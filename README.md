@@ -1,10 +1,18 @@
-## DSS : Digital Signature Service
+## DSS : Digital Signature Service for DigiDoc4j and SiVa
 
-This is the official repository for project DSS : https://ec.europa.eu/digital-building-blocks/wikis/display/DIGITAL/Digital+Signature+Service+-++DSS. 
+This is a Digital Signature Service project used by DigiDoc4j and SiVa.
+This repository is a fork of the original Digital Signature Services (DSS) project, maintained at
+https://github.com/esig/dss and
+https://ec.europa.eu/digital-building-blocks/sites/display/DIGITAL/Digital+Signature+Service+-++DSS.
+It includes additional modifications specific to BDoc-TM (a profile of the Estonian digital signature format).
+
+DigiDoc4j is located at https://github.com/open-eid/digidoc4j.
+
+SiVa is located at https://github.com/open-eid/Siva.
 
 # Issue Tracker
 
-Please, use the new JIRA for project is on https://ec.europa.eu/digital-building-blocks/tracker/projects/DSS/issues. 
+Please, use the issue tracker of the GitHub project on https://github.com/open-eid/sd-dss/issues. 
 
 # Requirements
 
@@ -22,14 +30,14 @@ Starting from version `6.0`, DSS uses `jakarta.\*` namespace naming of Specifica
 
 The release is published on Maven Central repository : 
 
-https://central.sonatype.com/search?q=eu.europa.ec.joinup.sd-dss
+https://central.sonatype.com/search?q=org.digidoc4j.dss
 
 <pre>
 &lt;!-- Add dss-bom for easy integration --&gt;
 &lt;dependencyManagement&gt;
     &lt;dependencies&gt;
         &lt;dependency&gt;
-            &lt;groupId&gt;eu.europa.ec.joinup.sd-dss&lt;/groupId&gt;
+            &lt;groupId&gt;org.digidoc4j.dss&lt;/groupId&gt;
             &lt;artifactId&gt;dss-bom&lt;/artifactId&gt;
             &lt;version&gt;6.2&lt;/version&gt;
             &lt;type&gt;pom&lt;/type&gt;
@@ -41,11 +49,11 @@ https://central.sonatype.com/search?q=eu.europa.ec.joinup.sd-dss
 &lt;!-- Add required modules (example) --&gt;
 &lt;dependencies&gt;
     &lt;dependency&gt;
-        &lt;groupId&gt;eu.europa.ec.joinup.sd-dss&lt;/groupId&gt;
+        &lt;groupId&gt;org.digidoc4j.dss&lt;/groupId&gt;
         &lt;artifactId&gt;dss-utils-apache-commons&lt;/artifactId&gt;
     &lt;/dependency&gt;
     &lt;dependency&gt;
-        &lt;groupId&gt;eu.europa.ec.joinup.sd-dss&lt;/groupId&gt;
+        &lt;groupId&gt;org.digidoc4j.dss&lt;/groupId&gt;
         &lt;artifactId&gt;dss-xades&lt;/artifactId&gt;
     &lt;/dependency&gt;
     ...
@@ -86,22 +94,6 @@ In order to build the documentation by yourself, the following command must be e
 ```
 mvn clean install -P asciidoctor
 ```
-
-# JavaDoc
-
-The JavaDoc is available on https://ec.europa.eu/digital-building-blocks/DSS/webapp-demo/apidocs/index.html
-
-# Demonstration
-
-The release is deployed on https://ec.europa.eu/digital-building-blocks/DSS/webapp-demo
-
-The source code of the demonstrations is available on https://github.com/esig/dss-demonstrations
-
-# Ready-to-use bundles
-
-Bundles which contain the above demonstration can be downloaded from the [Maven repository](https://ec.europa.eu/digital-building-blocks/artifact/service/rest/repository/browse/esignaturedss/eu/europa/ec/joinup/sd-dss/dss-demo-bundle/).
-
-The code of the demonstration can be found on https://ec.europa.eu/digital-building-blocks/code/projects/ESIG/repos/dss-demos/browse
 
 # Licenses
 
