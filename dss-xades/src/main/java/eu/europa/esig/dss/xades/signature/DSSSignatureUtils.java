@@ -27,7 +27,6 @@ import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.ASN1StreamParser;
 import org.bouncycastle.util.BigIntegers;
 
 import eu.europa.esig.dss.DSSException;
@@ -154,9 +153,15 @@ public final class DSSSignatureUtils {
      */
 	private static boolean isAsn1Encoded(byte[] signatureValue) {
 		try {
-			new ASN1StreamParser(signatureValue).readObject();
+			ASN1InputStream is = new ASN1InputStream(signatureValue);
+			ASN1Sequence seq = (ASN1Sequence) is.readObject();
+			if (seq.size() != 2) {
+				return false;
+			}
+			((ASN1Integer) seq.getObjectAt(0)).getValue();
+			((ASN1Integer) seq.getObjectAt(1)).getValue();
 			return true;
-		} catch (IOException e) {
+		} catch (Exception e) {
 			return false;
 		}
 	}
