@@ -167,6 +167,8 @@ public enum MessageTag {
 	ADEST_IOTNLABST_ANS("The validation failed, because OCSP is too long after the best-signature-time!"),
 	ADEST_IOABST("Is OCSP after the best-signature-time?"),
 	ADEST_IOABST_ANS("The validation failed, because OCSP is before the best-signature-time!"),
+	ADEST_IOIARBT("Is OCSP in allowed minutes range before timestamp"),
+	ADEST_IOIARBT_ANS("OCSP response production time is earlier than allowed minutes before timestamp time!"),
 	TSV_WACRABST("Was the algorithm(s) considered reliable at best-signature-time?"),
 	TSV_WACRABST_ANS("The algorithm(s) was not considered reliable at best-signature-time!"),
 

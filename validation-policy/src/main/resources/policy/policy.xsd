@@ -43,6 +43,15 @@
 									</xs:simpleContent>
 								</xs:complexType>
 							</xs:element>
+							<xs:element name="OcspTimeRangeBeforeTimeStamp" minOccurs="0">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:string">
+											<xs:attribute type="tns:level" name="Level"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
 							<xs:element name="OcspTimeTooMuchAfterBestSignatureTime" minOccurs="0" maxOccurs="1">
 								<xs:complexType>
 									<xs:sequence>

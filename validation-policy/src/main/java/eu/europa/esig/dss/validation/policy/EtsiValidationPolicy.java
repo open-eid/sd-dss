@@ -647,13 +647,34 @@ public class EtsiValidationPolicy extends ValidationPolicy {
 		}
 		return null;
 	}
-	
+
 	@Override
 	public Constraint getOcspEarlierThanBestSignatureTimeConstraint() {
 		final String XP_ROOT = "/ConstraintsParameters/MainSignature/OcspTimeBeforeBestSignatureTime";
 		return getBasicConstraint(XP_ROOT, true);
 	}
-	
+
+	@Override
+	public Constraint getOcspTimeRangeBeforeTimeStamp() {
+		final Integer beforeRangeminutes = getOcspAllowedMinutesRangeBeforeTimeStamp();
+		if ((beforeRangeminutes != null) && (beforeRangeminutes >= 0)) {
+			final String XP_ROOT = "/ConstraintsParameters/MainSignature/OcspTimeRangeBeforeTimeStamp";
+			Constraint constraint = getBasicConstraint(XP_ROOT, true);
+			constraint.setExpectedValue(TRUE);
+			return constraint;
+		}
+		return null;
+	}
+
+	@Override
+	public Integer getOcspAllowedMinutesRangeBeforeTimeStamp() {
+		final XmlDom beforeRangeMinutesPresent = getElement("/ConstraintsParameters/MainSignature/OcspTimeRangeBeforeTimeStamp");
+		if (beforeRangeMinutesPresent == null) {
+			return null;
+		}
+		return getIntValue("/ConstraintsParameters/MainSignature/OcspTimeRangeBeforeTimeStamp/text()");
+	}
+
 	@Override
 	public Constraint getOcspDelayConstraint(Long delay) {
 		if (delay != null && getElement("/ConstraintsParameters/MainSignature/OcspTimeTooMuchAfterBestSignatureTime") != null) {

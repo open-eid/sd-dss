@@ -395,6 +395,10 @@ public abstract class ValidationPolicy extends XmlDom {
 	
 	public abstract Constraint getOcspEarlierThanBestSignatureTimeConstraint();
 
+	public abstract Constraint getOcspTimeRangeBeforeTimeStamp();
+
+	public abstract Integer getOcspAllowedMinutesRangeBeforeTimeStamp();
+
 	public abstract Constraint getContentTimestampImprintIntactConstraint();
 
 	public abstract Constraint getContentTimestampImprintFoundConstraint();

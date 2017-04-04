@@ -14,7 +14,8 @@
 			<Id>PAdES_BASELINE_LT</Id>
 			<Id>PAdES_BASELINE_LTA</Id>
 		</AcceptableSignatureFormats>
-		<OcspTimeBeforeBestSignatureTime Level="FAIL"/>
+		<OcspTimeBeforeBestSignatureTime Level="INFORM"/>
+		<OcspTimeRangeBeforeTimeStamp Level="FAIL">10</OcspTimeRangeBeforeTimeStamp>
 		<OcspTimeTooMuchAfterBestSignatureTime Unit="MINUTES">
 			<Warn>
 				<MinimalDelay>15</MinimalDelay>
@@ -246,10 +247,10 @@
 	<Cryptographic>
 		<AlgoExpirationDate Format="yyyy-MM-dd">
 			<!-- Algorithms under 112 bit strength: -->
-			<Algo Date="2017-02-24">SHA1</Algo>
-			<Algo Date="2017-02-24">RSA1023</Algo>
-			<Algo Date="2017-02-24">RSA1024</Algo>
-			<Algo Date="2017-02-24">RSA1536</Algo>
+			<Algo Date="2018-02-24">SHA1</Algo>
+			<Algo Date="2018-02-24">RSA1023</Algo>
+			<Algo Date="2018-02-24">RSA1024</Algo>
+			<Algo Date="2018-02-24">RSA1536</Algo>
 
 			<!-- Algorithms with ~ 112 bit strength: -->
 			<Algo Date="2025-02-24">SHA224</Algo>

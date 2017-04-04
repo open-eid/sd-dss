@@ -20,14 +20,6 @@
  */
 package eu.europa.esig.dss.validation.process;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.XmlDom;
@@ -48,6 +40,15 @@ import eu.europa.esig.dss.validation.policy.rules.NodeValue;
 import eu.europa.esig.dss.validation.policy.rules.SubIndication;
 import eu.europa.esig.dss.validation.report.Conclusion;
 import eu.europa.esig.dss.x509.TimestampType;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import static org.apache.commons.lang.time.DateUtils.addSeconds;
 
 /**
  * This class implements:<br>
@@ -377,8 +378,12 @@ public class AdESTValidation {
 		if (!checkTimestampDelay(signatureConclusion)) {
 			return signatureConclusion;
 		}
-		
+
 		if (!checkOcspIssuingTime(signatureConclusion)) {
+			return signatureConclusion;
+		}
+
+		if (!checkOcspBeforeTimestampRange(signatureConclusion)) {
 			return signatureConclusion;
 		}
 
@@ -949,7 +954,7 @@ public class AdESTValidation {
 
 		return constraint.check();
 	}
-	
+
 	/**
 	 * Check of: Ocsp time compared to best-signature-time.
 	 *
@@ -984,4 +989,42 @@ public class AdESTValidation {
 		}
 		return constraint.check();
 	}
+
+	/**
+	 * Check of: Ocsp time compared not before allowed time than timestamp time.
+	 *
+	 * @param conclusion the conclusion to use to add the result of the check.
+	 * @return false if the check failed and the process should stop, true otherwise.
+	 */
+	private boolean checkOcspBeforeTimestampRange(Conclusion conclusion) {
+		final String ocspIssuingTime = diagnosticData.getValue("./UsedCertificates/Certificate/Revocation/IssuingTime/text()");
+		if (ocspIssuingTime == null) {
+			return true;
+		}
+
+		Constraint constraint = constraintData.getOcspTimeRangeBeforeTimeStamp();
+		if (constraint == null) {
+			return true;
+		}
+
+		final List<XmlDom> timestamps = signatureXmlDom.getElements("./Timestamps/Timestamp[@Type='%s']", TimestampType.SIGNATURE_TIMESTAMP);
+		final Date earliestTimestamp = getEarliestTimestampProductionTime(timestamps, TimestampType.SIGNATURE_TIMESTAMP);
+
+		final Date ocspIssuingDate = DSSUtils.quietlyParseDate(ocspIssuingTime);
+		Integer ocspAllowedMinutesRangeBeforeTimeStamp = constraintData.getOcspAllowedMinutesRangeBeforeTimeStamp();
+
+		constraint.create(signatureXmlNode, MessageTag.ADEST_IOIARBT);
+		constraint.setIndications(Indication.INVALID, null, MessageTag.ADEST_IOIARBT_ANS);
+		constraint.setValue(isInBeforeRangeMinutes(earliestTimestamp, ocspIssuingDate, ocspAllowedMinutesRangeBeforeTimeStamp));
+        constraint.setAttribute("ocspAllowedMinutesRangeBeforeTimeStamp", String.valueOf(ocspAllowedMinutesRangeBeforeTimeStamp));
+		constraint.setConclusionReceiver(conclusion);
+		return constraint.check();
+	}
+
+	public static boolean isInBeforeRangeMinutes(Date date1, Date date2, int rangeInMinutes) {
+		int rangeInSeconds = rangeInMinutes * 60;
+		Date earliestTime = addSeconds(date1, -rangeInSeconds);
+		return date2.after(earliestTime);
+	}
+
 }
