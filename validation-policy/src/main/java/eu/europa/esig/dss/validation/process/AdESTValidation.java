@@ -1015,7 +1015,7 @@ public class AdESTValidation {
 
 		constraint.create(signatureXmlNode, MessageTag.ADEST_IOIARBT);
 		constraint.setIndications(Indication.INVALID, null, MessageTag.ADEST_IOIARBT_ANS);
-		constraint.setValue(isInBeforeRangeMinutes(earliestTimestamp, ocspIssuingDate, ocspAllowedMinutesRangeBeforeTimeStamp));
+        constraint.setValue(earliestTimestamp != null && isInBeforeRangeMinutes(earliestTimestamp, ocspIssuingDate, ocspAllowedMinutesRangeBeforeTimeStamp));
         constraint.setAttribute("ocspAllowedMinutesRangeBeforeTimeStamp", String.valueOf(ocspAllowedMinutesRangeBeforeTimeStamp));
 		constraint.setConclusionReceiver(conclusion);
 		return constraint.check();

@@ -7,7 +7,7 @@
 	<parent>
         <artifactId>pdf-validator</artifactId>
         <groupId>eu.europa.ec.joinup.sd-dss</groupId>
-        <version>1.0.1.RC1</version>
+        <version>1.0.2.RC1</version>
 	</parent>
 
 	<groupId>eu.europa.ec.joinup.sd-dss</groupId>
