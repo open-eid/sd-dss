@@ -282,7 +282,8 @@ public class SignatureBasicBuildingBlocksCheck extends ChainItem<XmlValidationPr
 				}
 			}
 
-		} else if (!Indication.PASSED.equals(savConclusion.getIndication())) {
+		}
+		if (!Indication.PASSED.equals(savConclusion.getIndication())) {
 			indication = savConclusion.getIndication();
 			subIndication = savConclusion.getSubIndication();
 			errors.addAll(savConclusion.getErrors());
