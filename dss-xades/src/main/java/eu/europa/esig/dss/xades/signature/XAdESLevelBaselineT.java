@@ -35,12 +35,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.tsp.TimeStampToken;
+
+import org.digidoc4j.dss.xades.BDocTmSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import eu.europa.esig.dss.DSSASN1Utils;
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.DSSUtils;
@@ -163,6 +167,12 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 		ensureUnsignedSignatureProperties();
 		ensureSignedDataObjectProperties();
 
+		//BDoc support - do not add Timestamp for BDoc Timemark signatures
+		if (BDocTmSupport.isBdocTmSignatureProfile(params)) {
+			return;
+		}
+		//End of BDoc support
+
 		// The timestamp must be added only if there is no one or the extension -T level is being created
 		if (!xadesSignature.hasTProfile() || XAdES_BASELINE_T.equals(params.getSignatureLevel())) {
 
@@ -216,6 +226,11 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 			final CertificatePool certificatePool = getCertificatePool();
 			final boolean trustAnchorBPPolicy = params.bLevel().isTrustAnchorBPPolicy();
 			boolean trustAnchorIncluded = false;
+
+			//Custom Estonian functionality: OCSP responder certificate must have RESPONDER_CERT id attribute (needed only for jDigidoc interoperability)
+			int responderCertCounter = 0;
+			//End of Custom Estonian functionality
+
 			for (final CertificateToken certificateToken : toIncludeCertificates) {
 
 				if (trustAnchorBPPolicy && (certificatePool != null)) {
@@ -226,8 +241,19 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 					}
 				}
 				final byte[] bytes = certificateToken.getEncoded();
-				final String base64EncodeCertificate = Utils.toBase64(bytes);
-				DomUtils.addTextElement(documentDom, certificateValuesDom, XAdES, XADES_ENCAPSULATED_X509_CERTIFICATE, base64EncodeCertificate);
+				final String base64EncodeCertificate = Base64.encodeBase64String(bytes);
+				//DSSXMLUtils.addTextElement(documentDom, certificateValuesDom, XAdES, XADES_ENCAPSULATED_X509_CERTIFICATE, base64EncodeCertificate);
+				Element element = DomUtils.addElement(documentDom, certificateValuesDom, XAdES, XADES_ENCAPSULATED_X509_CERTIFICATE);
+
+				//BDoc-TM functionality: OCSP responder certificate must have RESPONDER_CERT id attribute (needed only for jDigidoc interoperability)
+				boolean isCaCert = certificateToken.getCertificate().getBasicConstraints() != -1;
+				if(DSSASN1Utils.isOCSPSigning(certificateToken) && !isCaCert) {
+					element.setAttribute("Id", xadesSignature.getId() + "-RESPONDER_CERT-" + responderCertCounter);
+					responderCertCounter++;
+				}
+				//End of BDoc-TM functionality
+
+				DomUtils.setTextNode(documentDom, element, base64EncodeCertificate);
 			}
 			if (trustAnchorBPPolicy && !trustAnchorIncluded) {
 				LOG.warn("The trust anchor is missing but its inclusion is required by the signature policy!");

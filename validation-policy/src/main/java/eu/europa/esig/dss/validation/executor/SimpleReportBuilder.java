@@ -84,8 +84,6 @@ public class SimpleReportBuilder {
 	/**
 	 * This method generates the validation simpleReport.
 	 *
-	 * @param params
-	 *            validation process parameters
 	 * @return the object representing {@code SimpleReport}
 	 */
 	public eu.europa.esig.dss.jaxb.simplereport.SimpleReport build() {
@@ -168,9 +166,9 @@ public class SimpleReportBuilder {
 		XmlConstraintsConclusion constraintsConclusion = null;
 		switch (validationLevel) {
 		case BASIC_SIGNATURES:
-		case TIMESTAMPS:
 			constraintsConclusion = getBasicSignatureValidationConclusion(signatureId);
 			break;
+		case TIMESTAMPS:
 		case LONG_TERM_DATA:
 			constraintsConclusion = getLongTermDataValidationConclusion(signatureId);
 			break;

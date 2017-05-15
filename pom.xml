@@ -85,12 +85,12 @@
 	</reporting>
 	
 	<modules>
-		<module>dss-model</module>
 		<module>dss-token</module>
 		<module>dss-utils</module>
 		<module>dss-utils-apache-commons</module>
 		<module>dss-utils-google-guava</module>
 		<module>dss-document</module>
+		<module>dss-model</module>
 		<module>dss-service</module>
 		<module>dss-spi</module>
 		<module>dss-test</module>

@@ -24,6 +24,7 @@ import java.net.URLEncoder;
 
 import javax.xml.crypto.dsig.CanonicalizationMethod;
 
+import org.digidoc4j.dss.xades.BDocTmSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -80,6 +81,7 @@ class DetachedSignatureBuilder extends XAdESSignatureBuilder {
 		reference.setId("r-id-" + referenceIndex);
 		final String fileURI = document.getName() != null ? document.getName() : "";
 		try {
+			String urlEncoded = BDocTmSupport.uriEncode(fileURI); //Estonian BDoc/ASIC-E support
 			reference.setUri(URLEncoder.encode(fileURI, "UTF-8"));
 		} catch (Exception e) {
 			logger.warn("Unable to encode uri '" + fileURI + "' : " + e.getMessage());

@@ -58,6 +58,7 @@ import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.tsp.TimeStampToken;
+import org.digidoc4j.dss.xades.BDocTmSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -876,6 +877,11 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	 * @return
 	 */
 	public boolean hasTProfile() {
+		if(BDocTmSupport.hasBDocTmPolicyId(signatureElement, xPathQueryHolder)) {
+			//BDoc-TM has policy id and OCSP response containing TimeMark
+			boolean hasOcspResponse = Utils.isStringNotBlank(DomUtils.getValue(signatureElement, xPathQueryHolder.XPATH_OCSP_VALUES_ENCAPSULATED_OCSP));
+			return hasOcspResponse;
+		}
 		return DomUtils.isNotEmpty(signatureElement, xPathQueryHolder.XPATH_SIGNATURE_TIMESTAMP);
 	}
 
