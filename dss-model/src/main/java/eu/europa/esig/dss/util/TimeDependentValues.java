@@ -1,5 +1,6 @@
 package eu.europa.esig.dss.util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -13,7 +14,7 @@ import java.util.List;
  * @author jdvorak
  * @param <T>
  */
-public class TimeDependentValues<T extends TimeDependent> implements Iterable<T> {
+public class TimeDependentValues<T extends TimeDependent> implements Iterable<T>, Serializable {
 
 	protected final List<T> list = new LinkedList<T>();
 	private final List<T> immutableList = Collections.unmodifiableList(list);
