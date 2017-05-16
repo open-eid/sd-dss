@@ -35,7 +35,7 @@ import eu.europa.esig.dss.validation.reports.wrapper.SignatureWrapper;
 
 public class XAdESValidationTest {
 
-	private static final String POLICY_ID = "urn:oid:1.3.6.1.4.1.10015.1000.3.2.1";
+	private static final String POLICY_ID = "1.3.6.1.4.1.10015.1000.3.2.1";
 	private static final String POLICY_URL = "http://spuri.test";
 
 	@Test
