@@ -32,6 +32,8 @@ import java.io.StringWriter;
 @SuppressWarnings("serial")
 public abstract class CommonDocument implements DSSDocument {
 
+	protected DSSDocument nextDocument;
+
 	protected MimeType mimeType;
 
 	protected String name;
@@ -67,6 +69,16 @@ public abstract class CommonDocument implements DSSDocument {
 	@Override
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	@Override
+	public DSSDocument getNextDocument() {
+		return nextDocument;
+	}
+
+	@Override
+	public void setNextDocument(final DSSDocument nextDocument) {
+		this.nextDocument = nextDocument;
 	}
 
 	@Override

@@ -104,4 +104,12 @@ public interface DSSDocument extends Serializable {
 	 */
 	String getDigest(final DigestAlgorithm digestAlgorithm);
 
+	/**
+	 * This method return the next {@code DSSDocument}.
+	 *
+	 * @return {@code DSSDocument}
+	 */
+	DSSDocument getNextDocument();
+
+	void setNextDocument(final DSSDocument nextDocument);
 }
