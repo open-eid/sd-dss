@@ -1,8 +1,9 @@
 package eu.europa.esig.dss.util;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class BaseTimeDependent implements TimeDependent {
+public class BaseTimeDependent implements TimeDependent, Serializable {
 
 	private Date startDate;
 	private Date endDate;
