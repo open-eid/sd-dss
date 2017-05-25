@@ -72,16 +72,6 @@ public abstract class CommonDocument implements DSSDocument {
 	}
 
 	@Override
-	public DSSDocument getNextDocument() {
-		return nextDocument;
-	}
-
-	@Override
-	public void setNextDocument(final DSSDocument nextDocument) {
-		this.nextDocument = nextDocument;
-	}
-
-	@Override
 	public String getAbsolutePath() {
 		return absolutePath;
 	}
