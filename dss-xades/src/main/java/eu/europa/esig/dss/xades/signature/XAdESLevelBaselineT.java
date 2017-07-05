@@ -29,6 +29,7 @@ import static eu.europa.esig.dss.xades.ProfileParameters.Operation.SIGNING;
 import static javax.xml.crypto.dsig.XMLSignature.XMLNS;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -73,7 +74,7 @@ import eu.europa.esig.dss.xades.validation.XAdESSignature;
  * -T profile of XAdES signature
  *
  */
-public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureExtension<XAdESSignatureParameters> {
+public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureExtension<XAdESSignatureParameters>, Serializable {
 
 	private static final Logger LOG = LoggerFactory.getLogger(XAdESLevelBaselineT.class);
 

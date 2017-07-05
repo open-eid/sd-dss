@@ -27,6 +27,7 @@ import static eu.europa.esig.dss.xades.XPathQueryHolder.XMLE_SIG_AND_REFS_TIME_S
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.math.BigInteger;
 import java.security.PublicKey;
@@ -110,7 +111,7 @@ import eu.europa.esig.dss.xades.XPathQueryHolder;
  * be created.
  *
  */
-public class XAdESSignature extends DefaultAdvancedSignature {
+public class XAdESSignature extends DefaultAdvancedSignature implements Serializable {
 
 	private static final Logger LOG = LoggerFactory.getLogger(XAdESSignature.class);
 
@@ -629,10 +630,12 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 			if (policyId != null) {
 				// Explicit policy
 				String policyIdString = policyId.getTextContent();
-				// urn:oid:1.2.3 --> 1.2.3
 				String policyUrlString = null;
-				if (policyIdString.indexOf(':') >= 0) {
+				if (DSSXMLUtils.isOid(policyIdString)) {
+					// urn:oid:1.2.3 --> 1.2.3
 					policyIdString = policyIdString.substring(policyIdString.lastIndexOf(':') + 1);
+				} else {
+					policyUrlString = policyIdString;
 				}
 				signaturePolicy = new SignaturePolicy(policyIdString);
 				final Node policyDigestMethod = DomUtils.getNode(policyIdentifier, xPathQueryHolder.XPATH__POLICY_DIGEST_METHOD);
@@ -647,8 +650,8 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 				final Element policyUrl = DomUtils.getElement(policyIdentifier, xPathQueryHolder.XPATH__POLICY_SPURI);
 				if (policyUrl != null) {
 					policyUrlString = policyUrl.getTextContent().trim();
-					signaturePolicy.setUrl(policyUrlString);
 				}
+				signaturePolicy.setUrl(policyUrlString);
 				signaturePolicy.setPolicyContent(signaturePolicyProvider.getSignaturePolicy(policyIdString, policyUrlString));
 			} else {
 				// Implicit policy
