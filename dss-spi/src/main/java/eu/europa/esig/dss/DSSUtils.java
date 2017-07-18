@@ -238,7 +238,7 @@ public final class DSSUtils {
 	/**
 	 * This method converts a PEM encoded crl to DER encoded
 	 * 
-	 * @param pemCert
+	 * @param pemCRL
 	 *            the String which contains the PEM encoded CRL
 	 * @return the binaries of the DER encoded crl
 	 */

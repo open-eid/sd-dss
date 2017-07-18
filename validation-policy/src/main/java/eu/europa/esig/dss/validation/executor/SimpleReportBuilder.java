@@ -186,7 +186,7 @@ public class SimpleReportBuilder {
 		}
 
 		if (constraintsConclusion == null) {
-            logger.error("Constraint conclusion not found!");
+            LOG.error("Constraint conclusion not found!");
 		    return;
         }
 

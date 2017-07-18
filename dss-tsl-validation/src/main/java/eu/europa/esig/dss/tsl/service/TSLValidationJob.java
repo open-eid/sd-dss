@@ -360,7 +360,7 @@ public class TSLValidationJob {
 			try {
 				TSLLoaderResult loaderResult = futureLoaderResult.get();
 				if(loaderResult.getContent() == null || loaderResult.getContent().length == 0) {
-					logger.error("Failed to load TSl for country '" + loaderResult.getCountryCode() + "' from '" + loaderResult.getUrl() + "'");
+					LOG.error("Failed to load TSl for country '" + loaderResult.getCountryCode() + "' from '" + loaderResult.getUrl() + "'");
 					continue;
 				}
 				if (loaderResult != null && loaderResult.getContent() != null) {

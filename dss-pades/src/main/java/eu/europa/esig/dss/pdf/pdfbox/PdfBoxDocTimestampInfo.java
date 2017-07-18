@@ -51,8 +51,8 @@ class PdfBoxDocTimestampInfo extends PdfBoxCMSInfo implements PdfDocTimestampInf
 	 * @param cms
 	 *            the CMS (CAdES) bytes
 	 * @param isArchiveTimestamp
-	 * @param inputStream
-	 *            the stream of the whole signed document
+	 * @param signedContent
+	 *
 	 * @throws DSSException
 	 */
 	PdfBoxDocTimestampInfo(CertificatePool validationCertPool, PDSignature signature, PdfDssDict dssDictionary, byte[] cms, byte[] signedContent,

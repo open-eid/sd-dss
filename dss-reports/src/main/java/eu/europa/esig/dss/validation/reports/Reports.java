@@ -73,7 +73,7 @@ public class Reports {
 	/**
 	 * This is the default constructor to instantiate this container.
 	 *
-	 * @param diagnosticData
+	 * @param diagnosticDataJaxb
 	 *            {@code DiagnosticData}
 	 * @param detailedReport
 	 *            {@code DetailedReport}

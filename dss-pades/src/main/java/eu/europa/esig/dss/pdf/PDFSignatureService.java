@@ -45,8 +45,6 @@ public interface PDFSignatureService {
 	 * @param toSignDocument
 	 * @param parameters
 	 * @param digestAlgorithm
-	 * @param extraDictionariesToAddBeforeSign
-	 *            only in the case of timestamp
 	 * @return
 	 * @throws DSSException
 	 */
@@ -60,7 +58,6 @@ public interface PDFSignatureService {
 	 * @param signedStream
 	 * @param parameters
 	 * @param digestAlgorithm
-	 * @param extraDictionariesToAddBeforeSign
 	 * @throws DSSException
 	 */
 	void sign(final InputStream pdfData, final byte[] signatureValue, final OutputStream signedStream, final PAdESSignatureParameters parameters,
