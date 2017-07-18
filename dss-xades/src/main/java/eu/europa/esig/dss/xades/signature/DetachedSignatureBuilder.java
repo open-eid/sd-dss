@@ -41,7 +41,7 @@ import eu.europa.esig.dss.xades.XAdESSignatureParameters;
  */
 class DetachedSignatureBuilder extends XAdESSignatureBuilder {
 
-	private static final Logger logger = LoggerFactory.getLogger(DetachedSignatureBuilder.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DetachedSignatureBuilder.class);
 
 	/**
 	 * The default constructor for DetachedSignatureBuilder.<br>
@@ -84,7 +84,7 @@ class DetachedSignatureBuilder extends XAdESSignatureBuilder {
 			String urlEncoded = BDocTmSupport.uriEncode(fileURI); //Estonian BDoc/ASIC-E support
 			reference.setUri(URLEncoder.encode(fileURI, "UTF-8"));
 		} catch (Exception e) {
-			logger.warn("Unable to encode uri '" + fileURI + "' : " + e.getMessage());
+			LOG.warn("Unable to encode uri '" + fileURI + "' : " + e.getMessage());
 			reference.setUri(fileURI);
 		}
 		reference.setContents(document);

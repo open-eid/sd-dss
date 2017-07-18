@@ -1,9 +1,33 @@
-## DSS : Digital Signature Service for DigiDoc4j
+## DSS : Digital Signature Service
 
-This is a Digital Signature Service project used by DigiDoc4j. This fork contains mainly BDoc-TM specific changes.
-
-This is a forked repository from the original DSS project located at https://github.com/esig/dss and https://joinup.ec.europa.eu/asset/sd-dss/description. 
+This is the official repository for project DSS : https://ec.europa.eu/cefdigital/wiki/display/CEFDIGITAL/eSignature. 
 
 # Issue Tracker
 
-Please, use Pivotal on https://www.pivotaltracker.com/n/projects/1110130
+Please, use the new JIRA for project is on https://ec.europa.eu/cefdigital/tracker/projects/DSS/issues. 
+
+# Maven repository
+
+The release is published on CEF Digital repository : 
+
+https://ec.europa.eu/cefdigital/artifact/#welcome
+
+<pre>
+&lt;repository&gt;
+  &lt;id&gt;cefdigital&lt;/id&gt;
+  &lt;name&gt;cefdigital&lt;/name&gt;
+  &lt;url&gt;https://ec.europa.eu/cefdigital/artifact/content/repositories/esignaturedss/&lt;/url&gt;
+&lt;/repository&gt;
+</pre>
+
+# Documentation
+
+The [documentation](dss-cookbook/src/main/asciidoc/dss-documentation.adoc) and samples are available in the dss-cookbook module. [SoapUI project](dss-cookbook/src/main/soapui) and [Postman project](dss-cookbook/src/main/postman) are also provided to illustrate SOAP/REST calls.
+
+# Demonstration
+
+The release is deployed on https://joinup.ec.europa.eu/sd-dss/webapp-demo/home 
+
+The code of the demonstration can be found on https://ec.europa.eu/cefdigital/code/projects/ESIG/repos/dss-demos/browse
+
+[![License (LGPL version 2.1)](https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-blue.svg?style=flat-square)](https://www.gnu.org/licenses/lgpl-2.1.html)
