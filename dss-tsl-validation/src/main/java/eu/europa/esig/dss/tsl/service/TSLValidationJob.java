@@ -338,7 +338,7 @@ public class TSLValidationJob {
 		List<String> pivotUris = new ArrayList<String>();
 		List<String> englishSchemeInformationURIs = parseResult.getEnglishSchemeInformationURIs();
 		for (String uri : englishSchemeInformationURIs) {
-			if (!Utils.areStringsEqual(ojUrl, uri) && !uri.startsWith(lotlRootSchemeInfoUri)) {
+			if (lotlRootSchemeInfoUri != null && !Utils.areStringsEqual(ojUrl, uri) && !uri.startsWith(lotlRootSchemeInfoUri)) {
 				pivotUris.add(uri);
 			}
 		}
