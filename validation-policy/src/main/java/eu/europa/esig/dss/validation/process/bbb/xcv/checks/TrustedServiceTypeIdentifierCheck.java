@@ -4,20 +4,16 @@ import java.text.MessageFormat;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
-
 import eu.europa.esig.dss.jaxb.detailedreport.XmlXCV;
-import eu.europa.esig.dss.jaxb.diagnostic.XmlServiceStatus;
-import eu.europa.esig.dss.jaxb.diagnostic.XmlServiceStatusType;
-import eu.europa.esig.dss.jaxb.diagnostic.XmlTrustedServiceProviderType;
-import eu.europa.esig.dss.validation.AdditionalInfo;
-import eu.europa.esig.dss.validation.MessageTag;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.policy.Context;
 import eu.europa.esig.dss.validation.policy.rules.Indication;
 import eu.europa.esig.dss.validation.policy.rules.SubIndication;
+import eu.europa.esig.dss.validation.process.AdditionalInfo;
+import eu.europa.esig.dss.validation.process.MessageTag;
 import eu.europa.esig.dss.validation.process.bbb.AbstractMultiValuesCheckItem;
 import eu.europa.esig.dss.validation.reports.wrapper.CertificateWrapper;
+import eu.europa.esig.dss.validation.reports.wrapper.TrustedServiceWrapper;
 import eu.europa.esig.dss.x509.CertificateSourceType;
 import eu.europa.esig.jaxb.policy.MultiValuesConstraint;
 
@@ -44,30 +40,26 @@ public class TrustedServiceTypeIdentifierCheck extends AbstractMultiValuesCheckI
 			return true;
 		}
 
-		List<XmlTrustedServiceProviderType> tspList = certificate.getCertificateTSPService();
-		for (XmlTrustedServiceProviderType trustedServiceProvider : tspList) {
-			XmlServiceStatus serviceStatus = trustedServiceProvider.getServiceStatus();
-			if (serviceStatus != null && CollectionUtils.isNotEmpty(serviceStatus.getStatusService())) {
-				for (XmlServiceStatusType status : serviceStatus.getStatusService()) {
-					serviceTypeStr = StringUtils.trim(trustedServiceProvider.getTSPServiceType());
-					if (processValueCheck(serviceTypeStr)) {
-						Date statusStartDate = status.getStartDate();
-						Date statusEndDate = status.getEndDate();
-						// The issuing time of the certificate should be into the validity period of the associated
-						// service
-						if ((usageTime.compareTo(statusStartDate) >= 0) && ((statusEndDate == null) || usageTime.before(statusEndDate))) {
-							return true;
-						}
-					}
+		List<TrustedServiceWrapper> trustedServices = certificate.getTrustedServices();
+		for (TrustedServiceWrapper trustedService : trustedServices) {
+			serviceTypeStr = Utils.trim(trustedService.getType());
+			Date statusStartDate = trustedService.getStartDate();
+			if (processValueCheck(serviceTypeStr) && statusStartDate != null) {
+				Date statusEndDate = trustedService.getEndDate();
+				// The issuing time of the certificate should be into the validity period of the associated
+				// service
+				if ((usageTime.compareTo(statusStartDate) >= 0) && ((statusEndDate == null) || usageTime.before(statusEndDate))) {
+					return true;
 				}
 			}
 		}
 		return false;
+
 	}
 
 	@Override
 	protected String getAdditionalInfo() {
-		if (StringUtils.isNotEmpty(serviceTypeStr)) {
+		if (Utils.isStringNotEmpty(serviceTypeStr)) {
 			Object[] params = new Object[] { serviceTypeStr };
 			return MessageFormat.format(AdditionalInfo.TRUSTED_SERVICE_TYPE, params);
 		}

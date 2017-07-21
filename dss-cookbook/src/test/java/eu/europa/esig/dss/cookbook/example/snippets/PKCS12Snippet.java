@@ -1,8 +1,7 @@
 package eu.europa.esig.dss.cookbook.example.snippets;
 
+import java.io.IOException;
 import java.util.List;
-
-import org.apache.commons.codec.binary.Base64;
 
 import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.SignatureValue;
@@ -10,14 +9,15 @@ import eu.europa.esig.dss.ToBeSigned;
 import eu.europa.esig.dss.token.DSSPrivateKeyEntry;
 import eu.europa.esig.dss.token.Pkcs12SignatureToken;
 import eu.europa.esig.dss.token.SignatureTokenConnection;
+import eu.europa.esig.dss.utils.Utils;
 
 public class PKCS12Snippet {
 
-	public static void main(String[] args){
+	public static void main(String[] args) throws IOException {
 
 		// tag::demo[]
 
-		SignatureTokenConnection token = new Pkcs12SignatureToken("password", "src/main/resources/user_a_rsa.p12");
+		SignatureTokenConnection token = new Pkcs12SignatureToken("src/main/resources/user_a_rsa.p12", "password");
 
 		List<DSSPrivateKeyEntry> keys = token.getKeys();
 		for (DSSPrivateKeyEntry entry : keys) {
@@ -27,9 +27,10 @@ public class PKCS12Snippet {
 		ToBeSigned toBeSigned = new ToBeSigned("Hello world".getBytes());
 		SignatureValue signatureValue = token.sign(toBeSigned, DigestAlgorithm.SHA256, keys.get(0));
 
-		System.out.println("Signature value : " + Base64.encodeBase64String(signatureValue.getValue()));
+		System.out.println("Signature value : " + Utils.toBase64(signatureValue.getValue()));
 
 		// end::demo[]
+
 	}
 
 }

@@ -11,8 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
 import eu.europa.esig.dss.DSSUtils;
@@ -21,9 +19,16 @@ import eu.europa.esig.dss.tsl.TSLConditionsForQualifiers;
 import eu.europa.esig.dss.tsl.TSLParserResult;
 import eu.europa.esig.dss.tsl.TSLPointer;
 import eu.europa.esig.dss.tsl.TSLService;
-import eu.europa.esig.dss.tsl.TSLServiceExtension;
 import eu.europa.esig.dss.tsl.TSLServiceProvider;
+import eu.europa.esig.dss.tsl.TSLServiceStatusAndInformationExtensions;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.x509.CertificateToken;
+import eu.europa.esig.jaxb.ecc.CriteriaListType;
+import eu.europa.esig.jaxb.ecc.KeyUsageBitType;
+import eu.europa.esig.jaxb.ecc.KeyUsageType;
+import eu.europa.esig.jaxb.ecc.PoliciesListType;
+import eu.europa.esig.jaxb.xades.IdentifierType;
+import eu.europa.esig.jaxb.xades.ObjectIdentifierType;
 
 public class TSLParserTest {
 
@@ -37,14 +42,14 @@ public class TSLParserTest {
 		assertEquals("EU", model.getTerritory());
 		assertEquals(115, model.getSequenceNumber());
 		List<TSLPointer> pointers = model.getPointers();
-		assertTrue(CollectionUtils.isNotEmpty(pointers));
+		assertTrue(Utils.isCollectionNotEmpty(pointers));
 		for (TSLPointer tslPointer : pointers) {
-			assertTrue(StringUtils.isNotEmpty(tslPointer.getMimeType()));
-			assertTrue(StringUtils.isNotEmpty(tslPointer.getTerritory()));
-			assertTrue(StringUtils.isNotEmpty(tslPointer.getUrl()));
-			assertTrue(CollectionUtils.isNotEmpty(tslPointer.getPotentialSigners()));
+			assertTrue(Utils.isStringNotEmpty(tslPointer.getMimeType()));
+			assertTrue(Utils.isStringNotEmpty(tslPointer.getTerritory()));
+			assertTrue(Utils.isStringNotEmpty(tslPointer.getUrl()));
+			assertTrue(Utils.isCollectionNotEmpty(tslPointer.getPotentialSigners()));
 		}
-		assertTrue(CollectionUtils.isNotEmpty(model.getDistributionPoints()));
+		assertTrue(Utils.isCollectionNotEmpty(model.getDistributionPoints()));
 	}
 
 	@Test
@@ -93,11 +98,8 @@ public class TSLParserTest {
 		TSLService service = getESTEIDSK2007(serviceProviders);
 		assertNotNull(service);
 
-		List<TSLServiceExtension> extensions = service.getExtensions();
-		assertEquals(1, extensions.size());
-		TSLServiceExtension extension = extensions.get(0);
-
-		List<TSLConditionsForQualifiers> conditionsForQualifiers = extension.getConditionsForQualifiers();
+		TSLServiceStatusAndInformationExtensions latestStatusAndExtensions = service.getStatusAndInformationExtensions().getLatest();
+		List<TSLConditionsForQualifiers> conditionsForQualifiers = latestStatusAndExtensions.getConditionsForQualifiers();
 		assertEquals(1, conditionsForQualifiers.size());
 
 		TSLConditionsForQualifiers qcStatement = getQualificationQCStatement(conditionsForQualifiers);
@@ -117,11 +119,8 @@ public class TSLParserTest {
 		service = getESTEIDSK2007(serviceProviders);
 		assertNotNull(service);
 
-		extensions = service.getExtensions();
-		assertEquals(1, extensions.size());
-		extension = extensions.get(0);
-
-		conditionsForQualifiers = extension.getConditionsForQualifiers();
+		latestStatusAndExtensions = service.getStatusAndInformationExtensions().getLatest();
+		conditionsForQualifiers = latestStatusAndExtensions.getConditionsForQualifiers();
 		assertEquals(2, conditionsForQualifiers.size());
 
 		qcStatement = getQualificationQCStatement(conditionsForQualifiers);
@@ -129,6 +128,23 @@ public class TSLParserTest {
 
 		Condition condition = qcStatement.getCondition();
 		assertTrue(condition.check(certificate));
+	}
+
+	@Test
+	public void getAdditionnalServiceInfo() throws Exception {
+		TSLParser parser = new TSLParser(new FileInputStream(new File("src/test/resources/tsls/tsl-be-v5.xml")));
+		TSLParserResult model = parser.call();
+
+		List<TSLServiceProvider> serviceProviders = model.getServiceProviders();
+		assertEquals(4, serviceProviders.size());
+
+		for (TSLServiceProvider tslServiceProvider : serviceProviders) {
+			if ("Certipost n.v./s.a.".equals(tslServiceProvider.getName())) {
+				List<TSLService> services = tslServiceProvider.getServices();
+				assertEquals(6, services.size());
+			}
+		}
+
 	}
 
 	private TSLConditionsForQualifiers getQualificationQCStatement(List<TSLConditionsForQualifiers> conditionsForQualifiers) {
@@ -160,20 +176,64 @@ public class TSLParserTest {
 	}
 
 	@Test
-	public void countCertificatesEE_TSLv5() throws Exception {
-		int oldResult = 41;
-		TSLParser parser = new TSLParser(new FileInputStream(new File("src/test/resources/tsls/tl-estonia_v5.xml")));
-		TSLParserResult model = parser.call();
+	public void testMultiPolicySet() {
+		PoliciesListType policiesA = new PoliciesListType();
+		policiesA.getPolicyIdentifier().add(oid("2.999.4"));
+		policiesA.getPolicyIdentifier().add(oid("2.999.5"));
 
-		Set<CertificateToken> certs = new HashSet<CertificateToken>();
-		List<TSLServiceProvider> serviceProviders = model.getServiceProviders();
-		for (TSLServiceProvider tslServiceProvider : serviceProviders) {
-			List<TSLService> services = tslServiceProvider.getServices();
-			for (TSLService tslService : services) {
-				certs.addAll( tslService.getCertificates());
-			}
-		}
-		assertEquals(oldResult, certs.size());
+		PoliciesListType policiesB = new PoliciesListType();
+		policiesB.getPolicyIdentifier().add(oid("2.999.6"));
+		policiesB.getPolicyIdentifier().add(oid("2.999.7"));
+
+		CriteriaListType criteria = new CriteriaListType();
+		criteria.setAssert("atLeastOne");
+		criteria.getPolicySet().add(policiesA);
+		criteria.getPolicySet().add(policiesB);
+
+		KeyUsageType keyUsageA = new KeyUsageType();
+		keyUsageA.getKeyUsageBit().add(kub("dataEncipherment", false));
+		keyUsageA.getKeyUsageBit().add(kub("decipherOnly", true));
+		criteria.getKeyUsage().add(keyUsageA);
+
+		KeyUsageType keyUsageB = new KeyUsageType();
+		keyUsageB.getKeyUsageBit().add(kub("encipherOnly", false));
+		keyUsageB.getKeyUsageBit().add(kub("keyCertSign", true));
+		criteria.getKeyUsage().add(keyUsageB);
+
+		criteria.getCriteriaList().add(getSubCriteria());
+
+		Condition condition = new TSLParser(null).getCondition(criteria);
+		System.out.println(condition.toString(""));
 	}
 
+	private CriteriaListType getSubCriteria() {
+		PoliciesListType policiesA = new PoliciesListType();
+		policiesA.getPolicyIdentifier().add(oid("1.2.3"));
+		policiesA.getPolicyIdentifier().add(oid("4.5.6"));
+
+		PoliciesListType policiesB = new PoliciesListType();
+		policiesB.getPolicyIdentifier().add(oid("7.8.9"));
+		policiesB.getPolicyIdentifier().add(oid("22.33.44"));
+
+		CriteriaListType criteria = new CriteriaListType();
+		criteria.setAssert("all");
+		criteria.getPolicySet().add(policiesA);
+		criteria.getPolicySet().add(policiesB);
+		return criteria;
+	}
+
+	private KeyUsageBitType kub(String kub, boolean val) {
+		KeyUsageBitType keyUsageBitType = new KeyUsageBitType();
+		keyUsageBitType.setName(kub);
+		keyUsageBitType.setValue(val);
+		return keyUsageBitType;
+	}
+
+	private static ObjectIdentifierType oid(String value) {
+		IdentifierType identifier = new IdentifierType();
+		identifier.setValue(value);
+		ObjectIdentifierType objectIdentifier = new ObjectIdentifierType();
+		objectIdentifier.setIdentifier(identifier);
+		return objectIdentifier;
+	}
 }

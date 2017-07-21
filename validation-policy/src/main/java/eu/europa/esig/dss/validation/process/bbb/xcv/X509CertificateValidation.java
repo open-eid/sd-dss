@@ -3,11 +3,10 @@ package eu.europa.esig.dss.validation.process.bbb.xcv;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.collections.CollectionUtils;
-
 import eu.europa.esig.dss.jaxb.detailedreport.XmlSubXCV;
 import eu.europa.esig.dss.jaxb.detailedreport.XmlXCV;
-import eu.europa.esig.dss.jaxb.diagnostic.XmlChainCertificate;
+import eu.europa.esig.dss.jaxb.diagnostic.XmlChainItem;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.policy.Context;
 import eu.europa.esig.dss.validation.policy.SubContext;
 import eu.europa.esig.dss.validation.policy.ValidationPolicy;
@@ -65,9 +64,9 @@ public class X509CertificateValidation extends Chain<XmlXCV> {
 		result.getSubXCV().add(subXCV);
 
 		// Check CA_CERTIFICATEs
-		List<XmlChainCertificate> certificateChainList = currentCertificate.getCertificateChain();
-		if (CollectionUtils.isNotEmpty(certificateChainList)) {
-			for (XmlChainCertificate chainCertificate : certificateChainList) {
+		List<XmlChainItem> certificateChainList = currentCertificate.getCertificateChain();
+		if (Utils.isCollectionNotEmpty(certificateChainList)) {
+			for (XmlChainItem chainCertificate : certificateChainList) {
 				CertificateWrapper certificate = diagnosticData.getUsedCertificateByIdNullSafe(chainCertificate.getId());
 
 				certificateValidation = new SubX509CertificateValidation(certificate, currentTime, context, SubContext.CA_CERTIFICATE, validationPolicy);

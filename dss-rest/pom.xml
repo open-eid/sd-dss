@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>4.7.RC2.d4j.1</version>
+		<version>5.0.d4j.1</version>
 	</parent>
 	
 	<artifactId>dss-rest</artifactId>
@@ -12,13 +12,12 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.digidoc4j.dss</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>dss-rest-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.digidoc4j.dss</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>dss-remote-services</artifactId>
 		</dependency>
 	</dependencies>
-	
 </project>

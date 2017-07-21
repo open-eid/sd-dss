@@ -9,17 +9,17 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.UnsupportedEncodingException;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.client.http.NativeHTTPDataLoader;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.x509.CertificateToken;
 
 public class DSSUtilsTest {
@@ -58,9 +58,9 @@ public class DSSUtilsTest {
 		assertNotNull(certificate);
 
 		FileInputStream fis = new FileInputStream("src/test/resources/belgiumrs2.crt");
-		byte[] byteArray = IOUtils.toByteArray(fis);
-		logger.info(Base64.encodeBase64String(byteArray));
-		IOUtils.closeQuietly(fis);
+		byte[] byteArray = Utils.toByteArray(fis);
+		logger.info(Utils.toBase64(byteArray));
+		Utils.closeQuietly(fis);
 		CertificateToken certificate2 = DSSUtils.loadCertificate(byteArray);
 		assertNotNull(certificate2);
 
@@ -68,9 +68,9 @@ public class DSSUtilsTest {
 		assertNotNull(certificateNew);
 
 		FileInputStream fisNew = new FileInputStream("src/test/resources/belgiumrs2-new.crt");
-		byte[] byteArrayNew = IOUtils.toByteArray(fisNew);
-		logger.info(Base64.encodeBase64String(byteArrayNew));
-		IOUtils.closeQuietly(fisNew);
+		byte[] byteArrayNew = Utils.toByteArray(fisNew);
+		logger.info(Utils.toBase64(byteArrayNew));
+		Utils.closeQuietly(fisNew);
 		CertificateToken certificate2New = DSSUtils.loadCertificate(byteArrayNew);
 		assertNotNull(certificate2New);
 
@@ -81,7 +81,11 @@ public class DSSUtilsTest {
 		// CertificateToken certificate3 =
 		// DSSUtils.loadCertificate(base64StringToBase64Binary);
 		// assertNotNull(certificate3);
+	}
 
+	@Test(expected = DSSException.class)
+	public void loadCertificateDoesNotThrowNullPointerExceptionWhenProvidedNonCertificateFile() throws Exception {
+		DSSUtils.loadCertificate(new ByteArrayInputStream("test".getBytes("UTF-8")));
 	}
 
 	@Test
@@ -93,13 +97,13 @@ public class DSSUtilsTest {
 		assertTrue(DSSUtils.isPEM(new ByteArrayInputStream(convertToPEM.getBytes())));
 
 		CertificateToken certificate = DSSUtils.loadCertificate(convertToPEM.getBytes());
-		assertTrue(certificate.equals(certificateWithAIA));
+		assertEquals(certificate,certificateWithAIA);
 
 		byte[] certDER = DSSUtils.convertToDER(convertToPEM);
 		assertFalse(DSSUtils.isPEM(new ByteArrayInputStream(certDER)));
 
 		CertificateToken certificate2 = DSSUtils.loadCertificate(certDER);
-		assertTrue(certificate2.equals(certificateWithAIA));
+		assertEquals(certificate2,certificateWithAIA);
 	}
 
 	@Test
@@ -179,6 +183,10 @@ public class DSSUtilsTest {
 
 		assertTrue(tsa.isSignedBy(signed));
 		assertTrue(tsa.isSignedBy(selfSign));
+	}
 
+	@Test
+	public void getMD5Digest() throws UnsupportedEncodingException {
+		assertEquals("3e25960a79dbc69b674cd4ec67a72c62", DSSUtils.getMD5Digest("Hello world".getBytes("UTF-8")));
 	}
 }

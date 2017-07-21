@@ -1,108 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>4.7.RC2.d4j.1</version>
+		<version>5.0.d4j.1</version>
 	</parent>
 
 	<artifactId>dss-document</artifactId>
 	<name>DSS Document</name>
 	<description>DSS Document contains the code for the creation and validation of XAdES, CAdES, PAdES and ASiC signatures._</description>
 
-	<url>https://github.com/open-eid/sd-dss</url>
-	<licenses>
-		<license>
-			<name>GNU Lesser General Public License, Version 2.1</name>
-			<url>http://www.gnu.org/licenses/lgpl-2.1.html</url>
-		</license>
-	</licenses>
-	<developers>
-		<developer>
-			<id>naramski</id>
-			<name>David Naramski</name>
-			<roles>
-				<role>developer</role>
-			</roles>
-		</developer>
-		<developer>
-			<id>vandenbroucke</id>
-			<name>Pierrick Vandenbroucke</name>
-			<roles>
-				<role>developer</role>
-			</roles>
-		</developer>
-		<developer>
-			<id>pirard</id>
-			<name>Nicolas Pirard</name>
-			<roles>
-				<role>developer</role>
-			</roles>
-		</developer>
-		<developer>
-			<id>abinet</id>
-			<name>Axel Abinet</name>
-			<roles>
-				<role>developer</role>
-			</roles>
-		</developer>
-		<developer>
-			<name>Rainer Villido</name>
-			<organization>Nortal</organization>
-			<organizationUrl>http://www.nortal.com</organizationUrl>
-		</developer>
-		<developer>
-			<name>Aho Augasmägi</name>
-			<organization>Codeborne</organization>
-			<organizationUrl>http://www.codeborne.com</organizationUrl>
-		</developer>
-		<developer>
-			<name>Allan Juhanson</name>
-			<organization>Nortal</organization>
-			<organizationUrl>http://www.nortal.com</organizationUrl>
-		</developer>
-	</developers>
-	<scm>
-		<connection>scm:git:git@github.com:open-eid/sd-dss.git</connection>
-		<developerConnection>scm:git:git@github.com:open-eid/sd-dss.git</developerConnection>
-		<url>https://github.com/open-eid/sd-dss.git</url>
-	</scm>
-
 	<dependencies>
 		<dependency>
-			<groupId>org.digidoc4j.dss</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>dss-spi</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.digidoc4j.dss</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>dss-reports</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.digidoc4j.dss</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>validation-policy</artifactId>
 		</dependency> 
-		<dependency>
-			<groupId>org.digidoc4j.dss</groupId>
-			<artifactId>dss-diagnostic-jaxb</artifactId>
-        </dependency>
         		
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.digidoc4j.dss</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>dss-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

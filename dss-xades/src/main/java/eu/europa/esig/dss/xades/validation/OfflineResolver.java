@@ -21,11 +21,8 @@
 package eu.europa.esig.dss.xades.validation;
 
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.xml.security.Init;
 import org.apache.xml.security.signature.XMLSignatureInput;
 import org.apache.xml.security.utils.resolver.ResourceResolverContext;
@@ -38,7 +35,11 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Attr;
 
 import eu.europa.esig.dss.DSSDocument;
+import eu.europa.esig.dss.DSSUtils;
+import eu.europa.esig.dss.DigestAlgorithm;
+import eu.europa.esig.dss.DigestDocument;
 import eu.europa.esig.dss.MimeType;
+import eu.europa.esig.dss.utils.Utils;
 
 /**
  * This class helps us home users to resolve http URIs without a network connection
@@ -49,15 +50,15 @@ public class OfflineResolver extends ResourceResolverSpi {
 	private static final Logger LOG = LoggerFactory.getLogger(OfflineResolver.class);
 
 	private final List<DSSDocument> documents;
+	private final DigestAlgorithm digestAlgorithm;
 
 	static {
-
 		Init.init();
 	}
 
-	public OfflineResolver(final List<DSSDocument> documents) {
-
+	public OfflineResolver(final List<DSSDocument> documents, DigestAlgorithm digestAlgorithm) {
 		this.documents = documents;
+		this.digestAlgorithm = digestAlgorithm;
 	}
 
 	@Override
@@ -65,7 +66,7 @@ public class OfflineResolver extends ResourceResolverSpi {
 		final Attr uriAttr = context.attr;
 		if (uriAttr != null) {
 			String encodedDocumentUri = uriAttr.getNodeValue();
-			String documentUri = decodeUrl(encodedDocumentUri);
+			String documentUri = DSSUtils.decodeUrl(encodedDocumentUri);
 			if ("".equals(documentUri) || documentUri.startsWith("#")) {
 				return false;
 			}
@@ -74,14 +75,14 @@ public class OfflineResolver extends ResourceResolverSpi {
 				return true;
 			}
 			documentUri = BDocTmSupport.fixEncoding(encodedDocumentUri);
-			documentUri = decodeUrl(documentUri);
+			documentUri = DSSUtils.decodeUrl(documentUri);
 			if (isKnown(documentUri) != null) {
 				LOG.debug("I state that I can resolve '" + documentUri.toString() + "' (external document)");
 				return true;
 			}
 			try {
 				final String baseUriString = context.baseUri;
-				if (StringUtils.isNotEmpty(baseUriString)) {
+				if (Utils.isStringNotEmpty(baseUriString)) {
 					final URI baseUri = new URI(baseUriString);
 					URI uriNew = new URI(baseUri, documentUri);
 					if (uriNew.getScheme().equals("http")) {
@@ -111,52 +112,35 @@ public class OfflineResolver extends ResourceResolverSpi {
 		} else if (uriAttr != null) {
 			documentUri = uriAttr.getNodeValue();
 		}
-		String decodedDocumentUri = decodeUrl(documentUri);
-		DSSDocument document = isKnown(decodedDocumentUri);
-		if(document == null) {
-			decodedDocumentUri = BDocTmSupport.fixEncoding(documentUri);
-			decodedDocumentUri = decodeUrl(decodedDocumentUri);
-			document = isKnown(documentUri);
-		}
-		if(document == null) {
-			document = getDocument(decodedDocumentUri);
-		}
-		if (document != null) {
+		documentUri = DSSUtils.decodeUrl(documentUri);
+		final DSSDocument document = getDocument(documentUri);
+		if (document instanceof DigestDocument) {
 
-			// The input stream is closed automatically by XMLSignatureInput class
+			DigestDocument digestDoc = (DigestDocument) document;
+			XMLSignatureInput result = new XMLSignatureInput(digestDoc.getDigest(digestAlgorithm));
+			result.setSourceURI(documentUri);
+			return result;
 
-			// TODO-Bob (05/09/2014): There is an error concerning the input streams base64 encoded. Some extra bytes
-			// are added within the santuario which breaks the HASH.
-			// TODO-Vin (05/09/2014): Can you create an isolated test-case JIRA DSS-?
+		} else if (document != null) {
+
 			InputStream inputStream = document.openStream();
 			final XMLSignatureInput result = new XMLSignatureInput(inputStream);
-			result.setSourceURI(decodedDocumentUri);
+			result.setSourceURI(documentUri);
 			final MimeType mimeType = document.getMimeType();
 			if (mimeType != null) {
 				result.setMIMEType(mimeType.getMimeTypeString());
 			}
 			return result;
 		} else {
-			Object exArgs[] = { "The uriNodeValue " + decodedDocumentUri + " is not configured for offline work" };
-			throw new ResourceResolverException("generic.EmptyMessage", exArgs, decodedDocumentUri, context.baseUri);
+			Object exArgs[] = { "The uriNodeValue " + documentUri + " is not configured for offline work" };
+			throw new ResourceResolverException("generic.EmptyMessage", exArgs, documentUri, context.baseUri);
 		}
 	}
 
 	private DSSDocument isKnown(final String documentUri) {
-
 		for (final DSSDocument dssDocument : documents) {
-
 			if (isRightDocument(documentUri, dssDocument)) {
-
 				return dssDocument;
-			}
-			DSSDocument nextDssDocument = dssDocument.getNextDocument();
-			while (nextDssDocument != null) {
-
-				if (isRightDocument(documentUri, nextDssDocument)) {
-					return nextDssDocument;
-				}
-				nextDssDocument = nextDssDocument.getNextDocument();
 			}
 		}
 		return null;
@@ -200,12 +184,4 @@ public class OfflineResolver extends ResourceResolverSpi {
 		return documents != null && documents.size() == 1;
 	}
 
-	private String decodeUrl(String documentUri) {
-		try {
-			return URLDecoder.decode(documentUri, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			LOG.error("Unable to decode '" + documentUri + "' : " + e.getMessage(), e);
-		}
-		return documentUri;
-	}
 }

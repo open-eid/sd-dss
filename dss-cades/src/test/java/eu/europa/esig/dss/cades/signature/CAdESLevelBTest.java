@@ -33,9 +33,6 @@ import java.util.List;
 
 import javax.crypto.Cipher;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
@@ -53,13 +50,12 @@ import org.bouncycastle.asn1.cms.SignerInfo;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.DigestInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eu.europa.esig.dss.DSSASN1Utils;
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.DigestAlgorithm;
@@ -70,14 +66,16 @@ import eu.europa.esig.dss.SignatureLevel;
 import eu.europa.esig.dss.SignaturePackaging;
 import eu.europa.esig.dss.cades.CAdESSignatureParameters;
 import eu.europa.esig.dss.cades.validation.CAdESSignature;
-import eu.europa.esig.dss.signature.AbstractTestSignature;
+import eu.europa.esig.dss.signature.AbstractTestDocumentSignatureService;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.test.gen.CertificateService;
 import eu.europa.esig.dss.test.mock.MockPrivateKeyEntry;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
+import eu.europa.esig.dss.x509.CertificateToken;
 
-public class CAdESLevelBTest extends AbstractTestSignature {
+public class CAdESLevelBTest extends AbstractTestDocumentSignatureService<CAdESSignatureParameters> {
 
 	private static final String HELLO_WORLD = "Hello World";
 
@@ -107,6 +105,8 @@ public class CAdESLevelBTest extends AbstractTestSignature {
 
 	}
 
+	// Annotation for error_probe
+	@SuppressWarnings("InsecureCryptoUsage")
 	@Override
 	protected void onDocumentSigned(byte[] byteArray) {
 		try {
@@ -150,14 +150,13 @@ public class CAdESLevelBTest extends AbstractTestSignature {
 				logger.info("SEQ cert " + i + " : " + seqCertif);
 
 				X509CertificateHolder certificateHolder = new X509CertificateHolder(seqCertif.getEncoded());
-				X509Certificate certificate = new JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME)
-						.getCertificate(certificateHolder);
-
-				certificate.checkValidity();
+				CertificateToken certificate = DSSASN1Utils.getCertificate(certificateHolder);
+				X509Certificate x509Certificate = certificate.getCertificate();
+				x509Certificate.checkValidity();
 
 				logger.info("Cert " + i + " : " + certificate);
 
-				foundCertificates.add(certificate);
+				foundCertificates.add(x509Certificate);
 			}
 
 			ASN1Set crLs = signedData.getCRLs();
@@ -231,7 +230,7 @@ public class CAdESLevelBTest extends AbstractTestSignature {
 
 			logger.info("Nb Auth Attributes : " + authenticatedAttributes.size());
 
-			String embeddedDigest = StringUtils.EMPTY;
+			String embeddedDigest = "";
 			for (int i = 0; i < authenticatedAttributes.size(); i++) {
 				ASN1Sequence authAttrSeq = ASN1Sequence.getInstance(authenticatedAttributes.getObjectAt(i));
 				logger.info(authAttrSeq.toString());
@@ -261,20 +260,20 @@ public class CAdESLevelBTest extends AbstractTestSignature {
 			DigestInfo digestInfo = new DigestInfo(seqDecrypt);
 			assertEquals(oidDigestAlgo, digestInfo.getAlgorithmId().getAlgorithm());
 
-			String decryptedDigestEncodeBase64 = Base64.encodeBase64String(digestInfo.getDigest());
+			String decryptedDigestEncodeBase64 = Utils.toBase64(digestInfo.getDigest());
 			logger.info("Decrypted Base64 : " + decryptedDigestEncodeBase64);
 
 			byte[] encoded = signedInfo.getAuthenticatedAttributes().getEncoded();
 			MessageDigest messageDigest = MessageDigest.getInstance(DigestAlgorithm.SHA256.getName());
 			byte[] digestOfAuthenticatedAttributes = messageDigest.digest(encoded);
 
-			String computedDigestEncodeBase64 = Base64.encodeBase64String(digestOfAuthenticatedAttributes);
+			String computedDigestEncodeBase64 = Utils.toBase64(digestOfAuthenticatedAttributes);
 			logger.info("Computed Base64 : " + computedDigestEncodeBase64);
 
 			assertEquals(decryptedDigestEncodeBase64, computedDigestEncodeBase64);
 
-			IOUtils.closeQuietly(asn1sInput);
-			IOUtils.closeQuietly(inputDecrypted);
+			Utils.closeQuietly(asn1sInput);
+			Utils.closeQuietly(inputDecrypted);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			fail(e.getMessage());

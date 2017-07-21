@@ -23,17 +23,15 @@ package eu.europa.esig.dss.xades.signature;
 import java.io.File;
 import java.util.Date;
 
-import org.apache.xml.security.utils.Base64;
 import org.junit.Before;
 
 import eu.europa.esig.dss.DSSDocument;
-import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.FileDocument;
 import eu.europa.esig.dss.MimeType;
 import eu.europa.esig.dss.SignatureAlgorithm;
 import eu.europa.esig.dss.SignatureLevel;
 import eu.europa.esig.dss.SignaturePackaging;
-import eu.europa.esig.dss.signature.AbstractTestSignature;
+import eu.europa.esig.dss.signature.AbstractTestDocumentSignatureService;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.test.gen.CertificateService;
 import eu.europa.esig.dss.test.mock.MockPrivateKeyEntry;
@@ -41,7 +39,7 @@ import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 
-public class XAdESLevelBEnvelopedTest extends AbstractTestSignature {
+public class XAdESLevelBEnvelopedTest extends AbstractTestDocumentSignatureService {
 
 	private DocumentSignatureService<XAdESSignatureParameters> service;
 	private XAdESSignatureParameters signatureParameters;
@@ -52,13 +50,8 @@ public class XAdESLevelBEnvelopedTest extends AbstractTestSignature {
 	public void init() throws Exception {
 		documentToSign = new FileDocument(new File("src/test/resources/sample.xml"));
 
-		System.out.println("Base64 orignal file : "+Base64.encode(DSSUtils.toByteArray(documentToSign)));
-
-
 		CertificateService certificateService = new CertificateService();
 		privateKeyEntry = certificateService.generateCertificateChain(SignatureAlgorithm.RSA_SHA256);
-
-		System.out.println("Base64 certificate : "+Base64.encode(privateKeyEntry.getCertificate().getEncoded()));
 
 		signatureParameters = new XAdESSignatureParameters();
 		signatureParameters.bLevel().setSigningDate(new Date());

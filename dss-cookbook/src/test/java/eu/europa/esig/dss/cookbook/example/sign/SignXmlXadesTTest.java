@@ -20,6 +20,8 @@
  */
 package eu.europa.esig.dss.cookbook.example.sign;
 
+import java.io.IOException;
+
 import org.junit.Test;
 
 import eu.europa.esig.dss.DSSDocument;
@@ -43,7 +45,7 @@ import eu.europa.esig.dss.xades.signature.XAdESService;
 public class SignXmlXadesTTest extends CookbookTools {
 
 	@Test
-	public void signXAdESBaselineT() {
+	public void signXAdESBaselineT() throws IOException {
 
 		// GET document to be signed -
 		// Return DSSDocument toSignDocument
@@ -86,7 +88,7 @@ public class SignXmlXadesTTest extends CookbookTools {
 			mockTSPSource = new MockTSPSource(new CertificateService().generateTspCertificate(SignatureAlgorithm.RSA_SHA256));
 			service.setTspSource(mockTSPSource);
 		} catch (Exception e) {
-			new DSSException("Error during MockTspSource", e);
+			throw new DSSException("Error during MockTspSource", e);
 		}
 
 		// Get the SignedInfo XML segment that need to be signed.

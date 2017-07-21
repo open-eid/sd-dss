@@ -26,16 +26,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
-
 import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.EncryptionAlgorithm;
 import eu.europa.esig.dss.jaxb.diagnostic.XmlCertificate;
+import eu.europa.esig.dss.jaxb.diagnostic.XmlContainerInfo;
 import eu.europa.esig.dss.jaxb.diagnostic.XmlSignature;
-import eu.europa.esig.dss.jaxb.diagnostic.XmlTimestampType;
-import eu.europa.esig.dss.jaxb.diagnostic.XmlTrustedServiceProviderType;
-import eu.europa.esig.dss.jaxb.diagnostic.XmlUsedCertificates;
+import eu.europa.esig.dss.jaxb.diagnostic.XmlTimestamp;
+import eu.europa.esig.dss.jaxb.diagnostic.XmlTrustedList;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.x509.TimestampType;
 
 /**
@@ -64,8 +62,8 @@ public class DiagnosticData {
 	 */
 	public List<String> getSignatureIdList() {
 		List<String> signatureIds = new ArrayList<String>();
-		List<XmlSignature> signatures = diagnosticData.getSignature();
-		if (CollectionUtils.isNotEmpty(signatures)) {
+		List<XmlSignature> signatures = diagnosticData.getSignatures();
+		if (Utils.isCollectionNotEmpty(signatures)) {
 			for (XmlSignature xmlSignature : signatures) {
 				signatureIds.add(xmlSignature.getId());
 			}
@@ -397,40 +395,6 @@ public class DiagnosticData {
 	}
 
 	/**
-	 * This method returns the associated TSPServiceName.
-	 *
-	 * @param dssCertificateId
-	 *            DSS certificate identifier to be checked
-	 * @return TSPServiceName
-	 */
-	public String getCertificateTSPServiceName(final String dssCertificateId) {
-		CertificateWrapper certificate = getUsedCertificateByIdNullSafe(dssCertificateId);
-		return certificate.getCertificateTSPServiceName();
-	}
-
-	public String getCertificateTSPServiceType(XmlCertificate xmlCertificate) {
-		List<XmlTrustedServiceProviderType> trustedServiceProviders = xmlCertificate.getTrustedServiceProvider();
-		if (CollectionUtils.isNotEmpty(trustedServiceProviders)) {
-			for (XmlTrustedServiceProviderType trustedServiceProvider : trustedServiceProviders) {
-				return trustedServiceProvider.getTSPServiceType(); // TODO correct ?? return first one
-			}
-		}
-		return StringUtils.EMPTY;
-	}
-
-	/**
-	 * This method indicates if the associated trusted list is well signed.
-	 *
-	 * @param dssCertificateId
-	 *            DSS certificate identifier to be checked
-	 * @return TSPServiceName
-	 */
-	public boolean isCertificateRelatedTSLWellSigned(final String dssCertificateId) {
-		CertificateWrapper certificate = getUsedCertificateByIdNullSafe(dssCertificateId);
-		return certificate.isCertificateRelatedTSLWellSigned();
-	}
-
-	/**
 	 * This method returns the revocation source for the given certificate.
 	 *
 	 * @param dssCertificateId
@@ -442,7 +406,7 @@ public class DiagnosticData {
 		if (certificate.isRevocationDataAvailable()) {
 			return certificate.getLatestRevocationData().getSource();
 		}
-		return StringUtils.EMPTY;
+		return Utils.EMPTY_STRING;
 	}
 
 	/**
@@ -472,7 +436,7 @@ public class DiagnosticData {
 		if (certificate.isRevocationDataAvailable()) {
 			return certificate.getLatestRevocationData().getReason();
 		}
-		return StringUtils.EMPTY;
+		return Utils.EMPTY_STRING;
 	}
 
 	public String getErrorMessage(final String signatureId) {
@@ -482,7 +446,7 @@ public class DiagnosticData {
 
 	private SignatureWrapper getFirstSignatureNullSafe() {
 		List<SignatureWrapper> signatures = getSignatures();
-		if (CollectionUtils.isNotEmpty(signatures)) {
+		if (Utils.isCollectionNotEmpty(signatures)) {
 			return signatures.get(0);
 		}
 		return new SignatureWrapper(new XmlSignature()); // TODO improve ?
@@ -490,9 +454,9 @@ public class DiagnosticData {
 
 	public SignatureWrapper getSignatureById(String id) {
 		List<SignatureWrapper> signatures = getSignatures();
-		if (CollectionUtils.isNotEmpty(signatures)) {
+		if (Utils.isCollectionNotEmpty(signatures)) {
 			for (SignatureWrapper xmlSignature : signatures) {
-				if (StringUtils.equals(id, xmlSignature.getId())) {
+				if (Utils.areStringsEqual(id, xmlSignature.getId())) {
 					return xmlSignature;
 				}
 			}
@@ -502,9 +466,9 @@ public class DiagnosticData {
 
 	private SignatureWrapper getSignatureByIdNullSafe(String id) {
 		List<SignatureWrapper> signatures = getSignatures();
-		if (CollectionUtils.isNotEmpty(signatures)) {
+		if (Utils.isCollectionNotEmpty(signatures)) {
 			for (SignatureWrapper xmlSignature : signatures) {
-				if (StringUtils.equals(id, xmlSignature.getId())) {
+				if (Utils.areStringsEqual(id, xmlSignature.getId())) {
 					return xmlSignature;
 				}
 			}
@@ -517,19 +481,19 @@ public class DiagnosticData {
 		for (SignatureWrapper signatureWrapper : signatures) {
 			List<TimestampWrapper> timestampList = signatureWrapper.getTimestampList();
 			for (TimestampWrapper timestampWrapper : timestampList) {
-				if (StringUtils.equals(id, timestampWrapper.getId())) {
+				if (Utils.areStringsEqual(id, timestampWrapper.getId())) {
 					return timestampWrapper;
 				}
 			}
 		}
-		return new TimestampWrapper(new XmlTimestampType());
+		return new TimestampWrapper(new XmlTimestamp());
 	}
 
 	public CertificateWrapper getUsedCertificateByIdNullSafe(String id) {
 		List<CertificateWrapper> certificates = getUsedCertificates();
-		if (CollectionUtils.isNotEmpty(certificates)) {
+		if (Utils.isCollectionNotEmpty(certificates)) {
 			for (CertificateWrapper certificate : certificates) {
-				if (StringUtils.equals(id, certificate.getId())) {
+				if (Utils.areStringsEqual(id, certificate.getId())) {
 					return certificate;
 				}
 			}
@@ -539,9 +503,9 @@ public class DiagnosticData {
 
 	public CertificateWrapper getUsedCertificateById(String id) {
 		List<CertificateWrapper> certificates = getUsedCertificates();
-		if (CollectionUtils.isNotEmpty(certificates)) {
+		if (Utils.isCollectionNotEmpty(certificates)) {
 			for (CertificateWrapper certificate : certificates) {
-				if (StringUtils.equals(id, certificate.getId())) {
+				if (Utils.areStringsEqual(id, certificate.getId())) {
 					return certificate;
 				}
 			}
@@ -552,8 +516,8 @@ public class DiagnosticData {
 	public List<SignatureWrapper> getSignatures() {
 		if (foundSignatures == null) {
 			foundSignatures = new ArrayList<SignatureWrapper>();
-			List<XmlSignature> xmlSignatures = diagnosticData.getSignature();
-			if (CollectionUtils.isNotEmpty(xmlSignatures)) {
+			List<XmlSignature> xmlSignatures = diagnosticData.getSignatures();
+			if (Utils.isCollectionNotEmpty(xmlSignatures)) {
 				for (XmlSignature xmlSignature : xmlSignatures) {
 					foundSignatures.add(new SignatureWrapper(xmlSignature));
 				}
@@ -565,9 +529,9 @@ public class DiagnosticData {
 	public List<CertificateWrapper> getUsedCertificates() {
 		if (usedCertificates == null) {
 			usedCertificates = new ArrayList<CertificateWrapper>();
-			XmlUsedCertificates xmlCertificates = diagnosticData.getUsedCertificates();
-			if ((xmlCertificates != null) && CollectionUtils.isNotEmpty(xmlCertificates.getCertificate())) {
-				for (XmlCertificate certificate : xmlCertificates.getCertificate()) {
+			List<XmlCertificate> xmlCertificates = diagnosticData.getUsedCertificates();
+			if (Utils.isCollectionNotEmpty(xmlCertificates)) {
+				for (XmlCertificate certificate : xmlCertificates) {
 					usedCertificates.add(new CertificateWrapper(certificate));
 				}
 			}
@@ -584,7 +548,7 @@ public class DiagnosticData {
 		Set<SignatureWrapper> signatures = new HashSet<SignatureWrapper>();
 		List<SignatureWrapper> mixedSignatures = getSignatures();
 		for (SignatureWrapper signatureWrapper : mixedSignatures) {
-			if (StringUtils.isEmpty(signatureWrapper.getParentId())) {
+			if (Utils.isStringEmpty(signatureWrapper.getParentId())) {
 				signatures.add(signatureWrapper);
 			}
 		}
@@ -600,7 +564,7 @@ public class DiagnosticData {
 		Set<SignatureWrapper> signatures = new HashSet<SignatureWrapper>();
 		List<SignatureWrapper> mixedSignatures = getSignatures();
 		for (SignatureWrapper signatureWrapper : mixedSignatures) {
-			if (StringUtils.isNotEmpty(signatureWrapper.getParentId())) {
+			if (Utils.isStringNotEmpty(signatureWrapper.getParentId())) {
 				signatures.add(signatureWrapper);
 			}
 		}
@@ -610,7 +574,7 @@ public class DiagnosticData {
 	public Set<RevocationWrapper> getAllRevocationData() {
 		Set<RevocationWrapper> revocationData = new HashSet<RevocationWrapper>();
 		List<CertificateWrapper> certificates = getUsedCertificates();
-		if (CollectionUtils.isNotEmpty(certificates)) {
+		if (Utils.isCollectionNotEmpty(certificates)) {
 			for (CertificateWrapper certificate : certificates) {
 				Set<RevocationWrapper> revocations = certificate.getRevocationData();
 				if (revocations != null) {
@@ -624,7 +588,7 @@ public class DiagnosticData {
 	public Set<TimestampWrapper> getAllTimestampsNotArchival() {
 		Set<TimestampWrapper> notArchivalTimestamps = new HashSet<TimestampWrapper>();
 		List<SignatureWrapper> signatures = getSignatures();
-		if (CollectionUtils.isNotEmpty(signatures)) {
+		if (Utils.isCollectionNotEmpty(signatures)) {
 			for (SignatureWrapper signatureWrapper : signatures) {
 				notArchivalTimestamps.addAll(signatureWrapper.getAllTimestampsNotArchival());
 			}
@@ -643,7 +607,7 @@ public class DiagnosticData {
 	public Set<TimestampWrapper> getAllArchiveTimestamps() {
 		Set<TimestampWrapper> archivalTimestamps = new HashSet<TimestampWrapper>();
 		List<SignatureWrapper> signatures = getSignatures();
-		if (CollectionUtils.isNotEmpty(signatures)) {
+		if (Utils.isCollectionNotEmpty(signatures)) {
 			for (SignatureWrapper signatureWrapper : signatures) {
 				archivalTimestamps.addAll(signatureWrapper.getTimestampListByType(TimestampType.ARCHIVE_TIMESTAMP));
 			}
@@ -654,7 +618,7 @@ public class DiagnosticData {
 	public Set<TimestampWrapper> getAllTimestamps() {
 		Set<TimestampWrapper> allTimestamps = new HashSet<TimestampWrapper>();
 		List<SignatureWrapper> signatures = getSignatures();
-		if (CollectionUtils.isNotEmpty(signatures)) {
+		if (Utils.isCollectionNotEmpty(signatures)) {
 			for (SignatureWrapper signatureWrapper : signatures) {
 				allTimestamps.addAll(signatureWrapper.getTimestampList());
 			}
@@ -664,6 +628,62 @@ public class DiagnosticData {
 
 	public eu.europa.esig.dss.jaxb.diagnostic.DiagnosticData getJaxbModel() {
 		return diagnosticData;
+	}
+
+	public boolean isContainerInfoPresent() {
+		return diagnosticData.getContainerInfo() != null;
+	}
+
+	public String getContainerType() {
+		XmlContainerInfo containerInfo = diagnosticData.getContainerInfo();
+		if (containerInfo != null) {
+			return containerInfo.getContainerType();
+		}
+		return null;
+	}
+
+	public String getZipComment() {
+		XmlContainerInfo containerInfo = diagnosticData.getContainerInfo();
+		if (containerInfo != null) {
+			return containerInfo.getZipComment();
+		}
+		return null;
+	}
+
+	public boolean isMimetypeFilePresent() {
+		XmlContainerInfo containerInfo = diagnosticData.getContainerInfo();
+		if (containerInfo != null) {
+			return containerInfo.isMimeTypeFilePresent();
+		}
+		return false;
+	}
+
+	public String getMimetypeFileContent() {
+		XmlContainerInfo containerInfo = diagnosticData.getContainerInfo();
+		if (containerInfo != null) {
+			return containerInfo.getMimeTypeContent();
+		}
+		return null;
+	}
+
+	public XmlContainerInfo getContainerInfo() {
+		return diagnosticData.getContainerInfo();
+	}
+
+	public List<XmlTrustedList> getTrustedLists() {
+		return diagnosticData.getTrustedLists();
+	}
+
+	public XmlTrustedList getListOfTrustedLists() {
+		return diagnosticData.getListOfTrustedLists();
+	}
+
+	public String getLOTLCountryCode() {
+		XmlTrustedList listOfTrustedLists = diagnosticData.getListOfTrustedLists();
+		if (listOfTrustedLists != null) {
+			return listOfTrustedLists.getCountryCode();
+		}
+		return null;
 	}
 
 }

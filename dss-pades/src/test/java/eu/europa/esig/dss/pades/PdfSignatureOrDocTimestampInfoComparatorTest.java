@@ -2,7 +2,6 @@ package eu.europa.esig.dss.pades;
 
 import static org.junit.Assert.assertEquals;
 
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -15,7 +14,6 @@ import org.junit.Test;
 import eu.europa.esig.dss.pdf.PdfDssDict;
 import eu.europa.esig.dss.pdf.PdfSignatureOrDocTimestampInfo;
 import eu.europa.esig.dss.pdf.PdfSignatureOrDocTimestampInfoComparator;
-import eu.europa.esig.dss.validation.SignatureCryptographicVerification;
 
 public class PdfSignatureOrDocTimestampInfoComparatorTest {
 
@@ -27,14 +25,14 @@ public class PdfSignatureOrDocTimestampInfoComparatorTest {
 	public void init() {
 
 		/*
-		[0, 91747, 124517, 723]
-		[0, 126092, 158862, 626]
-		[0, 160367, 193137, 642]
+		 * [0, 91747, 124517, 723]
+		 * [0, 126092, 158862, 626]
+		 * [0, 160367, 193137, 642]
 		 */
 
-		mock0 = new MockPdfSignature(new int[] {0, 91747, 124517, 723});
-		mock1 = new MockPdfSignature(new int[] {0, 126092, 158862, 626});
-		mock2 = new MockPdfSignature(new int[] {0, 160367, 193137, 642});
+		mock0 = new MockPdfSignature(new int[] { 0, 91747, 124517, 723 });
+		mock1 = new MockPdfSignature(new int[] { 0, 126092, 158862, 626 });
+		mock2 = new MockPdfSignature(new int[] { 0, 160367, 193137, 642 });
 	}
 
 	@Test
@@ -54,7 +52,7 @@ public class PdfSignatureOrDocTimestampInfoComparatorTest {
 	}
 
 	@Test
-	public void test2(){
+	public void test2() {
 		List<PdfSignatureOrDocTimestampInfo> listToSort = new ArrayList<PdfSignatureOrDocTimestampInfo>();
 
 		listToSort.add(mock2);
@@ -69,7 +67,7 @@ public class PdfSignatureOrDocTimestampInfoComparatorTest {
 	}
 
 	@Test
-	public void test3(){
+	public void test3() {
 		List<PdfSignatureOrDocTimestampInfo> listToSort = new ArrayList<PdfSignatureOrDocTimestampInfo>();
 
 		listToSort.add(mock1);
@@ -97,8 +95,7 @@ public class PdfSignatureOrDocTimestampInfoComparatorTest {
 		}
 
 		@Override
-		public SignatureCryptographicVerification checkIntegrity() {
-			return null;
+		public void checkIntegrity() {
 		}
 
 		@Override
@@ -123,11 +120,6 @@ public class PdfSignatureOrDocTimestampInfoComparatorTest {
 
 		@Override
 		public Date getSigningDate() {
-			return null;
-		}
-
-		@Override
-		public X509Certificate getSigningCertificate() {
 			return null;
 		}
 
@@ -163,6 +155,11 @@ public class PdfSignatureOrDocTimestampInfoComparatorTest {
 		@Override
 		public boolean isTimestamp() {
 			return false;
+		}
+
+		@Override
+		public byte[] getContent() {
+			return null;
 		}
 
 	}

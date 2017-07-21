@@ -1,20 +1,20 @@
 package eu.europa.esig.dss.validation.process.bbb.sav.checks;
 
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.jaxb.detailedreport.XmlConstraintsConclusion;
-import eu.europa.esig.dss.validation.MessageTag;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.policy.rules.Indication;
 import eu.europa.esig.dss.validation.policy.rules.SubIndication;
+import eu.europa.esig.dss.validation.process.AdditionalInfo;
 import eu.europa.esig.dss.validation.process.ChainItem;
+import eu.europa.esig.dss.validation.process.MessageTag;
 import eu.europa.esig.dss.validation.reports.wrapper.TokenProxy;
 import eu.europa.esig.jaxb.policy.Algo;
 import eu.europa.esig.jaxb.policy.AlgoExpirationDate;
@@ -27,14 +27,14 @@ public class CryptographicCheck<T extends XmlConstraintsConclusion> extends Chai
 
 	private static final String DATE_FORMAT = "yyyy-MM-dd";
 
-	private final Date currentTime;
+	private final Date validationDate;
 	private final TokenProxy token;
 	private final CryptographicConstraint constraint;
 	private MessageTag errorMessage = MessageTag.EMPTY;
 
 	public CryptographicCheck(T result, TokenProxy token, Date currentTime, CryptographicConstraint constraint) {
 		super(result, constraint);
-		this.currentTime = currentTime;
+		this.validationDate = currentTime;
 		this.token = token;
 		this.constraint = constraint;
 	}
@@ -44,7 +44,7 @@ public class CryptographicCheck<T extends XmlConstraintsConclusion> extends Chai
 
 		// Check encryption algorithm
 		ListAlgo acceptableEncryptionAlgo = constraint.getAcceptableEncryptionAlgo();
-		if ((acceptableEncryptionAlgo != null) && CollectionUtils.isNotEmpty(acceptableEncryptionAlgo.getAlgo())) {
+		if ((acceptableEncryptionAlgo != null) && Utils.isCollectionNotEmpty(acceptableEncryptionAlgo.getAlgo())) {
 			if (!isIn(token.getEncryptionAlgoUsedToSignThisToken(), acceptableEncryptionAlgo.getAlgo())) {
 				errorMessage = MessageTag.ASCCM_ANS_1;
 				return false;
@@ -53,7 +53,7 @@ public class CryptographicCheck<T extends XmlConstraintsConclusion> extends Chai
 
 		// Check digest algorithm
 		ListAlgo acceptableDigestAlgo = constraint.getAcceptableDigestAlgo();
-		if ((acceptableDigestAlgo != null) && CollectionUtils.isNotEmpty(acceptableDigestAlgo.getAlgo())) {
+		if ((acceptableDigestAlgo != null) && Utils.isCollectionNotEmpty(acceptableDigestAlgo.getAlgo())) {
 			if (!isIn(token.getDigestAlgoUsedToSignThisToken(), acceptableDigestAlgo.getAlgo())) {
 				errorMessage = MessageTag.ASCCM_ANS_2;
 				return false;
@@ -62,10 +62,10 @@ public class CryptographicCheck<T extends XmlConstraintsConclusion> extends Chai
 
 		// Check public key size
 		ListAlgo miniPublicKeySize = constraint.getMiniPublicKeySize();
-		if ((miniPublicKeySize != null) && CollectionUtils.isNotEmpty(miniPublicKeySize.getAlgo())) {
+		if ((miniPublicKeySize != null) && Utils.isCollectionNotEmpty(miniPublicKeySize.getAlgo())) {
 			String keySize = token.getKeyLengthUsedToSignThisToken();
 			int tokenKeySize = 0;
-			if (NumberUtils.isDigits(keySize)) {
+			if (Utils.isStringDigits(keySize)) {
 				tokenKeySize = Integer.parseInt(keySize);
 			}
 			int expectedMinimumKeySize = getExpectedKeySize(token.getEncryptionAlgoUsedToSignThisToken(), miniPublicKeySize.getAlgo());
@@ -77,7 +77,7 @@ public class CryptographicCheck<T extends XmlConstraintsConclusion> extends Chai
 
 		// Check algorithm expiration date
 		AlgoExpirationDate algoExpirationDate = constraint.getAlgoExpirationDate();
-		if ((algoExpirationDate != null) && CollectionUtils.isNotEmpty(algoExpirationDate.getAlgo())) {
+		if ((algoExpirationDate != null) && Utils.isCollectionNotEmpty(algoExpirationDate.getAlgo())) {
 
 			// Digest algorithm
 			Date expirationDate = getExpirationDate(token.getDigestAlgoUsedToSignThisToken(), algoExpirationDate.getAlgo(), algoExpirationDate.getFormat());
@@ -85,7 +85,7 @@ public class CryptographicCheck<T extends XmlConstraintsConclusion> extends Chai
 				errorMessage = MessageTag.ASCCM_ANS_4;
 				return false;
 			}
-			if (expirationDate.before(currentTime)) {
+			if (expirationDate.before(validationDate)) {
 				errorMessage = MessageTag.ASCCM_ANS_5;
 				return false;
 			}
@@ -97,7 +97,7 @@ public class CryptographicCheck<T extends XmlConstraintsConclusion> extends Chai
 				errorMessage = MessageTag.ASCCM_ANS_4;
 				return false;
 			}
-			if (expirationDate.before(currentTime)) {
+			if (expirationDate.before(validationDate)) {
 				errorMessage = MessageTag.ASCCM_ANS_5;
 				return false;
 			}
@@ -107,10 +107,10 @@ public class CryptographicCheck<T extends XmlConstraintsConclusion> extends Chai
 	}
 
 	private Date getExpirationDate(String algoToFind, List<Algo> algos, String format) {
-		SimpleDateFormat dateFormat = new SimpleDateFormat(StringUtils.isEmpty(format) ? DATE_FORMAT : format);
+		SimpleDateFormat dateFormat = new SimpleDateFormat(Utils.isStringEmpty(format) ? DATE_FORMAT : format);
 		Date result = null;
 		for (Algo algo : algos) {
-			if (StringUtils.equals(algoToFind, algo.getValue()) && StringUtils.isNotEmpty(algo.getDate())) {
+			if (Utils.areStringsEqual(algoToFind, algo.getValue()) && Utils.isStringNotEmpty(algo.getDate())) {
 				try {
 					result = dateFormat.parse(algo.getDate());
 				} catch (Exception e) {
@@ -124,9 +124,9 @@ public class CryptographicCheck<T extends XmlConstraintsConclusion> extends Chai
 	private int getExpectedKeySize(String encryptionAlgo, List<Algo> algos) {
 		int expectedSize = 0;
 		for (Algo algo : algos) {
-			if (StringUtils.equals(algo.getValue(), encryptionAlgo)) {
+			if (Utils.areStringsEqual(algo.getValue(), encryptionAlgo)) {
 				String size = algo.getSize();
-				if (NumberUtils.isDigits(size)) {
+				if (Utils.isStringDigits(size)) {
 					expectedSize = Integer.parseInt(size);
 				}
 			}
@@ -136,7 +136,7 @@ public class CryptographicCheck<T extends XmlConstraintsConclusion> extends Chai
 
 	private boolean isIn(String algoToFind, List<Algo> algos) {
 		for (Algo algo : algos) {
-			if (StringUtils.equals(algo.getValue(), algoToFind)) {
+			if (Utils.areStringsEqual(algo.getValue(), algoToFind)) {
 				return true;
 			}
 		}
@@ -161,6 +161,13 @@ public class CryptographicCheck<T extends XmlConstraintsConclusion> extends Chai
 	@Override
 	protected SubIndication getFailedSubIndicationForConclusion() {
 		return SubIndication.CRYPTO_CONSTRAINTS_FAILURE_NO_POE;
+	}
+
+	@Override
+	protected String getAdditionalInfo() {
+		SimpleDateFormat sdf = new SimpleDateFormat(AdditionalInfo.DATE_FORMAT);
+		Object[] params = new Object[] { sdf.format(validationDate) };
+		return MessageFormat.format(AdditionalInfo.VALIDATION_TIME, params);
 	}
 
 }

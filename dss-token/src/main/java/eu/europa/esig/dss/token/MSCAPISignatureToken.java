@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,11 +68,14 @@ public class MSCAPISignatureToken extends AbstractSignatureTokenConnection {
 	}
 
 	/**
-	 * This method is a workaround for scenarios when multiple entries have the same alias. Since the alias is the only "official"
+	 * This method is a workaround for scenarios when multiple entries have the same alias. Since the alias is the only
+	 * "official"
 	 * way of retrieving an entry, only the first entry with a given alias is accessible.
-	 * See: https://joinup.ec.europa.eu/software/sd-dss/issue/problem-possible-keystore-aliases-collision-when-using-mscapi
+	 * See:
+	 * https://joinup.ec.europa.eu/software/sd-dss/issue/problem-possible-keystore-aliases-collision-when-using-mscapi
 	 *
-	 * @param keyStore the key store to fix
+	 * @param keyStore
+	 *            the key store to fix
 	 */
 	private static void _fixAliases(KeyStore keyStore) {
 		Field field;
@@ -83,28 +87,38 @@ public class MSCAPISignatureToken extends AbstractSignatureTokenConnection {
 			keyStoreVeritable = (KeyStoreSpi) field.get(keyStore);
 
 			if ("sun.security.mscapi.KeyStore$MY".equals(keyStoreVeritable.getClass().getName())) {
-				Collection<?> entries;
-				String alias, hashCode;
-				X509Certificate[] certificates;
 
 				field = keyStoreVeritable.getClass().getEnclosingClass().getDeclaredField("entries");
 				field.setAccessible(true);
-				entries = (Collection<?>) field.get(keyStoreVeritable);
+				Object entriesObject = field.get(keyStoreVeritable);
+				if (entriesObject instanceof Map) {
+					// Old issue fixed in JDK 7u121 and JDK8
+					// More info :
+					// https://bugs.openjdk.java.net/browse/JDK-6483657
+					// http://hg.openjdk.java.net/jdk8u/jdk8u/jdk/rev/0901dc70ae2b
+					return;
+				} else if (entriesObject instanceof Collection<?>) {
+					Collection<?> entries = (Collection<?>) entriesObject;
+					String alias, hashCode;
+					X509Certificate[] certificates;
 
-				for (Object entry : entries) {
-					field = entry.getClass().getDeclaredField("certChain");
-					field.setAccessible(true);
-					certificates = (X509Certificate[]) field.get(entry);
+					for (Object entry : entries) {
+						field = entry.getClass().getDeclaredField("certChain");
+						field.setAccessible(true);
+						certificates = (X509Certificate[]) field.get(entry);
 
-					hashCode = Integer.toString(certificates[0].hashCode());
+						hashCode = Integer.toString(certificates[0].hashCode());
 
-					field = entry.getClass().getDeclaredField("alias");
-					field.setAccessible(true);
-					alias = (String) field.get(entry);
+						field = entry.getClass().getDeclaredField("alias");
+						field.setAccessible(true);
+						alias = (String) field.get(entry);
 
-					if (!alias.equals(hashCode)) {
-						field.set(entry, alias.concat(" - ").concat(hashCode));
+						if (!alias.equals(hashCode)) {
+							field.set(entry, alias.concat(" - ").concat(hashCode));
+						}
 					}
+				} else {
+					LOG.warn("Unsupported entries type : " + entriesObject.getClass().getName());
 				}
 			}
 		} catch (Exception exception) {
@@ -129,7 +143,7 @@ public class MSCAPISignatureToken extends AbstractSignatureTokenConnection {
 				String alias = aliases.nextElement();
 				if (keyStore.isKeyEntry(alias)) {
 					PrivateKeyEntry entry = (PrivateKeyEntry) keyStore.getEntry(alias, protectionParameter);
-					list.add(new KSPrivateKeyEntry(entry));
+					list.add(new KSPrivateKeyEntry(alias, entry));
 				}
 			}
 

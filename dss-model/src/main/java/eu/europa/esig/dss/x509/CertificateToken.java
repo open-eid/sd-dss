@@ -37,7 +37,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.security.auth.x500.X500Principal;
-import javax.xml.bind.DatatypeConverter;
 
 import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.DigestAlgorithm;
@@ -90,11 +89,6 @@ public class CertificateToken extends Token {
 	private Boolean selfSigned;
 
 	/**
-	 * Extra information collected during the validation process.
-	 */
-	protected CertificateTokenValidationExtraInfo extraInfo;
-
-	/**
 	 * In the case of the XML signature this is the Id associated with the certificate if any.
 	 */
 	private String xmlId;
@@ -133,7 +127,7 @@ public class CertificateToken extends Token {
 		this.digestAlgorithm = signatureAlgorithm.getDigestAlgorithm();
 		this.encryptionAlgorithm = signatureAlgorithm.getEncryptionAlgorithm();
 
-		super.extraInfo = this.extraInfo = new CertificateTokenValidationExtraInfo();
+		this.extraInfo = new TokenValidationExtraInfo();
 	}
 
 	/**
@@ -396,16 +390,6 @@ public class CertificateToken extends Token {
 		return signatureValid;
 	}
 
-	/**
-	 * Returns the object managing the validation extra info.
-	 *
-	 * @return
-	 */
-	@Override
-	public CertificateTokenValidationExtraInfo extraInfo() {
-		return extraInfo;
-	}
-
 	public DigestAlgorithm getDigestAlgorithm() {
 		return digestAlgorithm;
 	}
@@ -571,38 +555,6 @@ public class CertificateToken extends Token {
 
 	public Principal getSubjectDN() {
 		return x509Certificate.getSubjectDN();
-	}
-
-	private String extractCNName(X500Principal principal) {
-		String name = principal.getName();
-		int index = name.indexOf("CN=") + 3;
-		if (index == -1) {
-			return name;
-		}
-		int stop = name.indexOf(",", index);
-		if (stop == -1) {
-			return name.substring(index);
-		} else {
-			return name.substring(index, stop);
-		}
-	}
-
-	public String getSubjectShortName() {
-		return extractCNName(getSubjectX500Principal());
-	}
-
-	public String getBase64Encoded() {
-		return DatatypeConverter.printBase64Binary(getEncoded());
-	}
-
-	public String getReadableCertificate() {
-		String readableCertificate = x509Certificate.getSubjectDN().getName();
-		final int dnStartIndex = readableCertificate.indexOf("CN=") + 3;
-		if ((dnStartIndex > 0) && (readableCertificate.indexOf(",", dnStartIndex) > 0)) {
-			readableCertificate = readableCertificate.substring(dnStartIndex, readableCertificate.indexOf(",", dnStartIndex)) + " (SN:" + getSerialNumber()
-					+ ")";
-		}
-		return readableCertificate;
 	}
 
 }

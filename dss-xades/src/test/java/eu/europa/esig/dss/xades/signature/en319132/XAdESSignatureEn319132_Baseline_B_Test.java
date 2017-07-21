@@ -5,7 +5,6 @@ import java.util.Date;
 
 import org.junit.Before;
 
-import eu.europa.esig.dss.AbstractSignatureParameters;
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.FileDocument;
 import eu.europa.esig.dss.MimeType;
@@ -13,7 +12,7 @@ import eu.europa.esig.dss.SignatureAlgorithm;
 import eu.europa.esig.dss.SignatureLevel;
 import eu.europa.esig.dss.SignaturePackaging;
 import eu.europa.esig.dss.SignerLocation;
-import eu.europa.esig.dss.signature.AbstractTestSignature;
+import eu.europa.esig.dss.signature.AbstractTestDocumentSignatureService;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.test.gen.CertificateService;
 import eu.europa.esig.dss.test.mock.MockPrivateKeyEntry;
@@ -22,7 +21,7 @@ import eu.europa.esig.dss.validation.CommonCertificateVerifier;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 import eu.europa.esig.dss.xades.signature.XAdESService;
 
-public class XAdESSignatureEn319132_Baseline_B_Test extends AbstractTestSignature {
+public class XAdESSignatureEn319132_Baseline_B_Test extends AbstractTestDocumentSignatureService<XAdESSignatureParameters> {
 
 	private DocumentSignatureService<XAdESSignatureParameters> service;
 	private XAdESSignatureParameters signatureParameters;
@@ -72,7 +71,7 @@ public class XAdESSignatureEn319132_Baseline_B_Test extends AbstractTestSignatur
 	}
 
 	@Override
-	protected AbstractSignatureParameters getSignatureParameters() {
+	protected XAdESSignatureParameters getSignatureParameters() {
 		return signatureParameters;
 	}
 

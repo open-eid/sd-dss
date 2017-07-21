@@ -23,7 +23,6 @@ package eu.europa.esig.dss.xades.validation;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -31,6 +30,8 @@ import org.w3c.dom.NodeList;
 
 import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.DSSUtils;
+import eu.europa.esig.dss.DomUtils;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.x509.CertificatePool;
 import eu.europa.esig.dss.x509.CertificateToken;
 import eu.europa.esig.dss.x509.SignatureCertificateSource;
@@ -100,12 +101,12 @@ public class XAdESCertificateSource extends SignatureCertificateSource {
 	private List<CertificateToken> getCertificates(final String xPathQuery) {
 
 		final List<CertificateToken> list = new ArrayList<CertificateToken>();
-		final NodeList nodeList = DSSXMLUtils.getNodeList(signatureElement, xPathQuery);
+		final NodeList nodeList = DomUtils.getNodeList(signatureElement, xPathQuery);
 		for (int ii = 0; ii < nodeList.getLength(); ii++) {
 
 			final Element certificateElement = (Element) nodeList.item(ii);
 
-			final byte[] derEncoded = Base64.decodeBase64(certificateElement.getTextContent());
+			final byte[] derEncoded = Utils.fromBase64(certificateElement.getTextContent());
 			try {
 				final CertificateToken cert = DSSUtils.loadCertificate(derEncoded);
 				final CertificateToken certToken = addCertificate(cert);

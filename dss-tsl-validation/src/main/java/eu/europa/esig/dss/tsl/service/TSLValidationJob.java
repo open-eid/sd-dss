@@ -31,24 +31,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import javax.annotation.PostConstruct;
-
-import eu.europa.esig.dss.DSSException;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.DSSException;
-import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.client.http.DataLoader;
 import eu.europa.esig.dss.tsl.TSLLoaderResult;
 import eu.europa.esig.dss.tsl.TSLParserResult;
 import eu.europa.esig.dss.tsl.TSLPointer;
-import eu.europa.esig.dss.tsl.TSLService;
-import eu.europa.esig.dss.tsl.TSLServiceProvider;
 import eu.europa.esig.dss.tsl.TSLValidationModel;
 import eu.europa.esig.dss.tsl.TSLValidationResult;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.x509.CertificateToken;
 import eu.europa.esig.dss.x509.KeyStoreCertificateSource;
 
@@ -118,12 +111,11 @@ public class TSLValidationJob {
 		this.filterTerritories = filterTerritories;
 	}
 
-	@PostConstruct
 	public void initRepository() {
 		logger.info("Initialization of the TSL repository ...");
 		int loadedTSL = 0;
 		List<File> cachedFiles = repository.getStoredFiles();
-		if (CollectionUtils.isNotEmpty(cachedFiles)) {
+		if (Utils.isCollectionNotEmpty(cachedFiles)) {
 			List<Future<TSLParserResult>> futureParseResults = new ArrayList<Future<TSLParserResult>>();
 			for (File file : cachedFiles) {
 				try {
@@ -137,7 +129,6 @@ public class TSLValidationJob {
 			for (Future<TSLParserResult> futureParseResult : futureParseResults) {
 				try {
 					TSLParserResult tslParserResult = futureParseResult.get();
-					loadMissingCertificates(tslParserResult);
 					repository.addParsedResultFromCacheToMap(tslParserResult);
 					loadedTSL++;
 				} catch (Exception e) {
@@ -163,7 +154,7 @@ public class TSLValidationJob {
 					String countryCode = entry.getKey();
 					if (!lotlCode.equals(countryCode)) {
 						TSLValidationModel countryModel = entry.getValue();
-						TSLValidator tslValidator = new TSLValidator(new File(countryModel.getFilepath()), countryCode, dssKeyStore,
+						TSLValidator tslValidator = new TSLValidator(new File(countryModel.getFilepath()), countryCode,
 								getPotentialSigners(pointers, countryCode));
 						futureValidationResults.add(executorService.submit(tslValidator));
 					}
@@ -246,7 +237,7 @@ public class TSLValidationJob {
 	private void analyzeCountryPointers(List<TSLPointer> pointers, boolean newLotl) {
 		List<Future<TSLLoaderResult>> futureLoaderResults = new ArrayList<Future<TSLLoaderResult>>();
 		for (TSLPointer tslPointer : pointers) {
-			if (CollectionUtils.isEmpty(filterTerritories) || filterTerritories.contains(tslPointer.getTerritory())) {
+			if (Utils.isCollectionEmpty(filterTerritories) || filterTerritories.contains(tslPointer.getTerritory())) {
 				TSLLoader tslLoader = new TSLLoader(dataLoader, tslPointer.getTerritory(), tslPointer.getUrl());
 				futureLoaderResults.add(executorService.submit(tslLoader));
 			}
@@ -261,23 +252,25 @@ public class TSLValidationJob {
 					logger.error("Failed to load TSl for country '" + loaderResult.getCountryCode() + "' from '" + loaderResult.getUrl() + "'");
 					continue;
 				}
-				TSLValidationModel countryModel = null;
-				if (!repository.isLastVersion(loaderResult)) {
-					countryModel = repository.storeInCache(loaderResult);
-				} else {
-					countryModel = repository.getByCountry(loaderResult.getCountryCode());
-				}
+				if (loaderResult != null && loaderResult.getContent() != null) {
+					TSLValidationModel countryModel = null;
+					if (!repository.isLastVersion(loaderResult)) {
+						countryModel = repository.storeInCache(loaderResult);
+					} else {
+						countryModel = repository.getByCountry(loaderResult.getCountryCode());
+					}
 
-				TSLParserResult countryParseResult = countryModel.getParseResult();
-				if (countryParseResult == null) {
-					FileInputStream fis = new FileInputStream(countryModel.getFilepath());
-					futureParseResults.add(executorService.submit(new TSLParser(fis)));
-				}
+					TSLParserResult countryParseResult = countryModel.getParseResult();
+					if (countryParseResult == null) {
+						FileInputStream fis = new FileInputStream(countryModel.getFilepath());
+						futureParseResults.add(executorService.submit(new TSLParser(fis)));
+					}
 
-				if (checkTSLSignatures && (countryModel.getValidationResult() == null || newLotl)) {
-					TSLValidator tslValidator = new TSLValidator(new File(countryModel.getFilepath()), loaderResult.getCountryCode(), dssKeyStore,
-							getPotentialSigners(pointers, loaderResult.getCountryCode()));
-					futureValidationResults.add(executorService.submit(tslValidator));
+					if (checkTSLSignatures && (countryModel.getValidationResult() == null || newLotl)) {
+						TSLValidator tslValidator = new TSLValidator(new File(countryModel.getFilepath()), loaderResult.getCountryCode(),
+								getPotentialSigners(pointers, loaderResult.getCountryCode()));
+						futureValidationResults.add(executorService.submit(tslValidator));
+					}
 				}
 			} catch (Exception e) {
 				logger.error("Unable to load/parse TSL : " + e.getMessage(), e);
@@ -287,7 +280,6 @@ public class TSLValidationJob {
 		for (Future<TSLParserResult> futureParseResult : futureParseResults) {
 			try {
 				TSLParserResult tslParserResult = futureParseResult.get();
-				loadMissingCertificates(tslParserResult);
 				repository.updateParseResult(tslParserResult);
 			} catch (Exception e) {
 				logger.error("Unable to get parsing result : " + e.getMessage(), e);
@@ -308,42 +300,10 @@ public class TSLValidationJob {
 		}
 	}
 
-	/**
-	 * The spanish TSL contains some urls with certificates to download
-	 */
-	private void loadMissingCertificates(TSLParserResult tslParserResult) {
-		if ("ES".equals(tslParserResult.getTerritory())) {
-			List<TSLServiceProvider> serviceProviders = tslParserResult.getServiceProviders();
-			if (CollectionUtils.isNotEmpty(serviceProviders)) {
-				for (TSLServiceProvider tslServiceProvider : serviceProviders) {
-					List<TSLService> services = tslServiceProvider.getServices();
-					if (CollectionUtils.isNotEmpty(services)) {
-						for (TSLService tslService : services) {
-							List<String> certificateUrls = tslService.getCertificateUrls();
-							if (CollectionUtils.isNotEmpty(certificateUrls)) {
-								for (String url : certificateUrls) {
-									try {
-										byte[] byteArray = dataLoader.get(url);
-										CertificateToken certificate = DSSUtils.loadCertificate(byteArray);
-										if (certificate != null) {
-											tslService.getCertificates().add(certificate);
-										}
-									} catch (Exception e) {
-										logger.warn("Cannot load certificate from url '" + url + "' : " + e.getMessage());
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
 	private List<CertificateToken> getPotentialSigners(List<TSLPointer> pointers, String countryCode) {
-		if (CollectionUtils.isNotEmpty(pointers)) {
+		if (Utils.isCollectionNotEmpty(pointers)) {
 			for (TSLPointer tslPointer : pointers) {
-				if (StringUtils.equals(countryCode, tslPointer.getTerritory())) {
+				if (Utils.areStringsEqual(countryCode, tslPointer.getTerritory())) {
 					return tslPointer.getPotentialSigners();
 				}
 			}
@@ -352,7 +312,12 @@ public class TSLValidationJob {
 	}
 
 	private TSLValidationResult validateLOTL(TSLValidationModel validationModel) throws Exception {
-		TSLValidator tslValidator = new TSLValidator(new File(validationModel.getFilepath()), lotlCode, dssKeyStore);
+		validationModel.setLotl(true);
+		List<CertificateToken> certsFromKeystore = Collections.emptyList();
+		if (dssKeyStore != null) {
+			certsFromKeystore = dssKeyStore.getCertificatesFromKeyStore();
+		}
+		TSLValidator tslValidator = new TSLValidator(new File(validationModel.getFilepath()), lotlCode, certsFromKeystore);
 		Future<TSLValidationResult> future = executorService.submit(tslValidator);
 		return future.get();
 	}

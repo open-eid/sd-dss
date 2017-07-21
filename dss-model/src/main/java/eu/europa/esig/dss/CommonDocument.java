@@ -39,13 +39,13 @@ public abstract class CommonDocument implements DSSDocument {
 	protected String name;
 
 	protected String absolutePath;
-	
+
 	@Override
 	public void writeTo(OutputStream stream) throws IOException {
 		byte[] buffer = new byte[1024];
 		int count = -1;
 		InputStream inStream = openStream();
-		while((count = inStream.read(buffer)) > 0) {
+		while ((count = inStream.read(buffer)) > 0) {
 			stream.write(buffer, 0, count);
 		}
 		inStream.close();
@@ -72,16 +72,6 @@ public abstract class CommonDocument implements DSSDocument {
 	}
 
 	@Override
-	public DSSDocument getNextDocument() {
-		return nextDocument;
-	}
-
-	@Override
-	public void setNextDocument(final DSSDocument nextDocument) {
-		this.nextDocument = nextDocument;
-	}
-
-	@Override
 	public String getAbsolutePath() {
 		return absolutePath;
 	}
@@ -94,7 +84,8 @@ public abstract class CommonDocument implements DSSDocument {
 	public String toString() {
 
 		final StringWriter stringWriter = new StringWriter();
-		stringWriter.append("Name: " + getName()).append(" / ").append(mimeType == null ? "" : mimeType.getMimeTypeString()).append(" / ").append(getAbsolutePath());
+		stringWriter.append("Name: " + getName()).append(" / ").append(mimeType == null ? "" : mimeType.getMimeTypeString()).append(" / ")
+				.append(getAbsolutePath());
 		final String string = stringWriter.toString();
 		return string;
 	}

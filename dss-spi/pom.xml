@@ -1,82 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>4.7.RC2.d4j.1</version>
+		<version>5.0.d4j.1</version>
 	</parent>
 
 	<artifactId>dss-spi</artifactId>
 	<name>DSS Service Provider Interface</name>
 	<description>DSS Service Provider Interface contains the contract interface shared between the applet and the server-side of DSS.</description>
 
-	<url>https://github.com/open-eid/sd-dss</url>
-	<licenses>
-		<license>
-			<name>GNU Lesser General Public License, Version 2.1</name>
-			<url>http://www.gnu.org/licenses/lgpl-2.1.html</url>
-		</license>
-	</licenses>
-	<developers>
-		<developer>
-			<id>naramski</id>
-			<name>David Naramski</name>
-			<roles>
-				<role>developer</role>
-			</roles>
-		</developer>
-		<developer>
-			<id>vandenbroucke</id>
-			<name>Pierrick Vandenbroucke</name>
-			<roles>
-				<role>developer</role>
-			</roles>
-		</developer>
-		<developer>
-			<id>pirard</id>
-			<name>Nicolas Pirard</name>
-			<roles>
-				<role>developer</role>
-			</roles>
-		</developer>
-		<developer>
-			<id>abinet</id>
-			<name>Axel Abinet</name>
-			<roles>
-				<role>developer</role>
-			</roles>
-		</developer>
-		<developer>
-			<name>Rainer Villido</name>
-			<organization>Nortal</organization>
-			<organizationUrl>http://www.nortal.com</organizationUrl>
-		</developer>
-		<developer>
-			<name>Aho Augasmägi</name>
-			<organization>Codeborne</organization>
-			<organizationUrl>http://www.codeborne.com</organizationUrl>
-		</developer>
-		<developer>
-			<name>Allan Juhanson</name>
-			<organization>Nortal</organization>
-			<organizationUrl>http://www.nortal.com</organizationUrl>
-		</developer>
-	</developers>
-	<scm>
-		<connection>scm:git:git@github.com:open-eid/sd-dss.git</connection>
-		<developerConnection>scm:git:git@github.com:open-eid/sd-dss.git</developerConnection>
-		<url>https://github.com/open-eid/sd-dss.git</url>
-	</scm>
-
 	<dependencies>
 		<dependency>
-			<groupId>org.digidoc4j.dss</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>dss-model</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>dss-utils</artifactId>
 		</dependency>
 
 		<dependency>
@@ -86,33 +30,17 @@
 				
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcprov-jdk15on</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcpkix-jdk15on</artifactId>
-		</dependency>
-		
-		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-codec</groupId>
-			<artifactId>commons-codec</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-collections</groupId>
-			<artifactId>commons-collections</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
 		</dependency>
 		
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>dss-utils-apache-commons</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

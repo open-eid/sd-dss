@@ -1,113 +1,26 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-	<groupId>org.digidoc4j.dss</groupId>
+		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>4.7.RC2.d4j.1</version>
+		<version>5.0.d4j.1</version>
 	</parent>
 	<artifactId>validation-policy</artifactId>
 
-    <name>Validation Policy</name>
-    <description>Signed document validation policy module</description>
-    <url>https://github.com/open-eid/sd-dss</url>
-    <licenses>
-        <license>
-            <name>GNU Lesser General Public License, Version 2.1</name>
-            <url>http://www.gnu.org/licenses/lgpl-2.1.html</url>
-        </license>
-    </licenses>
-    <developers>
-        <developer>
-            <id>naramski</id>
-            <name>David Naramski</name>
-            <roles>
-                <role>developer</role>
-            </roles>
-        </developer>
-        <developer>
-            <id>vandenbroucke</id>
-            <name>Pierrick Vandenbroucke</name>
-            <roles>
-                <role>developer</role>
-            </roles>
-        </developer>
-        <developer>
-            <id>pirard</id>
-            <name>Nicolas Pirard</name>
-            <roles>
-                <role>developer</role>
-            </roles>
-        </developer>
-        <developer>
-            <id>abinet</id>
-            <name>Axel Abinet</name>
-            <roles>
-                <role>developer</role>
-            </roles>
-        </developer>
-    </developers>
-    <scm>
-        <connection>scm:git:git@github.com:open-eid/sd-dss.git</connection>
-        <developerConnection>scm:git:git@github.com:open-eid/sd-dss.git</developerConnection>
-        <url>https://github.com/open-eid/sd-dss.git</url>
-    </scm>
 	<dependencies>
 		<dependency>
-			<groupId>org.digidoc4j.dss</groupId>
-			<artifactId>dss-model</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.digidoc4j.dss</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>dss-reports</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.digidoc4j.dss</groupId>
-  			<artifactId>dss-policy-jaxb</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.digidoc4j.dss</groupId>
-  			<artifactId>dss-diagnostic-jaxb</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.digidoc4j.dss</groupId>
-  			<artifactId>dss-detailed-report-jaxb</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.digidoc4j.dss</groupId>
-  			<artifactId>dss-simple-report-jaxb</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.digidoc4j.dss</groupId>
-  			<artifactId>dss-test</artifactId>
-  			<scope>test</scope>
-		</dependency>
-
 		<dependency>
 		  <groupId>org.slf4j</groupId>
 		  <artifactId>slf4j-api</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-collections</groupId>
-			<artifactId>commons-collections</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-		</dependency>
 
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<scope>test</scope>
+			<groupId>${project.groupId}</groupId>
+  			<artifactId>dss-test</artifactId>
+  			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

@@ -21,12 +21,12 @@
 package eu.europa.esig.dss.xades.signature;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 
 import eu.europa.esig.dss.DSSDocument;
@@ -37,10 +37,11 @@ import eu.europa.esig.dss.MimeType;
 import eu.europa.esig.dss.SignatureAlgorithm;
 import eu.europa.esig.dss.SignatureLevel;
 import eu.europa.esig.dss.SignaturePackaging;
-import eu.europa.esig.dss.signature.AbstractTestSignature;
+import eu.europa.esig.dss.signature.AbstractTestDocumentSignatureService;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.test.gen.CertificateService;
 import eu.europa.esig.dss.test.mock.MockPrivateKeyEntry;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
@@ -48,7 +49,7 @@ import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.dss.xades.DSSReference;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 
-public class XAdESLevelBEnvelopingWithReferencesWithoutTransformationsTest extends AbstractTestSignature {
+public class XAdESLevelBEnvelopingWithReferencesWithoutTransformationsTest extends AbstractTestDocumentSignatureService {
 
 	private DocumentSignatureService<XAdESSignatureParameters> service;
 	private XAdESSignatureParameters signatureParameters;
@@ -88,7 +89,7 @@ public class XAdESLevelBEnvelopingWithReferencesWithoutTransformationsTest exten
 
 	private DSSDocument createDocument(String filePath) throws IOException {
 		File file = new File(filePath);
-		byte[] content = IOUtils.toByteArray(file.toURI());
+		byte[] content = Utils.toByteArray(new FileInputStream(file));
 		return new InMemoryDocument(content, filePath);
 	}
 

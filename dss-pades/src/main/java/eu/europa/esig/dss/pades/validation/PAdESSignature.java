@@ -27,9 +27,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +43,7 @@ import eu.europa.esig.dss.pdf.PdfDocTimestampInfo;
 import eu.europa.esig.dss.pdf.PdfDssDict;
 import eu.europa.esig.dss.pdf.PdfSignatureInfo;
 import eu.europa.esig.dss.pdf.PdfSignatureOrDocTimestampInfo;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
 import eu.europa.esig.dss.validation.CRLRef;
 import eu.europa.esig.dss.validation.CandidatesForSigningCertificate;
@@ -53,7 +51,6 @@ import eu.europa.esig.dss.validation.CertificateRef;
 import eu.europa.esig.dss.validation.CertifiedRole;
 import eu.europa.esig.dss.validation.CommitmentType;
 import eu.europa.esig.dss.validation.OCSPRef;
-import eu.europa.esig.dss.validation.SignatureCryptographicVerification;
 import eu.europa.esig.dss.validation.SignatureProductionPlace;
 import eu.europa.esig.dss.validation.TimestampReference;
 import eu.europa.esig.dss.validation.TimestampReferenceCategory;
@@ -151,7 +148,7 @@ public class PAdESSignature extends CAdESSignature {
 	@Override
 	public SignatureProductionPlace getSignatureProductionPlace() {
 		String location = pdfSignatureInfo.getLocation();
-		if (StringUtils.isBlank(location)) {
+		if (Utils.isStringBlank(location)) {
 			return super.getSignatureProductionPlace();
 		} else {
 			SignatureProductionPlace signatureProductionPlace = new SignatureProductionPlace();
@@ -240,7 +237,7 @@ public class PAdESSignature extends CAdESSignature {
 		usedCertificatesDigestAlgorithms.add(DigestAlgorithm.SHA1);
 
 		for (TimestampToken token : super.getSignatureTimestamps()) {
-			timestampedTimestamps.add(token.getDSSId().asXmlId());
+			timestampedTimestamps.add(token.getDSSIdAsString());
 		}
 
 		for (final PdfSignatureOrDocTimestampInfo outerSignature : outerSignatures) {
@@ -266,7 +263,7 @@ public class PAdESSignature extends CAdESSignature {
 					timestampToken.setTimestampedReferences(references);
 					archiveTimestampTokenList.add(timestampToken);
 				}
-				timestampedTimestamps.add(timestampToken.getDSSId().asXmlId());
+				timestampedTimestamps.add(timestampToken.getDSSIdAsString());
 			}
 
 		}
@@ -289,7 +286,7 @@ public class PAdESSignature extends CAdESSignature {
 
 	private TimestampReference createCertificateTimestampReference(CertificateRef ref) {
 		usedCertificatesDigestAlgorithms.add(ref.getDigestAlgorithm());
-		return new TimestampReference(ref.getDigestAlgorithm(), Base64.encodeBase64String(ref.getDigestValue()), TimestampReferenceCategory.CERTIFICATE);
+		return new TimestampReference(ref.getDigestAlgorithm(), Utils.toBase64(ref.getDigestValue()), TimestampReferenceCategory.CERTIFICATE);
 	}
 
 	@Override
@@ -298,13 +295,8 @@ public class PAdESSignature extends CAdESSignature {
 	}
 
 	@Override
-	public SignatureCryptographicVerification checkSignatureIntegrity() {
-
-		if (signatureCryptographicVerification != null) {
-			return signatureCryptographicVerification;
-		}
-		signatureCryptographicVerification = super.checkSignatureIntegrity();
-		return signatureCryptographicVerification;
+	public void checkSignatureIntegrity() {
+		super.checkSignatureIntegrity();
 	}
 
 	@Override
@@ -328,7 +320,7 @@ public class PAdESSignature extends CAdESSignature {
 			for (CertificateToken certificateToken : certList) {
 				CertificateRef ref = new CertificateRef();
 				ref.setDigestAlgorithm(DigestAlgorithm.SHA1);
-				ref.setDigestValue(DSSUtils.digest(DigestAlgorithm.SHA1, certificateToken.getEncoded()));
+				ref.setDigestValue(certificateToken.getDigest(DigestAlgorithm.SHA1));
 				refs.add(ref);
 			}
 		}
@@ -411,7 +403,7 @@ public class PAdESSignature extends CAdESSignature {
 		for (int i : signatureByteRange) {
 			baos.write(i);
 		}
-		return DSSUtils.getMD5Digest(baos);
+		return DSSUtils.getMD5Digest(baos.toByteArray());
 	}
 
 	@Override
@@ -427,7 +419,7 @@ public class PAdESSignature extends CAdESSignature {
 		case PDF_NOT_ETSI:
 			break;
 		case PAdES_BASELINE_LTA:
-			dataForLevelPresent = CollectionUtils.isNotEmpty(getArchiveTimestamps());
+			dataForLevelPresent = Utils.isCollectionNotEmpty(getArchiveTimestamps());
 			// c &= fct() will process fct() all time ; c = c && fct() will process fct() only if c is true
 			dataForLevelPresent = dataForLevelPresent && isDataForSignatureLevelPresent(SignatureLevel.PAdES_BASELINE_LT);
 			break;
@@ -436,7 +428,7 @@ public class PAdESSignature extends CAdESSignature {
 			dataForLevelPresent = dataForLevelPresent && isDataForSignatureLevelPresent(SignatureLevel.PAdES_BASELINE_T);
 			break;
 		case PAdES_BASELINE_T:
-			dataForLevelPresent = CollectionUtils.isNotEmpty(getSignatureTimestamps());
+			dataForLevelPresent = Utils.isCollectionNotEmpty(getSignatureTimestamps());
 			dataForLevelPresent = dataForLevelPresent && isDataForSignatureLevelPresent(SignatureLevel.PAdES_BASELINE_B);
 			break;
 		case PAdES_BASELINE_B:
@@ -466,7 +458,7 @@ public class PAdESSignature extends CAdESSignature {
 	}
 
 	public boolean hasOuterSignatures() {
-		return CollectionUtils.isNotEmpty(pdfSignatureInfo.getOuterSignatures());
+		return Utils.isCollectionNotEmpty(pdfSignatureInfo.getOuterSignatures());
 	}
 
 	public PdfSignatureInfo getPdfSignatureInfo() {

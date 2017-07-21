@@ -23,12 +23,10 @@ package eu.europa.esig.dss.validation.reports;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
-
 import eu.europa.esig.dss.jaxb.detailedreport.XmlBasicBuildingBlocks;
 import eu.europa.esig.dss.jaxb.detailedreport.XmlSignature;
 import eu.europa.esig.dss.jaxb.detailedreport.XmlValidationProcessTimestamps;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.policy.Context;
 import eu.europa.esig.dss.validation.policy.rules.Indication;
 import eu.europa.esig.dss.validation.policy.rules.SubIndication;
@@ -64,7 +62,7 @@ public class DetailedReport {
 	public Indication getBasicBuildingBlocksIndication(String tokenId) {
 		List<XmlBasicBuildingBlocks> basicBuildingBlocks = jaxbDetailedReport.getBasicBuildingBlocks();
 		for (XmlBasicBuildingBlocks xmlBasicBuildingBlocks : basicBuildingBlocks) {
-			if (StringUtils.equals(xmlBasicBuildingBlocks.getId(), tokenId)) {
+			if (Utils.areStringsEqual(xmlBasicBuildingBlocks.getId(), tokenId)) {
 				return xmlBasicBuildingBlocks.getConclusion().getIndication();
 			}
 		}
@@ -80,7 +78,7 @@ public class DetailedReport {
 	public SubIndication getBasicBuildingBlocksSubIndication(String tokenId) {
 		List<XmlBasicBuildingBlocks> basicBuildingBlocks = jaxbDetailedReport.getBasicBuildingBlocks();
 		for (XmlBasicBuildingBlocks xmlBasicBuildingBlocks : basicBuildingBlocks) {
-			if (StringUtils.equals(xmlBasicBuildingBlocks.getId(), tokenId)) {
+			if (Utils.areStringsEqual(xmlBasicBuildingBlocks.getId(), tokenId)) {
 				return xmlBasicBuildingBlocks.getConclusion().getSubIndication();
 			}
 		}
@@ -105,7 +103,7 @@ public class DetailedReport {
 	 */
 	public String getBasicBuildingBlocksSignatureId(final int index) {
 		List<XmlBasicBuildingBlocks> bbbs = jaxbDetailedReport.getBasicBuildingBlocks();
-		if (CollectionUtils.size(bbbs) >= index) {
+		if (Utils.collectionSize(bbbs) >= index) {
 			XmlBasicBuildingBlocks bbb = jaxbDetailedReport.getBasicBuildingBlocks().get(index);
 			if (bbb != null) {
 				return bbb.getId();
@@ -118,7 +116,7 @@ public class DetailedReport {
 		List<String> result = new ArrayList<String>();
 		List<XmlBasicBuildingBlocks> bbbs = jaxbDetailedReport.getBasicBuildingBlocks();
 		for (XmlBasicBuildingBlocks bbb : bbbs) {
-			if (StringUtils.equals(Context.SIGNATURE.name(), bbb.getType()) || StringUtils.equals(Context.COUNTER_SIGNATURE.name(), bbb.getType())) {
+			if (Utils.areStringsEqual(Context.SIGNATURE.name(), bbb.getType()) || Utils.areStringsEqual(Context.COUNTER_SIGNATURE.name(), bbb.getType())) {
 				result.add(bbb.getId());
 			}
 		}
@@ -129,7 +127,7 @@ public class DetailedReport {
 		List<String> result = new ArrayList<String>();
 		List<XmlBasicBuildingBlocks> bbbs = jaxbDetailedReport.getBasicBuildingBlocks();
 		for (XmlBasicBuildingBlocks bbb : bbbs) {
-			if (StringUtils.equals(Context.TIMESTAMP.name(), bbb.getType())) {
+			if (Utils.areStringsEqual(Context.TIMESTAMP.name(), bbb.getType())) {
 				result.add(bbb.getId());
 			}
 		}
@@ -140,7 +138,7 @@ public class DetailedReport {
 		List<String> result = new ArrayList<String>();
 		List<XmlBasicBuildingBlocks> bbbs = jaxbDetailedReport.getBasicBuildingBlocks();
 		for (XmlBasicBuildingBlocks bbb : bbbs) {
-			if (StringUtils.equals(Context.REVOCATION.name(), bbb.getType())) {
+			if (Utils.areStringsEqual(Context.REVOCATION.name(), bbb.getType())) {
 				result.add(bbb.getId());
 			}
 		}
@@ -167,12 +165,12 @@ public class DetailedReport {
 
 	public Indication getTimestampValidationIndication(String timestampId) {
 		List<XmlSignature> signatures = jaxbDetailedReport.getSignatures();
-		if (CollectionUtils.isNotEmpty(signatures)) {
+		if (Utils.isCollectionNotEmpty(signatures)) {
 			for (XmlSignature xmlSignature : signatures) {
 				List<XmlValidationProcessTimestamps> validationTimestamps = xmlSignature.getValidationProcessTimestamps();
-				if (CollectionUtils.isNotEmpty(validationTimestamps)) {
+				if (Utils.isCollectionNotEmpty(validationTimestamps)) {
 					for (XmlValidationProcessTimestamps tspValidation : validationTimestamps) {
-						if (StringUtils.equals(tspValidation.getId(), timestampId) && tspValidation.getConclusion() != null) {
+						if (Utils.areStringsEqual(tspValidation.getId(), timestampId) && tspValidation.getConclusion() != null) {
 							return tspValidation.getConclusion().getIndication();
 						}
 					}
@@ -184,12 +182,12 @@ public class DetailedReport {
 
 	public SubIndication getTimestampValidationSubIndication(String timestampId) {
 		List<XmlSignature> signatures = jaxbDetailedReport.getSignatures();
-		if (CollectionUtils.isNotEmpty(signatures)) {
+		if (Utils.isCollectionNotEmpty(signatures)) {
 			for (XmlSignature xmlSignature : signatures) {
 				List<XmlValidationProcessTimestamps> validationTimestamps = xmlSignature.getValidationProcessTimestamps();
-				if (CollectionUtils.isNotEmpty(validationTimestamps)) {
+				if (Utils.isCollectionNotEmpty(validationTimestamps)) {
 					for (XmlValidationProcessTimestamps tspValidation : validationTimestamps) {
-						if (StringUtils.equals(tspValidation.getId(), timestampId) && tspValidation.getConclusion() != null) {
+						if (Utils.areStringsEqual(tspValidation.getId(), timestampId) && tspValidation.getConclusion() != null) {
 							return tspValidation.getConclusion().getSubIndication();
 						}
 					}
@@ -233,9 +231,9 @@ public class DetailedReport {
 
 	private XmlSignature getXmlSignatureById(String signatureId) {
 		List<XmlSignature> signatures = jaxbDetailedReport.getSignatures();
-		if (CollectionUtils.isNotEmpty(signatures)) {
+		if (Utils.isCollectionNotEmpty(signatures)) {
 			for (XmlSignature xmlSignature : signatures) {
-				if (StringUtils.equals(signatureId, xmlSignature.getId())) {
+				if (Utils.areStringsEqual(signatureId, xmlSignature.getId())) {
 					return xmlSignature;
 				}
 			}
@@ -246,88 +244,5 @@ public class DetailedReport {
 	public eu.europa.esig.dss.jaxb.detailedreport.DetailedReport getJAXBModel() {
 		return jaxbDetailedReport;
 	}
-
-	//
-	// /**
-	// * This method checks if the basic building blocks have VALID indication. The check is performed for all
-	// signatures.
-	// *
-	// * @return {@code true} if basic building blocks (for all signatures) have VALID indication, otherwise {@code
-	// false}
-	// */
-	// public boolean areBasicBuildingBlocksValid() {
-	//
-	// final List<XmlDom> indications =
-	// getElements("/ValidationData/BasicBuildingBlocks/Signature/Conclusion/Indication");
-	// return areAllIndicationsValid(indications);
-	// }
-	//
-	// /**
-	// * This method checks if the long term validation has VALID indication. The check is performed for all signatures.
-	// *
-	// * @return {@code true} if long term validation (for all signatures) has VALID indication, otherwise {@code false}
-	// */
-	// public boolean isLongTermValidationValid() {
-	//
-	// final List<XmlDom> indications =
-	// getElements("/ValidationData/LongTermValidationData/Signature/Conclusion/Indication");
-	// return areAllIndicationsValid(indications);
-	// }
-	//
-	// /**
-	// * This method checks if the timestamp validation has VALID indication. The check is performed for all signatures.
-	// *
-	// * @return {@code true} if timestamp validation (for all signatures) has VALID indication, otherwise {@code false}
-	// */
-	// public boolean isTimestampValidationValid() {
-	//
-	// final List<XmlDom> indications =
-	// getElements("/ValidationData/TimestampValidationData/Signature/Timestamp/BasicBuildingBlocks/Conclusion/Indication");
-	// return areAllIndicationsValid(indications);
-	// }
-	//
-	// /**
-	// * This method checks the timestamp validation indication for all signatures is VALID.
-	// *
-	// * @return {@code true} if VALID indication for all signatures, {@code null} if there is no timestamp, {@code
-	// false}
-	// * otherwise.
-	// */
-	// public Boolean isTimestampValidationValidOrEmpty() {
-	//
-	// final List<XmlDom> indications =
-	// getElements("/ValidationData/TimestampValidationData/Signature/Timestamp/BasicBuildingBlocks/Conclusion/Indication");
-	// if (indications.size() == 0) {
-	// return null;
-	// }
-	// return areAllIndicationsValid(indications);
-	// }
-	//
-	// /**
-	// * This method returns the notice related to the signature policy.
-	// *
-	// * @param signatureId
-	// * {@code String} id of the signature for which the check is to be done
-	// * @return {@code String} describing the policy notice
-	// */
-	// public String getPolicyNotice(final String signatureId) {
-	//
-	// final String notice =
-	// getValue("/ValidationData/BasicBuildingBlocks/Signature[@Id='%s']/VCI/Constraint/Notice/text()", signatureId);
-	// return notice;
-	// }
-	//
-	// /**
-	// * This method returns the status of the constraint with the given tag.
-	// *
-	// * @param tag
-	// * the tag of the constraint to find.
-	// * @return the status of the constraint
-	// */
-	// public String getConstraintStatus(final MessageTag tag) {
-	//
-	// final String status = getValue("//Name[@NameId='%s']/../Status/text()", tag.name());
-	// return status;
-	// }
 
 }

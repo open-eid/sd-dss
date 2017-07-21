@@ -28,8 +28,6 @@ import java.security.GeneralSecurityException;
 import java.security.Signature;
 import java.util.List;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 import eu.europa.esig.dss.AbstractSignatureParameters;
@@ -40,6 +38,7 @@ import eu.europa.esig.dss.SignatureValue;
 import eu.europa.esig.dss.ToBeSigned;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.test.mock.MockPrivateKeyEntry;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.policy.rules.Indication;
@@ -55,24 +54,6 @@ public abstract class AbstractTestExtension<SP extends AbstractSignatureParamete
 	protected abstract SignatureLevel getOriginalSignatureLevel();
 
 	protected abstract SignatureLevel getFinalSignatureLevel();
-
-	/**
-	 * This method is used in case of ASiC signatures
-	 *
-	 * @return
-	 */
-	protected SignatureLevel getOriginalUnderlyingSignatureLevel() {
-		return getOriginalSignatureLevel();
-	}
-
-	/**
-	 * This method is used in case of ASiC signatures
-	 *
-	 * @return
-	 */
-	protected SignatureLevel getFinalUnderlyingSignatureLevel() {
-		return getFinalSignatureLevel();
-	}
 
 	protected abstract DocumentSignatureService<SP> getSignatureServiceToExtend() throws Exception;
 
@@ -106,7 +87,7 @@ public abstract class AbstractTestExtension<SP extends AbstractSignatureParamete
 
 		assertNotNull(extendedDocument);
 		assertNotNull(extendedDocument.getMimeType());
-		assertNotNull(IOUtils.toByteArray(extendedDocument.openStream()));
+		assertNotNull(Utils.toByteArray(extendedDocument.openStream()));
 		assertNotNull(extendedDocument.getName());
 
 		validator = SignedDocumentValidator.fromDocument(extendedDocument);
@@ -140,7 +121,7 @@ public abstract class AbstractTestExtension<SP extends AbstractSignatureParamete
 		assertNotNull(simpleReport);
 
 		List<String> signatureIdList = simpleReport.getSignatureIdList();
-		assertTrue(CollectionUtils.isNotEmpty(signatureIdList));
+		assertTrue(Utils.isCollectionNotEmpty(signatureIdList));
 
 		for (String sigId : signatureIdList) {
 			Indication indication = simpleReport.getIndication(sigId);
@@ -148,7 +129,7 @@ public abstract class AbstractTestExtension<SP extends AbstractSignatureParamete
 			if (indication != Indication.PASSED) {
 				assertNotNull(simpleReport.getSubIndication(sigId));
 			}
-			assertNotNull(simpleReport.getSignatureLevel(sigId));
+			assertNotNull(simpleReport.getSignatureQualification(sigId));
 		}
 		assertNotNull(simpleReport.getValidationTime());
 	}
@@ -165,7 +146,7 @@ public abstract class AbstractTestExtension<SP extends AbstractSignatureParamete
 		}
 
 		List<String> signatureIds = detailedReport.getSignatureIds();
-		assertTrue(CollectionUtils.isNotEmpty(signatureIds));
+		assertTrue(Utils.isCollectionNotEmpty(signatureIds));
 		for (String sigId : signatureIds) {
 			Indication basicIndication = detailedReport.getBasicValidationIndication(sigId);
 			assertNotNull(basicIndication);
@@ -175,7 +156,7 @@ public abstract class AbstractTestExtension<SP extends AbstractSignatureParamete
 		}
 
 		List<String> timestampIds = detailedReport.getTimestampIds();
-		if (CollectionUtils.isNotEmpty(timestampIds)) {
+		if (Utils.isCollectionNotEmpty(timestampIds)) {
 			for (String tspId : timestampIds) {
 				Indication timestampIndication = detailedReport.getTimestampValidationIndication(tspId);
 				assertNotNull(timestampIndication);
@@ -205,11 +186,11 @@ public abstract class AbstractTestExtension<SP extends AbstractSignatureParamete
 	protected abstract SP getExtensionParameters();
 
 	private void checkOriginalLevel(DiagnosticData diagnosticData) {
-		assertEquals(getOriginalUnderlyingSignatureLevel().name(), diagnosticData.getSignatureFormat(diagnosticData.getFirstSignatureId()));
+		assertEquals(getOriginalSignatureLevel().toString(), diagnosticData.getSignatureFormat(diagnosticData.getFirstSignatureId()));
 	}
 
 	private void checkFinalLevel(DiagnosticData diagnosticData) {
-		assertEquals(getFinalUnderlyingSignatureLevel().name(), diagnosticData.getSignatureFormat(diagnosticData.getFirstSignatureId()));
+		assertEquals(getFinalSignatureLevel().toString(), diagnosticData.getSignatureFormat(diagnosticData.getFirstSignatureId()));
 	}
 
 	private void checkBLevelValid(DiagnosticData diagnosticData) {

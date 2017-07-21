@@ -23,10 +23,7 @@ package eu.europa.esig.dss;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.cert.X509CRLEntry;
-import java.util.List;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang.ArrayUtils;
 import org.bouncycastle.asn1.ASN1Enumerated;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
@@ -52,10 +49,9 @@ import org.bouncycastle.x509.extension.X509ExtensionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.x509.CertificateToken;
-import eu.europa.esig.dss.x509.RevocationToken;
 import eu.europa.esig.dss.x509.crl.CRLReasonEnum;
-import eu.europa.esig.dss.x509.ocsp.OCSPToken;
 
 /**
  * Utility class used to convert OCSPResp to BasicOCSPResp
@@ -127,25 +123,6 @@ public final class DSSRevocationUtils {
 	}
 
 	/**
-	 * This method indicates if the given revocation token is present in the CRL
-	 * or OCSP response list.
-	 *
-	 * @param revocationToken
-	 *            revocation token to be checked
-	 * @param basicOCSPResponses
-	 *            list of basic OCSP responses
-	 * @return true if revocation token is present in one of the lists
-	 */
-	public static boolean isTokenIn(final RevocationToken revocationToken, final List<BasicOCSPResp> basicOCSPResponses) {
-		if ((revocationToken instanceof OCSPToken) && (basicOCSPResponses != null)) {
-			final BasicOCSPResp basicOCSPResp = ((OCSPToken) revocationToken).getBasicOCSPResp();
-			final boolean contains = basicOCSPResponses.contains(basicOCSPResp);
-			return contains;
-		}
-		return false;
-	}
-
-	/**
 	 * This method returns the reason of the revocation of the certificate
 	 * extracted from the given CRL.
 	 *
@@ -158,7 +135,7 @@ public final class DSSRevocationUtils {
 		final String reasonId = Extension.reasonCode.getId();
 		final byte[] extensionBytes = crlEntry.getExtensionValue(reasonId);
 
-		if (ArrayUtils.isEmpty(extensionBytes)) {
+		if (Utils.isArrayEmpty(extensionBytes)) {
 			logger.warn("Empty reasonCode extension for crl entry");
 			return null;
 		}
@@ -247,7 +224,7 @@ public final class DSSRevocationUtils {
 	 * @throws OCSPException
 	 */
 	public static BasicOCSPResp loadOCSPBase64Encoded(final String base64Encoded) throws IOException, OCSPException {
-		final byte[] derEncoded = Base64.decodeBase64(base64Encoded);
+		final byte[] derEncoded = Utils.fromBase64(base64Encoded);
 		final OCSPResp ocspResp = new OCSPResp(derEncoded);
 		final BasicOCSPResp basicOCSPResp = (BasicOCSPResp) ocspResp.getResponseObject();
 		return basicOCSPResp;

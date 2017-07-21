@@ -2,52 +2,57 @@ package eu.europa.esig.dss.tsl;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
-public class ServiceInfoStatus implements Serializable{
+import eu.europa.esig.dss.util.BaseTimeDependent;
+
+public class ServiceInfoStatus extends BaseTimeDependent implements Serializable {
+
+	private static final long serialVersionUID = 4258613511229825596L;
+
+	/**
+	 * <tsl:TrustServiceProvider><tsl:TSPServices><tsl:TSPService><tsl:ServiceInformation><tsl:ServiceTypeIdentifier>
+	 */
+	private final String type;
 
 	/**
 	 * <tsl:TrustServiceProvider><tsl:TSPServices><tsl:TSPService><tsl:ServiceInformation><tsl:ServiceStatus>
 	 */
-	private String status;
+	private final String status;
 
-	/**
-	 * <tsl:TrustServiceProvider><tsl:TSPServices><tsl:TSPService><tsl:ServiceInformation><tsl:StatusStartingTime>
-	 */
-	private Date startDate;
+	private final Map<String, List<Condition>> qualifiersAndConditions;
+	private final List<String> additionalServiceInfoUris;
+	private final Date expiredCertsRevocationInfo;
 
-	/**
-	 * The start date of the previous service history or null if current service
-	 */
-	private Date endDate;
-
-	public ServiceInfoStatus(String status, Date startDate, Date endDate) {
+	public ServiceInfoStatus(String type, String status, Map<String, List<Condition>> qualifiersAndConditions, List<String> additionalServiceInfoUris,
+			Date expiredCertsRevocationInfo, Date startDate, Date endDate) {
+		super(startDate, endDate);
+		this.type = type;
 		this.status = status;
-		this.startDate = startDate;
-		this.endDate = endDate;
+		this.qualifiersAndConditions = qualifiersAndConditions;
+		this.additionalServiceInfoUris = additionalServiceInfoUris;
+		this.expiredCertsRevocationInfo = expiredCertsRevocationInfo;
+	}
+
+	public String getType() {
+		return type;
 	}
 
 	public String getStatus() {
 		return status;
 	}
 
-	public void setStatus(String status) {
-		this.status = status;
+	public Map<String, List<Condition>> getQualifiersAndConditions() {
+		return qualifiersAndConditions;
 	}
 
-	public Date getStartDate() {
-		return startDate;
+	public List<String> getAdditionalServiceInfoUris() {
+		return additionalServiceInfoUris;
 	}
 
-	public void setStartDate(Date startDate) {
-		this.startDate = startDate;
-	}
-
-	public Date getEndDate() {
-		return endDate;
-	}
-
-	public void setEndDate(Date endDate) {
-		this.endDate = endDate;
+	public Date getExpiredCertsRevocationInfo() {
+		return expiredCertsRevocationInfo;
 	}
 
 }

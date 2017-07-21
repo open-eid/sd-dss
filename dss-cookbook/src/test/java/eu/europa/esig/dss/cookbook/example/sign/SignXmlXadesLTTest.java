@@ -21,6 +21,7 @@
 package eu.europa.esig.dss.cookbook.example.sign;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.junit.Test;
 
@@ -49,7 +50,7 @@ import eu.europa.esig.dss.xades.signature.XAdESService;
 public class SignXmlXadesLTTest extends CookbookTools {
 
 	@Test
-	public void signXAdESBaselineLT() {
+	public void signXAdESBaselineLT() throws IOException {
 
 		// GET document to be signed -
 		// Return DSSDocument toSignDocument
@@ -97,6 +98,7 @@ public class SignXmlXadesLTTest extends CookbookTools {
 		job.setDataLoader(commonsHttpDataLoader);
 		job.setDssKeyStore(keyStoreCertificateSource);
 		job.setLotlUrl("https://ec.europa.eu/information_society/policy/esignature/trusted-list/tl-mp.xml");
+		job.setOjUrl("http://eur-lex.europa.eu/legal-content/EN/TXT/?uri=uriserv:OJ.C_.2016.233.01.0001.01.ENG");
 		job.setLotlCode("EU");
 		job.setRepository(tslRepository);
 		job.refresh();
@@ -116,7 +118,7 @@ public class SignXmlXadesLTTest extends CookbookTools {
 		try {
 			service.setTspSource(getMockTSPSource());
 		} catch (Exception e) {
-			new DSSException("Error during MockTspSource", e);
+			throw new DSSException("Error during MockTspSource", e);
 		}
 
 		// Get the SignedInfo XML segment that need to be signed.

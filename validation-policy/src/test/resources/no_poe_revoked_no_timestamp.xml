@@ -1,37 +1,41 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <DiagnosticData xmlns="http://dss.esig.europa.eu/validation/diagnostic">
     <DocumentName>Signature-X-IT_ETSI-3.xml</DocumentName>
-    <Signature Id="xmldsig-22bfe6ce-8d82-496a-9e97-e0f8e68403c2">
-        <DateTime>2014-10-14T14:49:13</DateTime>
-        <SignatureFormat>XAdES_BASELINE_B</SignatureFormat>
-        <BasicSignature>
-            <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
-            <KeyLengthUsedToSignThisToken>1024</KeyLengthUsedToSignThisToken>
-            <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
-            <ReferenceDataFound>true</ReferenceDataFound>
-            <ReferenceDataIntact>true</ReferenceDataIntact>
-            <SignatureIntact>true</SignatureIntact>
-            <SignatureValid>true</SignatureValid>
-        </BasicSignature>
-        <SigningCertificate Id="725A763273585DD8DFA026EB2066F5667FFF6ED45F72052B3F9C2D3565DF6B5E">
-            <AttributePresent>true</AttributePresent>
-            <DigestValuePresent>true</DigestValuePresent>
-            <DigestValueMatch>true</DigestValueMatch>
-            <IssuerSerialMatch>true</IssuerSerialMatch>
-        </SigningCertificate>
-        <CertificateChain>
-            <ChainCertificate Id="725A763273585DD8DFA026EB2066F5667FFF6ED45F72052B3F9C2D3565DF6B5E">
-                <Source>SIGNATURE</Source>
-            </ChainCertificate>
-            <ChainCertificate Id="B689BFCFDAEE078405383971E848C3D077457CD0EC6B685550F10ED250F8FDC5">
-                <Source>TRUSTED_LIST</Source>
-            </ChainCertificate>
-        </CertificateChain>
-        <ContentType>text/xml</ContentType>
-        <SignatureScopes>
-            <SignatureScope name="xmldsig-22bfe6ce-8d82-496a-9e97-e0f8e68403c2-object0" scope="XmlElementSignatureScope">The XML element with ID 'xmldsig-22bfe6ce-8d82-496a-9e97-e0f8e68403c2-object0'</SignatureScope>
-        </SignatureScopes>
-    </Signature>
+    <ValidationDate>2016-05-04T15:10:00</ValidationDate>
+    <Signatures>
+	    <Signature Id="xmldsig-22bfe6ce-8d82-496a-9e97-e0f8e68403c2">
+	    	<SignatureFilename>firmaok.zip.p7m</SignatureFilename>
+	        <DateTime>2014-10-14T14:49:13</DateTime>
+	        <SignatureFormat>XAdES_BASELINE_B</SignatureFormat>
+	        <BasicSignature>
+	            <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
+	            <KeyLengthUsedToSignThisToken>1024</KeyLengthUsedToSignThisToken>
+	            <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
+	            <ReferenceDataFound>true</ReferenceDataFound>
+	            <ReferenceDataIntact>true</ReferenceDataIntact>
+	            <SignatureIntact>true</SignatureIntact>
+	            <SignatureValid>true</SignatureValid>
+	        </BasicSignature>
+	        <SigningCertificate Id="725A763273585DD8DFA026EB2066F5667FFF6ED45F72052B3F9C2D3565DF6B5E">
+	            <AttributePresent>true</AttributePresent>
+	            <DigestValuePresent>true</DigestValuePresent>
+	            <DigestValueMatch>true</DigestValueMatch>
+	            <IssuerSerialMatch>true</IssuerSerialMatch>
+	        </SigningCertificate>
+	        <CertificateChain>
+	            <ChainItem Id="725A763273585DD8DFA026EB2066F5667FFF6ED45F72052B3F9C2D3565DF6B5E">
+	                <Source>SIGNATURE</Source>
+	            </ChainItem>
+	            <ChainItem Id="B689BFCFDAEE078405383971E848C3D077457CD0EC6B685550F10ED250F8FDC5">
+	                <Source>TRUSTED_LIST</Source>
+	            </ChainItem>
+	        </CertificateChain>
+	        <ContentType>text/xml</ContentType>
+	        <SignatureScopes>
+	            <SignatureScope name="xmldsig-22bfe6ce-8d82-496a-9e97-e0f8e68403c2-object0" scope="XmlElementSignatureScope">The XML element with ID 'xmldsig-22bfe6ce-8d82-496a-9e97-e0f8e68403c2-object0'</SignatureScope>
+	        </SignatureScopes>
+	    </Signature>
+    </Signatures>
     <UsedCertificates>
         <Certificate Id="B689BFCFDAEE078405383971E848C3D077457CD0EC6B685550F10ED250F8FDC5">
             <SubjectDistinguishedName Format="CANONICAL">cn=infocert firma qualificata 2,2.5.4.5=#130b3037393435323131303036,ou=certificatore accreditato,o=infocert spa,c=it</SubjectDistinguishedName>
@@ -65,18 +69,9 @@
             <CertificatePolicyIds>
                 <oid>2.5.29.32.0</oid>
             </CertificatePolicyIds>
-            <TrustedServiceProvider>
-                <TSPName>Infocert S.p.A.</TSPName>
-                <TSPServiceName>CN=InfoCert Firma Qualificata 2,serialNumber=07945211006,OU=Certificatore Accreditato,O=INFOCERT SPA,C=IT</TSPServiceName>
-                <TSPServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</TSPServiceType>
-                <ServiceStatus>
-                    <StatusService>
-                        <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/accredited</Status>
-                        <StartDate>2013-04-19T18:26:15</StartDate>
-                    </StatusService>
-                </ServiceStatus>
-                <WellSigned>true</WellSigned>
-            </TrustedServiceProvider>
+            <QCStatementIds />
+            <QCTypes />
+            <TrustedServiceProviders />
         </Certificate>
         <Certificate Id="725A763273585DD8DFA026EB2066F5667FFF6ED45F72052B3F9C2D3565DF6B5E">
             <SubjectDistinguishedName Format="CANONICAL">2.5.4.42=#0c054c55494749,2.5.4.4=#0c0552495a5a4f,2.5.4.5=#131349543a525a5a4c475536334830364535303643,2.5.4.46=#130e3230313431343938353033393236,cn=L R,o=infocert spa/07945211006,c=it</SubjectDistinguishedName>
@@ -107,9 +102,9 @@
             </BasicSignature>
             <SigningCertificate Id="B689BFCFDAEE078405383971E848C3D077457CD0EC6B685550F10ED250F8FDC5"/>
             <CertificateChain>
-                <ChainCertificate Id="B689BFCFDAEE078405383971E848C3D077457CD0EC6B685550F10ED250F8FDC5">
+                <ChainItem Id="B689BFCFDAEE078405383971E848C3D077457CD0EC6B685550F10ED250F8FDC5">
                     <Source>TRUSTED_LIST</Source>
-                </ChainCertificate>
+                </ChainItem>
             </CertificateChain>
             <Trusted>false</Trusted>
             <SelfSigned>false</SelfSigned>
@@ -122,78 +117,70 @@
                 <oid>0.4.0.1862.1.4</oid>
                 <oid>0.4.0.1862.1.3</oid>
             </QCStatementIds>
-            <TrustedServiceProvider>
-                <TSPName>Infocert S.p.A.</TSPName>
-                <TSPServiceName>CN=InfoCert Firma Qualificata 2,serialNumber=07945211006,OU=Certificatore Accreditato,O=INFOCERT SPA,C=IT</TSPServiceName>
-                <TSPServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</TSPServiceType>
-                <ServiceStatus>
-                    <StatusService>
-                        <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/accredited</Status>
-                        <StartDate>2013-04-19T18:26:15</StartDate>
-                    </StatusService>
-                </ServiceStatus>
-                <WellSigned>true</WellSigned>
-            </TrustedServiceProvider>
-            <Revocation Id="0574F0CFD174789DDCB57C5F2EC6EC43DD341BF7789708E28E87AF9A2696CA56">
-                <Origin>EXTERNAL</Origin>
-                <Source>OCSPToken</Source>
-                <SourceAddress>http://ocsp.sc.infocert.it/</SourceAddress>
-                <Available>true</Available>
-                <Status>false</Status>
-                <Reason>cessationOfOperation</Reason>
-                <ProductionDate>2016-05-04T15:03:54</ProductionDate>
-                <ThisUpdate>2016-05-04T14:30:00</ThisUpdate>
-                <NextUpdate>2016-05-04T21:03:54</NextUpdate>
-                <RevocationDate>2014-10-15T15:12:23</RevocationDate>
-                <BasicSignature>
-                    <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
-                    <KeyLengthUsedToSignThisToken>2048</KeyLengthUsedToSignThisToken>
-                    <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
-                    <ReferenceDataFound>true</ReferenceDataFound>
-                    <ReferenceDataIntact>true</ReferenceDataIntact>
-                    <SignatureIntact>true</SignatureIntact>
-                    <SignatureValid>true</SignatureValid>
-                </BasicSignature>
-                <SigningCertificate Id="200BB21E10FDE02A75E6738ECB5D61BAFBE10028171C85A47E7F297B7E2F859A"/>
-                <CertificateChain>
-                    <ChainCertificate Id="200BB21E10FDE02A75E6738ECB5D61BAFBE10028171C85A47E7F297B7E2F859A">
-                        <Source>OCSP_RESPONSE</Source>
-                    </ChainCertificate>
-                    <ChainCertificate Id="B689BFCFDAEE078405383971E848C3D077457CD0EC6B685550F10ED250F8FDC5">
-                        <Source>TRUSTED_LIST</Source>
-                    </ChainCertificate>
-                </CertificateChain>
-            </Revocation>
-            <Revocation Id="55F56C98A1A43A431C6DD59F46D921DDE91F9FFE23FB1E4CC53A372CD38B4495">
-                <Origin>EXTERNAL</Origin>
-                <Source>OCSPToken</Source>
-                <SourceAddress>http://ocsp.sc.infocert.it/</SourceAddress>
-                <Available>true</Available>
-                <Status>false</Status>
-                <Reason>cessationOfOperation</Reason>
-                <ProductionDate>2016-05-04T15:12:31</ProductionDate>
-                <ThisUpdate>2016-05-04T14:30:00</ThisUpdate>
-                <NextUpdate>2016-05-04T21:12:31</NextUpdate>
-                <RevocationDate>2014-10-15T15:12:23</RevocationDate>
-                <BasicSignature>
-                    <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
-                    <KeyLengthUsedToSignThisToken>2048</KeyLengthUsedToSignThisToken>
-                    <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
-                    <ReferenceDataFound>true</ReferenceDataFound>
-                    <ReferenceDataIntact>true</ReferenceDataIntact>
-                    <SignatureIntact>true</SignatureIntact>
-                    <SignatureValid>true</SignatureValid>
-                </BasicSignature>
-                <SigningCertificate Id="200BB21E10FDE02A75E6738ECB5D61BAFBE10028171C85A47E7F297B7E2F859A"/>
-                <CertificateChain>
-                    <ChainCertificate Id="200BB21E10FDE02A75E6738ECB5D61BAFBE10028171C85A47E7F297B7E2F859A">
-                        <Source>OCSP_RESPONSE</Source>
-                    </ChainCertificate>
-                    <ChainCertificate Id="B689BFCFDAEE078405383971E848C3D077457CD0EC6B685550F10ED250F8FDC5">
-                        <Source>TRUSTED_LIST</Source>
-                    </ChainCertificate>
-                </CertificateChain>
-            </Revocation>
+            <QCTypes />
+            <TrustedServiceProviders />
+			<Revocations>
+	            <Revocation Id="0574F0CFD174789DDCB57C5F2EC6EC43DD341BF7789708E28E87AF9A2696CA56">
+	                <Origin>EXTERNAL</Origin>
+	                <Source>OCSPToken</Source>
+	                <SourceAddress>http://ocsp.sc.infocert.it/</SourceAddress>
+	                <Available>true</Available>
+	                <Status>false</Status>
+	                <Reason>cessationOfOperation</Reason>
+	                <ProductionDate>2016-05-04T15:03:54</ProductionDate>
+	                <ThisUpdate>2016-05-04T14:30:00</ThisUpdate>
+	                <NextUpdate>2016-05-04T21:03:54</NextUpdate>
+	                <RevocationDate>2014-10-15T15:12:23</RevocationDate>
+	                <BasicSignature>
+	                    <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
+	                    <KeyLengthUsedToSignThisToken>2048</KeyLengthUsedToSignThisToken>
+	                    <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
+	                    <ReferenceDataFound>true</ReferenceDataFound>
+	                    <ReferenceDataIntact>true</ReferenceDataIntact>
+	                    <SignatureIntact>true</SignatureIntact>
+	                    <SignatureValid>true</SignatureValid>
+	                </BasicSignature>
+	                <SigningCertificate Id="200BB21E10FDE02A75E6738ECB5D61BAFBE10028171C85A47E7F297B7E2F859A"/>
+	                <CertificateChain>
+	                    <ChainItem Id="200BB21E10FDE02A75E6738ECB5D61BAFBE10028171C85A47E7F297B7E2F859A">
+	                        <Source>OCSP_RESPONSE</Source>
+	                    </ChainItem>
+	                    <ChainItem Id="B689BFCFDAEE078405383971E848C3D077457CD0EC6B685550F10ED250F8FDC5">
+	                        <Source>TRUSTED_LIST</Source>
+	                    </ChainItem>
+	                </CertificateChain>
+	            </Revocation>
+	            <Revocation Id="55F56C98A1A43A431C6DD59F46D921DDE91F9FFE23FB1E4CC53A372CD38B4495">
+	                <Origin>EXTERNAL</Origin>
+	                <Source>OCSPToken</Source>
+	                <SourceAddress>http://ocsp.sc.infocert.it/</SourceAddress>
+	                <Available>true</Available>
+	                <Status>false</Status>
+	                <Reason>cessationOfOperation</Reason>
+	                <ProductionDate>2016-05-04T15:12:31</ProductionDate>
+	                <ThisUpdate>2016-05-04T14:30:00</ThisUpdate>
+	                <NextUpdate>2016-05-04T21:12:31</NextUpdate>
+	                <RevocationDate>2014-10-15T15:12:23</RevocationDate>
+	                <BasicSignature>
+	                    <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
+	                    <KeyLengthUsedToSignThisToken>2048</KeyLengthUsedToSignThisToken>
+	                    <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
+	                    <ReferenceDataFound>true</ReferenceDataFound>
+	                    <ReferenceDataIntact>true</ReferenceDataIntact>
+	                    <SignatureIntact>true</SignatureIntact>
+	                    <SignatureValid>true</SignatureValid>
+	                </BasicSignature>
+	                <SigningCertificate Id="200BB21E10FDE02A75E6738ECB5D61BAFBE10028171C85A47E7F297B7E2F859A"/>
+	                <CertificateChain>
+	                    <ChainItem Id="200BB21E10FDE02A75E6738ECB5D61BAFBE10028171C85A47E7F297B7E2F859A">
+	                        <Source>OCSP_RESPONSE</Source>
+	                    </ChainItem>
+	                    <ChainItem Id="B689BFCFDAEE078405383971E848C3D077457CD0EC6B685550F10ED250F8FDC5">
+	                        <Source>TRUSTED_LIST</Source>
+	                    </ChainItem>
+	                </CertificateChain>
+	            </Revocation>
+	        </Revocations>
             <Info>
                 <Message Id="0">No CRL info found !</Message>
                 <Message Id="0">No CRL info found !</Message>
@@ -229,24 +216,16 @@
             </BasicSignature>
             <SigningCertificate Id="B689BFCFDAEE078405383971E848C3D077457CD0EC6B685550F10ED250F8FDC5"/>
             <CertificateChain>
-                <ChainCertificate Id="B689BFCFDAEE078405383971E848C3D077457CD0EC6B685550F10ED250F8FDC5">
+                <ChainItem Id="B689BFCFDAEE078405383971E848C3D077457CD0EC6B685550F10ED250F8FDC5">
                     <Source>TRUSTED_LIST</Source>
-                </ChainCertificate>
+                </ChainItem>
             </CertificateChain>
             <Trusted>false</Trusted>
             <SelfSigned>false</SelfSigned>
-            <TrustedServiceProvider>
-                <TSPName>Infocert S.p.A.</TSPName>
-                <TSPServiceName>CN=InfoCert Firma Qualificata 2,serialNumber=07945211006,OU=Certificatore Accreditato,O=INFOCERT SPA,C=IT</TSPServiceName>
-                <TSPServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</TSPServiceType>
-                <ServiceStatus>
-                    <StatusService>
-                        <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/accredited</Status>
-                        <StartDate>2013-04-19T18:26:15</StartDate>
-                    </StatusService>
-                </ServiceStatus>
-                <WellSigned>true</WellSigned>
-            </TrustedServiceProvider>
+            <CertificatePolicyIds />
+            <QCStatementIds />
+            <QCTypes />
+            <TrustedServiceProviders />
             <Info>
                 <Message Id="0">OCSP check not needed: id-pkix-ocsp-nocheck extension present.</Message>
                 <Message Id="0">OCSP check not needed: id-pkix-ocsp-nocheck extension present.</Message>

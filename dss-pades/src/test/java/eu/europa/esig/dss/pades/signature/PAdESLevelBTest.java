@@ -38,8 +38,6 @@ import java.util.List;
 
 import javax.crypto.Cipher;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.bouncycastle.asn1.ASN1Encodable;
@@ -59,13 +57,12 @@ import org.bouncycastle.asn1.cms.SignerInfo;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.DigestInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eu.europa.esig.dss.DSSASN1Utils;
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.DigestAlgorithm;
@@ -74,13 +71,14 @@ import eu.europa.esig.dss.FileDocument;
 import eu.europa.esig.dss.MimeType;
 import eu.europa.esig.dss.SignatureAlgorithm;
 import eu.europa.esig.dss.SignatureLevel;
-import eu.europa.esig.dss.SignaturePackaging;
 import eu.europa.esig.dss.pades.PAdESSignatureParameters;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.test.gen.CertificateService;
 import eu.europa.esig.dss.test.mock.MockPrivateKeyEntry;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
+import eu.europa.esig.dss.x509.CertificateToken;
 
 public class PAdESLevelBTest extends AbstractPAdESTestSignature {
 
@@ -102,7 +100,6 @@ public class PAdESLevelBTest extends AbstractPAdESTestSignature {
 		signatureParameters.bLevel().setSigningDate(new Date());
 		signatureParameters.setSigningCertificate(privateKeyEntry.getCertificate());
 		signatureParameters.setCertificateChain(privateKeyEntry.getCertificateChain());
-		signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPING);
 		signatureParameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_B);
 		signatureParameters.setLocation("Luxembourg");
 		signatureParameters.setReason("DSS testing");
@@ -112,6 +109,8 @@ public class PAdESLevelBTest extends AbstractPAdESTestSignature {
 		service = new PAdESService(certificateVerifier);
 	}
 
+	// Annotation for error_probe
+	@SuppressWarnings("InsecureCryptoUsage")
 	@Override
 	protected void onDocumentSigned(byte[] byteArray) {
 
@@ -127,8 +126,6 @@ public class PAdESLevelBTest extends AbstractPAdESTestSignature {
 				byte[] signedContent = pdSignature.getSignedContent(byteArray);
 
 				logger.info("Byte range : " + Arrays.toString(pdSignature.getByteRange()));
-
-				// IOUtils.write(contents, new FileOutputStream("sig.p7s"));
 
 				ASN1InputStream asn1sInput = new ASN1InputStream(contents);
 				ASN1Sequence asn1Seq = (ASN1Sequence) asn1sInput.readObject();
@@ -161,6 +158,9 @@ public class PAdESLevelBTest extends AbstractPAdESTestSignature {
 				logger.info("SIGNER INFO ASN1 : " + signerInfosAsn1.toString());
 				SignerInfo signedInfo = SignerInfo.getInstance(ASN1Sequence.getInstance(signerInfosAsn1.getObjectAt(0)));
 
+				ASN1Set unauthenticatedAttributes = signedInfo.getUnauthenticatedAttributes();
+				assertNull(unauthenticatedAttributes);
+
 				ASN1Set authenticatedAttributeSet = signedInfo.getAuthenticatedAttributes();
 				logger.info("AUTHENTICATED ATTR : " + authenticatedAttributeSet);
 
@@ -181,11 +181,11 @@ public class PAdESLevelBTest extends AbstractPAdESTestSignature {
 				assertEquals(PKCSObjectIdentifiers.pkcs_9_at_messageDigest, attributeDigest.getAttrType());
 
 				ASN1OctetString asn1ObjString = ASN1OctetString.getInstance(attributeDigest.getAttrValues().getObjectAt(0));
-				String embeddedDigest = Base64.encodeBase64String(asn1ObjString.getOctets());
+				String embeddedDigest = Utils.toBase64(asn1ObjString.getOctets());
 				logger.info("MESSAGE DIGEST : " + embeddedDigest);
 
 				byte[] digestSignedContent = DSSUtils.digest(digestAlgorithm, signedContent);
-				String computedDigestSignedContentEncodeBase64 = Base64.encodeBase64String(digestSignedContent);
+				String computedDigestSignedContentEncodeBase64 = Utils.toBase64(digestSignedContent);
 				logger.info("COMPUTED DIGEST SIGNED CONTENT BASE64 : " + computedDigestSignedContentEncodeBase64);
 				assertEquals(embeddedDigest, computedDigestSignedContentEncodeBase64);
 
@@ -225,21 +225,21 @@ public class PAdESLevelBTest extends AbstractPAdESTestSignature {
 				DigestInfo digestInfo = new DigestInfo(seqDecrypt);
 				assertEquals(oidDigestAlgo, digestInfo.getAlgorithmId().getAlgorithm());
 
-				String decryptedDigestEncodeBase64 = Base64.encodeBase64String(digestInfo.getDigest());
+				String decryptedDigestEncodeBase64 = Utils.toBase64(digestInfo.getDigest());
 				logger.info("DECRYPTED BASE64 : " + decryptedDigestEncodeBase64);
 
 				byte[] encoded = authenticatedAttributeSet.getEncoded();
 				byte[] digest = DSSUtils.digest(digestAlgorithm, encoded);
-				String computedDigestFromSignatureEncodeBase64 = Base64.encodeBase64String(digest);
+				String computedDigestFromSignatureEncodeBase64 = Utils.toBase64(digest);
 				logger.info("COMPUTED DIGEST FROM SIGNATURE BASE64 : " + computedDigestFromSignatureEncodeBase64);
 
 				assertEquals(decryptedDigestEncodeBase64, computedDigestFromSignatureEncodeBase64);
 
-				IOUtils.closeQuietly(inputDecrypted);
-				IOUtils.closeQuietly(asn1sInput);
+				Utils.closeQuietly(inputDecrypted);
+				Utils.closeQuietly(asn1sInput);
 			}
 
-			IOUtils.closeQuietly(inputStream);
+			Utils.closeQuietly(inputStream);
 			document.close();
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
@@ -276,9 +276,9 @@ public class PAdESLevelBTest extends AbstractPAdESTestSignature {
 			ASN1Sequence seqCertif = ASN1Sequence.getInstance(certificates.getObjectAt(i));
 
 			X509CertificateHolder certificateHolder = new X509CertificateHolder(seqCertif.getEncoded());
-			X509Certificate certificate = new JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME).getCertificate(certificateHolder);
+			CertificateToken certificate = DSSASN1Utils.getCertificate(certificateHolder);
 
-			foundCertificates.add(certificate);
+			foundCertificates.add(certificate.getCertificate());
 		}
 		return foundCertificates;
 	}

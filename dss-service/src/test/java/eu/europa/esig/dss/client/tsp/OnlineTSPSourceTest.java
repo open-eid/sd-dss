@@ -3,11 +3,12 @@ package eu.europa.esig.dss.client.tsp;
 import static org.junit.Assert.assertNotNull;
 
 import org.bouncycastle.tsp.TimeStampToken;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.DigestAlgorithm;
-import eu.europa.esig.dss.client.NonceSource;
+import eu.europa.esig.dss.client.SecureRandomNonceSource;
 import eu.europa.esig.dss.client.http.NativeHTTPDataLoader;
 import eu.europa.esig.dss.client.http.commons.CommonsDataLoader;
 import eu.europa.esig.dss.client.http.commons.TimestampDataLoader;
@@ -36,12 +37,13 @@ public class OnlineTSPSourceTest {
 	}
 
 	@Test
+	@Ignore("Site forbidden?")
 	public void testWithTimestampDataLoader() {
-		OnlineTSPSource tspSource = new OnlineTSPSource(TSA_URL);
+		OnlineTSPSource tspSource = new OnlineTSPSource("http://tsa.sk.ee");
 		tspSource.setDataLoader(new TimestampDataLoader()); // content-type is different
 
-		byte[] digest = DSSUtils.digest(DigestAlgorithm.SHA1, "Hello world".getBytes());
-		TimeStampToken timeStampResponse = tspSource.getTimeStampResponse(DigestAlgorithm.SHA1, digest);
+		byte[] digest = DSSUtils.digest(DigestAlgorithm.SHA256, "Hello world".getBytes());
+		TimeStampToken timeStampResponse = tspSource.getTimeStampResponse(DigestAlgorithm.SHA256, digest);
 		assertNotNull(timeStampResponse);
 	}
 
@@ -58,8 +60,8 @@ public class OnlineTSPSourceTest {
 	@Test
 	public void testWithNonce() {
 		OnlineTSPSource tspSource = new OnlineTSPSource(TSA_URL);
-		tspSource.setNonceSource(new NonceSource());
 		tspSource.setDataLoader(new NativeHTTPDataLoader());
+		tspSource.setNonceSource(new SecureRandomNonceSource());
 
 		byte[] digest = DSSUtils.digest(DigestAlgorithm.SHA1, "Hello world".getBytes());
 		TimeStampToken timeStampResponse = tspSource.getTimeStampResponse(DigestAlgorithm.SHA1, digest);

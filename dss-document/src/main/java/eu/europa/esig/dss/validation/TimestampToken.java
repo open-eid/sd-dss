@@ -29,8 +29,6 @@ import java.util.List;
 
 import javax.security.auth.x500.X500Principal;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.Hex;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.cms.AttributeTable;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
@@ -51,6 +49,7 @@ import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.EncryptionAlgorithm;
 import eu.europa.esig.dss.SignatureAlgorithm;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.x509.ArchiveTimestampType;
 import eu.europa.esig.dss.x509.CertificatePool;
 import eu.europa.esig.dss.x509.CertificateToken;
@@ -62,7 +61,6 @@ import eu.europa.esig.dss.x509.TokenValidationExtraInfo;
 
 /**
  * SignedToken containing a TimeStamp.
- *
  *
  */
 public class TimestampToken extends Token {
@@ -80,8 +78,6 @@ public class TimestampToken extends Token {
 	private boolean messageImprintData;
 
 	private Boolean messageImprintIntact = null;
-
-	private String signedDataMessage = "";
 
 	private List<TimestampReference> timestampedReferences;
 
@@ -139,7 +135,7 @@ public class TimestampToken extends Token {
 
 	@Override
 	public String getAbbreviation() {
-		return timeStampType.name() + ": " + getDSSId() + ": " + DSSUtils.formatInternal(timeStamp.getTimeStampInfo().getGenTime());
+		return timeStampType.name() + ": " + getDSSIdAsString() + ": " + DSSUtils.formatInternal(timeStamp.getTimeStampInfo().getGenTime());
 	}
 
 	/**
@@ -192,28 +188,28 @@ public class TimestampToken extends Token {
 			if (logger.isDebugEnabled()) {
 				logger.debug("No signing certificate for timestamp token: ", e);
 			} else {
-				logger.info("No signing certificate for timestamp token: ", e.getMessage());
+				logger.info("No signing certificate for timestamp token: {}", e.getMessage());
 			}
 			timestampValidity = TimestampValidity.NO_SIGNING_CERTIFICATE;
 		} catch (TSPValidationException e) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("No valid signature for timestamp token: ", e);
 			} else {
-				logger.info("No valid signature for timestamp token: " + e.getMessage());
+				logger.info("No valid signature for timestamp token: {}", e.getMessage());
 			}
 			timestampValidity = TimestampValidity.NOT_VALID_SIGNATURE;
 		} catch (TSPException e) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("No valid structure for timestamp token: ", e);
 			} else {
-				logger.info("No valid structure for timestamp token: " + e.getMessage());
+				logger.info("No valid structure for timestamp token: {}", e.getMessage());
 			}
 			timestampValidity = TimestampValidity.NOT_VALID_STRUCTURE;
 		} catch (OperatorCreationException e) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("No valid structure for timestamp token: ", e);
 			} else {
-				logger.info("No valid structure for timestamp token: " + e.getMessage());
+				logger.info("No valid structure for timestamp token: {}", e.getMessage());
 			}
 			timestampValidity = TimestampValidity.NOT_VALID_STRUCTURE;
 		}
@@ -241,14 +237,12 @@ public class TimestampToken extends Token {
 			final byte[] timestampDigest = timeStampInfo.getMessageImprintDigest();
 			messageImprintIntact = Arrays.equals(computedDigest, timestampDigest);
 			if (!messageImprintIntact) {
-				logger.error("Computed digest ({}) on the extracted data from the document : {}", digestAlgorithm, Hex.encodeHexString(computedDigest));
-				logger.error("Digest present in TimestampToken: {}", Hex.encodeHexString(timestampDigest));
+				logger.error("Computed digest ({}) on the extracted data from the document : {}", digestAlgorithm, Utils.toHex(computedDigest));
+				logger.error("Digest present in TimestampToken: {}", Utils.toHex(timestampDigest));
 				logger.error("Digest in TimestampToken matches digest of extracted data from document: {}", messageImprintIntact);
 			}
 		} catch (DSSException e) {
-
 			messageImprintIntact = false;
-			signedDataMessage = "Timestamp digest problem: " + e.getMessage();
 		}
 		return messageImprintIntact;
 	}
@@ -292,7 +286,7 @@ public class TimestampToken extends Token {
 	public String getEncodedSignedDataDigestValue() {
 
 		final byte[] messageImprintDigest = timeStamp.getTimeStampInfo().getMessageImprintDigest();
-		return Base64.encodeBase64String(messageImprintDigest);
+		return Utils.toBase64(messageImprintDigest);
 	}
 
 	/**
@@ -449,17 +443,10 @@ public class TimestampToken extends Token {
 			}
 			indentStr += "\t";
 			if (messageImprintIntact != null) {
-
 				if (messageImprintIntact) {
-
 					out.append(indentStr).append("Timestamp MATCHES the signed data.").append('\n');
 				} else {
-
 					out.append(indentStr).append("Timestamp DOES NOT MATCH the signed data.").append('\n');
-					if (!signedDataMessage.isEmpty()) {
-
-						out.append(indentStr).append("- ").append(signedDataMessage).append('\n');
-					}
 				}
 			}
 			indentStr = indentStr.substring(1);

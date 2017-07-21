@@ -8,18 +8,26 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.cxf.jaxrs.model.wadl.Description;
-
 import eu.europa.esig.dss.validation.reports.dto.DataToValidateDTO;
 import eu.europa.esig.dss.validation.reports.dto.ReportsDTO;
 
-@Path("ValidationService")
+/**
+ * This REST interface provides operations for the validation of signature.
+ */
+@Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Description(value = "This REST interface provides operations for the validation of signature.")
 public interface RestDocumentValidationService extends Serializable {
 
+	/**
+	 * This method returns the result of the validation of the signed file. The results contains a Diagnostic Data, a
+	 * simple report and a detailed report
+	 * 
+	 * @param dataToValidate
+	 * @return
+	 */
 	@POST
 	@Path("validateSignature")
 	ReportsDTO validateSignature(DataToValidateDTO dataToValidate);
+
 }

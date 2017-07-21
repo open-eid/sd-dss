@@ -7,15 +7,29 @@
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element type="xs:string" name="Description"/>
+				<xs:element name="ContainerConstraints" type="tns:ContainerConstraints" minOccurs="0" />
 				<xs:element name="SignatureConstraints" type="tns:SignatureConstraints" minOccurs="0" />
 				<xs:element name="CounterSignatureConstraints" type="tns:SignatureConstraints" minOccurs="0" />
 				<xs:element name="Timestamp" type="tns:TimestampConstraints" minOccurs="0" />
 				<xs:element name="Revocation" type="tns:RevocationConstraints" minOccurs="0" />
 				<xs:element name="Cryptographic" type="tns:CryptographicConstraint" minOccurs="0" />
+				<xs:element name="eIDAS" type="tns:eIDAS" minOccurs="0" />
 			</xs:sequence>
 			<xs:attribute type="xs:string" name="Name"/>
 		</xs:complexType>
 	</xs:element>
+
+	<xs:complexType name="ContainerConstraints">
+		<xs:sequence>
+			<xs:element name="AcceptableContainerTypes" type="tns:MultiValuesConstraint" minOccurs="0" />
+			<xs:element name="ZipCommentPresent" type="tns:LevelConstraint" minOccurs="0" />
+			<xs:element name="AcceptableZipComment" type="tns:MultiValuesConstraint" minOccurs="0" />
+			<xs:element name="MimeTypeFilePresent" type="tns:LevelConstraint" minOccurs="0" />
+			<xs:element name="AcceptableMimeTypeFileContent" type="tns:MultiValuesConstraint" minOccurs="0" />
+			<xs:element name="ManifestFilePresent" type="tns:LevelConstraint" minOccurs="0" />
+			<xs:element name="AllFilesSigned" type="tns:LevelConstraint" minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
 
 	<xs:complexType name="SignatureConstraints">
 		<xs:sequence>
@@ -100,6 +114,8 @@
 			<xs:element name="Recognition" type="tns:LevelConstraint" minOccurs="0" />
 			<xs:element name="Signature" type="tns:LevelConstraint" minOccurs="0" />
 			<xs:element name="NotExpired" type="tns:LevelConstraint" minOccurs="0" />
+			<xs:element name="AuthorityInfoAccessPresent" type="tns:LevelConstraint" minOccurs="0" />
+			<xs:element name="RevocationInfoAccessPresent" type="tns:LevelConstraint" minOccurs="0" />
 			<xs:element name="RevocationDataAvailable" type="tns:LevelConstraint" minOccurs="0" />
 			<xs:element name="RevocationDataNextUpdatePresent" type="tns:LevelConstraint" minOccurs="0" />
 			<xs:element name="RevocationDataFreshness" type="tns:LevelConstraint" minOccurs="0" />
@@ -111,14 +127,16 @@
 			<xs:element name="OrganizationUnit" type="tns:MultiValuesConstraint" minOccurs="0" />
 			<xs:element name="OrganizationName" type="tns:MultiValuesConstraint" minOccurs="0" />
 			<xs:element name="Country" type="tns:MultiValuesConstraint" minOccurs="0" />
+			<xs:element name="SerialNumberPresent" type="tns:LevelConstraint" minOccurs="0" />
 			<xs:element name="NotRevoked" type="tns:LevelConstraint" minOccurs="0" />
 			<xs:element name="NotOnHold" type="tns:LevelConstraint" minOccurs="0" />
 			<xs:element name="PolicyIds" type="tns:MultiValuesConstraint" minOccurs="0" />
 			<xs:element name="QCStatementIds" type="tns:MultiValuesConstraint" minOccurs="0" />
 			<xs:element name="Qualification" type="tns:LevelConstraint" minOccurs="0" />
-			<xs:element name="SupportedBySSCD" type="tns:LevelConstraint" minOccurs="0" />
+			<xs:element name="SupportedByQSCD" type="tns:LevelConstraint" minOccurs="0" />
 			<xs:element name="IssuedToNaturalPerson" type="tns:LevelConstraint" minOccurs="0" />
 			<xs:element name="IssuedToLegalPerson" type="tns:LevelConstraint" minOccurs="0" />
+			<xs:element name="UsePseudonym" type="tns:LevelConstraint" minOccurs="0" />
 			<xs:element name="Cryptographic" type="tns:CryptographicConstraint" minOccurs="0" />
 		</xs:sequence>
 	</xs:complexType>
@@ -141,6 +159,19 @@
 				</xs:sequence>
 			</xs:extension>
 		</xs:complexContent>
+	</xs:complexType>
+	
+	<!-- eIDAS REGL 910/EU/2014 -->
+	<xs:complexType name="eIDAS">
+		<xs:sequence>
+			
+			<xs:element name="TLFreshness" type="tns:TimeConstraint" minOccurs="0" />
+			<xs:element name="TLNotExpired" type="tns:LevelConstraint" minOccurs="0" />
+			<xs:element name="TLWellSigned" type="tns:LevelConstraint" minOccurs="0" />
+			<xs:element name="TLVersion" type="tns:ValueConstraint" minOccurs="0" />
+			
+			<xs:element name="TLConsistency" type="tns:LevelConstraint" minOccurs="0" />
+		</xs:sequence>
 	</xs:complexType>
 	
 	<xs:complexType name="ListAlgo">

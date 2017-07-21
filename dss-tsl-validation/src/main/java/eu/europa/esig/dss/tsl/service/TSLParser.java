@@ -27,10 +27,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.xml.bind.JAXBContext;
@@ -39,8 +37,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -57,9 +53,11 @@ import eu.europa.esig.dss.tsl.TSLConditionsForQualifiers;
 import eu.europa.esig.dss.tsl.TSLParserResult;
 import eu.europa.esig.dss.tsl.TSLPointer;
 import eu.europa.esig.dss.tsl.TSLService;
-import eu.europa.esig.dss.tsl.TSLServiceExtension;
 import eu.europa.esig.dss.tsl.TSLServiceProvider;
-import eu.europa.esig.dss.tsl.TSLServiceStatus;
+import eu.europa.esig.dss.tsl.TSLServiceStatusAndInformationExtensions;
+import eu.europa.esig.dss.util.MutableTimeDependentValues;
+import eu.europa.esig.dss.util.TimeDependentValues;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.x509.CertificateToken;
 import eu.europa.esig.jaxb.ecc.CriteriaListType;
 import eu.europa.esig.jaxb.ecc.KeyUsageBitType;
@@ -69,6 +67,7 @@ import eu.europa.esig.jaxb.ecc.QualificationElementType;
 import eu.europa.esig.jaxb.ecc.QualificationsType;
 import eu.europa.esig.jaxb.ecc.QualifierType;
 import eu.europa.esig.jaxb.ecc.QualifiersType;
+import eu.europa.esig.jaxb.tsl.AdditionalServiceInformationType;
 import eu.europa.esig.jaxb.tsl.AnyType;
 import eu.europa.esig.jaxb.tsl.DigitalIdentityListType;
 import eu.europa.esig.jaxb.tsl.DigitalIdentityType;
@@ -138,6 +137,7 @@ public class TSLParser implements Callable<TSLParserResult> {
 		TSLParserResult tslModel = new TSLParserResult();
 		tslModel.setTerritory(getTerritory(tsl));
 		tslModel.setSequenceNumber(getSequenceNumber(tsl));
+		tslModel.setVersion(getVersion(tsl));
 		tslModel.setIssueDate(getIssueDate(tsl));
 		tslModel.setNextUpdateDate(getNextUpdate(tsl));
 		tslModel.setDistributionPoints(getDistributionPoints(tsl));
@@ -145,6 +145,14 @@ public class TSLParser implements Callable<TSLParserResult> {
 		tslModel.setServiceProviders(getServiceProviders(tsl));
 		tslModel.setEnglishSchemeInformationURIs(getEnglishSchemeInformationURIs(tsl));
 		return tslModel;
+	}
+
+	private int getVersion(TrustStatusListType tsl) {
+		BigInteger tslVersionIdentifier = tsl.getSchemeInformation().getTSLVersionIdentifier();
+		if (tslVersionIdentifier != null) {
+			return tslVersionIdentifier.intValue();
+		}
+		return -1;
 	}
 
 	private int getSequenceNumber(TrustStatusListType tsl) {
@@ -193,7 +201,7 @@ public class TSLParser implements Callable<TSLParserResult> {
 	private List<TSLPointer> getMachineProcessableTSLPointers(TrustStatusListType tsl) {
 		List<TSLPointer> list = new ArrayList<TSLPointer>();
 		List<TSLPointer> tslPointers = getTSLPointers(tsl);
-		if (CollectionUtils.isNotEmpty(tslPointers)) {
+		if (Utils.isCollectionNotEmpty(tslPointers)) {
 			for (TSLPointer tslPointer : tslPointers) {
 				if (TSL_MIME_TYPE.equals(tslPointer.getMimeType())) {
 					list.add(tslPointer);
@@ -224,7 +232,7 @@ public class TSLParser implements Callable<TSLParserResult> {
 
 	private void fillPointerTerritoryAndMimeType(OtherTSLPointerType otherTSLPointerType, TSLPointer pointer) {
 		List<Serializable> textualInformationOrOtherInformation = otherTSLPointerType.getAdditionalInformation().getTextualInformationOrOtherInformation();
-		if (CollectionUtils.isNotEmpty(textualInformationOrOtherInformation)) {
+		if (Utils.isCollectionNotEmpty(textualInformationOrOtherInformation)) {
 			Map<String, String> properties = new HashMap<String, String>();
 			for (Serializable serializable : textualInformationOrOtherInformation) {
 				if (serializable instanceof AnyType) {
@@ -258,7 +266,7 @@ public class TSLParser implements Callable<TSLParserResult> {
 	private void extractCertificates(List<DigitalIdentityListType> serviceDigitalIdentity, List<CertificateToken> result) {
 		for (DigitalIdentityListType digitalIdentityListType : serviceDigitalIdentity) {
 			List<CertificateToken> certificates = extractCertificates(digitalIdentityListType);
-			if (CollectionUtils.isNotEmpty(certificates)) {
+			if (Utils.isCollectionNotEmpty(certificates)) {
 				result.addAll(certificates);
 			}
 		}
@@ -283,7 +291,7 @@ public class TSLParser implements Callable<TSLParserResult> {
 	private List<TSLServiceProvider> getServiceProviders(TrustStatusListType tsl) {
 		List<TSLServiceProvider> serviceProviders = new ArrayList<TSLServiceProvider>();
 		TrustServiceProviderListType trustServiceProviderList = tsl.getTrustServiceProviderList();
-		if ((trustServiceProviderList != null) && (CollectionUtils.isNotEmpty(trustServiceProviderList.getTrustServiceProvider()))) {
+		if ((trustServiceProviderList != null) && (Utils.isCollectionNotEmpty(trustServiceProviderList.getTrustServiceProvider()))) {
 			for (TSPType tsp : trustServiceProviderList.getTrustServiceProvider()) {
 				serviceProviders.add(getServiceProvider(tsp));
 			}
@@ -306,7 +314,7 @@ public class TSLParser implements Callable<TSLParserResult> {
 
 	private List<TSLService> getServices(TSPServicesListType tspServices) {
 		List<TSLService> services = new ArrayList<TSLService>();
-		if ((tspServices != null) && CollectionUtils.isNotEmpty(tspServices.getTSPService())) {
+		if ((tspServices != null) && Utils.isCollectionNotEmpty(tspServices.getTSPService())) {
 			for (TSPServiceType tslService : tspServices.getTSPService()) {
 				if (tslService.getServiceInformation() != null) {
 					services.add(getService(tslService));
@@ -320,96 +328,123 @@ public class TSLParser implements Callable<TSLParserResult> {
 		TSLService service = new TSLService();
 		TSPServiceInformationType serviceInfo = tslService.getServiceInformation();
 		service.setName(getEnglishOrFirst(serviceInfo.getServiceName()));
-		service.setType(serviceInfo.getServiceTypeIdentifier());
-		service.setCertificateUrls(extractCertificatesUrls(serviceInfo));
 		service.setCertificates(extractCertificates(serviceInfo.getServiceDigitalIdentity()));
-		service.setExtensions(extractExtensions(serviceInfo.getServiceInformationExtensions()));
-		service.setStatus(getStatusHistory(tslService));
+		service.setStatusAndInformationExtensions(getStatusHistory(tslService));
 		return service;
 	}
 
-	private List<TSLServiceStatus> getStatusHistory(TSPServiceType tslService) {
-		List<TSLServiceStatus> statusHistoryList = new ArrayList<TSLServiceStatus>();
+	private TimeDependentValues<TSLServiceStatusAndInformationExtensions> getStatusHistory(TSPServiceType tslService) {
+		MutableTimeDependentValues<TSLServiceStatusAndInformationExtensions> statusHistoryList = new MutableTimeDependentValues<TSLServiceStatusAndInformationExtensions>();
 
 		TSPServiceInformationType serviceInfo = tslService.getServiceInformation();
 
-		TSLServiceStatus status = new TSLServiceStatus();
+		TSLServiceStatusAndInformationExtensions status = new TSLServiceStatusAndInformationExtensions();
+		status.setType(serviceInfo.getServiceTypeIdentifier());
 		status.setStatus(serviceInfo.getServiceStatus());
+		ExtensionsListType serviceInformationExtensions = serviceInfo.getServiceInformationExtensions();
+		if (serviceInformationExtensions != null) {
+			status.setConditionsForQualifiers(extractConditionsForQualifiers(serviceInformationExtensions.getExtension()));
+			status.setAdditionalServiceInfoUris(extractAdditionalServiceInfoUris(serviceInformationExtensions.getExtension()));
+			status.setExpiredCertsRevocationInfo(extractExpiredCertsRevocationInfo(serviceInformationExtensions.getExtension()));
+		}
 		Date nextEndDate = convertToDate(serviceInfo.getStatusStartingTime());
 		status.setStartDate(nextEndDate);
-		statusHistoryList.add(status);
+		statusHistoryList.addOldest(status);
 
-		if (tslService.getServiceHistory() != null && CollectionUtils.isNotEmpty(tslService.getServiceHistory().getServiceHistoryInstance())) {
+		if (tslService.getServiceHistory() != null && Utils.isCollectionNotEmpty(tslService.getServiceHistory().getServiceHistoryInstance())) {
 			for (ServiceHistoryInstanceType serviceHistory : tslService.getServiceHistory().getServiceHistoryInstance()) {
-				TSLServiceStatus statusHistory = new TSLServiceStatus();
+				TSLServiceStatusAndInformationExtensions statusHistory = new TSLServiceStatusAndInformationExtensions();
+				statusHistory.setType(serviceHistory.getServiceTypeIdentifier());
 				statusHistory.setStatus(serviceHistory.getServiceStatus());
+				ExtensionsListType serviceHistoryInformationExtensions = serviceHistory.getServiceInformationExtensions();
+				if (serviceHistoryInformationExtensions != null) {
+					statusHistory.setConditionsForQualifiers(extractConditionsForQualifiers(serviceHistoryInformationExtensions.getExtension()));
+					statusHistory.setAdditionalServiceInfoUris(extractAdditionalServiceInfoUris(serviceHistoryInformationExtensions.getExtension()));
+					statusHistory.setExpiredCertsRevocationInfo(extractExpiredCertsRevocationInfo(serviceHistoryInformationExtensions.getExtension()));
+				}
 				statusHistory.setEndDate(nextEndDate);
 				nextEndDate = convertToDate(serviceHistory.getStatusStartingTime());
 				statusHistory.setStartDate(nextEndDate);
-
-				statusHistoryList.add(statusHistory);
+				statusHistoryList.addOldest(statusHistory);
 			}
 		}
 
 		return statusHistoryList;
 	}
 
-	private List<String> extractCertificatesUrls(TSPServiceInformationType serviceInfo) {
-		Set<String> certificateUrls = new HashSet<String>();
-		if ((serviceInfo.getSchemeServiceDefinitionURI() != null) && CollectionUtils.isNotEmpty(serviceInfo.getSchemeServiceDefinitionURI().getURI())) {
-			List<NonEmptyMultiLangURIType> uris = serviceInfo.getSchemeServiceDefinitionURI().getURI();
-			for (NonEmptyMultiLangURIType uri : uris) {
-				String value = uri.getValue();
-				if (isCertificateURI(value)) {
-					certificateUrls.add(value);
+	@SuppressWarnings("rawtypes")
+	private List<String> extractAdditionalServiceInfoUris(List<ExtensionType> extensions) {
+		List<String> additionalServiceInfos = new ArrayList<String>();
+		for (ExtensionType extensionType : extensions) {
+			List<Object> content = extensionType.getContent();
+			if (Utils.isCollectionNotEmpty(content)) {
+				for (Object object : content) {
+					if (object instanceof JAXBElement) {
+						JAXBElement jaxbElement = (JAXBElement) object;
+						Object objectValue = jaxbElement.getValue();
+						if (objectValue instanceof AdditionalServiceInformationType) {
+							AdditionalServiceInformationType additionalServiceInfo = (AdditionalServiceInformationType) objectValue;
+							NonEmptyMultiLangURIType uri = additionalServiceInfo.getURI();
+							if (uri != null && ENGLISH_LANGUAGE.equals(uri.getLang())) {
+								additionalServiceInfos.add(uri.getValue());
+							}
+						}
+					}
 				}
 			}
 		}
-		return new ArrayList<String>(certificateUrls);
-	}
-
-	private boolean isCertificateURI(String value) {
-		return StringUtils.endsWithIgnoreCase(value, ".crt");
+		return additionalServiceInfos;
 	}
 
 	@SuppressWarnings("rawtypes")
-	private List<TSLServiceExtension> extractExtensions(ExtensionsListType serviceInformationExtensions) {
-		if ((serviceInformationExtensions != null) && CollectionUtils.isNotEmpty(serviceInformationExtensions.getExtension())) {
-			List<TSLServiceExtension> extensions = new ArrayList<TSLServiceExtension>();
-			for (ExtensionType extensionType : serviceInformationExtensions.getExtension()) {
-				List<Object> content = extensionType.getContent();
-				if (CollectionUtils.isNotEmpty(content)) {
-					List<TSLConditionsForQualifiers> conditionsForQualifiers = new ArrayList<TSLConditionsForQualifiers>();
-					for (Object object : content) {
-						if (object instanceof JAXBElement) {
-							JAXBElement jaxbElement = (JAXBElement) object;
-							Object objectValue = jaxbElement.getValue();
-							if (objectValue instanceof QualificationsType) {
-								QualificationsType qt = (QualificationsType) jaxbElement.getValue();
-								if ((qt != null) && CollectionUtils.isNotEmpty(qt.getQualificationElement())) {
-									for (QualificationElementType qualificationElement : qt.getQualificationElement()) {
-										CriteriaListType criteriaList = qualificationElement.getCriteriaList();
-										if(criteriaList != null) { //Added null check for TSL v5
-											List<String> qualifiers = extractQualifiers(qualificationElement);
-											Condition condition = getCondition(criteriaList);
-											if (CollectionUtils.isNotEmpty(qualifiers) && (condition != null)) {
-												conditionsForQualifiers.add(new TSLConditionsForQualifiers(qualifiers, condition));
-											}
-										}
+	private List<TSLConditionsForQualifiers> extractConditionsForQualifiers(List<ExtensionType> extensions) {
+		List<TSLConditionsForQualifiers> conditionsForQualifiers = new ArrayList<TSLConditionsForQualifiers>();
+		for (ExtensionType extensionType : extensions) {
+			List<Object> content = extensionType.getContent();
+			if (Utils.isCollectionNotEmpty(content)) {
+				for (Object object : content) {
+					if (object instanceof JAXBElement) {
+						JAXBElement jaxbElement = (JAXBElement) object;
+						Object objectValue = jaxbElement.getValue();
+						if (objectValue instanceof QualificationsType) {
+							QualificationsType qt = (QualificationsType) jaxbElement.getValue();
+							if ((qt != null) && Utils.isCollectionNotEmpty(qt.getQualificationElement())) {
+								for (QualificationElementType qualificationElement : qt.getQualificationElement()) {
+									List<String> qualifiers = extractQualifiers(qualificationElement);
+									Condition condition = getCondition(qualificationElement.getCriteriaList());
+									if (Utils.isCollectionNotEmpty(qualifiers) && (condition != null)) {
+										conditionsForQualifiers.add(new TSLConditionsForQualifiers(qualifiers, condition));
+
 									}
 								}
 							}
 						}
 					}
-					if (CollectionUtils.isNotEmpty(conditionsForQualifiers)) {
-						TSLServiceExtension extension = new TSLServiceExtension();
-						extension.setCritical(extensionType.isCritical());
-						extension.setConditionsForQualifiers(conditionsForQualifiers);
-						extensions.add(extension);
+				}
+			}
+		}
+		return conditionsForQualifiers;
+	}
+
+	@SuppressWarnings("rawtypes")
+	private Date extractExpiredCertsRevocationInfo(List<ExtensionType> extensions) {
+		for (ExtensionType extensionType : extensions) {
+			List<Object> content = extensionType.getContent();
+			if (Utils.isCollectionNotEmpty(content)) {
+				for (Object object : content) {
+					if (object instanceof JAXBElement) {
+						JAXBElement jaxbElement = (JAXBElement) object;
+						Object objectValue = jaxbElement.getValue();
+						if (objectValue instanceof XMLGregorianCalendar) {
+							XMLGregorianCalendar calendar = (XMLGregorianCalendar) objectValue;
+							if (calendar != null) {
+								return calendar.toGregorianCalendar().getTime();
+							}
+						}
+
 					}
 				}
 			}
-			return extensions;
 		}
 		return null;
 	}
@@ -417,7 +452,7 @@ public class TSLParser implements Callable<TSLParserResult> {
 	private List<String> extractQualifiers(QualificationElementType qualificationElement) {
 		List<String> qualifiers = new ArrayList<String>();
 		QualifiersType qualifiersType = qualificationElement.getQualifiers();
-		if ((qualifiersType != null) && CollectionUtils.isNotEmpty(qualifiersType.getQualifier())) {
+		if ((qualifiersType != null) && Utils.isCollectionNotEmpty(qualifiersType.getQualifier())) {
 			for (QualifierType qualitierType : qualifiersType.getQualifier()) {
 				qualifiers.add(qualitierType.getUri());
 			}
@@ -425,18 +460,21 @@ public class TSLParser implements Callable<TSLParserResult> {
 		return qualifiers;
 	}
 
-	private Condition getCondition(CriteriaListType criteriaList) {
+	protected Condition getCondition(CriteriaListType criteriaList) {
 		MatchingCriteriaIndicator matchingCriteriaIndicator = MatchingCriteriaIndicator.valueOf(criteriaList.getAssert());
 		CompositeCondition condition = new CriteriaListCondition(matchingCriteriaIndicator);
+
 		addKeyUsageConditionsIfPresent(criteriaList.getKeyUsage(), condition);
 		addPolicyIdConditionsIfPresent(criteriaList.getPolicySet(), condition);
 		addCriteriaListConditionsIfPresent(criteriaList.getCriteriaList(), condition);
+
 		return condition;
 	}
 
-	private void addPolicyIdConditionsIfPresent(List<PoliciesListType> policySet, CompositeCondition condition) {
-		if (CollectionUtils.isNotEmpty(policySet)) {
+	private void addPolicyIdConditionsIfPresent(List<PoliciesListType> policySet, CompositeCondition criteriaCondition) {
+		if (Utils.isCollectionNotEmpty(policySet)) {
 			for (PoliciesListType policiesListType : policySet) {
+				CompositeCondition condition = new CompositeCondition();
 				for (ObjectIdentifierType oidType : policiesListType.getPolicyIdentifier()) {
 					IdentifierType identifier = oidType.getIdentifier();
 					String id = identifier.getValue();
@@ -448,27 +486,28 @@ public class TSLParser implements Callable<TSLParserResult> {
 
 					condition.addChild(new PolicyIdCondition(id));
 				}
+				criteriaCondition.addChild(condition);
 			}
 		}
 	}
 
-	private void addKeyUsageConditionsIfPresent(List<KeyUsageType> keyUsages, CompositeCondition condition) {
-		if (CollectionUtils.isNotEmpty(keyUsages)) {
+	private void addKeyUsageConditionsIfPresent(List<KeyUsageType> keyUsages, CompositeCondition criteriaCondition) {
+		if (Utils.isCollectionNotEmpty(keyUsages)) {
 			for (KeyUsageType keyUsageType : keyUsages) {
+				CompositeCondition condition = new CompositeCondition();
 				for (KeyUsageBitType keyUsageBit : keyUsageType.getKeyUsageBit()) {
 					condition.addChild(new KeyUsageCondition(keyUsageBit.getName(), keyUsageBit.isValue()));
 				}
+				criteriaCondition.addChild(condition);
 			}
 		}
 	}
 
 	private void addCriteriaListConditionsIfPresent(List<CriteriaListType> criteriaList, CompositeCondition condition) {
-		if (CollectionUtils.isNotEmpty(criteriaList)) {
-			CompositeCondition compositeConditions = new CompositeCondition();
+		if (Utils.isCollectionNotEmpty(criteriaList)) {
 			for (CriteriaListType criteriaListType : criteriaList) {
-				compositeConditions.addChild(getCondition(criteriaListType));
+				condition.addChild(getCondition(criteriaListType));
 			}
-			condition.addChild(compositeConditions);
 		}
 	}
 
@@ -488,23 +527,23 @@ public class TSLParser implements Callable<TSLParserResult> {
 		}
 
 		StringBuffer sb = new StringBuffer();
-		if (StringUtils.isNotEmpty(a.getStreetAddress())) {
+		if (Utils.isStringNotEmpty(a.getStreetAddress())) {
 			sb.append(a.getStreetAddress());
 			sb.append(", ");
 		}
-		if (StringUtils.isNotEmpty(a.getPostalCode())) {
+		if (Utils.isStringNotEmpty(a.getPostalCode())) {
 			sb.append(a.getPostalCode());
 			sb.append(", ");
 		}
-		if (StringUtils.isNotEmpty(a.getLocality())) {
+		if (Utils.isStringNotEmpty(a.getLocality())) {
 			sb.append(a.getLocality());
 			sb.append(", ");
 		}
-		if (StringUtils.isNotEmpty(a.getStateOrProvince())) {
+		if (Utils.isStringNotEmpty(a.getStateOrProvince())) {
 			sb.append(a.getStateOrProvince());
 			sb.append(", ");
 		}
-		if (StringUtils.isNotEmpty(a.getCountryName())) {
+		if (Utils.isStringNotEmpty(a.getCountryName())) {
 			sb.append(a.getCountryName());
 		}
 		return sb.toString();
@@ -532,7 +571,7 @@ public class TSLParser implements Callable<TSLParserResult> {
 	private List<String> getEnglishSchemeInformationURIs(TrustStatusListType tsl) {
 		List<String> result = new ArrayList<String>();
 		NonEmptyMultiLangURIListType schemeInformationURI = tsl.getSchemeInformation().getSchemeInformationURI();
-		if (schemeInformationURI != null && CollectionUtils.isNotEmpty(schemeInformationURI.getURI())) {
+		if (schemeInformationURI != null && Utils.isCollectionNotEmpty(schemeInformationURI.getURI())) {
 			for (NonEmptyMultiLangURIType uri : schemeInformationURI.getURI()) {
 				if (ENGLISH_LANGUAGE.equals(uri.getLang())) {
 					result.add(uri.getValue());

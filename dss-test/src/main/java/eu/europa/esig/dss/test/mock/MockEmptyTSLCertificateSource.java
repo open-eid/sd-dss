@@ -20,17 +20,23 @@
  */
 package eu.europa.esig.dss.test.mock;
 
-import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import eu.europa.esig.dss.tsl.Condition;
 import eu.europa.esig.dss.tsl.ServiceInfo;
 import eu.europa.esig.dss.tsl.ServiceInfoStatus;
+import eu.europa.esig.dss.util.MutableTimeDependentValues;
 import eu.europa.esig.dss.x509.CertificateSourceType;
 import eu.europa.esig.dss.x509.CertificateToken;
 import eu.europa.esig.dss.x509.CommonTrustedCertificateSource;
 
 public class MockEmptyTSLCertificateSource extends CommonTrustedCertificateSource {
+
+	private static final long serialVersionUID = -2354302376180111712L;
 
 	public static final String CA_QC = "http://uri.etsi.org/TrstSvc/Svctype/CA/QC";
 	public static final String SERVICE_STATUS_UNDERSUPERVISION = "http://uri.etsi.org/TrstSvc/eSigDir-1999-93-EC-TrustedList/Svcstatus/undersupervision";
@@ -50,7 +56,6 @@ public class MockEmptyTSLCertificateSource extends CommonTrustedCertificateSourc
 	 */
 	@Override
 	public CertificateToken addCertificate(CertificateToken cert) {
-
 		final ServiceInfo serviceInfo = getMockServiceInfo();
 		final CertificateToken certToken = addCertificate(cert, serviceInfo);
 		return certToken;
@@ -66,15 +71,15 @@ public class MockEmptyTSLCertificateSource extends CommonTrustedCertificateSourc
 
 		ServiceInfo serviceInfo = new ServiceInfo();
 		serviceInfo.setTspName("DSS, Mock Office DSS-CA");
-		serviceInfo.setType(CA_QC);
 		serviceInfo.setServiceName("MockTSPServiceName");
 		Calendar calendar = Calendar.getInstance();
 		calendar.add(Calendar.YEAR, -1);
 
-		List<ServiceInfoStatus> status = new ArrayList<ServiceInfoStatus>();
-		status.add(new ServiceInfoStatus(SERVICE_STATUS_UNDERSUPERVISION, calendar.getTime(), null));
+		MutableTimeDependentValues<ServiceInfoStatus> status = new MutableTimeDependentValues<ServiceInfoStatus>();
+		Map<String, List<Condition>> emptyMap = new HashMap<String, List<Condition>>();
+		List<String> emptyList = Collections.emptyList();
+		status.addOldest(new ServiceInfoStatus(CA_QC, SERVICE_STATUS_UNDERSUPERVISION, emptyMap, emptyList, null, calendar.getTime(), null));
 		serviceInfo.setStatus(status);
-		serviceInfo.setTlWellSigned(true);
 
 		return serviceInfo;
 	}

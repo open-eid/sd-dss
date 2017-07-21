@@ -27,7 +27,6 @@ import java.io.File;
 import java.security.MessageDigest;
 import java.util.Date;
 
-import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 
 import eu.europa.esig.dss.DSSDocument;
@@ -35,12 +34,12 @@ import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.FileDocument;
 import eu.europa.esig.dss.SignatureAlgorithm;
 import eu.europa.esig.dss.SignatureLevel;
-import eu.europa.esig.dss.SignaturePackaging;
 import eu.europa.esig.dss.ToBeSigned;
 import eu.europa.esig.dss.pades.signature.PAdESService;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.test.gen.CertificateService;
 import eu.europa.esig.dss.token.DSSPrivateKeyEntry;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
 
 /**
@@ -66,7 +65,7 @@ public class DigestStabilityTest {
 		byte[] digest1 = messageDigest.digest(dataToSign1.getBytes());
 		byte[] digest2 = messageDigest.digest(dataToSign2.getBytes());
 
-		assertEquals(Base64.encodeBase64String(digest1), Base64.encodeBase64String(digest2));
+		assertEquals(Utils.toBase64(digest1), Utils.toBase64(digest2));
 	}
 
 	@Test
@@ -86,7 +85,7 @@ public class DigestStabilityTest {
 		byte[] digest1 = messageDigest.digest(dataToSign1.getBytes());
 		byte[] digest2 = messageDigest.digest(dataToSign2.getBytes());
 
-		assertNotEquals(Base64.encodeBase64String(digest1), Base64.encodeBase64String(digest2));
+		assertNotEquals(Utils.toBase64(digest1), Utils.toBase64(digest2));
 	}
 
 	@Test
@@ -106,7 +105,7 @@ public class DigestStabilityTest {
 		byte[] digest1 = messageDigest.digest(dataToSign1.getBytes());
 		byte[] digest2 = messageDigest.digest(dataToSign2.getBytes());
 
-		assertNotEquals(Base64.encodeBase64String(digest1), Base64.encodeBase64String(digest2));
+		assertNotEquals(Utils.toBase64(digest1), Utils.toBase64(digest2));
 	}
 
 	private ToBeSigned getDataToSign(DSSDocument toBeSigned, DSSPrivateKeyEntry privateKeyEntry, Date signingDate) {
@@ -117,7 +116,6 @@ public class DigestStabilityTest {
 		signatureParameters.bLevel().setSigningDate(signingDate);
 		signatureParameters.setSigningCertificate(privateKeyEntry.getCertificate());
 		signatureParameters.setCertificateChain(privateKeyEntry.getCertificateChain());
-		signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPING);
 		signatureParameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_B);
 
 		return service.getDataToSign(toBeSigned, signatureParameters);

@@ -23,17 +23,18 @@ package eu.europa.esig.dss.validation.policy;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import eu.europa.esig.dss.validation.DateUtils;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.jaxb.policy.Algo;
 import eu.europa.esig.jaxb.policy.AlgoExpirationDate;
 import eu.europa.esig.jaxb.policy.BasicSignatureConstraints;
 import eu.europa.esig.jaxb.policy.CertificateConstraints;
 import eu.europa.esig.jaxb.policy.ConstraintsParameters;
+import eu.europa.esig.jaxb.policy.ContainerConstraints;
 import eu.europa.esig.jaxb.policy.CryptographicConstraint;
+import eu.europa.esig.jaxb.policy.EIDAS;
 import eu.europa.esig.jaxb.policy.LevelConstraint;
 import eu.europa.esig.jaxb.policy.MultiValuesConstraint;
 import eu.europa.esig.jaxb.policy.RevocationConstraints;
@@ -76,17 +77,17 @@ public class EtsiValidationPolicy implements ValidationPolicy {
 		AlgoExpirationDate algoExpirationDate = signatureCryptographicConstraint.getAlgoExpirationDate();
 		String dateFormat = DateUtils.DEFAULT_DATE_FORMAT;
 		if (algoExpirationDate != null) {
-			if (StringUtils.isNotEmpty(algoExpirationDate.getFormat())) {
+			if (Utils.isStringNotEmpty(algoExpirationDate.getFormat())) {
 				dateFormat = algoExpirationDate.getFormat();
 			}
 			List<Algo> algos = algoExpirationDate.getAlgo();
 			String foundExpirationDate = null;
 			for (Algo algo : algos) {
-				if (StringUtils.equalsIgnoreCase(algo.getValue(), algorithm)) {
+				if (Utils.areStringsEqualIgnoreCase(algo.getValue(), algorithm)) {
 					foundExpirationDate = algo.getDate();
 				}
 			}
-			if (StringUtils.isNotEmpty(foundExpirationDate)) {
+			if (Utils.isStringNotEmpty(foundExpirationDate)) {
 				return DateUtils.parseDate(dateFormat, foundExpirationDate);
 			}
 		}
@@ -347,6 +348,24 @@ public class EtsiValidationPolicy implements ValidationPolicy {
 	}
 
 	@Override
+	public LevelConstraint getCertificatePseudoUsageConstraint(Context context, SubContext subContext) {
+		CertificateConstraints certificateConstraints = getCertificateConstraints(context, subContext);
+		if (certificateConstraints != null) {
+			return certificateConstraints.getUsePseudonym();
+		}
+		return null;
+	}
+
+	@Override
+	public LevelConstraint getCertificateSerialNumberConstraint(Context context, SubContext subContext) {
+		CertificateConstraints certificateConstraints = getCertificateConstraints(context, subContext);
+		if (certificateConstraints != null) {
+			return certificateConstraints.getSerialNumberPresent();
+		}
+		return null;
+	}
+
+	@Override
 	public LevelConstraint getCertificateNotExpiredConstraint(Context context, SubContext subContext) {
 		CertificateConstraints certificateConstraints = getCertificateConstraints(context, subContext);
 		if (certificateConstraints != null) {
@@ -360,6 +379,24 @@ public class EtsiValidationPolicy implements ValidationPolicy {
 		BasicSignatureConstraints basicSignatureConstraints = getBasicSignatureConstraintsByContext(context);
 		if (basicSignatureConstraints != null) {
 			return basicSignatureConstraints.getProspectiveCertificateChain();
+		}
+		return null;
+	}
+
+	@Override
+	public LevelConstraint getCertificateAuthorityInfoAccessPresentConstraint(Context context, SubContext subContext) {
+		CertificateConstraints certificateConstraints = getCertificateConstraints(context, subContext);
+		if (certificateConstraints != null) {
+			return certificateConstraints.getAuthorityInfoAccessPresent();
+		}
+		return null;
+	}
+
+	@Override
+	public LevelConstraint getCertificateRevocationInfoAccessPresentConstraint(Context context, SubContext subContext) {
+		CertificateConstraints certificateConstraints = getCertificateConstraints(context, subContext);
+		if (certificateConstraints != null) {
+			return certificateConstraints.getRevocationInfoAccessPresent();
 		}
 		return null;
 	}
@@ -465,10 +502,10 @@ public class EtsiValidationPolicy implements ValidationPolicy {
 	}
 
 	@Override
-	public LevelConstraint getCertificateSupportedBySSCDConstraint(Context context, SubContext subContext) {
+	public LevelConstraint getCertificateSupportedByQSCDConstraint(Context context, SubContext subContext) {
 		CertificateConstraints certificateConstraints = getCertificateConstraints(context, subContext);
 		if (certificateConstraints != null) {
-			return certificateConstraints.getSupportedBySSCD();
+			return certificateConstraints.getSupportedByQSCD();
 		}
 		return null;
 	}
@@ -719,6 +756,119 @@ public class EtsiValidationPolicy implements ValidationPolicy {
 		default:
 			logger.warn("Unsupported context " + context);
 			break;
+		}
+		return null;
+	}
+
+	@Override
+	public MultiValuesConstraint getAcceptedContainerTypesConstraint() {
+		ContainerConstraints containerConstraints = policy.getContainerConstraints();
+		if (containerConstraints != null) {
+			return containerConstraints.getAcceptableContainerTypes();
+		}
+		return null;
+	}
+
+	@Override
+	public LevelConstraint getZipCommentPresentConstraint() {
+		ContainerConstraints containerConstraints = policy.getContainerConstraints();
+		if (containerConstraints != null) {
+			return containerConstraints.getZipCommentPresent();
+		}
+		return null;
+	}
+
+	@Override
+	public MultiValuesConstraint getAcceptedZipCommentsConstraint() {
+		ContainerConstraints containerConstraints = policy.getContainerConstraints();
+		if (containerConstraints != null) {
+			return containerConstraints.getAcceptableZipComment();
+		}
+		return null;
+	}
+
+	@Override
+	public LevelConstraint getMimeTypeFilePresentConstraint() {
+		ContainerConstraints containerConstraints = policy.getContainerConstraints();
+		if (containerConstraints != null) {
+			return containerConstraints.getMimeTypeFilePresent();
+		}
+		return null;
+	}
+
+	@Override
+	public MultiValuesConstraint getAcceptedMimeTypeContentsConstraint() {
+		ContainerConstraints containerConstraints = policy.getContainerConstraints();
+		if (containerConstraints != null) {
+			return containerConstraints.getAcceptableMimeTypeFileContent();
+		}
+		return null;
+	}
+
+	@Override
+	public LevelConstraint getAllFilesSignedConstraint() {
+		ContainerConstraints containerConstraints = policy.getContainerConstraints();
+		if (containerConstraints != null) {
+			return containerConstraints.getAllFilesSigned();
+		}
+		return null;
+	}
+
+	@Override
+	public LevelConstraint getManifestFilePresentConstraint() {
+		ContainerConstraints containerConstraints = policy.getContainerConstraints();
+		if (containerConstraints != null) {
+			return containerConstraints.getManifestFilePresent();
+		}
+		return null;
+	}
+
+	@Override
+	public boolean isEIDASConstraintPresent() {
+		return policy.getEIDAS() != null;
+	}
+
+	@Override
+	public TimeConstraint getTLFreshnessConstraint() {
+		EIDAS eIDASConstraints = policy.getEIDAS();
+		if (eIDASConstraints != null) {
+			return eIDASConstraints.getTLFreshness();
+		}
+		return null;
+	}
+
+	@Override
+	public LevelConstraint getTLWellSignedConstraint() {
+		EIDAS eIDASConstraints = policy.getEIDAS();
+		if (eIDASConstraints != null) {
+			return eIDASConstraints.getTLWellSigned();
+		}
+		return null;
+	}
+
+	@Override
+	public LevelConstraint getTLNotExpiredConstraint() {
+		EIDAS eIDASConstraints = policy.getEIDAS();
+		if (eIDASConstraints != null) {
+			return eIDASConstraints.getTLNotExpired();
+		}
+		return null;
+	}
+
+	@Override
+	public ValueConstraint getTLVersionConstraint() {
+		EIDAS eIDASConstraints = policy.getEIDAS();
+		if (eIDASConstraints != null) {
+			return eIDASConstraints.getTLVersion();
+		}
+		return null;
+	}
+
+	@Override
+	public LevelConstraint getTLConsistencyConstraint() {
+		EIDAS eIDASConstraints = policy.getEIDAS();
+		if (eIDASConstraints != null) {
+			return eIDASConstraints.getTLConsistency();
 		}
 		return null;
 	}

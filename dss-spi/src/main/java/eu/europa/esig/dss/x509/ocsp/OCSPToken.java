@@ -24,12 +24,14 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.security.PublicKey;
 import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 
 import org.bouncycastle.asn1.ASN1GeneralizedTime;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
+import org.bouncycastle.cert.ocsp.CertificateID;
 import org.bouncycastle.cert.ocsp.CertificateStatus;
 import org.bouncycastle.cert.ocsp.OCSPResp;
 import org.bouncycastle.cert.ocsp.RevokedStatus;
@@ -58,6 +60,8 @@ public class OCSPToken extends RevocationToken {
 
 	private static final Logger logger = LoggerFactory.getLogger(OCSPToken.class);
 
+	private CertificateID certId;
+
 	/**
 	 * Status of the OCSP response
 	 */
@@ -78,37 +82,60 @@ public class OCSPToken extends RevocationToken {
 	 */
 	private BasicOCSPResp basicOCSPResp;
 
-	private SingleResp bestSingleResp;
-
 	public OCSPToken() {
 		this.extraInfo = new TokenValidationExtraInfo();
 	}
 
-	public boolean extractInfo() {
-		if (basicOCSPResp == null || bestSingleResp == null) {
-			return false;
+	public void extractInfo() {
+		if (basicOCSPResp != null) {
+			this.productionDate = basicOCSPResp.getProducedAt();
+			this.signatureAlgorithm = SignatureAlgorithm.forOID(basicOCSPResp.getSignatureAlgOID().getId());
+			extractArchiveCutOff();
+
+			SingleResp bestSingleResp = getBestSingleResp(basicOCSPResp, certId);
+			if (bestSingleResp != null) {
+				this.thisUpdate = bestSingleResp.getThisUpdate();
+				this.nextUpdate = bestSingleResp.getNextUpdate();
+				extractStatusInfo(bestSingleResp);
+			}
 		}
-
-		this.productionDate = basicOCSPResp.getProducedAt();
-		this.signatureAlgorithm = SignatureAlgorithm.forOID(basicOCSPResp.getSignatureAlgOID().getId());
-
-		this.thisUpdate = bestSingleResp.getThisUpdate();
-		this.nextUpdate = bestSingleResp.getNextUpdate();
-
-		extractStatusInfo(bestSingleResp.getCertStatus());
-		extractArchiveCutOff();
-		return true;
 	}
 
-	private void extractStatusInfo(final CertificateStatus certStatus) {
-		if (certStatus == null) {
+	private SingleResp getBestSingleResp(final BasicOCSPResp basicOCSPResp, final CertificateID certId) {
+		Date bestUpdate = null;
+		SingleResp bestSingleResp = null;
+		SingleResp[] responses = getResponses(basicOCSPResp);
+		for (final SingleResp singleResp : responses) {
+			if (DSSRevocationUtils.matches(certId, singleResp)) {
+				final Date thisUpdate = singleResp.getThisUpdate();
+				if ((bestUpdate == null) || thisUpdate.after(bestUpdate)) {
+					bestSingleResp = singleResp;
+					bestUpdate = thisUpdate;
+				}
+			}
+		}
+		return bestSingleResp;
+	}
+
+	private SingleResp[] getResponses(final BasicOCSPResp basicOCSPResp) {
+		SingleResp[] responses = new SingleResp[] {};
+		try {
+			responses = basicOCSPResp.getResponses();
+		} catch (Exception e) {
+			logger.error("Unable to parse the responses object from OCSP", e);
+			extraInfo.infoOCSPException("Unable to parse the responses object from OCSP : " + e.getMessage());
+		}
+		return responses;
+	}
+
+	private void extractStatusInfo(SingleResp bestSingleResp) {
+		CertificateStatus certStatus = bestSingleResp.getCertStatus();
+		if (CertificateStatus.GOOD == certStatus) {
+			if (logger.isInfoEnabled()) {
+				logger.info("OCSP status is good");
+			}
 			status = true;
-			return;
-		}
-		if (logger.isInfoEnabled()) {
-			logger.info("OCSP certificate status: " + certStatus.getClass().getSimpleName());
-		}
-		if (certStatus instanceof RevokedStatus) {
+		} else if (certStatus instanceof RevokedStatus) {
 			if (logger.isInfoEnabled()) {
 				logger.info("OCSP status revoked");
 			}
@@ -125,6 +152,8 @@ public class OCSPToken extends RevocationToken {
 				logger.info("OCSP status unknown");
 			}
 			reason = CRLReasonEnum.unknow.name();
+		} else {
+			logger.info("OCSP certificate status: " + certStatus);
 		}
 	}
 
@@ -144,6 +173,9 @@ public class OCSPToken extends RevocationToken {
 	public boolean isSignedBy(final CertificateToken issuerToken) {
 		if (this.issuerToken != null) {
 			return this.issuerToken.equals(issuerToken);
+		}
+		if (basicOCSPResp == null) {
+			return false;
 		}
 		try {
 			signatureInvalidityReason = "";
@@ -195,12 +227,12 @@ public class OCSPToken extends RevocationToken {
 		this.basicOCSPResp = basicOCSPResp;
 	}
 
-	public SingleResp getBestSingleResp() {
-		return bestSingleResp;
+	public CertificateID getCertId() {
+		return certId;
 	}
 
-	public void setBestSingleResp(SingleResp bestSingleResp) {
-		this.bestSingleResp = bestSingleResp;
+	public void setCertId(CertificateID certId) {
+		this.certId = certId;
 	}
 
 	/**
@@ -221,7 +253,7 @@ public class OCSPToken extends RevocationToken {
 	 */
 	@Override
 	public String getAbbreviation() {
-		return "OCSPToken[" + DSSUtils.formatInternal(basicOCSPResp.getProducedAt()) + ", signedBy="
+		return "OCSPToken[" + (basicOCSPResp == null ? "?" : DSSUtils.formatInternal(basicOCSPResp.getProducedAt())) + ", signedBy="
 				+ (issuerToken == null ? "?" : issuerToken.getDSSIdAsString()) + "]";
 	}
 
@@ -253,9 +285,12 @@ public class OCSPToken extends RevocationToken {
 	@Override
 	public byte[] getEncoded() {
 		try {
-			final OCSPResp ocspResp = DSSRevocationUtils.fromBasicToResp(basicOCSPResp);
-			final byte[] bytes = ocspResp.getEncoded();
-			return bytes;
+			if (basicOCSPResp != null) {
+				final OCSPResp ocspResp = DSSRevocationUtils.fromBasicToResp(basicOCSPResp);
+				return ocspResp.getEncoded();
+			} else {
+				throw new DSSException("Empty OCSP response");
+			}
 		} catch (IOException e) {
 			throw new DSSException("OCSP encoding error: " + e.getMessage(), e);
 		}

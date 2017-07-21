@@ -22,21 +22,17 @@ package eu.europa.esig.dss.tsl;
 
 import java.util.List;
 
+import eu.europa.esig.dss.util.TimeDependentValues;
 import eu.europa.esig.dss.x509.CertificateToken;
 
 /**
  * This class is a DTO representation for a TSL service
- *
  */
 public class TSLService {
 
 	private String name;
-	private String type;
-	/* Spanish TSL contains certificate urls */
-	private List<String> certificateUrls;
 	private List<CertificateToken> certificates;
-	private List<TSLServiceExtension> extensions;
-	private List<TSLServiceStatus> status;
+	private TimeDependentValues<TSLServiceStatusAndInformationExtensions> status;
 
 	public String getName() {
 		return name;
@@ -44,22 +40,6 @@ public class TSLService {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public String getType() {
-		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
-	}
-
-	public List<String> getCertificateUrls() {
-		return certificateUrls;
-	}
-
-	public void setCertificateUrls(List<String> certificateUrls) {
-		this.certificateUrls = certificateUrls;
 	}
 
 	public List<CertificateToken> getCertificates() {
@@ -70,19 +50,11 @@ public class TSLService {
 		this.certificates = certificates;
 	}
 
-	public List<TSLServiceExtension> getExtensions() {
-		return extensions;
-	}
-
-	public void setExtensions(List<TSLServiceExtension> extensions) {
-		this.extensions = extensions;
-	}
-
-	public List<TSLServiceStatus> getStatus() {
+	public TimeDependentValues<TSLServiceStatusAndInformationExtensions> getStatusAndInformationExtensions() {
 		return status;
 	}
 
-	public void setStatus(List<TSLServiceStatus> status) {
+	public void setStatusAndInformationExtensions(TimeDependentValues<TSLServiceStatusAndInformationExtensions> status) {
 		this.status = status;
 	}
 

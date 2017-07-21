@@ -3,12 +3,11 @@ package eu.europa.esig.dss.validation.process.vpfswatsp.checks.pcv;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
-
 import eu.europa.esig.dss.jaxb.detailedreport.XmlBasicBuildingBlocks;
 import eu.europa.esig.dss.jaxb.detailedreport.XmlPCV;
 import eu.europa.esig.dss.jaxb.detailedreport.XmlVTS;
-import eu.europa.esig.dss.jaxb.diagnostic.XmlChainCertificate;
+import eu.europa.esig.dss.jaxb.diagnostic.XmlChainItem;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.policy.Context;
 import eu.europa.esig.dss.validation.policy.SubContext;
 import eu.europa.esig.dss.validation.policy.ValidationPolicy;
@@ -94,8 +93,8 @@ public class PastCertificateValidation extends Chain<XmlPCV> {
 		Date intervalNotBefore = null;
 		Date intervalNotAfter = null;
 
-		List<XmlChainCertificate> certificateChain = token.getCertificateChain();
-		for (XmlChainCertificate certChainItem : certificateChain) {
+		List<XmlChainItem> certificateChain = token.getCertificateChain();
+		for (XmlChainItem certChainItem : certificateChain) {
 			CertificateWrapper certificate = diagnosticData.getUsedCertificateById(certChainItem.getId());
 			if (certificate.isTrusted()) {
 				// There is not need to check for the trusted certificate
@@ -103,7 +102,7 @@ public class PastCertificateValidation extends Chain<XmlPCV> {
 			}
 
 			SubContext subContext = SubContext.CA_CERTIFICATE;
-			if (StringUtils.equals(signingCertificateId, certChainItem.getId())) {
+			if (Utils.areStringsEqual(signingCertificateId, certChainItem.getId())) {
 				subContext = SubContext.SIGNING_CERT;
 			}
 
@@ -145,7 +144,7 @@ public class PastCertificateValidation extends Chain<XmlPCV> {
 		 */
 		if (controlTime != null) {
 			certificateChain = token.getCertificateChain();
-			for (XmlChainCertificate certChainItem : certificateChain) {
+			for (XmlChainItem certChainItem : certificateChain) {
 				CertificateWrapper certificate = diagnosticData.getUsedCertificateById(certChainItem.getId());
 				if (certificate.isTrusted()) {
 					// There is not need to check for the trusted certificate
@@ -153,7 +152,7 @@ public class PastCertificateValidation extends Chain<XmlPCV> {
 				}
 
 				SubContext subContext = SubContext.CA_CERTIFICATE;
-				if (StringUtils.equals(signingCertificateId, certChainItem.getId())) {
+				if (Utils.areStringsEqual(signingCertificateId, certChainItem.getId())) {
 					subContext = SubContext.SIGNING_CERT;
 				}
 

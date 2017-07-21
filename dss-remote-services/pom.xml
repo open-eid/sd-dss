@@ -3,33 +3,33 @@
   <parent>
     <groupId>org.digidoc4j.dss</groupId>
     <artifactId>sd-dss</artifactId>
-    <version>4.7.RC2.d4j.1</version>
+	  <version>5.0.d4j.1</version>
   </parent>
   
   <artifactId>dss-remote-services</artifactId>
   <name>DSS Remote Services</name>
-  <description>DSS Remote Services contrains common implementation used in REST and SOAP services.</description>
+  <description>DSS Remote Services contains common implementation used in REST and SOAP services.</description>
   
   <dependencies>
   	<dependency>
-    	<groupId>org.digidoc4j.dss</groupId>
-  		<artifactId>dss-model</artifactId>
-  	</dependency>
-  	<dependency>
-    	<groupId>org.digidoc4j.dss</groupId>
+    	<groupId>${project.groupId}</groupId>
   		<artifactId>dss-xades</artifactId>
   	</dependency>
   	<dependency>
-    	<groupId>org.digidoc4j.dss</groupId>
+    	<groupId>${project.groupId}</groupId>
   		<artifactId>dss-cades</artifactId>
   	</dependency>
   	<dependency>
-    	<groupId>org.digidoc4j.dss</groupId>
+    	<groupId>${project.groupId}</groupId>
   		<artifactId>dss-pades</artifactId>
   	</dependency>
   	<dependency>
-    	<groupId>org.digidoc4j.dss</groupId>
-  		<artifactId>dss-asic</artifactId>
+    	<groupId>${project.groupId}</groupId>
+  		<artifactId>dss-asic-cades</artifactId>
+  	</dependency>
+  	<dependency>
+    	<groupId>${project.groupId}</groupId>
+  		<artifactId>dss-asic-xades</artifactId>
   	</dependency>
   </dependencies>
 </project>

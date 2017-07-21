@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.SignerInformation;
@@ -38,6 +36,7 @@ import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.InMemoryDocument;
 import eu.europa.esig.dss.cades.CMSUtils;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 
@@ -90,7 +89,7 @@ public class CMSDocumentValidator extends SignedDocumentValidator {
 		} catch (CMSException e) {
 			throw new DSSException("Not a valid CAdES file", e);
 		} finally {
-			IOUtils.closeQuietly(inputStream);
+			Utils.closeQuietly(inputStream);
 		}
 	}
 
@@ -110,13 +109,11 @@ public class CMSDocumentValidator extends SignedDocumentValidator {
 	public List<AdvancedSignature> getSignatures() {
 		List<AdvancedSignature> signatures = new ArrayList<AdvancedSignature>();
 		if (cmsSignedData != null) {
-
-			ensureCertificatePoolInitialized();
-
 			for (final Object signerInformationObject : cmsSignedData.getSignerInfos().getSigners()) {
 
 				final SignerInformation signerInformation = (SignerInformation) signerInformationObject;
 				final CAdESSignature cadesSignature = new CAdESSignature(cmsSignedData, signerInformation, validationCertPool);
+				cadesSignature.setSignatureFilename(document.getName());
 				cadesSignature.setDetachedContents(detachedContents);
 				cadesSignature.setProvidedSigningCertificateToken(providedSigningCertificateToken);
 				signatures.add(cadesSignature);
@@ -126,14 +123,17 @@ public class CMSDocumentValidator extends SignedDocumentValidator {
 	}
 
 	@Override
-	public DSSDocument getOriginalDocument(final String signatureId) throws DSSException {
-		if (StringUtils.isBlank(signatureId)) {
+	public List<DSSDocument> getOriginalDocuments(final String signatureId) throws DSSException {
+		if (Utils.isStringBlank(signatureId)) {
 			throw new NullPointerException("signatureId");
 		}
+		List<DSSDocument> results = new ArrayList<DSSDocument>();
+
 		for (final Object signerInformationObject : cmsSignedData.getSignerInfos().getSigners()) {
 
 			final SignerInformation signerInformation = (SignerInformation) signerInformationObject;
 			final CAdESSignature cadesSignature = new CAdESSignature(cmsSignedData, signerInformation, validationCertPool);
+			cadesSignature.setSignatureFilename(document.getName());
 			cadesSignature.setDetachedContents(detachedContents);
 			cadesSignature.setProvidedSigningCertificateToken(providedSigningCertificateToken);
 			if (cadesSignature.getId().equals(signatureId)) {
@@ -142,10 +142,10 @@ public class CMSDocumentValidator extends SignedDocumentValidator {
 				}
 				byte[] content = CMSUtils.getSignedContent(cmsSignedData.getSignedContent());
 				content = isBase64Encoded(content) ? Base64.decode(content) : content;
-				return new InMemoryDocument(content);
+				results.add(new InMemoryDocument(content));
 			}
 		}
-		throw new DSSException("The signature with the given id was not found!");
+		return results;
 	}
 
 	private boolean isBase64Encoded(byte[] array) {
@@ -157,4 +157,5 @@ public class CMSDocumentValidator extends SignedDocumentValidator {
 		Matcher matcher = pattern.matcher(text);
 		return matcher.matches();
 	}
+
 }
