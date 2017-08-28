@@ -3,9 +3,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+		<groupId>${dss.groupId}</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.1.RC1</version>
+		<version>5.1.d4j.RC1</version>
 	</parent>
 
 	<name>CookBook</name>
@@ -14,44 +14,44 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-document</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-service</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <groupId>${dss.groupId}</groupId>
 			<artifactId>dss-tsl-validation</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-test</artifactId>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-asic-cades</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-asic-xades</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <groupId>${dss.groupId}</groupId>
 			<artifactId>dss-cades</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-pades</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <groupId>${dss.groupId}</groupId>
 			<artifactId>dss-xades</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-token</artifactId>
 		</dependency>
 		
