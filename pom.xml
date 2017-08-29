@@ -5,7 +5,7 @@
 
 	<groupId>${dss.groupId}</groupId>
 	<artifactId>sd-dss</artifactId>
-	<version>5.1.d4j.RC1</version>
+	<version>5.1.dss.d4j.RC1</version>
 	<packaging>pom</packaging>
 	<name>Digital Signature Services</name>
 
@@ -58,7 +58,7 @@
 
 		<junit.version>4.11</junit.version>
 
-		<dss.groupId>eu.europa.ec.joinup.sd-dss</dss.groupId>
+		<dss.groupId>org.digidoc4j.dss</dss.groupId>
 	</properties>
 	
 	<licenses>
@@ -162,7 +162,7 @@
 							<goal>test</goal>
 						</goals>
 						<configuration>
-							<skipTests>false</skipTests>
+							<skipTests>true</skipTests>
 							<testFailureIgnore>false</testFailureIgnore>
 							<includes>
 								<include>eu/**/*Test.java</include>
@@ -176,7 +176,7 @@
 							<goal>test</goal>
 						</goals>
 						<configuration>
-							<skipTests>false</skipTests>
+							<skipTests>true</skipTests>
 							<testFailureIgnore>true</testFailureIgnore>
 							<includes>
 								<include>plugtests/**/*Test.java</include>
@@ -190,7 +190,7 @@
 							<goal>test</goal>
 						</goals>
 						<configuration>
-							<skipTests>false</skipTests>
+							<skipTests>true</skipTests>
 							<testFailureIgnore>true</testFailureIgnore>
 							<includes>
 								<include>known/issues/**/*Test.java</include>
@@ -270,7 +270,7 @@
 		<url>https://ec.europa.eu/cefdigital/code/scm/esig/dss.git</url>
 		<connection>scm:git:https://ec.europa.eu/cefdigital/code/scm/esig/dss.git</connection>
 		<developerConnection>scm:git:https://ec.europa.eu/cefdigital/code/scm/esig/dss.git</developerConnection>
-		<tag>5.1.d4j.RC1</tag>
+		<tag>5.1.dss.d4j.RC1</tag>
 	</scm>
 
 	<dependencyManagement>
