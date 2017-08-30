@@ -3,11 +3,16 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>${dss.groupId}</groupId>
+	<groupId>org.digidoc4j.dss</groupId>
 	<artifactId>sd-dss</artifactId>
-	<version>5.1.dss.d4j.RC1</version>
+	<version>5.1.RC1.d4j.1</version>
 	<packaging>pom</packaging>
 	<name>Digital Signature Services</name>
+    <description>This is a forked repository from the original DSS project located at
+        https://github.com/esig/dss and https://joinup.ec.europa.eu/asset/sd-dss/description
+        and contains additionally the BDoc-TM specific changes.
+    </description>
+    <url>https://github.com/open-eid/sd-dss</url>
 
 	<developers>
 		<developer>
@@ -49,7 +54,7 @@
 		<slf4j.version>1.7.25</slf4j.version>
 		<logback-classic.version>1.2.3</logback-classic.version>
 
-		<bouncycastle.version>1.57</bouncycastle.version>
+		<bouncycastle.version>1.54</bouncycastle.version>
 		<xmlsec.version>2.0.8</xmlsec.version>
 		<xalan.version>2.7.2</xalan.version>
 		<pdfbox.version>2.0.6</pdfbox.version>
@@ -123,7 +128,20 @@
                     <target>${project.target.version}</target>
                 </configuration>
 			</plugin>
-			<plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.7.2.201409121644</version>
@@ -162,7 +180,7 @@
 							<goal>test</goal>
 						</goals>
 						<configuration>
-							<skipTests>true</skipTests>
+							<skipTests>false</skipTests>
 							<testFailureIgnore>false</testFailureIgnore>
 							<includes>
 								<include>eu/**/*Test.java</include>
@@ -176,7 +194,7 @@
 							<goal>test</goal>
 						</goals>
 						<configuration>
-							<skipTests>true</skipTests>
+							<skipTests>false</skipTests>
 							<testFailureIgnore>true</testFailureIgnore>
 							<includes>
 								<include>plugtests/**/*Test.java</include>
@@ -190,7 +208,7 @@
 							<goal>test</goal>
 						</goals>
 						<configuration>
-							<skipTests>true</skipTests>
+							<skipTests>false</skipTests>
 							<testFailureIgnore>true</testFailureIgnore>
 							<includes>
 								<include>known/issues/**/*Test.java</include>
@@ -199,25 +217,59 @@
 					</execution>
 				</executions>
 			</plugin>
-		</plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.4</version>
+                <configuration>
+                    <!-- Default configuration for all reports -->
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>non-aggregate</id>
+                        <goals>
+                            <goal>javadoc</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.8</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+
+                </configuration>
+            </plugin>
+        </plugins>
 
 		<pluginManagement>
 			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-source-plugin</artifactId>
-					<version>3.0.1</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-javadoc-plugin</artifactId>
-					<version>2.10.4</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-deploy-plugin</artifactId>
-					<version>2.8.2</version>
-				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-resources-plugin</artifactId>
@@ -242,12 +294,24 @@
 						</execution>
 					</executions>
 				</plugin>
+					<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>3.0.1</version>
+					<executions>
+						<execution>
+							<id>attach-sources</id>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
 				<plugin>
 	                <groupId>org.apache.maven.plugins</groupId>
 	                <artifactId>maven-release-plugin</artifactId>
 	                <version>2.5.3</version>
 	                <configuration>
-	                	<releaseProfiles>src,javadoc</releaseProfiles>
 						<autoVersionSubmodules>true</autoVersionSubmodules>
 						<tagNameFormat>@{project.version}</tagNameFormat>
 					</configuration>
@@ -262,15 +326,70 @@
 					<artifactId>maven-install-plugin</artifactId>
 					<version>2.5.2</version>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>2.8.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-project-info-reports-plugin</artifactId>
+					<version>2.9</version>
+				</plugin>
+				<plugin>
+					<groupId>org.owasp</groupId>
+					<artifactId>dependency-check-maven</artifactId>
+					<version>2.0.1</version>
+				</plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.10.4</version>
+                    <configuration>
+                        <docfilessubdirs>true</docfilessubdirs>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.6</version>
+                </plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
 
-	<scm>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.3</version>
+                <configuration>
+                    <outputEncoding>${project.encoding}</outputEncoding>
+                    <reportPlugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-project-info-reports-plugin</artifactId>
+                        </plugin>
+                    </reportPlugins>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
+
+    <scm>
 		<url>https://ec.europa.eu/cefdigital/code/scm/esig/dss.git</url>
 		<connection>scm:git:https://ec.europa.eu/cefdigital/code/scm/esig/dss.git</connection>
 		<developerConnection>scm:git:https://ec.europa.eu/cefdigital/code/scm/esig/dss.git</developerConnection>
-		<tag>5.1.dss.d4j.RC1</tag>
+		<tag>5.1</tag>
 	</scm>
 
 	<dependencyManagement>
@@ -559,16 +678,16 @@
 		</dependencies>
 	</dependencyManagement>
 
-	<distributionManagement>
-		<repository>
-			<id>cefdigital-nexus</id>
-			<url>https://ec.europa.eu/cefdigital/artifact/content/repositories/esignaturedss</url>
-		</repository>
-		<snapshotRepository>
-			<id>cefdigital-nexus</id>
-			<url>https://ec.europa.eu/cefdigital/artifact/content/repositories/esignaturedss-snapshots</url>
-		</snapshotRepository>
-	</distributionManagement>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 	
 	<issueManagement>
 		<system>JIRA</system>
@@ -578,16 +697,44 @@
 
 	<profiles>
 		<profile>
+			<id>delivery</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<skip>true</skip>
+						</configuration>
+					</plugin>
+					<plugin>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>default-testCompile</id>
+								<phase>test-compile</phase>
+								<goals>
+									<goal>testCompile</goal>
+								</goals>
+								<configuration>
+									<skip>true</skip>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
 			<id>owasp</id>
 			<build>
 				<plugins>
 					<plugin>
 						<groupId>org.owasp</groupId>
 						<artifactId>dependency-check-maven</artifactId>
-						<version>1.4.5</version>
-<!-- 						<configuration> -->
-<!-- 							<failBuildOnCVSS>8</failBuildOnCVSS> -->
-<!-- 						</configuration> -->
+						<version>2.0.1</version>
+						<configuration>
+							<failBuildOnCVSS>4</failBuildOnCVSS>
+						</configuration>
 						<executions>
 							<execution>
 								<goals>
@@ -599,45 +746,14 @@
 				</plugins>
 			</build>
 		</profile>
-	    <profile>
-	        <id>src</id>
-	        <build>
-	            <plugins>
-	                <plugin>
-	                    <groupId>org.apache.maven.plugins</groupId>
-	                    <artifactId>maven-source-plugin</artifactId>
-	                    <executions>
-	                        <execution>
-	                            <id>attach-sources</id>
-	                            <phase>verify</phase>
-	                            <goals>
-	                                <goal>jar-no-fork</goal>
-	                            </goals>
-	                        </execution>
-	                    </executions>
-	                </plugin>
-	            </plugins>
-	        </build>
-	    </profile>
-	    <profile>
-	        <id>javadoc</id>
-	        <build>
-	            <plugins>
-	                <plugin>
-	                    <groupId>org.apache.maven.plugins</groupId>
-	                    <artifactId>maven-javadoc-plugin</artifactId>
-	                    <executions>
-	                        <execution>
-	                            <id>attach-javadocs</id>
-	                            <phase>verify</phase>
-	                            <goals>
-	                                <goal>jar</goal>
-	                            </goals>
-	                        </execution>
-	                    </executions>
-	                </plugin>
-	            </plugins>
-	        </build>
-	    </profile>
-	</profiles>
+        <profile>
+            <id>disable-java8-doclint</id>
+            <activation>
+                <jdk>[1.8,)</jdk>
+            </activation>
+            <properties>
+                <additionalparam>-Xdoclint:none</additionalparam>
+            </properties>
+        </profile>
+    </profiles>
 </project>

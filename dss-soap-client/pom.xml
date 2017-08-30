@@ -2,9 +2,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>${dss.groupId}</groupId>
+		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.1.dss.d4j.RC1</version>
+		<version>5.1.RC1.d4j.1</version>
 	</parent>
 
 	<artifactId>dss-soap-client</artifactId>
