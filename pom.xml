@@ -10,10 +10,12 @@
 
 	<name>Digital Signature Services</name>
 	<description>
-		DSS (Digital Signature Services) is an open-source software library for electronic signature creation
-		and validation in line with European legislation.
+		This repository is a fork of the original Digital Signature Services (DSS) project, maintained at
+		https://github.com/esig/dss and
+		https://ec.europa.eu/digital-building-blocks/sites/display/DIGITAL/Digital+Signature+Service+-++DSS.
+		It includes additional modifications specific to BDoc-TM (a profile of the Estonian digital signature format).
 	</description>
-	<url>https://github.com/esig/dss</url>
+	<url>https://github.com/open-eid/sd-dss</url>
 
 	<developers>
 		<developer>
@@ -447,9 +449,9 @@
 	</build>
 
 	<scm>
-		<url>https://ec.europa.eu/digital-building-blocks/code/scm/esig/dss.git</url>
-		<connection>scm:git:https://ec.europa.eu/digital-building-blocks/code/scm/esig/dss.git</connection>
-		<developerConnection>scm:git:https://ec.europa.eu/digital-building-blocks/code/scm/esig/dss.git</developerConnection>
+		<url>https://github.com/open-eid/sd-dss.git</url>
+		<connection>scm:git:https://github.com/open-eid/sd-dss.git</connection>
+		<developerConnection>scm:git:https://github.com/open-eid/sd-dss.git</developerConnection>
 		<tag>6.2</tag>
 	</scm>
 
@@ -1070,9 +1072,8 @@
 	</distributionManagement>
 
 	<issueManagement>
-		<system>JIRA</system>
-		<url>https://ec.europa.eu/digital-building-blocks/tracker/projects/DSS</url>
-		<!-- <url>https://esig-dss.atlassian.net/projects/DSS</url> Old issues -->
+		<system>GitHub</system>
+		<url>https://github.com/open-eid/sd-dss/issues</url>
 	</issueManagement>
 
 	<profiles>
