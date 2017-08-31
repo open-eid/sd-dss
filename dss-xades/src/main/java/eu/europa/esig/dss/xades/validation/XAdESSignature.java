@@ -630,7 +630,7 @@ public class XAdESSignature extends DefaultAdvancedSignature implements Serializ
 			if (policyId != null) {
 				// Explicit policy
 				String policyIdString = policyId.getTextContent();
-				if(policyIdString != null && !policyIdString.isEmpty()) {
+				if (policyIdString != null && !policyIdString.isEmpty()) {
 					policyIdString = policyIdString.replaceAll("\n", "");
 					policyIdString = policyIdString.trim();
 				}
