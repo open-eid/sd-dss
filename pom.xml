@@ -5,7 +5,7 @@
 
 	<groupId>org.digidoc4j.dss</groupId>
 	<artifactId>sd-dss</artifactId>
-	<version>5.0.d4j.1</version>
+	<version>5.0.d4j.3</version>
 	<packaging>pom</packaging>
 	<name>Digital Signature Services</name>
     <description>This is a forked repository from the original DSS project located at
@@ -53,7 +53,7 @@
 		<slf4j.version>1.7.22</slf4j.version>
 		<logback-classic.version>1.1.9</logback-classic.version>
 
-		<bouncycastle.version>1.56</bouncycastle.version>
+		<bouncycastle.version>1.54</bouncycastle.version>
 		<xmlsec.version>2.0.8</xmlsec.version>
 		<xalan.version>2.7.2</xalan.version>
 		<pdfbox.version>2.0.4</pdfbox.version>
