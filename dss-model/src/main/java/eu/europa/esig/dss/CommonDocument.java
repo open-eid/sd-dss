@@ -32,6 +32,8 @@ import java.io.StringWriter;
 @SuppressWarnings("serial")
 public abstract class CommonDocument implements DSSDocument {
 
+	protected DSSDocument nextDocument;
+
 	protected MimeType mimeType;
 
 	protected String name;

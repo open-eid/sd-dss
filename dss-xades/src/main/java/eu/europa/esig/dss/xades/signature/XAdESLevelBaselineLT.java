@@ -20,6 +20,7 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
+import java.io.Serializable;
 import java.util.List;
 
 import org.w3c.dom.Element;
@@ -42,7 +43,7 @@ import eu.europa.esig.dss.x509.ocsp.OCSPToken;
  * LT profile of XAdES signature
  *
  */
-public class XAdESLevelBaselineLT extends XAdESLevelBaselineT {
+public class XAdESLevelBaselineLT extends XAdESLevelBaselineT implements Serializable {
 
 	/**
 	 * The default constructor for XAdESLevelBaselineLT.

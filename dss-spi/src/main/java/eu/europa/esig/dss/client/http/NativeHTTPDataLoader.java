@@ -43,7 +43,7 @@ public class NativeHTTPDataLoader implements DataLoader {
 
 	private static Logger logger = LoggerFactory.getLogger(NativeHTTPDataLoader.class);
 
-	private static final long MAX_SIZE = 15000;
+	private static final long MAX_SIZE = 875000;
 
 	/**
 	 * Used to limit the size of fetched data.

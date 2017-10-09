@@ -1,29 +1,9 @@
-## DSS : Digital Signature Service
+## DSS : Digital Signature Service for DigiDoc4j
 
-This is the official repository for project DSS : https://ec.europa.eu/cefdigital/wiki/display/CEFDIGITAL/eSignature. 
+This is a Digital Signature Service project used by DigiDoc4j. This fork contains mainly BDoc-TM specific changes.
+
+This is a forked repository from the original DSS project located at https://github.com/esig/dss and https://joinup.ec.europa.eu/asset/sd-dss/description. 
 
 # Issue Tracker
 
-Please, use the new JIRA for project is on https://ec.europa.eu/cefdigital/tracker/projects/DSS/issues. 
-
-# Maven repository
-
-The release is published on CEF Digital repository : 
-
-https://ec.europa.eu/cefdigital/artifact/#welcome
-
-<pre>
-&lt;repository&gt;
-  &lt;id&gt;cefdigital&lt;/id&gt;
-  &lt;name&gt;cefdigital&lt;/name&gt;
-  &lt;url&gt;https://ec.europa.eu/cefdigital/artifact/content/groups/public/&lt;/url&gt;
-&lt;/repository&gt;
-</pre>
-
-# Demonstration
-
-The release is deployed on https://joinup.ec.europa.eu/sd-dss/webapp-demo/home 
-
-The code of the demonstration can be found on https://ec.europa.eu/cefdigital/code/projects/ESIG/repos/dss-demos/browse
-
-[![License (LGPL version 2.1)](https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-blue.svg?style=flat-square)](https://www.gnu.org/licenses/lgpl-2.1.html)
+Please, use Pivotal on https://www.pivotaltracker.com/n/projects/1110130

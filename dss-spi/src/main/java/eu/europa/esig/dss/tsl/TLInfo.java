@@ -1,8 +1,9 @@
 package eu.europa.esig.dss.tsl;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class TLInfo {
+public class TLInfo implements Serializable {
 
 	private String countryCode;
 	private String url;

@@ -20,6 +20,7 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -42,7 +43,7 @@ import eu.europa.esig.dss.x509.TimestampType;
  * Holds level LTA aspects of XAdES
  *
  */
-public class XAdESLevelBaselineLTA extends XAdESLevelBaselineLT {
+public class XAdESLevelBaselineLTA extends XAdESLevelBaselineLT implements Serializable {
 
 	/**
 	 * The default constructor for XAdESLevelBaselineLTA.

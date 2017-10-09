@@ -259,7 +259,7 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 	 * {@code validationPolicyDom} contains the constraint file. If null or
 	 * empty the default file is used.
 	 *
-	 * @param validationPolicyDom
+	 * @param validationPolicyJaxb
 	 *            {@code Document}
 	 * @return
 	 */

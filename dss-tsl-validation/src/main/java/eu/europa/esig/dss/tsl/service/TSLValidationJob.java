@@ -248,6 +248,10 @@ public class TSLValidationJob {
 		for (Future<TSLLoaderResult> futureLoaderResult : futureLoaderResults) {
 			try {
 				TSLLoaderResult loaderResult = futureLoaderResult.get();
+				if(loaderResult.getContent() == null || loaderResult.getContent().length == 0) {
+					logger.error("Failed to load TSl for country '" + loaderResult.getCountryCode() + "' from '" + loaderResult.getUrl() + "'");
+					continue;
+				}
 				if (loaderResult != null && loaderResult.getContent() != null) {
 					TSLValidationModel countryModel = null;
 					if (!repository.isLastVersion(loaderResult)) {

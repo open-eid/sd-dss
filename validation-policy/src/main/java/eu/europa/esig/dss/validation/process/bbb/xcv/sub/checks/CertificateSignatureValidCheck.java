@@ -39,7 +39,7 @@ public class CertificateSignatureValidCheck<T extends XmlConstraintsConclusion> 
 
 	@Override
 	protected SubIndication getFailedSubIndicationForConclusion() {
-		return SubIndication.CERTIFICATE_CHAIN_GENERAL_FAILURE;
+		return SubIndication.NO_CERTIFICATE_CHAIN_FOUND;
 	}
 
 }

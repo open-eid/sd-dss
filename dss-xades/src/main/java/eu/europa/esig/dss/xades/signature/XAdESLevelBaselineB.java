@@ -20,6 +20,8 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
+import java.io.Serializable;
+
 import org.apache.xml.security.Init;
 
 import eu.europa.esig.dss.DSSDocument;
@@ -34,7 +36,7 @@ import eu.europa.esig.dss.xades.XAdESSignatureParameters;
  *
  *
  */
-public class XAdESLevelBaselineB implements SignatureProfile {
+public class XAdESLevelBaselineB implements SignatureProfile, Serializable {
 
 	static {
 

@@ -85,6 +85,7 @@ public class FileDocument extends CommonDocument {
 	public void save(final String path) throws IOException {
 		final InputStream inputStream = openStream();
 		DSSUtils.saveToFile(inputStream, path);
+		inputStream.close();
 		Utils.closeQuietly(inputStream);
 	}
 

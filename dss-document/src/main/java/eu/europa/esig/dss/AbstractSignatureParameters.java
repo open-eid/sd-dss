@@ -101,7 +101,7 @@ public abstract class AbstractSignatureParameters extends AbstractSerializableSi
 	 * <p />
 	 * When extending this method must be invoked to indicate the {@code detachedContent}.
 	 *
-	 * @param detachedContent
+	 * @param detachedContents
 	 */
 	public void setDetachedContents(final List<DSSDocument> detachedContents) {
 		this.detachedContents = detachedContents;
@@ -177,4 +177,7 @@ public abstract class AbstractSignatureParameters extends AbstractSerializableSi
 		deterministicId = null;
 	}
 
+	public void setDeterministicId(String deterministicId) {
+		this.deterministicId = deterministicId;
+	}
 }

@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.0</version>
+		<version>5.0.d4j.4</version>
 	</parent>
 	
 	<artifactId>dss-asic-cades</artifactId>
@@ -12,21 +12,21 @@
 	
 	<dependencies>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>dss-asic-common</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>dss-cades</artifactId>
 		</dependency>
 
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>dss-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>dss-document</artifactId>
 			<type>test-jar</type>
 			<scope>test</scope>

@@ -84,8 +84,6 @@ public class SimpleReportBuilder {
 	/**
 	 * This method generates the validation simpleReport.
 	 *
-	 * @param params
-	 *            validation process parameters
 	 * @return the object representing {@code SimpleReport}
 	 */
 	public eu.europa.esig.dss.jaxb.simplereport.SimpleReport build() {
@@ -168,9 +166,11 @@ public class SimpleReportBuilder {
 		XmlConstraintsConclusion constraintsConclusion = null;
 		switch (validationLevel) {
 		case BASIC_SIGNATURES:
-		case TIMESTAMPS:
 			constraintsConclusion = getBasicSignatureValidationConclusion(signatureId);
 			break;
+		case TIMESTAMPS:
+            constraintsConclusion = getTimestampsValidationConclusion(signatureId);
+            break;
 		case LONG_TERM_DATA:
 			constraintsConclusion = getLongTermDataValidationConclusion(signatureId);
 			break;
@@ -181,6 +181,11 @@ public class SimpleReportBuilder {
 			logger.error("Unsupported validation level : " + validationLevel);
 			break;
 		}
+
+		if (constraintsConclusion == null) {
+            logger.error("Constraint conclusion not found!");
+		    return;
+        }
 
 		XmlConclusion conclusion = constraintsConclusion.getConclusion();
 		Indication indication = conclusion.getIndication();
@@ -378,6 +383,24 @@ public class SimpleReportBuilder {
 		for (eu.europa.esig.dss.jaxb.detailedreport.XmlSignature xmlSignature : signatures) {
 			if (Utils.areStringsEqual(signatureId, xmlSignature.getId())) {
 				return xmlSignature.getValidationProcessBasicSignatures();
+			}
+		}
+		return null;
+	}
+
+	private XmlConstraintsConclusion getTimestampsValidationConclusion(String signatureId) {
+		List<eu.europa.esig.dss.jaxb.detailedreport.XmlSignature> signatures = detailedReport.getSignatures();
+		for (eu.europa.esig.dss.jaxb.detailedreport.XmlSignature xmlSignature : signatures) {
+			if (Utils.areStringsEqual(signatureId, xmlSignature.getId())) {
+                List<XmlValidationProcessTimestamps> timestamps = xmlSignature.getValidationProcessTimestamps();
+                XmlValidationProcessTimestamps worstTimestamp = null;
+                for (XmlValidationProcessTimestamps timestamp : timestamps) {
+                    if (worstTimestamp == null) worstTimestamp = timestamp;
+                    if (timestamp.getConclusion().getIndication().ordinal() > worstTimestamp.getConclusion().getIndication().ordinal()) {
+                        worstTimestamp = timestamp;
+                    }
+                }
+                return worstTimestamp;
 			}
 		}
 		return null;

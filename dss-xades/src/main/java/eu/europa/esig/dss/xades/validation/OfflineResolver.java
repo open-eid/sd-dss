@@ -29,6 +29,7 @@ import org.apache.xml.security.utils.resolver.ResourceResolverContext;
 import org.apache.xml.security.utils.resolver.ResourceResolverException;
 import org.apache.xml.security.utils.resolver.ResourceResolverSpi;
 import org.apache.xml.utils.URI;
+import org.digidoc4j.dss.xades.BDocTmSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Attr;
@@ -64,16 +65,22 @@ public class OfflineResolver extends ResourceResolverSpi {
 	public boolean engineCanResolveURI(final ResourceResolverContext context) {
 		final Attr uriAttr = context.attr;
 		if (uriAttr != null) {
-			String documentUri = uriAttr.getNodeValue();
-			documentUri = DSSUtils.decodeUrl(documentUri);
+			String encodedDocumentUri = uriAttr.getNodeValue();
+			String documentUri = DSSUtils.decodeUrl(encodedDocumentUri);
 			if ("".equals(documentUri) || documentUri.startsWith("#")) {
 				return false;
 			}
+			if (isKnown(documentUri) != null) {
+				LOG.debug("I state that I can resolve '" + documentUri.toString() + "' (external document)");
+				return true;
+			}
+			documentUri = BDocTmSupport.fixEncoding(encodedDocumentUri);
+			documentUri = DSSUtils.decodeUrl(documentUri);
+			if (isKnown(documentUri) != null) {
+				LOG.debug("I state that I can resolve '" + documentUri.toString() + "' (external document)");
+				return true;
+			}
 			try {
-				if (isKnown(documentUri) != null) {
-					LOG.debug("I state that I can resolve '" + documentUri + "' (external document)");
-					return true;
-				}
 				final String baseUriString = context.baseUri;
 				if (Utils.isStringNotEmpty(baseUriString)) {
 					final URI baseUri = new URI(baseUriString);
