@@ -2,7 +2,7 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+	<groupId>org.digidoc4j.dss</groupId>
 	<artifactId>sd-dss</artifactId>
 	<version>4.2.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
@@ -194,48 +194,48 @@
 		<dependencies>
 			<!-- Internal Dependencies -->
 			<dependency>
-				<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+				<groupId>org.digidoc4j.dss</groupId>
 				<artifactId>dss-demo-applet</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+				<groupId>org.digidoc4j.dss</groupId>
 				<artifactId>dss-demo-applet-package</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+				<groupId>org.digidoc4j.dss</groupId>
 				<artifactId>dss-demo-webapp</artifactId>
 				<type>war</type>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+				<groupId>org.digidoc4j.dss</groupId>
 				<artifactId>dss-spi</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+				<groupId>org.digidoc4j.dss</groupId>
 				<artifactId>dss-service</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+				<groupId>org.digidoc4j.dss</groupId>
 				<artifactId>dss-document</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+				<groupId>org.digidoc4j.dss</groupId>
 				<artifactId>dss-webservices</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+				<groupId>org.digidoc4j.dss</groupId>
 				<artifactId>dss-webservices-client</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+				<groupId>org.digidoc4j.dss</groupId>
 				<artifactId>dss-common</artifactId>
 				<version>${project.version}</version>
 			</dependency>

@@ -162,7 +162,9 @@ public class CertificateToken extends Token {
 	 *            of module.
 	 */
 	public void addRevocationToken(RevocationToken revocationToken) {
-		this.revocationTokens.add(revocationToken);
+		if (revocationToken.getStatus() != null) { // do not collect tokens what shall be ignored
+			this.revocationTokens.add(revocationToken);
+		}
 	}
 
 	/**

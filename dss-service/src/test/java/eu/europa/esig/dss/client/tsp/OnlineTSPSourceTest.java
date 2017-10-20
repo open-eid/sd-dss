@@ -3,6 +3,7 @@ package eu.europa.esig.dss.client.tsp;
 import static org.junit.Assert.assertNotNull;
 
 import org.bouncycastle.tsp.TimeStampToken;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import eu.europa.esig.dss.DSSUtils;
@@ -36,6 +37,7 @@ public class OnlineTSPSourceTest {
 	}
 
 	@Test
+	@Ignore("Site forbidden?")
 	public void testWithTimestampDataLoader() {
 		OnlineTSPSource tspSource = new OnlineTSPSource("http://demo.sk.ee/tsa/");
 		tspSource.setPolicyOid("0.4.0.2023.1.1");
