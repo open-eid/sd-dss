@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.digidoc4j.dss</groupId>
     <artifactId>sd-dss</artifactId>
-	  <version>5.0.d4j.3</version>
+    <version>5.1.d4j.1</version>
   </parent>
   
   <artifactId>dss-remote-services</artifactId>
@@ -12,23 +12,23 @@
   
   <dependencies>
   	<dependency>
-    	<groupId>${project.groupId}</groupId>
+			<groupId>${dss.groupId}</groupId>
   		<artifactId>dss-xades</artifactId>
   	</dependency>
   	<dependency>
-    	<groupId>${project.groupId}</groupId>
+			<groupId>${dss.groupId}</groupId>
   		<artifactId>dss-cades</artifactId>
   	</dependency>
   	<dependency>
-    	<groupId>${project.groupId}</groupId>
+			<groupId>${dss.groupId}</groupId>
   		<artifactId>dss-pades</artifactId>
   	</dependency>
   	<dependency>
-    	<groupId>${project.groupId}</groupId>
+			<groupId>${dss.groupId}</groupId>
   		<artifactId>dss-asic-cades</artifactId>
   	</dependency>
   	<dependency>
-    	<groupId>${project.groupId}</groupId>
+			<groupId>${dss.groupId}</groupId>
   		<artifactId>dss-asic-xades</artifactId>
   	</dependency>
   </dependencies>

@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.0.d4j.3</version>
+		<version>5.1.d4j.1</version>
 	</parent>
 
 	<artifactId>dss-simple-report-jaxb</artifactId>
@@ -12,7 +12,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>${project.groupId}</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-common-validation-jaxb</artifactId>
 		</dependency>
 	</dependencies>

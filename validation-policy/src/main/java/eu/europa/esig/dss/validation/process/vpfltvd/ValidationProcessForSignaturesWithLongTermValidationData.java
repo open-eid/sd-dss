@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import eu.europa.esig.dss.validation.policy.EtsiValidationPolicy;
+import eu.europa.esig.jaxb.policy.CryptographicConstraint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +45,7 @@ import eu.europa.esig.dss.validation.reports.wrapper.TimestampWrapper;
  */
 public class ValidationProcessForSignaturesWithLongTermValidationData extends Chain<XmlValidationProcessLongTermData> {
 
-	private static final Logger logger = LoggerFactory.getLogger(ValidationProcessForSignaturesWithLongTermValidationData.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ValidationProcessForSignaturesWithLongTermValidationData.class);
 
 	private final XmlConstraintsConclusion basicSignatureValidation;
 	private final List<XmlValidationProcessTimestamps> timestampValidations;
@@ -101,7 +103,7 @@ public class ValidationProcessForSignaturesWithLongTermValidationData extends Ch
 				if (revocationBBB != null) {
 					item = item.setNextItem(revocationBasicBuildingBlocksValid(revocationBBB));
 				} else {
-					logger.warn("No BBB found for revocation " + revocation.getId());
+					LOG.warn("No BBB found for revocation " + revocation.getId());
 				}
 			}
 		}
@@ -162,7 +164,7 @@ public class ValidationProcessForSignaturesWithLongTermValidationData extends Ch
 		 */
 		if (Indication.INDETERMINATE.equals(bsConclusion.getIndication())
 				&& SubIndication.CRYPTO_CONSTRAINTS_FAILURE_NO_POE.equals(bsConclusion.getSubIndication())) {
-			item = item.setNextItem(algorithmReliableAtBestSignatureTime(bestSignatureTime));
+			item = addChecksIfAlgorithmReliableAtBestSignatureTime(item, bestSignatureTime);
 		}
 
 		if (Utils.isCollectionNotEmpty(allowedTimestamps)) {
@@ -233,7 +235,7 @@ public class ValidationProcessForSignaturesWithLongTermValidationData extends Ch
 				}
 			}
 			if (!foundValidationTSP) {
-				logger.warn("Cannot find tsp validation info for tsp " + timestampWrapper.getId());
+				LOG.warn("Cannot find tsp validation info for tsp " + timestampWrapper.getId());
 			}
 		}
 		return result;
@@ -270,9 +272,24 @@ public class ValidationProcessForSignaturesWithLongTermValidationData extends Ch
 		return new TimestampDelayCheck(result, currentSignature, bestSignatureTime, policy.getTimestampDelaySigningTimePropertyConstraint());
 	}
 
-	private ChainItem<XmlValidationProcessLongTermData> algorithmReliableAtBestSignatureTime(Date bestSignatureTime) {
-		return new CryptographicCheck<XmlValidationProcessLongTermData>(result, currentSignature, bestSignatureTime,
-				policy.getSignatureCryptographicConstraint(Context.SIGNATURE));
+	/**
+	 * Method created in order to support multiple constraints.
+	 * @return At least one chainitem
+	 */
+	private ChainItem<XmlValidationProcessLongTermData> addChecksIfAlgorithmReliableAtBestSignatureTime(
+			ChainItem<XmlValidationProcessLongTermData> item, Date bestSignatureTime) {
+		int index = 0;
+		ChainItem<XmlValidationProcessLongTermData> newItem = item;
+		EtsiValidationPolicy epolicy = (EtsiValidationPolicy) policy;
+		CryptographicConstraint constraint;
+		do {
+			constraint = epolicy.getSignatureCryptographicConstraint(Context.SIGNATURE, index);
+			if (index == 0 || constraint != null) {
+				newItem = newItem.setNextItem(new CryptographicCheck<XmlValidationProcessLongTermData>(result,
+						currentSignature, bestSignatureTime, constraint));
+				index++;
+			}
+		} while (constraint != null);
+		return newItem;
 	}
-
 }

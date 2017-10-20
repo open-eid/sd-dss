@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.0.d4j.3</version>
+		<version>5.1.d4j.1</version>
 	</parent>
 
 	<artifactId>dss-tsl-validation</artifactId>
@@ -12,21 +12,21 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>${project.groupId}</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-tsl-jaxb</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>${project.groupId}</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-xades</artifactId>
 		</dependency>
 		
 		<dependency>
-			<groupId>${project.groupId}</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>${project.groupId}</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-service</artifactId>
 			<scope>test</scope>
 		</dependency>

@@ -27,7 +27,6 @@ import static eu.europa.esig.dss.xades.XPathQueryHolder.XMLE_SIG_AND_REFS_TIME_S
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.io.StringReader;
 import java.math.BigInteger;
 import java.security.PublicKey;
@@ -57,8 +56,6 @@ import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.x509.GeneralName;
-import org.bouncycastle.cms.CMSSignedData;
-import org.bouncycastle.tsp.TimeStampToken;
 import org.digidoc4j.dss.xades.BDocTmSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,7 +108,7 @@ import eu.europa.esig.dss.xades.XPathQueryHolder;
  * be created.
  *
  */
-public class XAdESSignature extends DefaultAdvancedSignature implements Serializable {
+public class XAdESSignature extends DefaultAdvancedSignature {
 
 	private static final Logger LOG = LoggerFactory.getLogger(XAdESSignature.class);
 
@@ -794,11 +791,14 @@ public class XAdESSignature extends DefaultAdvancedSignature implements Serializ
 			return null;
 
 		}
-		final String base64EncodedTimestamp = timestampTokenNode.getTextContent();
-		final TimeStampToken timeStampToken = createTimeStampToken(base64EncodedTimestamp);
-		final TimestampToken timestampToken = new TimestampToken(timeStampToken, timestampType, certPool);
+		TimestampToken timestampToken = null;
+		try {
+			timestampToken = new TimestampToken(Utils.fromBase64(timestampTokenNode.getTextContent()), timestampType, certPool);
+		} catch (Exception e) {
+			throw new DSSException("Unable to extract timestamp", e);
+		}
 		timestampToken.setHashCode(timestampElement.hashCode());
-		setTimestampCanonicalizationMethod(timestampElement, timestampToken);
+		timestampToken.setCanonicalizationMethod(getTimestampCanonicalizationMethod(timestampElement));
 
 		// TODO: timestampToken.setIncludes(element.getIncludes)...
 		// final NodeList includes =
@@ -809,23 +809,6 @@ public class XAdESSignature extends DefaultAdvancedSignature implements Serializ
 		// includes.item(i).getAttributes()));
 		// }
 		return timestampToken;
-	}
-
-	/**
-	 * This method generates a bouncycastle {@code TimeStampToken} based on base 64 encoded {@code String}.
-	 *
-	 * @param base64EncodedTimestamp
-	 * @return bouncycastle {@code TimeStampToken}
-	 * @throws DSSException
-	 */
-	private TimeStampToken createTimeStampToken(final String base64EncodedTimestamp) throws DSSException {
-		try {
-			final byte[] tokenBytes = Utils.fromBase64(base64EncodedTimestamp);
-			final CMSSignedData signedData = new CMSSignedData(tokenBytes);
-			return new TimeStampToken(signedData);
-		} catch (Exception e) {
-			throw new DSSException(e);
-		}
 	}
 
 	public Element getSignatureValue() {
@@ -1011,7 +994,7 @@ public class XAdESSignature extends DefaultAdvancedSignature implements Serializ
 		if (!checkTimestampTokenIncludes(timestampToken)) {
 			throw new DSSException("The Included referencedData attribute is either not present or set to false!");
 		}
-		if (references.size() == 0) {
+		if (references.isEmpty()) {
 			throw new DSSException("The method 'checkSignatureIntegrity' must be invoked first!");
 		}
 		// get first include element
@@ -1075,7 +1058,7 @@ public class XAdESSignature extends DefaultAdvancedSignature implements Serializ
 		if (!checkTimestampTokenIncludes(timestampToken)) {
 			throw new DSSException("The Included referencedData attribute is either not present or set to false!");
 		}
-		if (references.size() == 0) {
+		if (references.isEmpty()) {
 			throw new DSSException("The method 'checkSignatureIntegrity' must be invoked first!");
 		}
 		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -1309,19 +1292,17 @@ public class XAdESSignature extends DefaultAdvancedSignature implements Serializ
 	}
 
 	private TimestampReference getSignatureTimestampReference() {
-
 		final TimestampReference signatureReference = new TimestampReference(getId());
 		return signatureReference;
 	}
 
-	private void setTimestampCanonicalizationMethod(final Element timestampElement, final TimestampToken timestampToken) {
-
+	private String getTimestampCanonicalizationMethod(final Element timestampElement) {
 		final Element canonicalizationMethodElement = DomUtils.getElement(timestampElement, xPathQueryHolder.XPATH__CANONICALIZATION_METHOD);
 		String canonicalizationMethod = DEFAULT_TIMESTAMP_VALIDATION_CANONICALIZATION_METHOD;
 		if (canonicalizationMethodElement != null) {
 			canonicalizationMethod = canonicalizationMethodElement.getAttribute(XMLE_ALGORITHM);
 		}
-		timestampToken.setCanonicalizationMethod(canonicalizationMethod);
+		return canonicalizationMethod;
 	}
 
 	/*
@@ -1471,7 +1452,7 @@ public class XAdESSignature extends DefaultAdvancedSignature implements Serializ
 			// through all candidates extracted from the signature.
 			final CandidatesForSigningCertificate candidates = getCandidatesForSigningCertificate();
 			certificateValidityList = candidates.getCertificateValidityList();
-			if (certificateValidityList.size() == 0) {
+			if (certificateValidityList.isEmpty()) {
 
 				// The public key can also be extracted from the signature.
 				final KeyInfo extractedKeyInfo = santuarioSignature.getKeyInfo();
@@ -1933,7 +1914,7 @@ public class XAdESSignature extends DefaultAdvancedSignature implements Serializ
 					for (int jj = 0; jj < length; jj++) {
 						final Node item = attributes.item(jj);
 						final String nodeName = item.getNodeName();
-						if ("ID".equals(nodeName.toUpperCase())) {
+						if (Utils.areStringsEqualIgnoreCase("ID", nodeName)) {
 							id = item.getNodeValue();
 							break;
 						}

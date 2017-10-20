@@ -3,15 +3,15 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.0.d4j.3</version>
+		<version>5.1.d4j.1</version>
 	</parent>
 	<artifactId>dss-utils-apache-commons</artifactId>
 	<name>DSS Utils implementation with Apache Commons</name>
-	<description>DSS Utils with Apache Commons : util methods for String, Collection,...</description>
+	<description>DSS Utils with Apache Commons : utility methods for String, Collection,...</description>
 
 	<dependencies>
 		<dependency>
-			<groupId>${project.groupId}</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-utils</artifactId>
 		</dependency>
 
@@ -37,7 +37,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>${project.groupId}</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-utils</artifactId>
 			<type>test-jar</type>
 			<scope>test</scope>
