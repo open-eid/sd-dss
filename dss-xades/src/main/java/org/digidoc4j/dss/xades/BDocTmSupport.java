@@ -67,7 +67,11 @@ public class BDocTmSupport implements Serializable {
     try {
       return URLEncoder.encode(string, "UTF-8")
           .replaceAll("\\+", "%20")
-          .replaceAll("\\%7E", "~"); // by https://www.urlencoder.org/
+          .replaceAll("\\%21", "!")
+          .replaceAll("\\%27", "'")
+          .replaceAll("\\%28", "(")
+          .replaceAll("\\%29", ")")
+          .replaceAll("\\%7E", "~");
     } catch (UnsupportedEncodingException e) {
       LOG.error("Unable to decode '" + string + "' : " + e.getMessage(), e);
       return string;

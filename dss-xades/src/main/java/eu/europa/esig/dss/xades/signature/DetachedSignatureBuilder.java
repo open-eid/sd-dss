@@ -82,7 +82,7 @@ class DetachedSignatureBuilder extends XAdESSignatureBuilder {
 		final String fileURI = document.getName() != null ? document.getName() : "";
 		try {
 			String urlEncoded = BDocTmSupport.uriEncode(fileURI); //Estonian BDoc/ASIC-E support
-			reference.setUri(urlEncoded);
+			reference.setUri(URLEncoder.encode(fileURI, "UTF-8"));
 		} catch (Exception e) {
 			LOG.warn("Unable to encode uri '" + fileURI + "' : " + e.getMessage());
 			reference.setUri(fileURI);
