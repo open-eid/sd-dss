@@ -461,6 +461,7 @@ public class TSLParser implements Callable<TSLParserResult> {
 	}
 
 	protected Condition getCondition(CriteriaListType criteriaList) {
+		if (criteriaList == null) return null;
 		MatchingCriteriaIndicator matchingCriteriaIndicator = MatchingCriteriaIndicator.valueOf(criteriaList.getAssert());
 		CompositeCondition condition = new CriteriaListCondition(matchingCriteriaIndicator);
 
