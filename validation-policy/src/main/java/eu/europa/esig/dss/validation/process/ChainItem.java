@@ -201,7 +201,10 @@ public abstract class ChainItem<T extends XmlConstraintsConclusion> {
 		if (messageTag != null) {
 			xmlName.setNameId(messageTag.name());
 			String lValue = messageTag.getMessage();
-			if (getAdditionalParameter().length() > 0) lValue = lValue + " (" + getAdditionalParameter() + ")";
+			String lParam = getAdditionalParameter();
+			if (lParam != null) {
+				if (lParam.length() > 0) lValue = lValue + " (" + lParam + ")";
+			}
 			xmlName.setValue(lValue);
 		} else {
 			logger.error("MessageTag is null");
