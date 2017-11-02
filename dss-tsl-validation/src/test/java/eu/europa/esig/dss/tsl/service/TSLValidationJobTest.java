@@ -113,28 +113,4 @@ public class TSLValidationJobTest {
 		logger.info("***************** Second load *****************");
 		job.refresh();
 	}
-
-	@Test
-	public void testWhenCountryTslLoadingFails() throws Exception {
-		String lotlUrl = "file:src/test/resources/LOTL-with-err-country.xml";
-		TSLRepository repository = new TSLRepository();
-		repository.setTrustedListsCertificateSource(new TrustedListsCertificateSource());
-
-		assertNull(repository.getByCountry("BE"));
-		assertNull(repository.getByCountry("AT"));
-
-		TSLValidationJob job = new TSLValidationJob();
-		job.setCheckLOTLSignature(false);
-		job.setCheckTSLSignatures(false);
-		job.setDataLoader(new CommonsDataLoader());
-		job.setLotlUrl(lotlUrl);
-		job.setLotlCode("EU");
-		job.setDssKeyStore(dssKeyStore);
-		job.setRepository(repository);
-
-		job.refresh();
-
-		assertNotNull(repository.getByCountry("BE"));
-		assertNull(repository.getByCountry("AT"));
-	}
 }
