@@ -1,6 +1,7 @@
 package eu.europa.esig.dss.asic.signature;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -18,6 +19,7 @@ import eu.europa.esig.dss.SignaturePackaging;
 import eu.europa.esig.dss.SignatureValue;
 import eu.europa.esig.dss.SigningOperation;
 import eu.europa.esig.dss.ToBeSigned;
+import eu.europa.esig.dss.asic.ASiCExtractResult;
 import eu.europa.esig.dss.asic.ASiCNamespace;
 import eu.europa.esig.dss.asic.ASiCParameters;
 import eu.europa.esig.dss.asic.ASiCUtils;
@@ -33,6 +35,8 @@ import eu.europa.esig.dss.xades.signature.XAdESService;
 public class ASiCWithXAdESService extends AbstractASiCSignatureService<ASiCWithXAdESSignatureParameters> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ASiCWithXAdESService.class);
+
+	public static final String XPATH_SIGNATURE_ID = "//ds:Signature/@Id";
 
 	static {
 		DomUtils.registerNamespace("asic", ASiCNamespace.NS);
@@ -119,6 +123,43 @@ public class ASiCWithXAdESService extends AbstractASiCSignatureService<ASiCWithX
 		DSSDocument asicSignature = new InMemoryDocument(baos.toByteArray(), null, toExtendDocument.getMimeType());
 		asicSignature.setName(
 				DSSUtils.getFinalFileName(toExtendDocument, SigningOperation.EXTEND, parameters.getSignatureLevel(), parameters.aSiC().getContainerType()));
+		return asicSignature;
+	}
+
+	/**
+	 * Removes signature from xades container by signature id
+	 *
+	 * @param zipArchive
+	 * @param signatureId
+
+	 * @throws IOException
+	 */
+	public DSSDocument removeSignatureById(DSSDocument zipArchive, String signatureId)throws IOException {
+		if(signatureId == null || signatureId.isEmpty()){
+			throw new DSSException("Signature id should be defined");
+		}
+		AbstractASiCContainerExtractor extractor = getArchiveExtractor(zipArchive);
+		ASiCExtractResult archiveContent = extractor.extract();
+		List<DSSDocument> signatureDocs = archiveContent.getSignatureDocuments();
+		List<DSSDocument> sigantureToRemove = new ArrayList<>();
+
+		for(DSSDocument signature: signatureDocs){
+			Document document = DomUtils.buildDOM(signature);
+			String sigId = DomUtils.getValue(document, XPATH_SIGNATURE_ID);
+			if (signatureId.equals(sigId)){
+				sigantureToRemove.add(signature);
+			}
+		}
+		signatureDocs.removeAll(sigantureToRemove);
+
+		ByteArrayOutputStream baos = null;
+		try {
+			baos = new ByteArrayOutputStream();
+			copyExistingArchiveWithSignatureList(zipArchive, signatureDocs, baos);
+		} finally {
+			Utils.closeQuietly(baos);
+		}
+		DSSDocument asicSignature = new InMemoryDocument(baos.toByteArray(), zipArchive.getName(), zipArchive.getMimeType());
 		return asicSignature;
 	}
 
