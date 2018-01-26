@@ -22,6 +22,7 @@ package eu.europa.esig.dss;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -29,6 +30,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -59,11 +63,11 @@ import java.util.concurrent.TimeUnit;
 
 import javax.security.auth.x500.X500Principal;
 
-import org.bouncycastle.cert.X509CRLHolder;
-import org.bouncycastle.cert.jcajce.JcaX509CRLConverter;
-import org.bouncycastle.cert.ocsp.BasicOCSPResp;
-import org.bouncycastle.cert.ocsp.OCSPResp;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.jcajce.JcaMiscPEMGenerator;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemReader;
+import org.bouncycastle.util.io.pem.PemWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,12 +78,6 @@ import eu.europa.esig.dss.x509.CertificateToken;
 public final class DSSUtils {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DSSUtils.class);
-
-	public static final String CERT_BEGIN = "-----BEGIN CERTIFICATE-----";
-	public static final String CERT_END = "-----END CERTIFICATE-----";
-
-	public static final String CRL_BEGIN = "-----BEGIN X509 CRL-----";
-	public static final String CRL_END = "-----END X509 CRL-----";
 
 	private static final BouncyCastleProvider securityProvider = new BouncyCastleProvider();
 
@@ -93,8 +91,6 @@ public final class DSSUtils {
 	 * The default date pattern: "yyyy-MM-dd"
 	 */
 	public static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd";
-
-	private static final String NEW_LINE = "\n";
 
 	static {
 		try {
@@ -209,97 +205,60 @@ public final class DSSUtils {
 	 * This method converts the given certificate into its PEM string.
 	 *
 	 * @param cert
-	 * @return
+	 *            the token to be converted to PEM
+	 * @return PEM encoded certificate
 	 * @throws DSSException
 	 */
 	public static String convertToPEM(final CertificateToken cert) throws DSSException {
-		final byte[] derCert = cert.getEncoded();
-		String pemCertPre = Utils.toBase64(derCert);
-		final String pemCert = CERT_BEGIN + NEW_LINE + pemCertPre + NEW_LINE + CERT_END;
-		return pemCert;
+		return convertToPEM(cert.getCertificate());
 	}
 
 	/**
 	 * This method converts the given CRL into its PEM string.
 	 *
 	 * @param crl
-	 * @return
+	 *            the DER encoded CRL to be converted
+	 *
+	 * @return the PEM encoded CRL
 	 */
 	public static String convertCrlToPEM(final X509CRL crl) throws DSSException {
-		try {
-			final byte[] derCrl = crl.getEncoded();
-			String pemCrlPre = Utils.toBase64(derCrl);
-			final String pemCrl = CRL_BEGIN + NEW_LINE + pemCrlPre + NEW_LINE + CRL_END;
-			return pemCrl;
-		} catch (CRLException e) {
-			throw new DSSException("Unable to convert CRL to PEM encoding : " + e.getMessage(), e);
-		}
+		return convertToPEM(crl);
 	}
 
-	/**
-	 * This method returns true if the inputStream contains a PEM encoded item
-	 * 
-	 * @return true if PEM encoded
-	 */
-	public static boolean isPEM(InputStream is) {
-		try {
-			String startPEM = "-----BEGIN";
-			int headerLength = 100;
-			byte[] preamble = new byte[headerLength];
-			if (is.read(preamble, 0, headerLength) > 0) {
-				String startArray = new String(preamble);
-				return startArray.startsWith(startPEM);
-			}
-			return false;
+	private static String convertToPEM(Object obj) throws DSSException {
+		try (StringWriter out = new StringWriter(); PemWriter pemWriter = new PemWriter(out)) {
+			pemWriter.writeObject(new JcaMiscPEMGenerator(obj));
+			pemWriter.flush();
+			return out.toString();
 		} catch (Exception e) {
-			throw new DSSException("Unable to read InputStream", e);
+			throw new DSSException("Unable to convert DER to PEM", e);
 		}
 	}
 
 	/**
-	 * This method returns true if the byteArray contains a PEM encoded item
+	 * This method returns true if the inputStream contains a DER encoded item
 	 * 
-	 * @return true if PEM encoded
+	 * @return true if DER encoded
 	 */
-	public static boolean isPEM(byte[] byteArray) {
-		try {
-			String startPEM = "-----BEGIN";
-			int headerLength = 100;
-			byte[] preamble = new byte[headerLength];
-			System.arraycopy(byteArray, 0, preamble, 0, headerLength);
-			String startArray = new String(preamble);
-			return startArray.startsWith(startPEM);
-		} catch (Exception e) {
-			throw new DSSException("Unable to read InputStream");
+	public static boolean isDER(InputStream is) {
+		byte firstByte = readFirstByte(new InMemoryDocument(is));
+		return DSSASN1Utils.isASN1SequenceTag(firstByte);
+	}
+
+	/**
+	 * This method converts a PEM encoded certificate/crl/... to DER encoded
+	 * 
+	 * @param pemContent
+	 *            the String which contains the PEM encoded object
+	 * @return the binaries of the DER encoded object
+	 */
+	public static byte[] convertToDER(String pemContent) {
+		try (Reader reader = new StringReader(pemContent); PemReader pemReader = new PemReader(reader)) {
+			PemObject readPemObject = pemReader.readPemObject();
+			return readPemObject.getContent();
+		} catch (IOException e) {
+			throw new DSSException("Unable to convert PEM to DER", e);
 		}
-	}
-
-	/**
-	 * This method converts a PEM encoded certificate to DER encoded
-	 * 
-	 * @param pemCert
-	 *            the String which contains the PEM encoded certificate
-	 * @return the binaries of the DER encoded certificate
-	 */
-	public static byte[] convertToDER(String pemCert) {
-		String base64 = pemCert.replace(CERT_BEGIN, "");
-		base64 = base64.replace(CERT_END, "");
-		base64 = base64.replaceAll("\\s", "");
-		return Utils.fromBase64(base64);
-	}
-
-	/**
-	 * This method converts a PEM encoded crl to DER encoded
-	 * 
-	 * @param pemCRL
-	 *            the String which contains the PEM encoded CRL
-	 * @return the binaries of the DER encoded crl
-	 */
-	public static byte[] convertCRLToDER(String pemCRL) {
-		String base64 = pemCRL.replace(CRL_BEGIN, "");
-		base64 = base64.replace(CRL_END, "");
-		base64 = base64.replaceAll("\\s", "");
-		return Utils.fromBase64(base64);
 	}
 
 	/**
@@ -416,98 +375,42 @@ public final class DSSUtils {
 	}
 
 	/**
-	 * This method loads the issuer certificate from the given location (AIA). The certificate must be DER-encoded and
-	 * may be supplied in binary or
-	 * printable (Base64) encoding. If the certificate is provided in Base64 encoding, it must be bounded at the
-	 * beginning by -----BEGIN
-	 * CERTIFICATE-----, and must be bounded at the end by -----END CERTIFICATE-----. It throws an {@code DSSException}
-	 * or return {@code null} when the certificate cannot be loaded.
+	 * This method loads the potential issuer certificate(s) from the given locations (AIA).
 	 *
 	 * @param cert
-	 *            certificate for which the issuer should be loaded
+	 *            certificate for which the issuer(s) should be loaded
 	 * @param loader
-	 *            the loader to use
-	 * @return
+	 *            the data loader to use
+	 * @return a list of potential issuers
 	 */
-	public static Collection<CertificateToken> loadIssuerCertificates(final CertificateToken cert, final DataLoader loader) {
+	public static Collection<CertificateToken> loadPotentialIssuerCertificates(final CertificateToken cert, final DataLoader loader) {
 		List<String> urls = DSSASN1Utils.getCAAccessLocations(cert);
+
 		if (Utils.isCollectionEmpty(urls)) {
 			LOG.info("There is no AIA extension for certificate download. CA " + cert.getIssuerX500Principal().getName());
 			return null;
 		}
-
 		if (loader == null) {
-			LOG.warn("There is no DataLoader defined to load Certificates from AIA extension (urls : " + urls + ")");
-			return null;
+			LOG.warn("There is no DataLoader defined to load Certificates from AIA extension (urls : {})", urls);
+			return Collections.emptyList();
 		}
 
 		for (String url : urls) {
-			LOG.debug("Loading certificate from {}", url);
-
+			LOG.debug("Loading certificate(s) from {}", url);
 			byte[] bytes = loader.get(url);
 			if (Utils.isArrayNotEmpty(bytes)) {
-				LOG.debug("Base64 content : " + Utils.toBase64(bytes));
+				LOG.debug("Base64 content : {}", Utils.toBase64(bytes));
 				try (InputStream is = new ByteArrayInputStream(bytes)) {
-
-					Collection<CertificateToken> issuerCerts = null;
-					CertificateToken issuerCert = null;
-					try {
-						issuerCert = loadCertificate(bytes);
-						issuerCerts = Collections.singletonList(issuerCert);
-					} catch (DSSException dssEx) {
-						if (issuerCert == null) {
-							Collection<CertificateToken> certsCollection = loadCertificateFromP7c(is);
-							for (CertificateToken token : certsCollection) {
-								if (cert.isSignedBy(token)) {
-									issuerCert = token;
-									issuerCerts = certsCollection;
-								}
-							}
-						}
-					}
-
-					if (issuerCert != null) {
-						if (!cert.getIssuerX500Principal().equals(issuerCert.getSubjectX500Principal())) {
-							LOG.info("There is AIA extension, but the issuer subject name and subject name does not match.");
-							LOG.info("CERT ISSUER    : " + cert.getIssuerX500Principal().toString());
-							LOG.info("ISSUER SUBJECT : " + issuerCert.getSubjectX500Principal().toString());
-						}
-						return issuerCerts;
-					}
+					return loadCertificates(is);
 				} catch (Exception e) {
-					LOG.warn("Unable to parse certficate from AIA (url:" + url + ") : " + e.getMessage());
+					LOG.warn("Unable to parse certificate(s) from AIA (url: {}) : {}", url, e.getMessage());
 				}
 			} else {
-				LOG.error("Unable to read data from {}.", url);
+				LOG.warn("Empty content from {}.", url);
 			}
 		}
 
-		return null;
-	}
-
-	/**
-	 * This method loads a CRL from the given base 64 encoded string.
-	 *
-	 * @param base64Encoded
-	 * @return
-	 */
-	public static X509CRL loadCRLBase64Encoded(final String base64Encoded) {
-		final byte[] derEncoded = Utils.fromBase64(base64Encoded);
-		return loadCRL(derEncoded);
-	}
-
-	/**
-	 * This method loads a CRL from the given location.
-	 *
-	 * @param byteArray
-	 * @return
-	 */
-	public static X509CRL loadCRL(final byte[] byteArray) {
-		try (ByteArrayInputStream inputStream = new ByteArrayInputStream(byteArray)) {
-			return loadCRL(inputStream);
-		} catch (IOException e) {
-			throw new DSSException(e);
-		}
+		return Collections.emptyList();
 	}
 
 	/**
@@ -515,7 +418,9 @@ public final class DSSUtils {
 	 *
 	 * @param inputStream
 	 * @return
+	 * @deprecated for performance reasons, the X509CRL object needs to be avoided
 	 */
+	@Deprecated
 	public static X509CRL loadCRL(final InputStream inputStream) {
 		try {
 			return (X509CRL) certificateFactory.generateCRL(inputStream);
@@ -534,47 +439,6 @@ public final class DSSUtils {
 	public static String getSHA1Digest(final String stringToDigest) {
 		final byte[] digest = getMessageDigest(DigestAlgorithm.SHA1).digest(stringToDigest.getBytes());
 		return Utils.toHex(digest);
-	}
-
-	/**
-	 * This method digests the given {@code InputStream} with SHA1 algorithm and encode returned array of bytes as hex
-	 * string.
-	 *
-	 * @param inputStream
-	 * @return
-	 */
-	public static String getSHA1Digest(final InputStream inputStream) throws IOException {
-		return Utils.toHex(digest(DigestAlgorithm.SHA1, inputStream));
-	}
-
-	/**
-	 * This method replaces in a string one pattern by another one without using regexp.
-	 *
-	 * @param string
-	 * @param oldPattern
-	 * @param newPattern
-	 * @return
-	 */
-	public static StringBuilder replaceStrStr(final StringBuilder string, final String oldPattern, final String newPattern) {
-		if ((string == null) || (oldPattern == null) || oldPattern.equals("") || (newPattern == null)) {
-			return string;
-		}
-
-		final StringBuilder replaced = new StringBuilder();
-		int startIdx = 0;
-		int idxOld;
-		while ((idxOld = string.indexOf(oldPattern, startIdx)) >= 0) {
-			replaced.append(string.substring(startIdx, idxOld));
-			replaced.append(newPattern);
-			startIdx = idxOld + oldPattern.length();
-		}
-		replaced.append(string.substring(startIdx));
-		return replaced;
-	}
-
-	public static String replaceStrStr(final String string, final String oldPattern, final String newPattern) {
-		final StringBuilder stringBuilder = replaceStrStr(new StringBuilder(string), oldPattern, newPattern);
-		return stringBuilder.toString();
 	}
 
 	/**
@@ -848,16 +712,6 @@ public final class DSSUtils {
 		}
 	}
 
-	public static String toString(final byte[] bytes) {
-
-		if (bytes == null) {
-
-			throw new NullPointerException();
-		}
-		final String string = new String(bytes);
-		return string;
-	}
-
 	/**
 	 * This method saves the given array of {@code byte} to the provided {@code File}.
 	 *
@@ -868,17 +722,10 @@ public final class DSSUtils {
 	 */
 	public static void saveToFile(final byte[] bytes, final File file) throws DSSException {
 		file.getParentFile().mkdirs();
-		InputStream is = null;
-		OutputStream os = null;
-		try {
-			os = new FileOutputStream(file);
-			is = new ByteArrayInputStream(bytes);
+		try (InputStream is = new ByteArrayInputStream(bytes); OutputStream os = new FileOutputStream(file)) {
 			Utils.copy(is, os);
 		} catch (IOException e) {
 			throw new DSSException(e);
-		} finally {
-			Utils.closeQuietly(is);
-			Utils.closeQuietly(os);
 		}
 	}
 
@@ -897,39 +744,11 @@ public final class DSSUtils {
 		Utils.closeQuietly(fileOutputStream);
 	}
 
-	public static X509CRL toX509CRL(final X509CRLHolder x509CRLHolder) {
-		try {
-			final JcaX509CRLConverter jcaX509CRLConverter = new JcaX509CRLConverter();
-			final X509CRL x509CRL = jcaX509CRLConverter.getCRL(x509CRLHolder);
-			return x509CRL;
-		} catch (CRLException e) {
-			throw new DSSException(e);
-		}
-	}
-
 	public static byte[] getEncoded(X509CRL x509CRL) {
 		try {
 			final byte[] encoded = x509CRL.getEncoded();
 			return encoded;
 		} catch (CRLException e) {
-			throw new DSSException(e);
-		}
-	}
-
-	public static byte[] getEncoded(BasicOCSPResp basicOCSPResp) {
-		try {
-			final byte[] encoded = basicOCSPResp.getEncoded();
-			return encoded;
-		} catch (IOException e) {
-			throw new DSSException(e);
-		}
-	}
-
-	public static byte[] getEncoded(OCSPResp ocspResp) {
-		try {
-			final byte[] encoded = ocspResp.getEncoded();
-			return encoded;
-		} catch (IOException e) {
 			throw new DSSException(e);
 		}
 	}
@@ -942,14 +761,14 @@ public final class DSSUtils {
 	 * @return
 	 */
 	public static String getDeterministicId(final Date signingTime, TokenIdentifier id) {
-		try {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); DataOutputStream dos = new DataOutputStream(baos);) {
 			if (signingTime != null) {
-				baos.write(Long.toString(signingTime.getTime()).getBytes());
+				dos.writeLong(signingTime.getTime());
 			}
 			if (id != null) {
-				baos.write(id.asXmlId().getBytes());
+				dos.writeChars(id.asXmlId());
 			}
+			dos.close();
 			final String deterministicId = "id-" + getMD5Digest(baos.toByteArray());
 			return deterministicId;
 		} catch (IOException e) {
@@ -1236,6 +1055,24 @@ public final class DSSUtils {
 		long diff = date2.getTime() - date1.getTime();
 		return timeUnit.convert(diff, TimeUnit.MILLISECONDS);
 	}
+
+  /**
+   * Reads the first byte from the DSSDocument
+   *
+   * @param dssDocument
+   *            the document
+   * @return the first byte
+   * @throws DSSException
+   */
+  public static byte readFirstByte(final DSSDocument dssDocument) throws DSSException {
+    byte[] result = new byte[1];
+    try (InputStream inputStream = dssDocument.openStream()) {
+      inputStream.read(result, 0, 1);
+    } catch (IOException e) {
+      throw new DSSException(e);
+    }
+    return result[0];
+  }
 
 	/**
 	 * Concatenates all the arrays into a new array. The new array contains all of the element of each array followed by

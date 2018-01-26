@@ -61,6 +61,7 @@ import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.ValidationContext;
 import eu.europa.esig.dss.x509.CertificatePool;
+import eu.europa.esig.dss.x509.CertificateSource;
 import eu.europa.esig.dss.x509.CertificateToken;
 import eu.europa.esig.dss.x509.TimestampType;
 import eu.europa.esig.dss.x509.tsp.TSPSource;
@@ -167,6 +168,7 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 		ensureUnsignedProperties();
 		ensureUnsignedSignatureProperties();
 		ensureSignedDataObjectProperties();
+		assertSignatureValid(xadesSignature);
 
 		//BDoc support - do not add Timestamp for BDoc Timemark signatures
 		if (BDocTmSupport.isBdocTmSignatureProfile(params)) {
@@ -216,7 +218,9 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 	 * @param parentDom
 	 * @param toIncludeCertificates
 	 */
-	protected void incorporateCertificateValues(final Element parentDom, final List<CertificateToken> toIncludeCertificates) {
+	protected void incorporateCertificateValues(final Element parentDom, final ValidationContext validationContext) {
+
+		final Set<CertificateToken> toIncludeCertificates = xadesSignature.getCertificatesForInclusion(validationContext);
 
 		// <xades:CertificateValues>
 		// ...<xades:EncapsulatedX509Certificate>MIIC9TC...
@@ -224,7 +228,8 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 
 			final Element certificateValuesDom = DomUtils.addElement(documentDom, parentDom, XAdES, XADES_CERTIFICATE_VALUES);
 
-			final CertificatePool certificatePool = getCertificatePool();
+			CertificateSource trustedCertSource = certificateVerifier.getTrustedCertSource();
+
 			final boolean trustAnchorBPPolicy = params.bLevel().isTrustAnchorBPPolicy();
 			boolean trustAnchorIncluded = false;
 
@@ -233,11 +238,8 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 			//End of Custom Estonian functionality
 
 			for (final CertificateToken certificateToken : toIncludeCertificates) {
-
-				if (trustAnchorBPPolicy && (certificatePool != null)) {
-
-					final List<CertificateToken> certificateTokens = certificatePool.get(certificateToken.getSubjectX500Principal());
-					if (certificateTokens.size() > 0) {
+				if (trustAnchorBPPolicy && (trustedCertSource != null)) {
+					if (!trustedCertSource.get(certificateToken.getSubjectX500Principal()).isEmpty()) {
 						trustAnchorIncluded = true;
 					}
 				}
@@ -262,19 +264,6 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 		}
 	}
 
-	public Set<CertificateToken> getCertificatesForInclusion(final ValidationContext validationContext) {
-
-		final Set<CertificateToken> certificates = new HashSet<CertificateToken>();
-		final List<CertificateToken> certWithinSignatures = xadesSignature.getCertificates();
-		for (final CertificateToken certificateToken : validationContext.getProcessedCertificates()) {
-			if (certWithinSignatures.contains(certificateToken)) {
-				continue;
-			}
-			certificates.add(certificateToken);
-		}
-		return certificates;
-	}
-
 	/**
 	 * Creates any XAdES TimeStamp object representation. The timestamp token is obtained from TSP source
 	 *
@@ -289,82 +278,61 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 	 */
 	protected void createXAdESTimeStampType(final TimestampType timestampType, final String timestampC14nMethod, final byte[] digestValue) throws DSSException {
 
-		try {
+		Element timeStampDom = null;
+		final TimestampParameters signatureTimestampParameters = params.getSignatureTimestampParameters();
+		DigestAlgorithm timestampDigestAlgorithm = signatureTimestampParameters.getDigestAlgorithm();
+		switch (timestampType) {
 
-			Element timeStampDom = null;
-			final TimestampParameters signatureTimestampParameters = params.getSignatureTimestampParameters();
-			DigestAlgorithm timestampDigestAlgorithm = signatureTimestampParameters.getDigestAlgorithm();
-			switch (timestampType) {
-
-			case SIGNATURE_TIMESTAMP:
-				// <xades:SignatureTimeStamp Id="time-stamp-1dee38c4-8388-40d1-8880-9eeda853fe60">
-				timeStampDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, XAdES, XADES_SIGNATURE_TIME_STAMP);
-				break;
-			case VALIDATION_DATA_REFSONLY_TIMESTAMP:
-				// timeStampDom = DSSXMLUtils.addElement(documentDom, unsignedSignaturePropertiesDom,
-				// XAdESNamespaces.XAdES, XADES_);
-				break;
-			case VALIDATION_DATA_TIMESTAMP:
-				// <xades:SigAndRefsTimeStamp Id="time-stamp-a762ab0e-e05c-4cc8-a804-cf2c4ffb5516">
-				if (params.isEn319132() && !SignatureLevel.XAdES_X.equals(params.getSignatureLevel())) {
-					timeStampDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, XAdES, XADES_SIG_AND_REFS_TIME_STAMP_V2);
-				} else {
-					timeStampDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, XAdES, XADES_SIG_AND_REFS_TIME_STAMP);
-				}
-				break;
-			case ARCHIVE_TIMESTAMP:
-				// <xades141:ArchiveTimeStamp Id="time-stamp-a762ab0e-e05c-4cc8-a804-cf2c4ffb5516">
-				timeStampDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, XAdES141, XADES141_ARCHIVE_TIME_STAMP);
-				timestampDigestAlgorithm = params.getArchiveTimestampParameters().getDigestAlgorithm();
-				break;
-			case ALL_DATA_OBJECTS_TIMESTAMP:
-				timeStampDom = DomUtils.addElement(documentDom, signedDataObjectPropertiesDom, XAdES, XADES_ALL_DATA_OBJECTS_TIME_STAMP);
-				break;
-			case INDIVIDUAL_DATA_OBJECTS_TIMESTAMP:
-				timeStampDom = DomUtils.addElement(documentDom, signedDataObjectPropertiesDom, XAdES, XADES_INDIVIDUAL_DATA_OBJECTS_TIME_STAMP);
-				break;
-			default:
-				LOG.error("Unsupported timestamp type : " + timestampType);
-				break;
+		case SIGNATURE_TIMESTAMP:
+			// <xades:SignatureTimeStamp Id="time-stamp-1dee38c4-8388-40d1-8880-9eeda853fe60">
+			timeStampDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, XAdES, XADES_SIGNATURE_TIME_STAMP);
+			break;
+		case VALIDATION_DATA_REFSONLY_TIMESTAMP:
+			// timeStampDom = DSSXMLUtils.addElement(documentDom, unsignedSignaturePropertiesDom,
+			// XAdESNamespaces.XAdES, XADES_);
+			break;
+		case VALIDATION_DATA_TIMESTAMP:
+			// <xades:SigAndRefsTimeStamp Id="time-stamp-a762ab0e-e05c-4cc8-a804-cf2c4ffb5516">
+			if (params.isEn319132() && !SignatureLevel.XAdES_X.equals(params.getSignatureLevel())) {
+				timeStampDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, XAdES, XADES_SIG_AND_REFS_TIME_STAMP_V2);
+			} else {
+				timeStampDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, XAdES, XADES_SIG_AND_REFS_TIME_STAMP);
 			}
-
-			if (LOG.isDebugEnabled()) {
-
-				final String encodedDigestValue = Utils.toBase64(digestValue);
-				LOG.debug("Timestamp generation: " + timestampDigestAlgorithm.getName() + " / " + timestampC14nMethod + " / " + encodedDigestValue);
-			}
-			final TimeStampToken timeStampToken = tspSource.getTimeStampResponse(timestampDigestAlgorithm, digestValue);
-			final byte[] timeStampTokenBytes = timeStampToken.getEncoded();
-			final String base64EncodedTimeStampToken = Utils.toBase64(timeStampTokenBytes);
-
-			final String timestampId = UUID.randomUUID().toString();
-			timeStampDom.setAttribute(ID, "TS-" + timestampId);
-
-			// <ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
-			incorporateC14nMethod(timeStampDom, timestampC14nMethod);
-
-			// <xades:EncapsulatedTimeStamp Id="time-stamp-token-6a150419-caab-4615-9a0b-6e239596643a">MIAGCSqGSIb3DQEH
-			final Element encapsulatedTimeStampDom = DomUtils.addElement(documentDom, timeStampDom, XAdES, XADES_ENCAPSULATED_TIME_STAMP);
-			encapsulatedTimeStampDom.setAttribute(ID, "ETS-" + timestampId);
-			DomUtils.setTextNode(documentDom, encapsulatedTimeStampDom, base64EncodedTimeStampToken);
-		} catch (IOException e) {
-			throw new DSSException("Error during the creation of the XAdES timestamp!", e);
+			break;
+		case ARCHIVE_TIMESTAMP:
+			// <xades141:ArchiveTimeStamp Id="time-stamp-a762ab0e-e05c-4cc8-a804-cf2c4ffb5516">
+			timeStampDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, XAdES141, XADES141_ARCHIVE_TIME_STAMP);
+			timestampDigestAlgorithm = params.getArchiveTimestampParameters().getDigestAlgorithm();
+			break;
+		case ALL_DATA_OBJECTS_TIMESTAMP:
+			timeStampDom = DomUtils.addElement(documentDom, signedDataObjectPropertiesDom, XAdES, XADES_ALL_DATA_OBJECTS_TIME_STAMP);
+			break;
+		case INDIVIDUAL_DATA_OBJECTS_TIMESTAMP:
+			timeStampDom = DomUtils.addElement(documentDom, signedDataObjectPropertiesDom, XAdES, XADES_INDIVIDUAL_DATA_OBJECTS_TIME_STAMP);
+			break;
+		default:
+			LOG.error("Unsupported timestamp type : " + timestampType);
+			break;
 		}
-	}
 
-	protected List<CertificateToken> getToIncludeCertificateTokens(final ValidationContext valContext) {
+		if (LOG.isDebugEnabled()) {
 
-		// if the certificate is already present within the KeyInfo then it is ignored.
-		final Set<CertificateToken> processedCertificates = valContext.getProcessedCertificates();
-		final List<CertificateToken> keyInfoCertificates = xadesSignature.getKeyInfoCertificates();
-		final List<CertificateToken> toIncludeCertificates = new ArrayList<CertificateToken>();
-		for (final CertificateToken processedCertificate : processedCertificates) {
-
-			if (!keyInfoCertificates.contains(processedCertificate)) {
-				toIncludeCertificates.add(processedCertificate);
-			}
+			final String encodedDigestValue = Utils.toBase64(digestValue);
+			LOG.debug("Timestamp generation: " + timestampDigestAlgorithm.getName() + " / " + timestampC14nMethod + " / " + encodedDigestValue);
 		}
-		return toIncludeCertificates;
+		final TimeStampToken timeStampToken = tspSource.getTimeStampResponse(timestampDigestAlgorithm, digestValue);
+		final String base64EncodedTimeStampToken = Utils.toBase64(DSSASN1Utils.getEncoded(timeStampToken));
+
+		final String timestampId = UUID.randomUUID().toString();
+		timeStampDom.setAttribute(ID, "TS-" + timestampId);
+
+		// <ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
+		incorporateC14nMethod(timeStampDom, timestampC14nMethod);
+
+		// <xades:EncapsulatedTimeStamp Id="time-stamp-token-6a150419-caab-4615-9a0b-6e239596643a">MIAGCSqGSIb3DQEH
+		final Element encapsulatedTimeStampDom = DomUtils.addElement(documentDom, timeStampDom, XAdES, XADES_ENCAPSULATED_TIME_STAMP);
+		encapsulatedTimeStampDom.setAttribute(ID, "ETS-" + timestampId);
+		DomUtils.setTextNode(documentDom, encapsulatedTimeStampDom, base64EncodedTimeStampToken);
 	}
 
 }

@@ -13,11 +13,11 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>${dss.groupId}</groupId>
+			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
 			<artifactId>dss-soap-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>${dss.groupId}</groupId>
+			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
 			<artifactId>dss-remote-services</artifactId>
 		</dependency>
 	</dependencies>

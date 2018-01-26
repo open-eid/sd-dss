@@ -16,13 +16,17 @@
 	<dependencies>
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
-			<artifactId>dss-spi</artifactId>
+			<artifactId>dss-document</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-token</artifactId>
 		</dependency>
-		
+		<dependency>
+			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<artifactId>dss-service</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jcl-over-slf4j</artifactId>
@@ -46,6 +50,15 @@
 			<artifactId>dss-utils-google-guava</artifactId>
 		</dependency>
 		
+		<!-- Choose your implementation -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>eu.europa.ec.joinup.sd-dss</groupId> -->
+<!-- 			<artifactId>dss-crl-parser-x509crl</artifactId> -->
+<!-- 		</dependency> -->
+		<dependency>
+			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<artifactId>dss-crl-parser-stream</artifactId>
+		</dependency>
 	</dependencies>
 	
 </project>

@@ -112,18 +112,10 @@ public class ASiCWithXAdESService extends AbstractASiCSignatureService<ASiCWithX
 			extendedDocuments.add(extendDocument);
 		}
 
-		ByteArrayOutputStream baos = null;
-		try {
-			baos = new ByteArrayOutputStream();
-			copyExistingArchiveWithSignatureList(toExtendDocument, extendedDocuments, baos);
-		} finally {
-			Utils.closeQuietly(baos);
-		}
-
-		DSSDocument asicSignature = new InMemoryDocument(baos.toByteArray(), null, toExtendDocument.getMimeType());
-		asicSignature.setName(
+		DSSDocument extensionResult = mergeArchiveAndExtendedSignatures(toExtendDocument, extendedDocuments);
+		extensionResult.setName(
 				DSSUtils.getFinalFileName(toExtendDocument, SigningOperation.EXTEND, parameters.getSignatureLevel(), parameters.aSiC().getContainerType()));
-		return asicSignature;
+		return extensionResult;
 	}
 
 	/**

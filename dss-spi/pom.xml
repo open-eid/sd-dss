@@ -22,6 +22,10 @@
 			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-utils</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-crl-parser</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.slf4j</groupId>

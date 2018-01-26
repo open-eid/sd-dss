@@ -1,6 +1,8 @@
 package eu.europa.esig.dss;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
@@ -102,8 +104,12 @@ public final class DomUtils {
 		dbFactory.setNamespaceAware(true);
 		try {
 			// disable external entities
+			// details : https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Prevention_Cheat_Sheet#Java
+
 			dbFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
 			dbFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+			dbFactory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+
 			dbFactory.setXIncludeAware(false);
 			dbFactory.setExpandEntityReferences(false);
 		} catch (ParserConfigurationException e) {
@@ -462,6 +468,17 @@ public final class DomUtils {
 		} catch (Exception e) {
 			throw new DSSException(e);
 		}
+	}
+
+	public static DSSDocument createDssDocumentFromDomDocument(Document document, String name) {
+		DSSDocument dssDoc = null;
+		try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+			DomUtils.writeDocumentTo(document, baos);
+			dssDoc = new InMemoryDocument(baos.toByteArray(), name, MimeType.XML);
+		} catch (IOException e) {
+			throw new DSSException(e);
+		}
+		return dssDoc;
 	}
 
 	/**
