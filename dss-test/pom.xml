@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.1.d4j.5</version>
+		<version>5.2.d4j.1</version>
 	</parent>
 
 	<name>DSS Test</name>
@@ -23,7 +23,7 @@
 			<artifactId>dss-token</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-service</artifactId>
 		</dependency>
 
@@ -56,7 +56,7 @@
 <!-- 			<artifactId>dss-crl-parser-x509crl</artifactId> -->
 <!-- 		</dependency> -->
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-crl-parser-stream</artifactId>
 		</dependency>
 	</dependencies>

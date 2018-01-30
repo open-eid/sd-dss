@@ -2,9 +2,9 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>
-		<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.2</version>
+		<version>5.2.d4j.1</version>
 	</parent>
 	
 	<artifactId>dss-crl-parser-stream</artifactId>
@@ -13,12 +13,12 @@
 	
 	<dependencies>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-crl-parser</artifactId>
 		</dependency>
 		
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-crl-parser</artifactId>
 			<type>test-jar</type>
 			<scope>test</scope>
@@ -34,7 +34,7 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-utils-google-guava</artifactId>
 			<scope>test</scope>
 		</dependency>

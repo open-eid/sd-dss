@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.1.d4j.5</version>
+		<version>5.2.d4j.1</version>
 	</parent>
 	
 	<artifactId>dss-asic-cades</artifactId>
@@ -23,12 +23,6 @@
 		<dependency>
       <groupId>${dss.groupId}</groupId>
 			<artifactId>dss-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-      <groupId>${dss.groupId}</groupId>
-			<artifactId>dss-document</artifactId>
-			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

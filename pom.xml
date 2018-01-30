@@ -3,9 +3,9 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+	<groupId>org.digidoc4j.dss</groupId>
 	<artifactId>sd-dss</artifactId>
-	<version>5.1.d4j.5</version>
+	<version>5.2.d4j.1</version>
 	<packaging>pom</packaging>
 	<name>Digital Signature Services</name>
     <description>This is a forked repository from the original DSS project located at
@@ -74,6 +74,7 @@
 	</licenses>
 	
 	<modules>
+		<module>dss-model</module>
 		<module>dss-token</module>
 		<module>dss-utils</module>
 		<module>dss-utils-apache-commons</module>
@@ -83,9 +84,7 @@
 		<module>dss-crl-parser-stream</module>
 		<module>dss-spi</module>
 		<module>dss-document</module>
-		<module>dss-model</module>
 		<module>dss-service</module>
-		<module>dss-spi</module>
 		<module>dss-test</module>
 		<module>sscd-mocca-adapter</module>
 		<module>dss-policy-jaxb</module>
@@ -317,6 +316,7 @@
 	                <artifactId>maven-release-plugin</artifactId>
 	                <version>2.5.3</version>
 	                <configuration>
+	                	<releaseProfiles>src,javadoc</releaseProfiles>
 						<autoVersionSubmodules>true</autoVersionSubmodules>
 						<tagNameFormat>@{project.version}</tagNameFormat>
 					</configuration>
@@ -379,12 +379,12 @@
                 <version>3.3</version>
                 <configuration>
                     <outputEncoding>${project.encoding}</outputEncoding>
-                    <reportPlugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-project-info-reports-plugin</artifactId>
-                        </plugin>
-                    </reportPlugins>
+                    <!--<reportPlugins>-->
+                        <!--<plugin>-->
+                            <!--<groupId>org.apache.maven.plugins</groupId>-->
+                            <!--<artifactId>maven-project-info-reports-plugin</artifactId>-->
+                        <!--</plugin>-->
+                    <!--</reportPlugins>-->
                 </configuration>
             </plugin>
         </plugins>
@@ -412,7 +412,7 @@
 			</dependency>
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
-				<artifactId>dss-service</artifactId>
+				<artifactId>dss-crl-parser</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -422,24 +422,23 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-crl-parser-x509crl</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-crl-parser-stream</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-service</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-document</artifactId>
-				<type>test-jar</type>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -752,10 +751,10 @@
 					<plugin>
 						<groupId>org.owasp</groupId>
 						<artifactId>dependency-check-maven</artifactId>
-						<version>2.0.1</version>
-						<configuration>
-							<failBuildOnCVSS>4</failBuildOnCVSS>
-						</configuration>
+						<version>2.1.1</version>
+						<!--<configuration>-->
+							<!--<failBuildOnCVSS>4</failBuildOnCVSS>-->
+						<!--</configuration>-->
 						<executions>
 							<execution>
 								<goals>

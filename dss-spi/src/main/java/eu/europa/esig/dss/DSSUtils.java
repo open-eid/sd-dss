@@ -388,7 +388,7 @@ public final class DSSUtils {
 
 		if (Utils.isCollectionEmpty(urls)) {
 			LOG.info("There is no AIA extension for certificate download. CA " + cert.getIssuerX500Principal().getName());
-			return null;
+			return Collections.emptyList();
 		}
 		if (loader == null) {
 			LOG.warn("There is no DataLoader defined to load Certificates from AIA extension (urls : {})", urls);

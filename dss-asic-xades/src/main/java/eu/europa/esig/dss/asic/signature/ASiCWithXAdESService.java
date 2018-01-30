@@ -144,14 +144,8 @@ public class ASiCWithXAdESService extends AbstractASiCSignatureService<ASiCWithX
 		}
 		signatureDocs.removeAll(sigantureToRemove);
 
-		ByteArrayOutputStream baos = null;
-		try {
-			baos = new ByteArrayOutputStream();
-			copyExistingArchiveWithSignatureList(zipArchive, signatureDocs, baos);
-		} finally {
-			Utils.closeQuietly(baos);
-		}
-		DSSDocument asicSignature = new InMemoryDocument(baos.toByteArray(), zipArchive.getName(), zipArchive.getMimeType());
+		DSSDocument asicSignature = mergeArchiveAndExtendedSignatures(zipArchive, signatureDocs);
+		asicSignature.setName(zipArchive.getName());
 		return asicSignature;
 	}
 

@@ -62,7 +62,7 @@ public class DSSUtilsTest {
 			DSSUtils.loadCertificate(new FileInputStream("src/test/resources/certchain.p7c"));
 			fail("Should not load single certificate (first?)");
 		} catch (DSSException dssEx) {
-			assertEquals(dssEx.getMessage(), "eu.europa.esig.dss.DSSException: Could not parse certificate(s)");
+			assertEquals(dssEx.getMessage(), "Could not parse certificate");
 		}
 	}
 
