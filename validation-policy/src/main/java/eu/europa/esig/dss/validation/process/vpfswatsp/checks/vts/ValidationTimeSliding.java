@@ -5,13 +5,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import eu.europa.esig.dss.jaxb.detailedreport.XmlPCV;
 import eu.europa.esig.dss.jaxb.detailedreport.XmlRFC;
 import eu.europa.esig.dss.jaxb.detailedreport.XmlVTS;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.TimestampedObjectType;
 import eu.europa.esig.dss.validation.policy.Context;
-import eu.europa.esig.dss.validation.policy.EtsiValidationPolicy;
 import eu.europa.esig.dss.validation.policy.SubContext;
 import eu.europa.esig.dss.validation.policy.ValidationPolicy;
 import eu.europa.esig.dss.validation.policy.rules.Indication;
@@ -173,9 +171,9 @@ public class ValidationTimeSliding extends Chain<XmlVTS> {
 				 * shall set control-time to the lowest time up to which
 				 * the listed algorithms were considered reliable.
 				 */
-				item = addChecksForCryptographic(item, certificate, controlTime);
+				item = item.setNextItem(cryptographicCheck(certificate, controlTime));
 
-				item = addChecksForCryptographic(item, latestCompliantRevocation, controlTime);
+				item = item.setNextItem(cryptographicCheck(latestCompliantRevocation, controlTime));
 
 			}
 		}
@@ -201,23 +199,9 @@ public class ValidationTimeSliding extends Chain<XmlVTS> {
 		return new POEExistsAtOrBeforeControlTimeCheck(result, token, referenceCategory, controlTime, poe, getFailLevelConstraint());
 	}
 
-	/**
-	 * Method created in order to support multiple constraints.
-	 * @return At least one chainitem
-	 */
-	private ChainItem<XmlVTS> addChecksForCryptographic(ChainItem<XmlVTS> item, TokenProxy token, Date validationTime) {
-		int index = 0;
-		ChainItem<XmlVTS> newItem = item;
-		EtsiValidationPolicy epolicy = (EtsiValidationPolicy) policy;
-		CryptographicConstraint constraint;
-		do {
-			constraint = epolicy.getCertificateCryptographicConstraint(context, SubContext.SIGNING_CERT, index);
-			if (index == 0 || constraint != null) {
-				newItem = newItem.setNextItem(new CryptographicCheck<XmlVTS>(result, token, validationTime, constraint));
-				index++;
-			}
-		} while (constraint != null);
-		return newItem;
+	private ChainItem<XmlVTS> cryptographicCheck(TokenProxy token, Date validationTime) {
+		CryptographicConstraint constraint = policy.getCertificateCryptographicConstraint(context, SubContext.SIGNING_CERT);
+		return new CryptographicCheck<XmlVTS>(result, token, validationTime, constraint);
 	}
 
 	private boolean isConsistant(CertificateWrapper certificate, RevocationWrapper revocationData) {

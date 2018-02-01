@@ -5,12 +5,10 @@ import java.util.Date;
 import eu.europa.esig.dss.jaxb.detailedreport.XmlRFC;
 import eu.europa.esig.dss.jaxb.detailedreport.XmlSubXCV;
 import eu.europa.esig.dss.validation.policy.Context;
-import eu.europa.esig.dss.validation.policy.EtsiValidationPolicy;
 import eu.europa.esig.dss.validation.policy.SubContext;
 import eu.europa.esig.dss.validation.policy.ValidationPolicy;
 import eu.europa.esig.dss.validation.process.Chain;
 import eu.europa.esig.dss.validation.process.ChainItem;
-import eu.europa.esig.dss.validation.process.bbb.sav.checks.CryptographicCheck;
 import eu.europa.esig.dss.validation.process.bbb.xcv.rfc.RevocationFreshnessChecker;
 import eu.europa.esig.dss.validation.process.bbb.xcv.sub.checks.AuthorityInfoAccessPresentCheck;
 import eu.europa.esig.dss.validation.process.bbb.xcv.sub.checks.CertificateCryptographicCheck;
@@ -38,7 +36,6 @@ import eu.europa.esig.dss.validation.process.bbb.xcv.sub.checks.RevocationInfoAc
 import eu.europa.esig.dss.validation.process.bbb.xcv.sub.checks.SerialNumberCheck;
 import eu.europa.esig.dss.validation.process.bbb.xcv.sub.checks.SurnameCheck;
 import eu.europa.esig.dss.validation.reports.wrapper.CertificateWrapper;
-import eu.europa.esig.dss.validation.reports.wrapper.RevocationWrapper;
 import eu.europa.esig.jaxb.policy.CryptographicConstraint;
 import eu.europa.esig.jaxb.policy.LevelConstraint;
 import eu.europa.esig.jaxb.policy.MultiValuesConstraint;
@@ -92,7 +89,7 @@ public class SubX509CertificateValidation extends Chain<XmlSubXCV> {
 
 		item = item.setNextItem(certificateSignatureValid(currentCertificate, subContext));
 
-		item = addChecksForCertificateCryptographic(item, currentCertificate, context, subContext);
+		item = item.setNextItem(certificateCryptographic(currentCertificate, context, subContext));
 
 		item = item.setNextItem(keyUsage(currentCertificate, subContext));
 
@@ -234,23 +231,9 @@ public class SubX509CertificateValidation extends Chain<XmlSubXCV> {
 		return new CertificateQCStatementIdsCheck(result, certificate, constraint);
 	}
 
-	/**
-	 * Method created in order to support multiple constraints.
-	 * @return At least one chainitem
-	 */
-	private ChainItem<XmlSubXCV> addChecksForCertificateCryptographic(ChainItem<XmlSubXCV> item, CertificateWrapper certificate, Context context, SubContext subcontext) {
-		int index = 0;
-		ChainItem<XmlSubXCV> newItem = item;
-		EtsiValidationPolicy epolicy = (EtsiValidationPolicy) validationPolicy;
-		CryptographicConstraint constraint;
-		do {
-			constraint = epolicy.getCertificateCryptographicConstraint(context, subContext, index);
-			if (index == 0 || constraint != null) {
-				newItem = newItem.setNextItem(new CertificateCryptographicCheck(result, certificate, currentTime, constraint));
-				index++;
-			}
-		} while (constraint != null);
-		return newItem;
+	private ChainItem<XmlSubXCV> certificateCryptographic(CertificateWrapper certificate, Context context, SubContext subcontext) {
+		CryptographicConstraint cryptographicConstraint = validationPolicy.getCertificateCryptographicConstraint(context, subcontext);
+		return new CertificateCryptographicCheck(result, certificate, currentTime, cryptographicConstraint);
 	}
 
 	private ChainItem<XmlSubXCV> certificateQualified(CertificateWrapper certificate, SubContext subContext) {

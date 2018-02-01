@@ -8,8 +8,6 @@
 
 package eu.europa.esig.jaxb.policy;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -52,7 +50,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="IssuedToNaturalPerson" type="{http://dss.esig.europa.eu/validation/policy}LevelConstraint" minOccurs="0"/>
  *         &lt;element name="IssuedToLegalPerson" type="{http://dss.esig.europa.eu/validation/policy}LevelConstraint" minOccurs="0"/>
  *         &lt;element name="UsePseudonym" type="{http://dss.esig.europa.eu/validation/policy}LevelConstraint" minOccurs="0"/>
- *         &lt;element name="Cryptographic" type="{http://dss.esig.europa.eu/validation/policy}CryptographicConstraint" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="Cryptographic" type="{http://dss.esig.europa.eu/validation/policy}CryptographicConstraint" minOccurs="0"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -146,7 +144,7 @@ public class CertificateConstraints {
     @XmlElement(name = "UsePseudonym")
     protected LevelConstraint usePseudonym;
     @XmlElement(name = "Cryptographic")
-    protected List<CryptographicConstraint> cryptographic;
+    protected CryptographicConstraint cryptographic;
 
     /**
      * Gets the value of the recognition property.
@@ -775,30 +773,25 @@ public class CertificateConstraints {
     /**
      * Gets the value of the cryptographic property.
      * 
-     * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the cryptographic property.
-     * 
-     * <p>
-     * For example, to add a new item, do as follows:
-     * <pre>
-     *    getCryptographic().add(newItem);
-     * </pre>
-     * 
-     * 
-     * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link CryptographicConstraint }
-     * 
-     * 
+     * @return
+     *     possible object is
+     *     {@link CryptographicConstraint }
+     *
      */
-    public List<CryptographicConstraint> getCryptographic() {
-        if (cryptographic == null) {
-            cryptographic = new ArrayList<CryptographicConstraint>();
-        }
-        return this.cryptographic;
+    public CryptographicConstraint getCryptographic() {
+        return cryptographic;
+    }
+
+    /**
+     * Sets the value of the cryptographic property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link CryptographicConstraint }
+     *
+     */
+    public void setCryptographic(CryptographicConstraint value) {
+        this.cryptographic = value;
     }
 
 }
