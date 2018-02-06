@@ -71,13 +71,17 @@ public class OfflineResolver extends ResourceResolverSpi {
 			if ("".equals(documentUri) || documentUri.startsWith("#")) {
 				return false;
 			}
+			if (isKnown(documentUri) != null) {
+				LOG.debug("I state that I can resolve '" + documentUri.toString() + "' (external document)");
+				return true;
+			}
 			documentUri = BDocTmSupport.fixEncoding(encodedDocumentUri);
 			documentUri = DSSUtils.decodeUrl(documentUri);
-      try {
-        if (isKnown(documentUri) != null) {
-          LOG.debug("I state that I can resolve '{}' (external document)", documentUri);
-          return true;
-        }
+			if (isKnown(documentUri) != null) {
+				LOG.debug("I state that I can resolve '" + documentUri.toString() + "' (external document)");
+				return true;
+			}
+			try {
 				final String baseUriString = context.baseUri;
 				if (Utils.isStringNotEmpty(baseUriString)) {
 					final URI baseUri = new URI(baseUriString);
