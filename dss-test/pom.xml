@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.1.d4j.1</version>
+		<version>5.1.d4j.5</version>
 	</parent>
 
 	<name>DSS Test</name>
@@ -38,7 +38,7 @@
 		
 		<!-- Choose your implementation -->
 <!-- 		<dependency> -->
-<!-- 			<groupId>eu.europa.ec.joinup.sd-dss</groupId> -->
+<!-- 			<groupId>${project.groupId}</groupId> -->
 <!-- 			<artifactId>dss-utils-apache-commons</artifactId> -->
 <!-- 		</dependency> -->
 		<dependency>

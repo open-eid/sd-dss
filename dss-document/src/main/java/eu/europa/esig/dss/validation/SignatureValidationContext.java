@@ -398,7 +398,8 @@ public class SignatureValidationContext implements ValidationContext {
 			LOG.trace("Checking revocation data for: " + certToken.getDSSIdAsString());
 		}
 		if (certToken.isSelfSigned() || certToken.isTrusted() || (certToken.getIssuerToken() == null)) {
-
+			LOG.warn("Revocation data will not be verified because one of the following: token is selfSigned:{} or trusted:{} or hasNoIssuer:{}", certToken.isSelfSigned(), certToken.isTrusted(), certToken.getIssuerToken() == null);
+			LOG.warn("Hence no corresponding data will be added to the signature");
 			// It is not possible to check the revocation data without its signing certificate;
 			// This check is not needed for the trust anchor.
 			return Collections.emptyList();

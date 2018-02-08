@@ -26,7 +26,10 @@ import java.io.IOException;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1Sequence;
+
 import org.bouncycastle.util.BigIntegers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.EncryptionAlgorithm;
@@ -37,6 +40,8 @@ import eu.europa.esig.dss.utils.Utils;
  *
  */
 public final class DSSSignatureUtils {
+
+	private static final Logger LOG = LoggerFactory.getLogger(DSSSignatureUtils.class);
 
 	private DSSSignatureUtils() {
 	}
@@ -122,7 +127,7 @@ public final class DSSSignatureUtils {
 	 *            signature value to check.
 	 * @return if the signature is ASN.1 encoded.
 	 */
-	private static boolean isAsn1Encoded(byte[] signatureValue) {
+	public static boolean isAsn1Encoded(byte[] signatureValue) {
 		ASN1InputStream is = null;
 		try {
 			is = new ASN1InputStream(signatureValue);
