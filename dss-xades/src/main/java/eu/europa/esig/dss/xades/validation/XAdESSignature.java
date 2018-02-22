@@ -1326,6 +1326,8 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 				} catch (XMLSignatureException e) {
 					LOG.debug("Exception while probing candidate certificate as signing certificate: " + e.getMessage());
 					preliminaryErrorMessages.add(errorMessagePrefix + e.getMessage());
+				} catch ( Exception e) {
+					LOG.error("Technical Exception : " + e.getMessage());
 				}
 				certificateNumber++;
 			}

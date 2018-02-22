@@ -675,8 +675,7 @@ public class DiagnosticDataBuilder {
 		final EncryptionAlgorithm encryptionAlgorithm = signature.getEncryptionAlgorithm();
 		final String encryptionAlgorithmString = encryptionAlgorithm == null ? "?" : encryptionAlgorithm.getName();
 		xmlBasicSignature.setEncryptionAlgoUsedToSignThisToken(encryptionAlgorithmString);
-
-		final int keyLength = signingCertificateToken == null ? 0 : DSSPKUtils.getPublicKeySize(signingCertificateToken.getPublicKey());
+		final int keyLength = signingCertificateToken == null ? 0 : getkeyLenght(signingCertificateToken);
 		xmlBasicSignature.setKeyLengthUsedToSignThisToken(String.valueOf(keyLength));
 		final DigestAlgorithm digestAlgorithm = signature.getDigestAlgorithm();
 		final String digestAlgorithmString = digestAlgorithm == null ? "?" : digestAlgorithm.getName();
@@ -692,6 +691,16 @@ public class DiagnosticDataBuilder {
 		xmlBasicSignature.setSignatureIntact(scv.isSignatureIntact());
 		xmlBasicSignature.setSignatureValid(scv.isSignatureValid());
 		return xmlBasicSignature;
+	}
+
+	private int getkeyLenght(CertificateToken signingCertificateToken) {
+		try{
+			PublicKey publicKey = signingCertificateToken.getPublicKey();
+			return DSSPKUtils.getPublicKeySize(publicKey);
+		} catch (IllegalArgumentException e){
+			LOG.error("Getting public key from certifcate in Bouncy Castle failed: {}", e.getMessage());
+			return 0;
+		}
 	}
 
 	private List<XmlSignatureScope> getXmlSignatureScopes(List<SignatureScope> scopes) {
@@ -743,9 +752,13 @@ public class DiagnosticDataBuilder {
 
 		xmlCert.setNotAfter(certToken.getNotAfter());
 		xmlCert.setNotBefore(certToken.getNotBefore());
-		final PublicKey publicKey = certToken.getPublicKey();
-		xmlCert.setPublicKeySize(DSSPKUtils.getPublicKeySize(publicKey));
-		xmlCert.setPublicKeyEncryptionAlgo(DSSPKUtils.getPublicKeyEncryptionAlgo(publicKey));
+		try{
+			final PublicKey publicKey = certToken.getPublicKey();
+			xmlCert.setPublicKeySize(DSSPKUtils.getPublicKeySize(publicKey));
+			xmlCert.setPublicKeyEncryptionAlgo(DSSPKUtils.getPublicKeyEncryptionAlgo(publicKey));
+		} catch (Exception e) {
+			LOG.error("Technical exception: {}", e.getMessage().toUpperCase());
+		}
 
 		xmlCert.setKeyUsageBits(getXmlKeyUsages(certToken.getKeyUsageBits()));
 
