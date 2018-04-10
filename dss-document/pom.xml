@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.1.d4j.5</version>
+		<version>5.2.d4j.2</version>
 	</parent>
 
 	<artifactId>dss-document</artifactId>
@@ -20,16 +20,29 @@
 		</dependency>
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
-			<artifactId>dss-reports</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>${dss.groupId}</groupId>
 			<artifactId>validation-policy</artifactId>
-		</dependency> 
-        		
+		</dependency>
+
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<scope>test</scope>
+		</dependency>
+ 		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Choose your implementation -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>${dss.groupId}</groupId> -->
+<!-- 			<artifactId>dss-utils-apache-commons</artifactId> -->
+<!-- 			<scope>test</scope> -->
+<!-- 		</dependency> -->
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
-			<artifactId>dss-test</artifactId>
+			<artifactId>dss-utils-google-guava</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

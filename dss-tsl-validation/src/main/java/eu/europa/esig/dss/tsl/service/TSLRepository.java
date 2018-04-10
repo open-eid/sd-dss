@@ -214,7 +214,7 @@ public class TSLRepository {
 	List<File> getStoredFiles() {
 		ensureCacheDirectoryExists();
 		File cacheDir = new File(cacheDirectoryPath);
-		File[] listFiles = cacheDir.listFiles();
+		File[] listFiles = cacheDir.listFiles(new IgnorePivotFilenameFilter());
 		return Arrays.asList(listFiles);
 	}
 
@@ -311,8 +311,8 @@ public class TSLRepository {
 			for (TSLServiceStatusAndInformationExtensions tslServiceStatus : serviceStatus) {
 				final Map<String, List<Condition>> qualifiersAndConditions = getMapConditionsByQualifier(tslServiceStatus);
 				final ServiceInfoStatus s = new ServiceInfoStatus(tslServiceStatus.getType(), tslServiceStatus.getStatus(), qualifiersAndConditions,
-						tslServiceStatus.getAdditionalServiceInfoUris(), tslServiceStatus.getExpiredCertsRevocationInfo(), tslServiceStatus.getStartDate(),
-						tslServiceStatus.getEndDate());
+						tslServiceStatus.getAdditionalServiceInfoUris(), tslServiceStatus.getServiceSupplyPoints(),
+						tslServiceStatus.getExpiredCertsRevocationInfo(), tslServiceStatus.getStartDate(), tslServiceStatus.getEndDate());
 
 				status.addOldest(s);
 			}

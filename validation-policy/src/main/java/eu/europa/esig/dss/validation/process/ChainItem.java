@@ -188,10 +188,6 @@ public abstract class ChainItem<T extends XmlConstraintsConclusion> {
 		return null;
 	}
 
-	protected String getAdditionalParameter() {
-		return "";
-	}
-
 	private void addConstraint(XmlConstraint constraint) {
 		result.getConstraint().add(constraint);
 	}
@@ -200,12 +196,7 @@ public abstract class ChainItem<T extends XmlConstraintsConclusion> {
 		XmlName xmlName = new XmlName();
 		if (messageTag != null) {
 			xmlName.setNameId(messageTag.name());
-			String lValue = messageTag.getMessage();
-			String lParam = getAdditionalParameter();
-			if (lParam != null) {
-				if (lParam.length() > 0) lValue = lValue + " (" + lParam + ")";
-			}
-			xmlName.setValue(lValue);
+			xmlName.setValue(messageTag.getMessage());
 		} else {
 			LOG.error("MessageTag is null");
 		}

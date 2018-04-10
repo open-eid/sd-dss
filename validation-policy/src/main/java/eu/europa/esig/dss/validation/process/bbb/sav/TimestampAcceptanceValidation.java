@@ -4,7 +4,6 @@ import java.util.Date;
 
 import eu.europa.esig.dss.jaxb.detailedreport.XmlSAV;
 import eu.europa.esig.dss.validation.policy.Context;
-import eu.europa.esig.dss.validation.policy.EtsiValidationPolicy;
 import eu.europa.esig.dss.validation.policy.ValidationPolicy;
 import eu.europa.esig.dss.validation.process.ChainItem;
 import eu.europa.esig.dss.validation.process.bbb.sav.checks.CryptographicCheck;
@@ -28,7 +27,7 @@ public class TimestampAcceptanceValidation extends AbstractAcceptanceValidation<
 
 	@Override
 	protected void initChain() {
-		ChainItem<XmlSAV> item = addChecksForTimestampCryptographic();
+		ChainItem<XmlSAV> item = firstItem = timestampCryptographic();
 
 		// PVA : best place to validate MessageImprintData here
 		// This allows to configure the validation with policy and to get a feedback in the UI
@@ -36,28 +35,9 @@ public class TimestampAcceptanceValidation extends AbstractAcceptanceValidation<
 		item = item.setNextItem(messageImprintDataIntact());
 	}
 
-	/**
-	 * Method created in order to support multiple constraints.
-	 * @return At least one chainitem
-	 */
-	private ChainItem<XmlSAV> addChecksForTimestampCryptographic() {
-		int index = 0;
-		ChainItem<XmlSAV> newItem = null;
-		EtsiValidationPolicy epolicy = (EtsiValidationPolicy) validationPolicy;
-		CryptographicConstraint constraint;
-		do {
-			constraint = epolicy.getSignatureCryptographicConstraint(Context.TIMESTAMP, index);
-			if (index == 0 || constraint != null) {
-				if (newItem == null) {
-					newItem = new CryptographicCheck<XmlSAV>(result, token, currentTime, constraint);
-					firstItem = newItem;
-				} else {
-					newItem = newItem.setNextItem(new CryptographicCheck<XmlSAV>(result, token, currentTime, constraint));
-				}
-				index++;
-			}
-		} while (constraint != null);
-		return newItem;
+	private ChainItem<XmlSAV> timestampCryptographic() {
+		CryptographicConstraint constraint = validationPolicy.getSignatureCryptographicConstraint(Context.TIMESTAMP);
+		return new CryptographicCheck<XmlSAV>(result, token, currentTime, constraint);
 	}
 
 	private ChainItem<XmlSAV> messageImprintDataFound() {

@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.1.d4j.5</version>
+		<version>5.2.d4j.2</version>
 	</parent>
 
 	<name>DSS Test</name>
@@ -16,13 +16,17 @@
 	<dependencies>
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
-			<artifactId>dss-spi</artifactId>
+			<artifactId>dss-document</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-token</artifactId>
 		</dependency>
-		
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-service</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jcl-over-slf4j</artifactId>
@@ -46,6 +50,15 @@
 			<artifactId>dss-utils-google-guava</artifactId>
 		</dependency>
 		
+		<!-- Choose your implementation -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>eu.europa.ec.joinup.sd-dss</groupId> -->
+<!-- 			<artifactId>dss-crl-parser-x509crl</artifactId> -->
+<!-- 		</dependency> -->
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-crl-parser-stream</artifactId>
+		</dependency>
 	</dependencies>
 	
 </project>

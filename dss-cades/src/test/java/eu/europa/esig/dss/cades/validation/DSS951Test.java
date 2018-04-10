@@ -3,6 +3,7 @@ package eu.europa.esig.dss.cades.validation;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import eu.europa.esig.dss.DSSDocument;
@@ -15,6 +16,7 @@ import eu.europa.esig.dss.validation.reports.wrapper.SignatureWrapper;
 
 public class DSS951Test {
 
+	@Ignore
 	@Test
 	public void testFile1() {
 		DSSDocument dssDocument = new FileDocument("src/test/resources/validation/dss-951/NexU-CAdES-B-B-Detached-Sha512.p7m");

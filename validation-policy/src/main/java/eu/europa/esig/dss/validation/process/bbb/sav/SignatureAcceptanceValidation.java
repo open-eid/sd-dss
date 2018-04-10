@@ -4,7 +4,6 @@ import java.util.Date;
 
 import eu.europa.esig.dss.jaxb.detailedreport.XmlSAV;
 import eu.europa.esig.dss.validation.policy.Context;
-import eu.europa.esig.dss.validation.policy.EtsiValidationPolicy;
 import eu.europa.esig.dss.validation.policy.ValidationPolicy;
 import eu.europa.esig.dss.validation.process.ChainItem;
 import eu.europa.esig.dss.validation.process.bbb.sav.checks.CertifiedRolesCheck;
@@ -80,7 +79,7 @@ public class SignatureAcceptanceValidation extends AbstractAcceptanceValidation<
 		item = item.setNextItem(certifiedRoles());
 
 		// cryptographic check
-		item = addChecksForSignatureCryptographic(item);
+		item = item.setNextItem(signatureCryptographic());
 	}
 
 	private ChainItem<XmlSAV> structuralValidation() {
@@ -138,23 +137,9 @@ public class SignatureAcceptanceValidation extends AbstractAcceptanceValidation<
 		return new CertifiedRolesCheck(result, token, constraint);
 	}
 
-	/**
-	 * Method created in order to support multiple constraints.
-	 * @return At least one chainitem
-	 */
-	private ChainItem<XmlSAV> addChecksForSignatureCryptographic(ChainItem<XmlSAV> item) {
-		int index = 0;
-		ChainItem<XmlSAV> newItem = item;
-		EtsiValidationPolicy epolicy = (EtsiValidationPolicy) validationPolicy;
-		CryptographicConstraint constraint;
-		do {
-			constraint = epolicy.getSignatureCryptographicConstraint(context, index);
-			if (index == 0 || constraint != null) {
-				newItem = newItem.setNextItem(new CryptographicCheck<XmlSAV>(result, token, currentTime, constraint));
-				index++;
-			}
-		} while (constraint != null);
-		return newItem;
+	private ChainItem<XmlSAV> signatureCryptographic() {
+		CryptographicConstraint constraint = validationPolicy.getSignatureCryptographicConstraint(context);
+		return new CryptographicCheck<XmlSAV>(result, token, currentTime, constraint);
 	}
 
 }

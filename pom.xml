@@ -5,7 +5,7 @@
 
 	<groupId>org.digidoc4j.dss</groupId>
 	<artifactId>sd-dss</artifactId>
-	<version>5.1.d4j.5</version>
+	<version>5.2.d4j.2</version>
 	<packaging>pom</packaging>
 	<name>Digital Signature Services</name>
     <description>This is a forked repository from the original DSS project located at
@@ -54,16 +54,16 @@
 		<slf4j.version>1.7.25</slf4j.version>
 		<logback-classic.version>1.2.3</logback-classic.version>
 
-		<bouncycastle.version>1.54</bouncycastle.version>
-		<xmlsec.version>2.0.8</xmlsec.version>
+		<bouncycastle.version>1.58</bouncycastle.version>
+		<xmlsec.version>2.0.9</xmlsec.version>
 		<xalan.version>2.7.2</xalan.version>
-		<pdfbox.version>2.0.6</pdfbox.version>
+		<pdfbox.version>2.0.7</pdfbox.version>
 		<httpclient.version>4.5.3</httpclient.version>
 		<rs-api.version>2.0.1</rs-api.version>
 
-		<junit.version>4.11</junit.version>
+		<junit.version>4.12</junit.version>
 
-		<dss.groupId>org.digidoc4j.dss</dss.groupId>
+    <dss.groupId>org.digidoc4j.dss</dss.groupId>
 	</properties>
 	
 	<licenses>
@@ -74,14 +74,17 @@
 	</licenses>
 	
 	<modules>
+		<module>dss-model</module>
 		<module>dss-token</module>
 		<module>dss-utils</module>
 		<module>dss-utils-apache-commons</module>
 		<module>dss-utils-google-guava</module>
-		<module>dss-document</module>
-		<module>dss-model</module>
-		<module>dss-service</module>
+		<module>dss-crl-parser</module>
+		<module>dss-crl-parser-x509crl</module>
+		<module>dss-crl-parser-stream</module>
 		<module>dss-spi</module>
+		<module>dss-document</module>
+		<module>dss-service</module>
 		<module>dss-test</module>
 		<module>sscd-mocca-adapter</module>
 		<module>dss-policy-jaxb</module>
@@ -164,13 +167,14 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.19.1</version>
+				<version>2.20</version>
 				<configuration>
 					<!-- Default test configuration -->
 					<skipTests>true</skipTests>
 					<classpathDependencyExcludes>
 			            <classpathDependencyExclude>commons-logging:commons-logging</classpathDependencyExclude>
 			        </classpathDependencyExcludes>
+			        <threadCount>1</threadCount>
 				</configuration>
 				<executions>
 					<execution>
@@ -312,6 +316,7 @@
 	                <artifactId>maven-release-plugin</artifactId>
 	                <version>2.5.3</version>
 	                <configuration>
+	                	<releaseProfiles>src,javadoc</releaseProfiles>
 						<autoVersionSubmodules>true</autoVersionSubmodules>
 						<tagNameFormat>@{project.version}</tagNameFormat>
 					</configuration>
@@ -389,10 +394,10 @@
 		<url>https://ec.europa.eu/cefdigital/code/scm/esig/dss.git</url>
 		<connection>scm:git:https://ec.europa.eu/cefdigital/code/scm/esig/dss.git</connection>
 		<developerConnection>scm:git:https://ec.europa.eu/cefdigital/code/scm/esig/dss.git</developerConnection>
-		<tag>5.1</tag>
+		<tag>5.2</tag>
 	</scm>
 
-    <dependencyManagement>
+	<dependencyManagement>
 		<dependencies>
 			<!-- Internal Dependencies -->
 			<dependency>
@@ -407,18 +412,33 @@
 			</dependency>
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-crl-parser</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-crl-parser</artifactId>
+				<type>test-jar</type>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-crl-parser-x509crl</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-crl-parser-stream</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-service</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-document</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>${dss.groupId}</groupId>
-				<artifactId>dss-document</artifactId>
-				<type>test-jar</type>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -731,10 +751,10 @@
 					<plugin>
 						<groupId>org.owasp</groupId>
 						<artifactId>dependency-check-maven</artifactId>
-						<version>2.0.1</version>
-						<configuration>
-							<failBuildOnCVSS>4</failBuildOnCVSS>
-						</configuration>
+						<version>2.1.1</version>
+						<!--<configuration>-->
+							<!--<failBuildOnCVSS>4</failBuildOnCVSS>-->
+						<!--</configuration>-->
 						<executions>
 							<execution>
 								<goals>

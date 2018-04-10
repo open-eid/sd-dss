@@ -20,15 +20,22 @@
  */
 package eu.europa.esig.dss.validation;
 
-import java.security.cert.X509CRL;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.cert.ocsp.OCSPResp;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import eu.europa.esig.dss.DSSASN1Utils;
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.DSSRevocationUtils;
@@ -37,6 +44,7 @@ import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.SignatureLevel;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.x509.CertificatePool;
+import eu.europa.esig.dss.x509.CertificateSourceType;
 import eu.europa.esig.dss.x509.CertificateToken;
 import eu.europa.esig.dss.x509.RevocationOrigin;
 import eu.europa.esig.dss.x509.RevocationToken;
@@ -51,16 +59,16 @@ import eu.europa.esig.dss.x509.ocsp.OfflineOCSPSource;
 
 public abstract class DefaultAdvancedSignature implements AdvancedSignature {
 
+	private static final Logger LOG = LoggerFactory.getLogger(DefaultAdvancedSignature.class);
+
 	/**
-	 * This is the reference to the global (external) pool of certificates. All encapsulated certificates in the
-	 * signature are added to this pool. See {@link
-	 * eu.europa.esig.dss.x509.CertificatePool}
+	 * This is the reference to the global (external) pool of certificates. All encapsulated certificates in the signature are added to this pool. See
+	 * {@link eu.europa.esig.dss.x509.CertificatePool}
 	 */
 	protected final CertificatePool certPool;
 
 	/**
-	 * In the case of a non AdES signature the signing certificate is not mandatory within the signature and can be
-	 * provided by the driving application.
+	 * In the case of a non AdES signature the signing certificate is not mandatory within the signature and can be provided by the driving application.
 	 */
 	protected CertificateToken providedSigningCertificateToken;
 
@@ -199,6 +207,16 @@ public abstract class DefaultAdvancedSignature implements AdvancedSignature {
 	}
 
 	/**
+	 * Returns an unmodifiable list of all certificate tokens encapsulated in the signature
+	 * 
+	 * @see eu.europa.esig.dss.validation.AdvancedSignature#getCertificates()
+	 */
+	@Override
+	public List<CertificateToken> getCertificates() {
+		return getCertificateSource().getCertificates();
+	}
+
+	/**
 	 * This method returns all certificates used during the validation process. If a certificate is already present
 	 * within the signature then it is ignored.
 	 *
@@ -221,25 +239,50 @@ public abstract class DefaultAdvancedSignature implements AdvancedSignature {
 	}
 
 	public List<CertificateToken> getCertificatesWithinSignatureAndTimestamps() {
+		List<CertificateToken> certs = new ArrayList<CertificateToken>();
+		Map<String, List<CertificateToken>> certificatesWithinSignatureAndTimestamps = getCertificatesWithinSignatureAndTimestamps(false);
+		for (List<CertificateToken> certificateTokens : certificatesWithinSignatureAndTimestamps.values()) {
+			certs.addAll(certificateTokens);
+		}
+		return certs;
+	}
 
-		final List<CertificateToken> certWithinSignatures = new ArrayList<CertificateToken>();
-		certWithinSignatures.addAll(getCertificates());
-		for (final TimestampToken timestampToken : getSignatureTimestamps()) {
-			certWithinSignatures.addAll(timestampToken.getCertificates());
-		}
-		for (final TimestampToken timestampToken : getArchiveTimestamps()) {
-			certWithinSignatures.addAll(timestampToken.getCertificates());
-		}
+	public Map<String, List<CertificateToken>> getCertificatesWithinSignatureAndTimestamps(boolean skipLastArchiveTimestamp) {
+		Map<String, List<CertificateToken>> certificates = new HashMap<String, List<CertificateToken>>();
+		certificates.put(CertificateSourceType.SIGNATURE.name(), getCertificates());
+		int timestampCounter = 0;
 		for (final TimestampToken timestampToken : getContentTimestamps()) {
-			certWithinSignatures.addAll(timestampToken.getCertificates());
+			certificates.put(timestampToken.getTimeStampType().name() + timestampCounter++, timestampToken.getCertificates());
 		}
 		for (final TimestampToken timestampToken : getTimestampsX1()) {
-			certWithinSignatures.addAll(timestampToken.getCertificates());
+			certificates.put(timestampToken.getTimeStampType().name() + timestampCounter++, timestampToken.getCertificates());
 		}
 		for (final TimestampToken timestampToken : getTimestampsX2()) {
-			certWithinSignatures.addAll(timestampToken.getCertificates());
+			certificates.put(timestampToken.getTimeStampType().name() + timestampCounter++, timestampToken.getCertificates());
 		}
-		return certWithinSignatures;
+		for (final TimestampToken timestampToken : getSignatureTimestamps()) {
+			certificates.put(timestampToken.getTimeStampType().name() + timestampCounter++, timestampToken.getCertificates());
+		}
+
+		List<TimestampToken> archiveTsps = getArchiveTimestamps();
+		if (skipLastArchiveTimestamp) {
+			archiveTsps = removeLastTimestamp(archiveTsps);
+		}
+		for (final TimestampToken timestampToken : archiveTsps) {
+			certificates.put(timestampToken.getTimeStampType().name() + timestampCounter++, timestampToken.getCertificates());
+		}
+
+		return certificates;
+	}
+
+	private List<TimestampToken> removeLastTimestamp(List<TimestampToken> timestamps) {
+		List<TimestampToken> tsps = new ArrayList<TimestampToken>();
+		Collections.copy(timestamps, tsps);
+		if (Utils.collectionSize(tsps) > 1) {
+			Collections.sort(tsps, new TimestampByGenerationTimeComparator());
+			tsps.remove(tsps.size() - 1);
+		}
+		return tsps;
 	}
 
 	/**
@@ -255,16 +298,14 @@ public abstract class DefaultAdvancedSignature implements AdvancedSignature {
 		final List<CRLToken> crlTokens = new ArrayList<CRLToken>();
 		final List<OCSPToken> ocspTokens = new ArrayList<OCSPToken>();
 		for (final RevocationToken revocationToken : revocationTokens) {
-			if (!RevocationOrigin.SIGNATURE.equals(revocationToken.getOrigin())) {
-				if (revocationToken instanceof CRLToken) {
-					final CRLToken crlToken = (CRLToken) revocationToken;
-					crlTokens.add(crlToken);
-				} else if (revocationToken instanceof OCSPToken) {
-					final OCSPToken ocspToken = (OCSPToken) revocationToken;
-					ocspTokens.add(ocspToken);
-				} else {
-					throw new DSSException("Unknown type for revocationToken: " + revocationToken.getClass().getName());
-				}
+			if (revocationToken instanceof CRLToken) {
+				final CRLToken crlToken = (CRLToken) revocationToken;
+				crlTokens.add(crlToken);
+			} else if (revocationToken instanceof OCSPToken) {
+				final OCSPToken ocspToken = (OCSPToken) revocationToken;
+				ocspTokens.add(ocspToken);
+			} else {
+				throw new DSSException("Unknown type for revocationToken: " + revocationToken.getClass().getName());
 			}
 		}
 		return new RevocationDataForInclusion(crlTokens, ocspTokens);
@@ -452,7 +493,7 @@ public abstract class DefaultAdvancedSignature implements AdvancedSignature {
 				for (BasicOCSPResp basicOCSPResp : containedOCSPResponses) {
 					OCSPResp ocspResp = DSSRevocationUtils.fromBasicToResp(basicOCSPResp);
 					final byte[] digest = DSSUtils.digest(DigestAlgorithm.SHA1, DSSRevocationUtils.getEncoded(ocspResp));
-					references.add(new TimestampReference(DigestAlgorithm.SHA1, Utils.toBase64(digest), TimestampReferenceCategory.REVOCATION));
+					references.add(new TimestampReference(DigestAlgorithm.SHA1, Utils.toBase64(digest), TimestampedObjectType.REVOCATION));
 				}
 			}
 		}
@@ -467,12 +508,12 @@ public abstract class DefaultAdvancedSignature implements AdvancedSignature {
 	protected void addReferencesFromOfflineCRLSource(List<TimestampReference> references) {
 		OfflineCRLSource crlSource = getCRLSource();
 		if (crlSource != null) {
-			List<X509CRL> containedX509CRLs = crlSource.getContainedX509CRLs();
+			Collection<byte[]> containedX509CRLs = crlSource.getContainedX509CRLs();
 			if (Utils.isCollectionNotEmpty(containedX509CRLs)) {
 				usedCertificatesDigestAlgorithms.add(DigestAlgorithm.SHA1);
-				for (X509CRL x509crl : containedX509CRLs) {
-					final byte[] digest = DSSUtils.digest(DigestAlgorithm.SHA1, DSSRevocationUtils.getEncoded(x509crl));
-					references.add(new TimestampReference(DigestAlgorithm.SHA1, Utils.toBase64(digest), TimestampReferenceCategory.REVOCATION));
+				for (byte[] x509crl : containedX509CRLs) {
+					final byte[] digest = DSSUtils.digest(DigestAlgorithm.SHA1, x509crl);
+					references.add(new TimestampReference(DigestAlgorithm.SHA1, Utils.toBase64(digest), TimestampedObjectType.REVOCATION));
 				}
 			}
 		}
@@ -516,6 +557,81 @@ public abstract class DefaultAdvancedSignature implements AdvancedSignature {
 			archiveTimestamps = new ArrayList<TimestampToken>();
 		}
 		archiveTimestamps.add(timestamp);
+	}
+
+	/* Defines the level T */
+	public boolean hasTProfile() {
+		return Utils.isCollectionNotEmpty(getSignatureTimestamps());
+	}
+
+	/* Defines the level LT */
+	public boolean hasLTProfile() {
+		Map<String, List<CertificateToken>> certificateChains = getCertificatesWithinSignatureAndTimestamps(true);
+		boolean emptyOCSPs = Utils.isCollectionEmpty(getOCSPSource().getContainedOCSPResponses());
+		boolean emptyCRLs = Utils.isCollectionEmpty(getCRLSource().getContainedX509CRLs());
+
+		if (certificateChains.isEmpty() && (emptyOCSPs || emptyCRLs)) {
+			return false;
+		}
+
+		if (!isAllCertChainsHaveRevocationData(certificateChains)) {
+			return false;
+		}
+
+		return true;
+	}
+
+	private boolean isAllCertChainsHaveRevocationData(Map<String, List<CertificateToken>> certificateChains) {
+		for (Entry<String, List<CertificateToken>> entryCertChain : certificateChains.entrySet()) {
+			LOG.debug("Testing revocation data presence for certificates chain {}", entryCertChain.getKey());
+			if (!isAllCertsHaveRevocationData(entryCertChain.getValue())) {
+				LOG.debug("Revocation data missing in certificate chain {}", entryCertChain.getKey());
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean isAllCertsHaveRevocationData(List<CertificateToken> certificates) {
+		for (CertificateToken certificateToken : certificates) {
+			if (isRevocationDataNotRequired(certificateToken)) {
+				// TODO we suppose that the certificate chain is well ordered
+				// It returns true to avoid checking upper levels than trusted certificates (cross certification)
+				return true;
+			}
+			Set<RevocationToken> revocationData = certificateToken.getRevocationTokens();
+			if (Utils.isCollectionEmpty(revocationData)) {
+				return false;
+			} else {
+				boolean foundInSignature = false;
+				for (RevocationToken revocationToken : revocationData) {
+					if (RevocationOrigin.SIGNATURE == revocationToken.getOrigin()) {
+						foundInSignature = true;
+					}
+				}
+				if (!foundInSignature) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private boolean isRevocationDataNotRequired(CertificateToken certificateToken) {
+		if (certificateToken.isTrusted() || certificateToken.isSelfSigned()) {
+			return true;
+		}
+
+		if (DSSASN1Utils.hasIdPkixOcspNoCheckExtension(certificateToken)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/* Defines the level LTA */
+	public boolean hasLTAProfile() {
+		return Utils.isCollectionNotEmpty(getArchiveTimestamps());
 	}
 
 }
