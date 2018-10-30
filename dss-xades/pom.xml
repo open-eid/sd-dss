@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.2.d4j.3</version>
+		<version>5.2.d4j.4</version>
 	</parent>
 
 	<artifactId>dss-xades</artifactId>
@@ -22,10 +22,6 @@
 		<dependency>
 			<groupId>org.apache.santuario</groupId>
 			<artifactId>xmlsec</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>xalan</groupId>
-			<artifactId>xalan</artifactId>
 		</dependency>
         
 		<dependency>
