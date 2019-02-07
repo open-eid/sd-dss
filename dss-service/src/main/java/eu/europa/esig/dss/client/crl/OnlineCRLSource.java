@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -22,6 +22,7 @@ package eu.europa.esig.dss.client.crl;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -36,6 +37,7 @@ import eu.europa.esig.dss.crl.CRLUtils;
 import eu.europa.esig.dss.crl.CRLValidity;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.x509.CertificateToken;
+import eu.europa.esig.dss.x509.RevocationSourceAlternateUrlsSupport;
 import eu.europa.esig.dss.x509.crl.CRLSource;
 import eu.europa.esig.dss.x509.crl.CRLToken;
 
@@ -46,10 +48,8 @@ import eu.europa.esig.dss.x509.crl.CRLToken;
  * provided. For FTP the standard load from URI is provided. For LDAP kind of URLs an internal implementation using
  * apache-ldap-api is provided.
  *
- *
  */
-
-public class OnlineCRLSource implements CRLSource {
+public class OnlineCRLSource implements CRLSource, RevocationSourceAlternateUrlsSupport<CRLToken> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OnlineCRLSource.class);
 
@@ -68,7 +68,6 @@ public class OnlineCRLSource implements CRLSource {
 	 * The default constructor. A {@code CommonsDataLoader is created}.
 	 */
 	public OnlineCRLSource() {
-
 		dataLoader = new CommonsDataLoader();
 		LOG.trace("+OnlineCRLSource with the default data loader.");
 	}
@@ -80,21 +79,19 @@ public class OnlineCRLSource implements CRLSource {
 	 *            the component that allows to retrieve the data using any protocol: HTTP, HTTPS, FTP, LDAP.
 	 */
 	public OnlineCRLSource(final DataLoader dataLoader) {
-
 		this.dataLoader = dataLoader;
 		LOG.trace("+OnlineCRLSource with the specific data loader.");
 	}
 
 	/**
 	 * This method allows to set the preferred protocol. This parameter is used used when retrieving the CRL to choose
-	 * the canal.<br/>
+	 * the canal.<br>
 	 * Possible values are: http, ldap, ftp
 	 *
 	 * @param preferredProtocol
 	 *            {@code Protocol} that is used first to retrieve the revocation data
 	 */
 	public void setPreferredProtocol(final Protocol preferredProtocol) {
-
 		this.preferredProtocol = preferredProtocol;
 	}
 
@@ -105,25 +102,35 @@ public class OnlineCRLSource implements CRLSource {
 	 *            the component that allows to retrieve the data using any protocol: HTTP, HTTPS, FTP, LDAP.
 	 */
 	public void setDataLoader(final DataLoader dataLoader) {
-
 		this.dataLoader = dataLoader;
 	}
 
 	@Override
-	public CRLToken findCrl(final CertificateToken certificateToken) throws DSSException {
+	public CRLToken getRevocationToken(CertificateToken certificateToken, CertificateToken issuerCertificateToken) throws DSSException {
+		return getRevocationToken(certificateToken, issuerCertificateToken, Collections.<String>emptyList());
+	}
 
+	@Override
+	public CRLToken getRevocationToken(final CertificateToken certificateToken, final CertificateToken issuerToken, List<String> alternativeUrls)
+			throws DSSException {
 		if (certificateToken == null) {
 			return null;
 		}
-		final CertificateToken issuerToken = certificateToken.getIssuerToken();
 		if (issuerToken == null) {
 			return null;
 		}
+
+		if (Utils.isCollectionNotEmpty(alternativeUrls)) {
+			LOG.info("CRL alternative urls : {}", alternativeUrls);
+		}
+
+		final String dssIdAsString = certificateToken.getDSSIdAsString();
 		final List<String> crlUrls = DSSASN1Utils.getCrlUrls(certificateToken);
-		LOG.info("CRL's URL for " + certificateToken.getAbbreviation() + " : " + crlUrls);
-		if (Utils.isCollectionEmpty(crlUrls)) {
+		if (Utils.isCollectionEmpty(crlUrls) && Utils.isCollectionEmpty(alternativeUrls)) {
+			LOG.debug("No CRL location found for {}", dssIdAsString);
 			return null;
 		}
+		crlUrls.addAll(alternativeUrls);
 
 		prioritize(crlUrls);
 		final DataLoader.DataAndUrl dataAndUrl = downloadCrl(crlUrls);
@@ -182,4 +189,5 @@ public class OnlineCRLSource implements CRLSource {
 			}
 		}
 	}
+
 }

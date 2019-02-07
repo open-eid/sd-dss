@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.validation.process.vpfswatsp.checks.vts;
 
 import java.util.Collections;
@@ -78,6 +98,8 @@ public class ValidationTimeSliding extends Chain<XmlVTS> {
 			Collections.reverse(certificateChainIds); // trusted_list -> ... ->
 														// signature
 
+			ChainItem<XmlVTS> item = null;
+
 			for (String certificateId : certificateChainIds) {
 				CertificateWrapper certificate = diagnosticData.getUsedCertificateById(certificateId);
 				if (certificate.isTrusted()) {
@@ -115,9 +137,10 @@ public class ValidationTimeSliding extends Chain<XmlVTS> {
 					}
 				}
 
-				ChainItem<XmlVTS> item = satisfyingRevocationDataExists(latestCompliantRevocation);
-				if (firstItem == null) {
-					firstItem = item;
+				if (item == null) {
+					item = firstItem = satisfyingRevocationDataExists(latestCompliantRevocation);
+				} else {
+					item = item.setNextItem(satisfyingRevocationDataExists(latestCompliantRevocation));
 				}
 
 				/*
@@ -242,7 +265,13 @@ public class ValidationTimeSliding extends Chain<XmlVTS> {
 			}
 		}
 
-		return thisUpdate != null && certNotBefore.before(thisUpdate) && (certNotAfter.compareTo(notAfterRevoc) >= 0);
+		/*
+		 * certHash extension can be present in an OCSP Response. If present, a digest match indicates the OCSP
+		 * responder knows the certificate as we have it, and so also its revocation state
+		 */
+		boolean certHashOK = revocationData.isCertHashExtensionPresent() && revocationData.isCertHashExtensionMatch();
+
+		return thisUpdate != null && certNotBefore.before(thisUpdate) && ((certNotAfter.compareTo(notAfterRevoc) >= 0) || certHashOK);
 	}
 
 	private boolean isIssuanceBeforeControlTime(RevocationWrapper revocationData) {

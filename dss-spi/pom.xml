@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.2.d4j.4</version>
+		<version>5.4.d4j.1</version>
 	</parent>
 
 	<artifactId>dss-spi</artifactId>
@@ -45,6 +45,11 @@
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-utils-apache-commons</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-crl-parser-x509crl</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

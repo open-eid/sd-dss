@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.asic.signature;
 
 import java.io.ByteArrayOutputStream;
@@ -13,7 +33,6 @@ import java.util.zip.ZipOutputStream;
 import eu.europa.esig.dss.AbstractSignatureParameters;
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.DSSException;
-import eu.europa.esig.dss.DSSUnsupportedOperationException;
 import eu.europa.esig.dss.InMemoryDocument;
 import eu.europa.esig.dss.SignatureValue;
 import eu.europa.esig.dss.ToBeSigned;
@@ -25,6 +44,7 @@ import eu.europa.esig.dss.signature.AbstractSignatureService;
 import eu.europa.esig.dss.signature.MultipleDocumentsSignatureService;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CertificateVerifier;
+import eu.europa.esig.dss.validation.TimestampToken;
 
 public abstract class AbstractASiCSignatureService<SP extends AbstractSignatureParameters> extends AbstractSignatureService<SP>
 		implements MultipleDocumentsSignatureService<SP> {
@@ -34,42 +54,26 @@ public abstract class AbstractASiCSignatureService<SP extends AbstractSignatureP
 	private static final String ZIP_ENTRY_DETACHED_FILE = "detached-file";
 	private static final String ZIP_ENTRY_MIMETYPE = "mimetype";
 
-	private ASiCExtractResult archiveContent = new ASiCExtractResult();
+	protected ASiCExtractResult archiveContent = new ASiCExtractResult();
 
 	protected AbstractASiCSignatureService(CertificateVerifier certificateVerifier) {
 		super(certificateVerifier);
 	}
 
-	protected void assertCanBeSign(List<DSSDocument> documents, final ASiCParameters asicParameters) {
-		if (!canBeSigned(documents, asicParameters)) { // First verify if the file can be signed
-			throw new DSSUnsupportedOperationException("You only can sign an ASiC container by using the same type of container and of signature");
-		}
-	}
-
-	private boolean canBeSigned(List<DSSDocument> documents, ASiCParameters asicParameters) {
-		boolean isMimetypeCorrect = true;
-		boolean isSignatureTypeCorrect = true;
-		if (ASiCUtils.isArchive(documents)) {
-			DSSDocument archive = documents.get(0);
-			String expectedMimeType = archive.getMimeType().getMimeTypeString();
-			String mimeTypeFromParameter = ASiCUtils.getMimeTypeString(asicParameters);
-			isMimetypeCorrect = Utils.areStringsEqualIgnoreCase(expectedMimeType, mimeTypeFromParameter);
-			if (isMimetypeCorrect) {
-				isSignatureTypeCorrect = ASiCUtils.isArchiveContainsCorrectSignatureExtension(archive, getExpectedSignatureExtension());
-			}
-		}
-		return isMimetypeCorrect && isSignatureTypeCorrect;
-	}
-
 	abstract String getExpectedSignatureExtension();
 
 	@Override
-	public ToBeSigned getDataToSign(DSSDocument toSignDocument, SP parameters) throws DSSException {
+	public TimestampToken getContentTimestamp(DSSDocument toSignDocument, SP parameters) {
+		return getContentTimestamp(Arrays.asList(toSignDocument), parameters);
+	}
+
+	@Override
+	public ToBeSigned getDataToSign(DSSDocument toSignDocument, SP parameters) {
 		return getDataToSign(Arrays.asList(toSignDocument), parameters);
 	}
 
 	@Override
-	public DSSDocument signDocument(DSSDocument toSignDocument, SP parameters, SignatureValue signatureValue) throws DSSException {
+	public DSSDocument signDocument(DSSDocument toSignDocument, SP parameters, SignatureValue signatureValue) {
 		return signDocument(Arrays.asList(toSignDocument), parameters, signatureValue);
 	}
 

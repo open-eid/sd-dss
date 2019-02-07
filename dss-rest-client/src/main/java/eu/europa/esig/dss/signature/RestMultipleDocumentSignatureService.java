@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -42,6 +42,13 @@ public interface RestMultipleDocumentSignatureService extends Serializable {
 
 	/**
 	 * Retrieves the bytes of the data that need to be signed based on the toSignDocument and parameters.
+	 * 
+	 * @param dataToSign
+	 *            a DTO with the needed information (one or more document(s) and parameters) to compute the data to be
+	 *            signed
+	 * @return the data to be signed
+	 * @throws DSSException
+	 *             if an error occurred
 	 */
 	@POST
 	@Path("getDataToSignMultiple")
@@ -49,6 +56,13 @@ public interface RestMultipleDocumentSignatureService extends Serializable {
 
 	/**
 	 * Signs the toSignDocuments with the provided signatureValue.
+	 * 
+	 * @param signDocument
+	 *            a DTO with the needed information (one or more document(s), parameters and signature value) to
+	 *            generate the signed document
+	 * @return the signed document
+	 * @throws DSSException
+	 *             if an error occurred
 	 */
 	@POST
 	@Path("signDocument")
@@ -56,6 +70,13 @@ public interface RestMultipleDocumentSignatureService extends Serializable {
 
 	/**
 	 * Extends the level of the signatures in the toExtendDocument
+	 * 
+	 * @param extendDocument
+	 *            a DTO with the needed information (the signed document and extension parameters) to generate the
+	 *            extended document
+	 * @return the extended document
+	 * @throws DSSException
+	 *             if an error occurred
 	 */
 	@POST
 	@Path("extendDocument")

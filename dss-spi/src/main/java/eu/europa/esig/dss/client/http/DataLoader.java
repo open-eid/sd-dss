@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -57,7 +57,7 @@ public interface DataLoader extends Serializable {
 	 * Execute a HTTP GET operation.
 	 *
 	 * @param url
-	 *            to access
+	 *            the url to access
 	 * @return {@code byte} array of obtained data or null
 	 */
 	byte[] get(final String url);
@@ -89,6 +89,7 @@ public interface DataLoader extends Serializable {
 	 * @param url
 	 *            to access
 	 * @param content
+	 *            the content to post
 	 * @return {@code byte} array of obtained data
 	 */
 	byte[] post(final String url, final byte[] content);
@@ -97,7 +98,7 @@ public interface DataLoader extends Serializable {
 	 * This allows to set the content type. Example: Content-Type "application/ocsp-request"
 	 *
 	 * @param contentType
-	 *            to set
+	 *            to set the Content-Type
 	 */
 	void setContentType(final String contentType);
 

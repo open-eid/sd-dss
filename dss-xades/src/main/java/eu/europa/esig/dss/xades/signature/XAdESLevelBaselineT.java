@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -60,7 +60,6 @@ import eu.europa.esig.dss.signature.SignatureExtension;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.ValidationContext;
-import eu.europa.esig.dss.x509.CertificatePool;
 import eu.europa.esig.dss.x509.CertificateSource;
 import eu.europa.esig.dss.x509.CertificateToken;
 import eu.europa.esig.dss.x509.TimestampType;
@@ -138,9 +137,7 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 
 				continue;
 			}
-			final CertificatePool certPool = new CertificatePool();
-			// TODO-Bob (13/07/2014): The XPath query holder can be inherited from the xadesSignature: to be analysed
-			xadesSignature = new XAdESSignature(currentSignatureDom, certPool);
+			xadesSignature = new XAdESSignature(currentSignatureDom);
 			xadesSignature.setDetachedContents(params.getDetachedContents());
 			extendSignatureTag();
 		}
@@ -153,15 +150,14 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 	/**
 	 * Extends the signature to a desired level. This method is overridden by other profiles.<br>
 	 * For -T profile adds the SignatureTimeStamp element which contains a single HashDataInfo element that refers to
-	 * the
-	 * ds:SignatureValue element of the [XMLDSIG] signature. The timestamp token is obtained from TSP source.<br>
-	 * Adds <SignatureTimeStamp> segment into <UnsignedSignatureProperties> element.
+	 * the ds:SignatureValue element of the [XMLDSIG] signature. The timestamp token is obtained from TSP source.<br>
+	 * Adds {@code <SignatureTimeStamp>} segment into {@code <UnsignedSignatureProperties>} element.
 	 *
 	 * @throws eu.europa.esig.dss.DSSException
 	 */
 	protected void extendSignatureTag() throws DSSException {
 
-		assertExtendSignaturePossible();
+		assertExtendSignatureToTPossible();
 
 		// We ensure that all XML segments needed for the construction of the extension -T are present.
 		// If a segment does not exist then it is created.
@@ -191,11 +187,9 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 	/**
 	 * Checks if the extension is possible.
 	 */
-	private void assertExtendSignaturePossible() throws DSSException {
-
+	private void assertExtendSignatureToTPossible() {
 		final SignatureLevel signatureLevel = params.getSignatureLevel();
 		if (XAdES_BASELINE_T.equals(signatureLevel) && (xadesSignature.hasLTProfile() || xadesSignature.hasLTAProfile())) {
-
 			final String exceptionMessage = "Cannot extend signature. The signedData is already extended with [%s].";
 			throw new DSSException(String.format(exceptionMessage, "XAdES LT"));
 		}
@@ -213,17 +207,25 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 	}
 
 	/**
-	 * * This method incorporates all certificates passed as parameter.
+	 * This method incorporates all certificates passed as parameter :
+	 * 
+	 * <pre>
+	 * {@code
+	 * 	<xades:CertificateValues>
+	 *		<xades:EncapsulatedX509Certificate>MIIC9TC...</xades:EncapsulatedX509Certificate>
+	 *		...
+	 * 	</xades:CertificateValues>
+	 * }
+	 * </pre>
 	 *
 	 * @param parentDom
-	 * @param toIncludeCertificates
+	 *            the parent element
+	 * @param validationContext
+	 *            the validation context with all cerrtificates
 	 */
 	protected void incorporateCertificateValues(final Element parentDom, final ValidationContext validationContext) {
 
 		final Set<CertificateToken> toIncludeCertificates = xadesSignature.getCertificatesForInclusion(validationContext);
-
-		// <xades:CertificateValues>
-		// ...<xades:EncapsulatedX509Certificate>MIIC9TC...
 		if (!toIncludeCertificates.isEmpty()) {
 
 			final Element certificateValuesDom = DomUtils.addElement(documentDom, parentDom, XAdES, XADES_CERTIFICATE_VALUES);
@@ -287,13 +289,9 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 			// <xades:SignatureTimeStamp Id="time-stamp-1dee38c4-8388-40d1-8880-9eeda853fe60">
 			timeStampDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, XAdES, XADES_SIGNATURE_TIME_STAMP);
 			break;
-		case VALIDATION_DATA_REFSONLY_TIMESTAMP:
-			// timeStampDom = DSSXMLUtils.addElement(documentDom, unsignedSignaturePropertiesDom,
-			// XAdESNamespaces.XAdES, XADES_);
-			break;
 		case VALIDATION_DATA_TIMESTAMP:
 			// <xades:SigAndRefsTimeStamp Id="time-stamp-a762ab0e-e05c-4cc8-a804-cf2c4ffb5516">
-			if (params.isEn319132() && !SignatureLevel.XAdES_X.equals(params.getSignatureLevel())) {
+			if (params.isEn319132() && !isOldGeneration(params.getSignatureLevel())) {
 				timeStampDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, XAdES, XADES_SIG_AND_REFS_TIME_STAMP_V2);
 			} else {
 				timeStampDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, XAdES, XADES_SIG_AND_REFS_TIME_STAMP);
@@ -304,21 +302,14 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 			timeStampDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, XAdES141, XADES141_ARCHIVE_TIME_STAMP);
 			timestampDigestAlgorithm = params.getArchiveTimestampParameters().getDigestAlgorithm();
 			break;
-		case ALL_DATA_OBJECTS_TIMESTAMP:
-			timeStampDom = DomUtils.addElement(documentDom, signedDataObjectPropertiesDom, XAdES, XADES_ALL_DATA_OBJECTS_TIME_STAMP);
-			break;
-		case INDIVIDUAL_DATA_OBJECTS_TIMESTAMP:
-			timeStampDom = DomUtils.addElement(documentDom, signedDataObjectPropertiesDom, XAdES, XADES_INDIVIDUAL_DATA_OBJECTS_TIME_STAMP);
-			break;
 		default:
-			LOG.error("Unsupported timestamp type : " + timestampType);
-			break;
+			// Content timestamps need to be generated before the signature itself
+			throw new DSSException("Unsupported timestamp type : " + timestampType);
 		}
 
 		if (LOG.isDebugEnabled()) {
-
-			final String encodedDigestValue = Utils.toBase64(digestValue);
-			LOG.debug("Timestamp generation: " + timestampDigestAlgorithm.getName() + " / " + timestampC14nMethod + " / " + encodedDigestValue);
+			LOG.debug("Timestamp generation: {} / {} / {}", timestampDigestAlgorithm.getName(), timestampC14nMethod,
+					Utils.toBase64(digestValue));
 		}
 		final TimeStampToken timeStampToken = tspSource.getTimeStampResponse(timestampDigestAlgorithm, digestValue);
 		final String base64EncodedTimeStampToken = Utils.toBase64(DSSASN1Utils.getEncoded(timeStampToken));
@@ -333,6 +324,10 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 		final Element encapsulatedTimeStampDom = DomUtils.addElement(documentDom, timeStampDom, XAdES, XADES_ENCAPSULATED_TIME_STAMP);
 		encapsulatedTimeStampDom.setAttribute(ID, "ETS-" + timestampId);
 		DomUtils.setTextNode(documentDom, encapsulatedTimeStampDom, base64EncodedTimeStampToken);
+	}
+
+	private boolean isOldGeneration(SignatureLevel signatureLevel) {
+		return SignatureLevel.XAdES_X.equals(signatureLevel) || SignatureLevel.XAdES_XL.equals(signatureLevel) || SignatureLevel.XAdES_A.equals(signatureLevel);
 	}
 
 }

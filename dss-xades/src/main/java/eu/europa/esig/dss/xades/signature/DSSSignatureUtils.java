@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.EncryptionAlgorithm;
-import eu.europa.esig.dss.utils.Utils;
 
 /**
  * This is the utility class to manipulate different signature types.
@@ -52,7 +51,8 @@ public final class DSSSignatureUtils {
 	 * @param algorithm
 	 *            Signature algorithm used to create the signatureValue
 	 * @param signatureValue
-	 * @return
+	 *            the original signature value
+	 * @return the converted signature value
 	 */
 	public static byte[] convertToXmlDSig(final EncryptionAlgorithm algorithm, byte[] signatureValue) {
 		if (EncryptionAlgorithm.ECDSA == algorithm && isAsn1Encoded(signatureValue)) {
@@ -80,7 +80,7 @@ public final class DSSSignatureUtils {
 	 */
 	private static byte[] convertASN1toXMLDSIG(byte[] binaries) {
 
-		try (ByteArrayOutputStream buffer = new ByteArrayOutputStream(); ASN1InputStream is = new ASN1InputStream(binaries);) {
+		try (ByteArrayOutputStream buffer = new ByteArrayOutputStream(); ASN1InputStream is = new ASN1InputStream(binaries)) {
 
 			ASN1Sequence seq = (ASN1Sequence) is.readObject();
 			if (seq.size() != 2) {
@@ -124,15 +124,11 @@ public final class DSSSignatureUtils {
 	 * @return if the signature is ASN.1 encoded.
 	 */
 	public static boolean isAsn1Encoded(byte[] signatureValue) {
-		ASN1InputStream is = null;
-		try {
-			is = new ASN1InputStream(signatureValue);
+		try (ASN1InputStream is = new ASN1InputStream(signatureValue)) {
 			ASN1Sequence seq = (ASN1Sequence) is.readObject();
 			return seq != null && seq.size() == 2;
 		} catch (Exception e) {
 			return false;
-		} finally {
-			Utils.closeQuietly(is);
 		}
 	}
 

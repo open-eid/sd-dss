@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -46,21 +46,19 @@ public class CMSSignedDocument extends CommonDocument {
 	 * The default constructor for CMSSignedDocument.
 	 *
 	 * @param data
-	 * @throws IOException
+	 *            the CMSSignedData
 	 */
-	public CMSSignedDocument(final CMSSignedData data) throws DSSException {
+	public CMSSignedDocument(final CMSSignedData data) {
 		this.signedData = data;
 		if (data == null) {
-			throw new NullPointerException();
+			throw new NullPointerException("The CMSSignedData cannot be null");
 		}
 		mimeType = MimeType.PKCS7;
 	}
 
 	@Override
-	public InputStream openStream() throws DSSException {
-		final byte[] bytes = getBytes();
-		final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
-		return byteArrayInputStream;
+	public InputStream openStream() {
+		return new ByteArrayInputStream(getBytes());
 	}
 
 	/**
@@ -70,7 +68,7 @@ public class CMSSignedDocument extends CommonDocument {
 		return signedData;
 	}
 
-	public byte[] getBytes() throws DSSException {
+	public byte[] getBytes() {
 		try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
 			final DEROutputStream derOutputStream = new DEROutputStream(output);
 			final byte[] encoded = signedData.getEncoded();

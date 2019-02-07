@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.asic.validation;
 
 import java.util.ArrayList;
@@ -14,10 +34,12 @@ import eu.europa.esig.dss.asic.ASiCUtils;
 import eu.europa.esig.dss.asic.ASiCWithCAdESContainerExtractor;
 import eu.europa.esig.dss.asic.AbstractASiCContainerExtractor;
 import eu.europa.esig.dss.cades.validation.CAdESSignature;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
 import eu.europa.esig.dss.validation.DocumentValidator;
 import eu.europa.esig.dss.validation.ManifestFile;
 import eu.europa.esig.dss.validation.TimestampToken;
+import eu.europa.esig.dss.x509.CertificateToken;
 import eu.europa.esig.dss.x509.TimestampType;
 
 /**
@@ -39,7 +61,7 @@ public class ASiCContainerWithCAdESValidator extends AbstractASiCContainerValida
 
 	@Override
 	public boolean isSupported(DSSDocument dssDocument) {
-		return ASiCUtils.isASiCContainer(dssDocument) && ASiCUtils.isArchiveContainsCorrectSignatureExtension(dssDocument, ".p7s");
+		return ASiCUtils.isASiCContainer(dssDocument) && ASiCUtils.isArchiveContainsCorrectSignatureFileWithExtension(dssDocument, ".p7s");
 	}
 
 	@Override
@@ -73,6 +95,14 @@ public class ASiCContainerWithCAdESValidator extends AbstractASiCContainerValida
 				List<String> coveredFilenames = tspValidator.getCoveredFilenames();
 
 				TimestampToken timestamp = tspValidator.getTimestamp();
+				// TODO temp fix
+				List<CertificateToken> certificates = timestamp.getCertificates();
+				for (CertificateToken candidate : certificates) {
+					if (timestamp.isSignedBy(candidate)) {
+						break;
+					}
+				}
+
 				if (timestamp.isSignatureValid()) {
 					for (AdvancedSignature advancedSignature : allSignatures) {
 						if (coveredFilenames.contains(advancedSignature.getSignatureFilename())) {
@@ -107,7 +137,7 @@ public class ASiCContainerWithCAdESValidator extends AbstractASiCContainerValida
 				timestampValidator.setTimestampedData(archiveManifest);
 				timestampValidators.add(timestampValidator);
 			} else {
-				LOG.warn("Timestamp " + timestamp.getName() + " is skipped (no linked archive manifest found)");
+				LOG.warn("Timestamp {} is skipped (no linked archive manifest found)", timestamp.getName());
 			}
 		}
 		return timestampValidators;
@@ -159,6 +189,47 @@ public class ASiCContainerWithCAdESValidator extends AbstractASiCContainerValida
 		}
 
 		return descriptions;
+	}
+
+	@Override
+	public List<DSSDocument> getOriginalDocuments(String signatureId) {
+		List<DSSDocument> result = new ArrayList<DSSDocument>();
+		List<AdvancedSignature> signatures = getSignatures();
+		for (AdvancedSignature signature : signatures) {
+			if (signature.getId().equals(signatureId)) {
+				List<DSSDocument> retrievedDocs = signature.getDetachedContents();
+				if (ASiCContainerType.ASiC_S.equals(getContainerType())) {
+					result.addAll(getSignedDocumentsASiCS(retrievedDocs));
+				} else {
+					DSSDocument signatureDocument = getSignatureDocument(signature.getSignatureFilename());
+					ASiCEWithCAdESManifestValidator manifestValidator = new ASiCEWithCAdESManifestValidator(
+							signatureDocument, getManifestDocuments(), getSignedDocuments());
+					DSSDocument linkedManifest = manifestValidator.getLinkedManifest();
+					ASiCEWithCAdESManifestParser parser = new ASiCEWithCAdESManifestParser(linkedManifest);
+					ManifestFile manifestFile = parser.getDescription();
+					List<String> entries = manifestFile.getEntries();
+					List<DSSDocument> signedDocuments = getSignedDocuments();
+					for (String entry : entries) {
+						for (DSSDocument signedDocument : signedDocuments) {
+							if (Utils.areStringsEqual(entry, signedDocument.getName())) {
+								result.add(signedDocument);
+							}
+						}
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	private DSSDocument getSignatureDocument(String signatureFilename) {
+		List<DSSDocument> signatureDocuments = getSignatureDocuments();
+		for (DSSDocument dssDocument : signatureDocuments) {
+			if (Utils.areStringsEqual(signatureFilename, dssDocument.getName())) {
+				return dssDocument;
+			}
+		}
+		return null;
 	}
 
 }

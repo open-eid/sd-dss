@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -22,6 +22,7 @@ package eu.europa.esig.dss.cades.signature;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.math.BigInteger;
@@ -29,6 +30,7 @@ import java.security.MessageDigest;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -70,6 +72,8 @@ import eu.europa.esig.dss.cades.validation.CAdESSignature;
 import eu.europa.esig.dss.signature.AbstractPkiFactoryTestDocumentSignatureService;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.utils.Utils;
+import eu.europa.esig.dss.validation.reports.wrapper.DiagnosticData;
+import eu.europa.esig.dss.validation.reports.wrapper.SignatureWrapper;
 import eu.europa.esig.dss.x509.CertificateToken;
 
 public class CAdESLevelBTest extends AbstractPkiFactoryTestDocumentSignatureService<CAdESSignatureParameters> {
@@ -95,7 +99,13 @@ public class CAdESLevelBTest extends AbstractPkiFactoryTestDocumentSignatureServ
 		signerLocation.setPostalAddress(Arrays.asList("Line1", "Line2"));
 		signatureParameters.bLevel().setSignerLocation(signerLocation);
 
+		signatureParameters.bLevel().setClaimedSignerRoles(Arrays.asList("supplier"));
 		signatureParameters.bLevel().setCommitmentTypeIndications(Arrays.asList("1.2.3", "2.4.5.6"));
+
+		signatureParameters.setContentHintsType("1.2.840.113549.1.7.1");
+		signatureParameters.setContentHintsDescription("text/plain");
+		signatureParameters.setContentIdentifierPrefix("TEST-PREFIX");
+		// signatureParameters.setContentIdentifierSuffix("TEST-SUFFIX");
 
 		signatureParameters.setSigningCertificate(getSigningCert());
 		signatureParameters.setCertificateChain(getCertificateChain());
@@ -104,6 +114,15 @@ public class CAdESLevelBTest extends AbstractPkiFactoryTestDocumentSignatureServ
 
 		service = new CAdESService(getCompleteCertificateVerifier());
 
+	}
+
+	@Override
+	protected void verifyDiagnosticData(DiagnosticData diagnosticData) {
+		super.verifyDiagnosticData(diagnosticData);
+
+		SignatureWrapper signature = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId());
+		assertTrue(Utils.isStringNotBlank(signature.getContentHints()));
+		assertTrue(Utils.isStringNotBlank(signature.getContentIdentifier()));
 	}
 
 	@Override
@@ -307,6 +326,11 @@ public class CAdESLevelBTest extends AbstractPkiFactoryTestDocumentSignatureServ
 	@Override
 	protected DSSDocument getDocumentToSign() {
 		return documentToSign;
+	}
+
+	@Override
+	protected List<DSSDocument> getOriginalDocuments() {
+		return Collections.singletonList(getDocumentToSign());
 	}
 
 	@Override

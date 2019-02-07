@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -178,12 +178,9 @@ public interface AdvancedSignature extends Serializable {
 
 	/**
 	 * Verifies the signature integrity; checks if the signed content has not been tampered with. In the case of a
-	 * non-AdES signature no including the signing certificate then the
-	 * latter must be provided by calling {@code setProvidedSigningCertificateToken} In the case of a detached signature
-	 * the signed content must be provided by calling {@code
-	 * setProvidedSigningCertificateToken}
-	 *
-	 * @return SignatureCryptographicVerification with all the information collected during the validation process.
+	 * non-AdES signature no including the signing certificate then the latter must be provided by calling
+	 * {@code setProvidedSigningCertificateToken} In the case of a detached signature the signed content must be
+	 * provided by calling {@code setProvidedSigningCertificateToken}
 	 */
 	void checkSignatureIntegrity();
 
@@ -432,5 +429,13 @@ public interface AdvancedSignature extends Serializable {
 	void findSignatureScope(SignatureScopeFinder signatureScopeFinder);
 
 	List<SignatureScope> getSignatureScopes();
+
+	/**
+	 * Returns individual validation foreach reference (XAdES) or for the
+	 * message-imprint (CAdES)
+	 * 
+	 * @return a list with one or more {@code ReferenceValidation}
+	 */
+	List<ReferenceValidation> getReferenceValidations();
 
 }

@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.xades.signature;
 
 import java.util.List;
@@ -9,16 +29,14 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Text;
 
 import eu.europa.esig.dss.DSSDocument;
-import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.DomUtils;
-import eu.europa.esig.dss.utils.Utils;
 
 /**
  * This class builds a ds:Manifest element
  * 
  * <pre>
- * <code>
+ * {@code
  * 	<ds:Manifest Id="manifest">
  * 		<ds:Reference URI="l_19420170726bg.pdf">
  * 			<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"/>
@@ -30,7 +48,7 @@ import eu.europa.esig.dss.utils.Utils;
  * 		</ds:Reference>
  * 		...
  * 	</ds:Manifest>
- * </code>
+ * }
  * </pre>
  * 
  */
@@ -40,10 +58,28 @@ public class ManifestBuilder {
 	private final DigestAlgorithm digestAlgorithm;
 	private final List<DSSDocument> documents;
 
+	/**
+	 * Constructor for the builder (the Id of the Manifest tag will be equals to "manifest")
+	 * 
+	 * @param digestAlgorithm
+	 *            the digest algorithm to be used
+	 * @param documents
+	 *            the documents to include
+	 */
 	public ManifestBuilder(DigestAlgorithm digestAlgorithm, List<DSSDocument> documents) {
 		this("manifest", digestAlgorithm, documents);
 	}
 
+	/**
+	 * Constructor for the builder
+	 * 
+	 * @param manifestId
+	 *            the Id of the Manifest tag
+	 * @param digestAlgorithm
+	 *            the digest algorithm to be used
+	 * @param documents
+	 *            the documents to include
+	 */
 	public ManifestBuilder(String manifestId, DigestAlgorithm digestAlgorithm, List<DSSDocument> documents) {
 		this.manifestId = manifestId;
 		this.digestAlgorithm = digestAlgorithm;
@@ -67,12 +103,12 @@ public class ManifestBuilder {
 			digestMethodDom.setAttribute(XAdESBuilder.ALGORITHM, digestAlgorithm.getXmlId());
 
 			Element digestValueDom = DomUtils.addElement(documentDom, referenceDom, XMLSignature.XMLNS, XAdESBuilder.DS_DIGEST_VALUE);
-			Text textNode = documentDom.createTextNode(Utils.toBase64(DSSUtils.digest(digestAlgorithm, document)));
+			Text textNode = documentDom.createTextNode(document.getDigest(digestAlgorithm));
 			digestValueDom.appendChild(textNode);
 
 		}
 
-		return DomUtils.createDssDocumentFromDomDocument(documentDom, null);
+		return DomUtils.createDssDocumentFromDomDocument(documentDom, manifestId);
 	}
 
 }

@@ -5,7 +5,7 @@
 
 	<groupId>org.digidoc4j.dss</groupId>
 	<artifactId>sd-dss</artifactId>
-	<version>5.2.d4j.4</version>
+	<version>5.4.d4j.1</version>
 	<packaging>pom</packaging>
 	<name>Digital Signature Services</name>
     <description>This is a forked repository from the original DSS project located at
@@ -54,21 +54,37 @@
 		<slf4j.version>1.7.25</slf4j.version>
 		<logback-classic.version>1.2.3</logback-classic.version>
 
-		<bouncycastle.version>1.58</bouncycastle.version>
-        <xmlsec.version>2.0.9</xmlsec.version>
-		<pdfbox.version>2.0.12</pdfbox.version>
-        <httpclient.version>4.5.3</httpclient.version>
-        <rs-api.version>2.0.1</rs-api.version>
+		<bouncycastle.version>1.60</bouncycastle.version>
+		<xmlsec.version>2.0.10</xmlsec.version>
+		<pdfbox.version>2.0.13</pdfbox.version>
+		<openpdf.version>1.2.7</openpdf.version>
+		<httpclient.version>4.5.6</httpclient.version>
+		<rs-api.version>2.0.1</rs-api.version>
+		
+		<!-- JDK9+ -->
+		<jaxb.version>2.3.0</jaxb.version>
+		<jaxws-ri.version>2.3.0</jaxws-ri.version>
+		<activation.version>1.2.0</activation.version>
 
 		<junit.version>4.12</junit.version>
+		<mockito.version>2.12.0</mockito.version>
+		
+	    <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+	    <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+	    <sonar.jacoco.reportPaths>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPaths>
 
-    <dss.groupId>org.digidoc4j.dss</dss.groupId>
+		<dss.groupId>org.digidoc4j.dss</dss.groupId>
 	</properties>
 	
 	<licenses>
 		<license>
 			<name>GNU Lesser General Public License</name>
 			<url>https://www.gnu.org/licenses/lgpl-2.1.html</url>
+		</license>
+		<license>
+			<comments>If your project is including the module 'sscd-mocca-adapter', it inherits the MOCCA license</comments>
+      		<name>EUPL v1.1</name>
+      		<url>https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12</url>
 		</license>
 	</licenses>
 	
@@ -91,12 +107,15 @@
 		<module>dss-tsl-jaxb</module>
 		<module>dss-diagnostic-jaxb</module>
 		<module>dss-simple-report-jaxb</module>
+		<module>dss-simple-certificate-report-jaxb</module>
 		<module>dss-detailed-report-jaxb</module>
 		<module>dss-reports</module>
 		<module>validation-policy</module>
 		<module>dss-xades</module>
 		<module>dss-cades</module>
 		<module>dss-pades</module>
+		<module>dss-pades-pdfbox</module>
+		<module>dss-pades-openpdf</module>
 		<module>dss-asic-common</module>
 		<module>dss-asic-xades</module>
 		<module>dss-asic-cades</module>
@@ -122,8 +141,19 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.6.0</version>
                 <configuration>
                     <encoding>${project.encoding}</encoding>
                     <source>${project.source.version}</source>
@@ -131,22 +161,12 @@
                 </configuration>
 			</plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar-no-fork</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.7.2.201409121644</version>
+			    <configuration>
+			        <destFile>${sonar.jacoco.reportPaths}</destFile>
+			        <append>true</append>
+			    </configuration>
 				<executions>
 					<execution>
 						<id>prepare-unit-test-agent</id>
@@ -166,7 +186,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.20</version>
 				<configuration>
 					<!-- Default test configuration -->
 					<skipTests>true</skipTests>
@@ -220,63 +239,102 @@
 					</execution>
 				</executions>
 			</plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.4</version>
-                <configuration>
-                    <!-- Default configuration for all reports -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<configuration>
+                	<encoding>UTF-8</encoding>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>non-aggregate</id>
-                        <goals>
-                            <goal>javadoc</goal>
-                        </goals>
-                        <phase>package</phase>
-                    </execution>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.6</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.8</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-
-                </configuration>
-            </plugin>
-        </plugins>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		
+			<plugin>
+	            <groupId>org.apache.maven.plugins</groupId>
+	            <artifactId>maven-site-plugin</artifactId>
+	            <inherited>false</inherited>	            
+	            <configuration>
+	                <reportPlugins>
+	                    <plugin>
+	                        <groupId>org.apache.maven.plugins</groupId>
+	                        <artifactId>maven-javadoc-plugin</artifactId>
+							<version>3.0.1</version>
+	                        <reportSets>
+	                            <reportSet>
+	                                <id>aggregate</id>
+	                                <reports>
+	                                    <report>aggregate</report>
+	                                </reports>
+	                            </reportSet>
+	                        </reportSets>
+	                        <configuration>
+                				<encoding>UTF-8</encoding>
+                				                	
+<!-- 							Requires GraphViz (see DSS-1282) -->
+<!-- 							Be sure that the complete path to graphviz\bin\dot(.exe) is in the PATH -->
+								<doclet>org.umlgraph.doclet.UmlGraphDoc</doclet>
+								<docletArtifact>
+									<groupId>org.umlgraph</groupId>
+									<artifactId>umlgraph</artifactId>
+									<version>5.6.6</version>
+								</docletArtifact>
+								<additionalparam>-views -all</additionalparam>
+								<useStandardDocletOptions>true</useStandardDocletOptions>	
+	                        </configuration>
+	                    </plugin>
+	                </reportPlugins>
+	            </configuration>
+	        </plugin>
+			
+		</plugins>
 
 		<pluginManagement>
 			<plugins>
 				<plugin>
+					<groupId>org.jacoco</groupId>
+					<artifactId>jacoco-maven-plugin</artifactId>
+					<version>0.8.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.8.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>3.0.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.22.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>3.0.1</version>
+				</plugin>
+				<plugin>
+		            <groupId>org.apache.maven.plugins</groupId>
+		            <artifactId>maven-site-plugin</artifactId>
+		            <version>3.6</version>
+	            </plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>2.8.2</version>
+				</plugin>
+				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-resources-plugin</artifactId>
-					<version>3.0.2</version>
+					<version>3.1.0</version>
 					<configuration>
 						<encoding>${project.encoding}</encoding>
 						<nonFilteredFileExtensions><!-- Avoid to modify keystore -->
@@ -288,24 +346,11 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jar-plugin</artifactId>
-					<version>3.0.2</version>
+					<version>3.1.0</version>
 					<executions>
 						<execution>
 							<goals>
 								<goal>test-jar</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
-					<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-source-plugin</artifactId>
-					<version>3.0.1</version>
-					<executions>
-						<execution>
-							<id>attach-sources</id>
-							<goals>
-								<goal>jar</goal>
 							</goals>
 						</execution>
 					</executions>
@@ -323,17 +368,12 @@
 				<plugin>
 					<groupId>org.jvnet.jaxb2.maven2</groupId>
 					<artifactId>maven-jaxb2-plugin</artifactId>
-					<version>0.10.0</version>
+					<version>0.14.0</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-install-plugin</artifactId>
 					<version>2.5.2</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-deploy-plugin</artifactId>
-					<version>2.8.2</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -345,22 +385,6 @@
 					<artifactId>dependency-check-maven</artifactId>
 					<version>2.0.1</version>
 				</plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.10.4</version>
-                    <configuration>
-                        <docfilessubdirs>true</docfilessubdirs>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>attach-javadocs</id>
-                            <goals>
-                                <goal>jar</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-gpg-plugin</artifactId>
@@ -393,7 +417,7 @@
 		<url>https://ec.europa.eu/cefdigital/code/scm/esig/dss.git</url>
 		<connection>scm:git:https://ec.europa.eu/cefdigital/code/scm/esig/dss.git</connection>
 		<developerConnection>scm:git:https://ec.europa.eu/cefdigital/code/scm/esig/dss.git</developerConnection>
-		<tag>5.2</tag>
+		<tag>5.4</tag>
 	</scm>
 
 	<dependencyManagement>
@@ -463,6 +487,22 @@
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-pades</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-pades</artifactId>
+				<type>test-jar</type>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-pades-pdfbox</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-pades-openpdf</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -593,6 +633,11 @@
 			</dependency>
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-simple-certificate-report-jaxb</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
 				<artifactId>validation-policy</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -652,6 +697,12 @@
 				<version>${pdfbox.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>com.github.librepdf</groupId>
+				<artifactId>openpdf</artifactId>
+				<version>${openpdf.version}</version>
+			</dependency>
+			
+			<dependency>
 				<groupId>org.apache.santuario</groupId>
 				<artifactId>xmlsec</artifactId>
 				<version>${xmlsec.version}</version>
@@ -684,10 +735,48 @@
 				<version>${logback-classic.version}</version>
 			</dependency>
 
+			<!-- JDK9+ : JAXB -->
+			<dependency>
+			    <groupId>javax.xml.bind</groupId>
+			    <artifactId>jaxb-api</artifactId>
+			    <version>${jaxb.version}</version>
+			</dependency>
+			<dependency>
+			    <groupId>com.sun.xml.bind</groupId>
+			    <artifactId>jaxb-core</artifactId>
+			    <version>${jaxb.version}</version>
+			</dependency>
+			<dependency>
+			    <groupId>com.sun.xml.bind</groupId>
+			    <artifactId>jaxb-impl</artifactId>
+			    <version>${jaxb.version}</version>
+			</dependency>
+			
+			<!-- JDK9+ : JAX-WS -->
+			<dependency>
+			    <groupId>com.sun.xml.ws</groupId>
+			    <artifactId>jaxws-ri</artifactId>
+			    <version>${jaxws-ri.version}</version>
+			    <type>pom</type>
+			</dependency>
+			
+			<!-- JDK9+ : activation -->
+			<dependency>
+			    <groupId>com.sun.activation</groupId>
+			    <artifactId>javax.activation</artifactId>
+			    <version>${activation.version}</version>
+			</dependency>
+
+			<!-- Testing -->
 			<dependency>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
 				<version>${junit.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-core</artifactId>
+				<version>${mockito.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -745,10 +834,10 @@
 					<plugin>
 						<groupId>org.owasp</groupId>
 						<artifactId>dependency-check-maven</artifactId>
-						<version>2.1.1</version>
-						<!--<configuration>-->
-							<!--<failBuildOnCVSS>4</failBuildOnCVSS>-->
-						<!--</configuration>-->
+						<version>3.3.4</version>
+<!-- 						<configuration> -->
+<!-- 							<failBuildOnCVSS>8</failBuildOnCVSS> -->
+<!-- 						</configuration> -->
 						<executions>
 							<execution>
 								<goals>
@@ -769,5 +858,24 @@
                 <additionalparam>-Xdoclint:none</additionalparam>
             </properties>
         </profile>
-    </profiles>
+		<profile>
+            <id>jdk19-plus</id>
+            <activation>
+                <jdk>[9,)</jdk>
+            </activation>
+            <build>
+            	<plugins>
+            		<plugin>
+			            <groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<configuration>
+							<additionalJOptions>
+								<additionalJOption>-html5</additionalJOption>
+							</additionalJOptions>
+		                </configuration>
+            		</plugin>
+            	</plugins>
+            </build>
+		</profile>
+	</profiles>
 </project>

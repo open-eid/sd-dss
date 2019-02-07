@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -23,7 +23,6 @@ package eu.europa.esig.dss.cades.signature;
 import static org.bouncycastle.asn1.cms.CMSObjectIdentifiers.id_ri_ocsp_response;
 import static org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers.id_pkix_ocsp_basic;
 
-import java.io.InputStream;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -39,13 +38,13 @@ import org.bouncycastle.cms.CMSProcessableByteArray;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.CMSSignedDataGenerator;
 import org.bouncycastle.cms.DefaultSignedAttributeTableGenerator;
+import org.bouncycastle.cms.SignerId;
 import org.bouncycastle.cms.SignerInfoGenerator;
 import org.bouncycastle.cms.SignerInfoGeneratorBuilder;
 import org.bouncycastle.cms.SimpleAttributeTableGenerator;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.DigestCalculatorProvider;
 import org.bouncycastle.operator.OperatorCreationException;
-import org.bouncycastle.operator.bc.BcDigestCalculatorProvider;
 import org.bouncycastle.util.Store;
 
 import eu.europa.esig.dss.DSSASN1Utils;
@@ -54,7 +53,6 @@ import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.cades.CAdESSignatureParameters;
 import eu.europa.esig.dss.signature.BaselineBCertificateSelector;
-import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.x509.CertificateToken;
 
@@ -68,7 +66,7 @@ import eu.europa.esig.dss.x509.CertificateToken;
  */
 public class CMSSignedDataBuilder {
 
-	private CertificateVerifier certificateVerifier;
+	private final CertificateVerifier certificateVerifier;
 
 	/**
 	 * This is the default constructor for {@code CMSSignedDataGeneratorBuilder}. The {@code CertificateVerifier} is
@@ -79,7 +77,6 @@ public class CMSSignedDataBuilder {
 	 *            in the context of a signature.
 	 */
 	public CMSSignedDataBuilder(final CertificateVerifier certificateVerifier) {
-
 		this.certificateVerifier = certificateVerifier;
 	}
 
@@ -89,14 +86,14 @@ public class CMSSignedDataBuilder {
 	 * SignedData is present AND (any version 1 attribute certificates are present OR any SignerInfo structures
 	 * are version 3 OR eContentType from encapContentInfo is other than id-data). Otherwise, the CMS
 	 * SignedData version is required to be set to 1.
-	 * ---> CMS SignedData Version is handled automatically by BouncyCastle.
+	 * CMS SignedData Version is handled automatically by BouncyCastle.
 	 *
 	 * @param parameters
 	 *            set of the driving signing parameters
 	 * @param contentSigner
-	 *            the contentSigned to get the hash of the data to be signed
+	 *            the contentSigner to get the hash of the data to be signed
 	 * @param signerInfoGeneratorBuilder
-	 *            true if the unsigned attributes must be included
+	 *            the builder for the signer info generator
 	 * @param originalSignedData
 	 *            the original signed data if extending an existing signature. null otherwise.
 	 * @return the bouncycastle signed data generator which signs the document and adds the required signed and unsigned
@@ -106,13 +103,8 @@ public class CMSSignedDataBuilder {
 	protected CMSSignedDataGenerator createCMSSignedDataGenerator(final CAdESSignatureParameters parameters, final ContentSigner contentSigner,
 			final SignerInfoGeneratorBuilder signerInfoGeneratorBuilder, final CMSSignedData originalSignedData) throws DSSException {
 		try {
-
-			final CertificateToken signingCertificate = parameters.getSigningCertificate();
-
 			final CMSSignedDataGenerator generator = new CMSSignedDataGenerator();
-
-			final X509CertificateHolder certHolder = DSSASN1Utils.getX509CertificateHolder(signingCertificate);
-			final SignerInfoGenerator signerInfoGenerator = signerInfoGeneratorBuilder.build(contentSigner, certHolder);
+			final SignerInfoGenerator signerInfoGenerator = getSignerInfoGenerator(signerInfoGeneratorBuilder, contentSigner, parameters);
 
 			generator.addSignerInfoGenerator(signerInfoGenerator);
 
@@ -144,6 +136,10 @@ public class CMSSignedDataBuilder {
 	}
 
 	/**
+	 * This method creates a builder of SignerInfoGenerator
+	 *
+	 * @param digestCalculatorProvider
+	 *            the digest calculator (can be pre-computed)
 	 * @param parameters
 	 *            the parameters of the signature containing values for the attributes
 	 * @param includeUnsignedAttributes
@@ -151,7 +147,8 @@ public class CMSSignedDataBuilder {
 	 * @return a SignerInfoGeneratorBuilder that generate the signed and unsigned attributes according to the
 	 *         CAdESLevelBaselineB
 	 */
-	SignerInfoGeneratorBuilder getSignerInfoGeneratorBuilder(final CAdESSignatureParameters parameters, final boolean includeUnsignedAttributes) {
+	SignerInfoGeneratorBuilder getSignerInfoGeneratorBuilder(DigestCalculatorProvider digestCalculatorProvider, final CAdESSignatureParameters parameters,
+			final boolean includeUnsignedAttributes) {
 
 		final CAdESLevelBaselineB cadesProfile = new CAdESLevelBaselineB();
 		final AttributeTable signedAttributes = cadesProfile.getSignedAttributes(parameters);
@@ -160,41 +157,32 @@ public class CMSSignedDataBuilder {
 		if (includeUnsignedAttributes) {
 			unsignedAttributes = cadesProfile.getUnsignedAttributes();
 		}
-		return getSignerInfoGeneratorBuilder(signedAttributes, unsignedAttributes);
+		return getSignerInfoGeneratorBuilder(digestCalculatorProvider, signedAttributes, unsignedAttributes);
 	}
 
 	/**
+	 * This method creates a builder of SignerInfoGenerator
+	 *
+	 * @param digestCalculatorProvider
+	 *            the digest calculator (can be pre-computed)
 	 * @param signedAttributes
 	 *            the signedAttributes
 	 * @param unsignedAttributes
 	 *            the unsignedAttributes
 	 * @return a SignerInfoGeneratorBuilder that generate the signed and unsigned attributes according to the parameters
 	 */
-	private SignerInfoGeneratorBuilder getSignerInfoGeneratorBuilder(AttributeTable signedAttributes, AttributeTable unsignedAttributes) {
+	private SignerInfoGeneratorBuilder getSignerInfoGeneratorBuilder(DigestCalculatorProvider digestCalculatorProvider, AttributeTable signedAttributes,
+			AttributeTable unsignedAttributes) {
 
-		if ((signedAttributes != null) && (signedAttributes.size() == 0)) {
+		if (DSSASN1Utils.isEmpty(signedAttributes)) {
 			signedAttributes = null;
 		}
 		final DefaultSignedAttributeTableGenerator signedAttributeGenerator = new DefaultSignedAttributeTableGenerator(signedAttributes);
-		if ((unsignedAttributes != null) && (unsignedAttributes.size() == 0)) {
+		if (DSSASN1Utils.isEmpty(unsignedAttributes)) {
 			unsignedAttributes = null;
 		}
 		final SimpleAttributeTableGenerator unsignedAttributeGenerator = new SimpleAttributeTableGenerator(unsignedAttributes);
 
-		return getSignerInfoGeneratorBuilder(signedAttributeGenerator, unsignedAttributeGenerator);
-	}
-
-	/**
-	 * @param signedAttributeGenerator
-	 *            the signedAttribute generator
-	 * @param unsignedAttributeGenerator
-	 *            the unsignedAttribute generator
-	 * @return a SignerInfoGeneratorBuilder that generate the signed and unsigned attributes according to the parameters
-	 */
-	private SignerInfoGeneratorBuilder getSignerInfoGeneratorBuilder(DefaultSignedAttributeTableGenerator signedAttributeGenerator,
-			SimpleAttributeTableGenerator unsignedAttributeGenerator) {
-
-		final DigestCalculatorProvider digestCalculatorProvider = new BcDigestCalculatorProvider();
 		SignerInfoGeneratorBuilder sigInfoGeneratorBuilder = new SignerInfoGeneratorBuilder(digestCalculatorProvider);
 		sigInfoGeneratorBuilder.setSignedAttributeGenerator(signedAttributeGenerator);
 		sigInfoGeneratorBuilder.setUnsignedAttributeGenerator(unsignedAttributeGenerator);
@@ -202,15 +190,43 @@ public class CMSSignedDataBuilder {
 	}
 
 	/**
+	 * @param signerInfoGeneratorBuilder
+	 *            the SignerInfoGeneratorBuilder
+	 * @param contentSigner
+	 *            the content signer
+	 * @param parameters
+	 *            set of the driving signing parameters
+	 * @return SignerInfoGenerator generated by the given builder according to the parameters
+	 * @throws OperatorCreationException
+	 */
+	private SignerInfoGenerator getSignerInfoGenerator(final SignerInfoGeneratorBuilder signerInfoGeneratorBuilder, final ContentSigner contentSigner,
+			CAdESSignatureParameters parameters) throws OperatorCreationException {
+		final CertificateToken signingCertificate = parameters.getSigningCertificate();
+
+		if (signingCertificate == null && parameters.isGenerateTBSWithoutCertificate()) {
+			// Generate data-to-be-signed without signing certificate
+			final SignerId signerId = new SignerId(DSSUtils.EMPTY_BYTE_ARRAY);
+			return signerInfoGeneratorBuilder.build(contentSigner, signerId.getSubjectKeyIdentifier());
+		}
+
+		final X509CertificateHolder certHolder = DSSASN1Utils.getX509CertificateHolder(signingCertificate);
+		return signerInfoGeneratorBuilder.build(contentSigner, certHolder);
+	}
+
+	/**
 	 * The order of the certificates is important, the fist one must be the signing certificate.
 	 *
 	 * @return a store with the certificate chain of the signing certificate. The {@code Collection} is unique.
-	 * @throws CertificateEncodingException
 	 */
 	private JcaCertStore getJcaCertStore(final Collection<CertificateToken> certificateChain, CAdESSignatureParameters parameters) {
-
 		BaselineBCertificateSelector certificateSelectors = new BaselineBCertificateSelector(certificateVerifier, parameters);
-		List<CertificateToken> certificatesToAdd = certificateSelectors.getCertificates();
+		List<CertificateToken> certificatesToAdd;
+		if (parameters.getSigningCertificate() == null && parameters.isGenerateTBSWithoutCertificate()) {
+			certificatesToAdd = new ArrayList<CertificateToken>();
+		} else {
+			certificatesToAdd = certificateSelectors.getCertificates();
+		}
+
 		for (CertificateToken certificateToken : certificatesToAdd) {
 			if (!certificateChain.contains(certificateToken)) {
 				certificateChain.add(certificateToken);
@@ -243,9 +259,8 @@ public class CMSSignedDataBuilder {
 			if (!encapsulate) {
 				List<DSSDocument> detachedContents = parameters.getDetachedContents();
 				// CAdES can only sign one document
-				final InputStream inputStream = detachedContents.get(0).openStream();
-				final CMSProcessableByteArray content = new CMSProcessableByteArray(DSSUtils.toByteArray(inputStream));
-				Utils.closeQuietly(inputStream);
+				final DSSDocument doc = detachedContents.get(0);
+				final CMSProcessableByteArray content = new CMSProcessableByteArray(DSSUtils.toByteArray(doc));
 				cmsSignedData = cmsSignedDataGenerator.generate(content, encapsulate);
 			} else {
 				cmsSignedData = cmsSignedDataGenerator.generate(cmsSignedData.getSignedContent(), encapsulate);
@@ -256,5 +271,4 @@ public class CMSSignedDataBuilder {
 		}
 	}
 
-	// TODO Vincent: regeneration of SignedData -> Content-TS
 }

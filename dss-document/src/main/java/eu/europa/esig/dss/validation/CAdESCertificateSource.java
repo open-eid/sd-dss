@@ -1,32 +1,36 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 package eu.europa.esig.dss.validation;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.cms.Attribute;
 import org.bouncycastle.asn1.cms.AttributeTable;
+import org.bouncycastle.asn1.ess.OtherCertID;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.Certificate;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -36,8 +40,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.DSSASN1Utils;
-import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.DSSUtils;
+import eu.europa.esig.dss.DigestAlgorithm;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.x509.CertificatePool;
 import eu.europa.esig.dss.x509.CertificateToken;
 import eu.europa.esig.dss.x509.SignatureCertificateSource;
@@ -60,14 +65,11 @@ public class CAdESCertificateSource extends SignatureCertificateSource {
 	 */
 	public CAdESCertificateSource(final CMSSignedData cmsSignedData, final CertificatePool certPool) {
 		super(certPool);
-		if (cmsSignedData == null) {
-			throw new DSSException("CMS SignedData is null, it must be provided!");
-		}
-		if (certificateTokens == null) {
-			certificateTokens = new ArrayList<CertificateToken>();
-			keyInfoCerts = extractIdSignedDataCertificates(cmsSignedData);
-			encapsulatedCerts = extractEncapsulatedCertificates(cmsSignedData);
-		}
+
+		Objects.requireNonNull(cmsSignedData, "CMS SignedData is null, it must be provided!");
+
+		keyInfoCerts = extractIdSignedDataCertificates(cmsSignedData);
+		encapsulatedCerts = extractEncapsulatedCertificates(cmsSignedData);
 	}
 
 	/**
@@ -82,15 +84,15 @@ public class CAdESCertificateSource extends SignatureCertificateSource {
 	}
 
 	private List<CertificateToken> extractEncapsulatedCertificates(CMSSignedData cmsSignedData) {
-		final List<CertificateToken> encapsulatedCerts = new ArrayList<CertificateToken>();
+		final List<CertificateToken> currentCerts = new ArrayList<CertificateToken>();
 		// Gets certificates from CAdES-XL certificate-values inside SignerInfo attribute if present
 		SignerInformation signerInformation = DSSASN1Utils.getFirstSignerInformation(cmsSignedData);
 		if ((signerInformation != null) && (signerInformation.getUnsignedAttributes() != null)) {
 			AttributeTable unsignedAttributes = signerInformation.getUnsignedAttributes();
-			extractCertificateFromUnsignedAttribute(encapsulatedCerts, unsignedAttributes.get(PKCSObjectIdentifiers.id_aa_ets_certValues));
-			extractCertificateFromUnsignedAttribute(encapsulatedCerts, unsignedAttributes.get(PKCSObjectIdentifiers.id_aa_ets_certificateRefs));
+			extractCertificateFromUnsignedAttribute(currentCerts, unsignedAttributes.get(PKCSObjectIdentifiers.id_aa_ets_certValues));
+			extractCertificateRefsFromUnsignedAttribute(currentCerts, unsignedAttributes.get(PKCSObjectIdentifiers.id_aa_ets_certificateRefs));
 		}
-		return encapsulatedCerts;
+		return currentCerts;
 	}
 
 	private void extractCertificateFromUnsignedAttribute(List<CertificateToken> encapsulatedCerts, Attribute attribute) {
@@ -104,7 +106,39 @@ public class CAdESCertificateSource extends SignatureCertificateSource {
 						encapsulatedCerts.add(certToken);
 					}
 				} catch (Exception e) {
-					LOG.warn("Unable to parse encapsulated certificate : " + e.getMessage());
+					LOG.warn("Unable to parse encapsulated certificate : {}", e.getMessage());
+				}
+			}
+		}
+	}
+
+	private void extractCertificateRefsFromUnsignedAttribute(List<CertificateToken> encapsulatedCertRefs, Attribute attribute) {
+		if (attribute != null) {
+			final ASN1Sequence seq = (ASN1Sequence) attribute.getAttrValues().getObjectAt(0);
+			for (int ii = 0; ii < seq.size(); ii++) {
+				try {
+					OtherCertID otherCertId = OtherCertID.getInstance(seq.getObjectAt(ii));
+					byte[] expectedCertHash = otherCertId.getCertHash();
+					DigestAlgorithm digestAlgo = DigestAlgorithm.forOID(otherCertId.getAlgorithmHash().getAlgorithm().getId());
+					BigInteger expectedSerialNumber = null;
+					if (otherCertId.getIssuerSerial() != null) {
+						expectedSerialNumber = otherCertId.getIssuerSerial().getSerial().getValue();
+					}
+					boolean found = false;
+					List<CertificateToken> certificates = getCertificates();
+					for (CertificateToken certificateToken : certificates) {
+						byte[] certHash = certificateToken.getDigest(digestAlgo);
+						if (Arrays.equals(expectedCertHash, certHash)
+								&& (expectedSerialNumber == null || expectedSerialNumber.equals(certificateToken.getSerialNumber()))) {
+							found = true;
+							break;
+						}
+					}
+					if (!found) {
+						LOG.warn("Certificate Ref (SN:{} / {}:{}) is not known", expectedSerialNumber, digestAlgo, Utils.toBase64(expectedCertHash));
+					}
+				} catch (Exception e) {
+					LOG.warn("Unable to parse encapsulated OtherCertID : {}", e.getMessage());
 				}
 			}
 		}
@@ -113,10 +147,10 @@ public class CAdESCertificateSource extends SignatureCertificateSource {
 	/**
 	 * Returns the list of certificates included in CAdES equivalent of XAdES
 	 * "ds:KeyInfo/ds:X509Data/ds:X509Certificate" node.
-	 * <p/>
+	 * <p>
 	 * They are extracted from id-signedData OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840) rsadsi(113549)
 	 * pkcs(1) pkcs7(7) 2 }
-	 * <p/>
+	 * <p>
 	 * SignedData ::= SEQUENCE {<br>
 	 * - version CMSVersion,<br>
 	 * - digestAlgorithms DigestAlgorithmIdentifiers,<br>
@@ -145,8 +179,9 @@ public class CAdESCertificateSource extends SignatureCertificateSource {
 				}
 			}
 		} catch (Exception e) {
-			LOG.warn("Cannot extract certificates from CMS Signed Data : " + e.getMessage());
+			LOG.warn("Cannot extract certificates from CMS Signed Data : {}", e.getMessage());
 		}
 		return essCertIDCerts;
 	}
+
 }

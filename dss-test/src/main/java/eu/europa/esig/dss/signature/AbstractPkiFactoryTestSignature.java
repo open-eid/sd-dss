@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.signature;
 
 import static org.junit.Assert.assertEquals;
@@ -11,16 +31,24 @@ import java.util.List;
 import java.util.Set;
 
 import javax.security.auth.x500.X500Principal;
+import javax.xml.crypto.dsig.CanonicalizationMethod;
+import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.xml.security.c14n.Canonicalizer;
+import org.apache.xml.security.exceptions.XMLSecurityException;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
 import eu.europa.esig.dss.AbstractSignatureParameters;
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.DSSUtils;
+import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.MaskGenerationFunction;
 import eu.europa.esig.dss.MimeType;
+import eu.europa.esig.dss.SignatureAlgorithm;
+import eu.europa.esig.dss.jaxb.diagnostic.XmlDigestMatcher;
 import eu.europa.esig.dss.token.KSPrivateKeyEntry;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
@@ -30,7 +58,9 @@ import eu.europa.esig.dss.validation.policy.rules.Indication;
 import eu.europa.esig.dss.validation.reports.DetailedReport;
 import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.dss.validation.reports.SimpleReport;
+import eu.europa.esig.dss.validation.reports.wrapper.CertificateWrapper;
 import eu.europa.esig.dss.validation.reports.wrapper.DiagnosticData;
+import eu.europa.esig.dss.validation.reports.wrapper.SignatureWrapper;
 import eu.europa.esig.dss.validation.reports.wrapper.TimestampWrapper;
 import eu.europa.esig.dss.x509.CertificateToken;
 import eu.europa.esig.dss.x509.TimestampType;
@@ -59,31 +89,113 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends AbstractSignatu
 
 		// signedDocument.save("target/" + signedDocument.getName());
 
-		try {
-			byte[] byteArray = Utils.toByteArray(signedDocument.openStream());
-			onDocumentSigned(byteArray);
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(new String(byteArray));
-			}
-		} catch (Exception e) {
-			LOG.error("Cannot display file content", e);
+		byte[] byteArray = DSSUtils.toByteArray(signedDocument);
+		onDocumentSigned(byteArray);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(new String(byteArray));
 		}
 
 		checkMimeType(signedDocument);
 
-		Reports reports = getValidationReport(signedDocument);
+		SignedDocumentValidator validator = getValidator(signedDocument);
+
+		List<AdvancedSignature> signatures = validator.getSignatures();
+		checkAdvancedSignatures(signatures);
+
+		Reports reports = validator.validateDocument();
 		// reports.setValidateXml(true);
 		// reports.print();
 
 		DiagnosticData diagnosticData = reports.getDiagnosticData();
 		verifyDiagnosticData(diagnosticData);
 
+		verifyDiagnosticDataJaxb(reports.getDiagnosticDataJaxb());
+
 		SimpleReport simpleReport = reports.getSimpleReport();
 		verifySimpleReport(simpleReport);
 
 		DetailedReport detailedReport = reports.getDetailedReport();
 		verifyDetailedReport(detailedReport);
+
+		getOriginalDocument(signedDocument, diagnosticData);
 	}
+
+	protected void checkAdvancedSignatures(List<AdvancedSignature> signatures) {
+		assertTrue(Utils.isCollectionNotEmpty(signatures));
+	}
+
+	protected void getOriginalDocument(DSSDocument signedDocument, DiagnosticData diagnosticData) {
+		List<String> signatureIdList = diagnosticData.getSignatureIdList();
+		for (String signatureId : signatureIdList) {
+
+			SignedDocumentValidator validator = getValidator(signedDocument);
+			List<DSSDocument> retrievedOriginalDocuments = validator.getOriginalDocuments(signatureId);
+
+			assertTrue(Utils.isCollectionNotEmpty(retrievedOriginalDocuments));
+			List<DSSDocument> originalDocuments = getOriginalDocuments();
+
+			for (DSSDocument original : originalDocuments) {
+				boolean found = false;
+				boolean toBeCanonicalized = MimeType.XML.equals(original.getMimeType()) || MimeType.HTML.equals(original.getMimeType());
+				String originalDigest = getDigest(original, toBeCanonicalized);
+				for (DSSDocument retrieved : retrievedOriginalDocuments) {
+					String retrievedDigest = getDigest(retrieved, toBeCanonicalized);
+					if (Utils.areStringsEqual(originalDigest, retrievedDigest)) {
+						found = true;
+					}
+				}
+
+				if (!MimeType.PDF.equals(original.getMimeType())) {
+					assertTrue("Unable to retrieve the document " + original.getName(), found);
+				} else if (!found) {
+					byte[] originalByteArray = DSSUtils.toByteArray(original);
+					DSSDocument retrieved = retrievedOriginalDocuments.get(0);
+					byte[] retrievedByteArray = DSSUtils.toByteArray(retrieved);
+					assertTrue(isOnlyOneByteDifferAtLastPosition(originalByteArray, retrievedByteArray));
+				}
+			}
+		}
+	}
+
+	/**
+	 * In some cases, PDF files finish with %%EOF + EOL and some other cases only %%EOF
+	 * 
+	 * There's no technical way to extract the exact file ending.
+	 */
+	private boolean isOnlyOneByteDifferAtLastPosition(byte[] originalByteArray, byte[] retrievedByteArray) {
+		int lengthOrigin = originalByteArray.length;
+		int lengthRetrieved = retrievedByteArray.length;
+
+		int min = Math.min(lengthOrigin, lengthRetrieved);
+		if ((lengthOrigin - min > 1) || (lengthRetrieved - min > 1)) {
+			return false;
+		}
+
+		for (int i = 0; i < min; i++) {
+			if (originalByteArray[i] != retrievedByteArray[i]) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private String getDigest(DSSDocument doc, boolean toBeCanonicalized) {
+		byte[] byteArray = DSSUtils.toByteArray(doc);
+		if (toBeCanonicalized) {
+			try {
+				// we canonicalize to ignore the header (which is not covered by the signature)
+				Canonicalizer c14n = Canonicalizer.getInstance(CanonicalizationMethod.INCLUSIVE);
+				byteArray = c14n.canonicalize(byteArray);
+			} catch (XMLSecurityException | ParserConfigurationException | IOException | SAXException e) {
+				// Not always able to canonicalize (more than one file can be covered (XML + something else) )
+			}
+		}
+		// LOG.info("Bytes : {}", new String(byteArray));
+		return Utils.toBase64(DSSUtils.digest(DigestAlgorithm.SHA256, byteArray));
+	}
+
+	protected abstract List<DSSDocument> getOriginalDocuments();
 
 	protected abstract DSSDocument sign();
 
@@ -105,6 +217,13 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends AbstractSignatu
 		checkALevelAndValid(diagnosticData);
 		checkTimestamps(diagnosticData);
 		checkSignatureScopes(diagnosticData);
+		checkCommitmentTypeIndications(diagnosticData);
+		checkClaimedRoles(diagnosticData);
+		checkMessageDigestAlgorithm(diagnosticData);
+	}
+
+	protected void verifyDiagnosticDataJaxb(eu.europa.esig.dss.jaxb.diagnostic.DiagnosticData diagnosticDataJaxb) {
+
 	}
 
 	protected void checkSignatureScopes(DiagnosticData diagnosticData) {
@@ -177,15 +296,11 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends AbstractSignatu
 		}
 	}
 
-	protected Reports getValidationReport(final DSSDocument signedDocument) {
+	protected SignedDocumentValidator getValidator(final DSSDocument signedDocument) {
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(signedDocument);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 		validator.setSignaturePolicyProvider(getSignaturePolicyProvider());
-		List<AdvancedSignature> signatures = validator.getSignatures();
-		assertTrue(Utils.isCollectionNotEmpty(signatures));
-
-		Reports reports = validator.validateDocument();
-		return reports;
+		return validator;
 	}
 
 	protected SignaturePolicyProvider getSignaturePolicyProvider() {
@@ -193,7 +308,7 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends AbstractSignatu
 	}
 
 	protected void checkMimeType(DSSDocument signedDocument) {
-		assertEquals(getExpectedMime(), signedDocument.getMimeType());
+		assertTrue(getExpectedMime().equals(signedDocument.getMimeType()));
 	}
 
 	protected void checkNumberOfSignatures(DiagnosticData diagnosticData) {
@@ -217,25 +332,32 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends AbstractSignatu
 	}
 
 	protected void checkSigningCertificateValue(DiagnosticData diagnosticData) {
-		String signingCertificateId = diagnosticData.getSigningCertificateId();
+		String signingCertificateId = diagnosticData.getFirstSigningCertificateId();
 		String certificateDN = diagnosticData.getCertificateDN(signingCertificateId);
 		String certificateSerialNumber = diagnosticData.getCertificateSerialNumber(signingCertificateId);
-		CertificateToken certificate = getToken().getKey(getSigningAlias()).getCertificate();
+		CertificateToken certificate = getPrivateKeyEntry().getCertificate();
 		assertEquals(certificate.getSubjectX500Principal().getName(X500Principal.RFC2253), certificateDN);
 		assertEquals(certificate.getSerialNumber().toString(), certificateSerialNumber);
+
+		SignatureAlgorithm signatureAlgorithm = certificate.getSignatureAlgorithm();
+		CertificateWrapper certificateWrapper = diagnosticData.getUsedCertificateById(signingCertificateId);
+		assertEquals(signatureAlgorithm.getDigestAlgorithm(), certificateWrapper.getDigestAlgorithm());
+		assertEquals(signatureAlgorithm.getEncryptionAlgorithm(), certificateWrapper.getEncryptionAlgorithm());
 	}
 
 	protected void checkIssuerSigningCertificateValue(DiagnosticData diagnosticData) {
-		String signingCertificateId = diagnosticData.getSigningCertificateId();
+		String signingCertificateId = diagnosticData.getFirstSigningCertificateId();
 		String issuerDN = diagnosticData.getCertificateIssuerDN(signingCertificateId);
-		CertificateToken certificate = getToken().getKey(getSigningAlias()).getCertificate();
+		CertificateToken certificate = getPrivateKeyEntry().getCertificate();
 		assertEquals(certificate.getIssuerX500Principal().getName(X500Principal.RFC2253), issuerDN);
 	}
 
 	protected void checkCertificateChain(DiagnosticData diagnosticData) {
-		KSPrivateKeyEntry entry = getToken().getKey(getSigningAlias());
+		KSPrivateKeyEntry entry = getPrivateKeyEntry();
 		List<String> signatureCertificateChain = diagnosticData.getSignatureCertificateChain(diagnosticData.getFirstSignatureId());
-		assertEquals(entry.getCertificateChain().length, signatureCertificateChain.size());
+		assertTrue(Utils.isCollectionNotEmpty(signatureCertificateChain));
+		// upper certificate than trust anchors are ignored
+		assertTrue(entry.getCertificateChain().length >= signatureCertificateChain.size());
 	}
 
 	protected void checkSignatureLevel(DiagnosticData diagnosticData) {
@@ -243,6 +365,17 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends AbstractSignatu
 	}
 
 	protected void checkBLevelValid(DiagnosticData diagnosticData) {
+		SignatureWrapper signatureWrapper = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId());
+
+		List<XmlDigestMatcher> digestMatchers = signatureWrapper.getDigestMatchers();
+		assertTrue(Utils.isCollectionNotEmpty(digestMatchers));
+		for (XmlDigestMatcher digestMatcher : digestMatchers) {
+			assertTrue(digestMatcher.isDataFound());
+			assertTrue(digestMatcher.isDataIntact());
+		}
+
+		assertTrue(signatureWrapper.isSignatureIntact());
+		assertTrue(signatureWrapper.isSignatureValid());
 		assertTrue(diagnosticData.isBLevelTechnicallyValid(diagnosticData.getFirstSignatureId()));
 	}
 
@@ -259,7 +392,7 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends AbstractSignatu
 	protected void checkTimestamps(DiagnosticData diagnosticData) {
 		List<String> timestampIdList = diagnosticData.getTimestampIdList(diagnosticData.getFirstSignatureId());
 
-		boolean foundContentTimeStamp = false;
+		int nbContentTimestamps = 0;
 		boolean foundSignatureTimeStamp = false;
 		boolean foundArchiveTimeStamp = false;
 
@@ -269,7 +402,9 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends AbstractSignatu
 				TimestampType type = TimestampType.valueOf(timestampType);
 				switch (type) {
 				case CONTENT_TIMESTAMP:
-					foundContentTimeStamp = true;
+				case ALL_DATA_OBJECTS_TIMESTAMP:
+				case INDIVIDUAL_DATA_OBJECTS_TIMESTAMP:
+					nbContentTimestamps++;
 					break;
 				case SIGNATURE_TIMESTAMP:
 					foundSignatureTimeStamp = true;
@@ -283,9 +418,7 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends AbstractSignatu
 			}
 		}
 
-		if (hasContentTimestamp()) {
-			assertTrue(foundContentTimeStamp);
-		}
+		assertEquals(nbContentTimestamps, Utils.collectionSize(getSignatureParameters().getContentTimestamps()));
 
 		if (isBaselineT()) {
 			assertTrue(foundSignatureTimeStamp);
@@ -300,23 +433,57 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends AbstractSignatu
 			assertNotNull(timestampWrapper.getProductionTime());
 			assertTrue(timestampWrapper.isMessageImprintDataFound());
 			assertTrue(timestampWrapper.isMessageImprintDataIntact());
-			assertTrue(timestampWrapper.isSignatureValid());
 			assertTrue(timestampWrapper.isSignatureIntact());
+			assertTrue(timestampWrapper.isSignatureValid());
+
+			List<XmlDigestMatcher> digestMatchers = timestampWrapper.getDigestMatchers();
+			for (XmlDigestMatcher xmlDigestMatcher : digestMatchers) {
+				assertTrue(xmlDigestMatcher.isDataFound());
+				assertTrue(xmlDigestMatcher.isDataIntact());
+			}
 		}
 	}
 
-	protected boolean hasContentTimestamp() {
-		return false;
-	}
-
 	protected void checkSigningDate(DiagnosticData diagnosticData) {
-		Date signatureDate = diagnosticData.getSignatureDate();
+		Date signatureDate = diagnosticData.getFirstSignatureDate();
 		Date originalSigningDate = getSignatureParameters().bLevel().getSigningDate();
 
 		// Date in signed documents is truncated
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MMM-dd HH:mm:ss");
 
 		assertEquals(dateFormat.format(originalSigningDate), dateFormat.format(signatureDate));
+	}
+
+	protected void checkCommitmentTypeIndications(DiagnosticData diagnosticData) {
+		List<String> commitmentTypeIndications = getSignatureParameters().bLevel().getCommitmentTypeIndications();
+		if (Utils.isCollectionNotEmpty(commitmentTypeIndications)) {
+			SignatureWrapper signatureWrapper = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId());
+			List<String> foundCommitmentTypeIdentifiers = signatureWrapper.getCommitmentTypeIdentifiers();
+			assertTrue(commitmentTypeIndications.equals(foundCommitmentTypeIdentifiers));
+		}
+	}
+
+	protected void checkClaimedRoles(DiagnosticData diagnosticData) {
+		List<String> claimedRoles = getSignatureParameters().bLevel().getClaimedSignerRoles();
+		if (Utils.isCollectionNotEmpty(claimedRoles)) {
+			SignatureWrapper signatureWrapper = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId());
+			List<String> foundClaimedRoles = signatureWrapper.getClaimedRoles();
+			assertTrue(claimedRoles.equals(foundClaimedRoles));
+		}
+	}
+
+	protected void checkMessageDigestAlgorithm(DiagnosticData diagnosticData) {
+		DigestAlgorithm expectedDigestAlgorithm = getSignatureParameters().getReferenceDigestAlgorithm();
+		if (expectedDigestAlgorithm == null) {
+			expectedDigestAlgorithm = getSignatureParameters().getDigestAlgorithm();
+		}
+
+		SignatureWrapper signature = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId());
+		List<XmlDigestMatcher> digestMatchers = signature.getDigestMatchers();
+		assertTrue(Utils.isCollectionNotEmpty(digestMatchers));
+		for (XmlDigestMatcher xmlDigestMatcher : digestMatchers) {
+			assertEquals(expectedDigestAlgorithm.getName(), xmlDigestMatcher.getDigestMethod());
+		}
 	}
 
 }

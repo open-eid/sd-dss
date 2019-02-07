@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.validation.process;
 
 import java.util.Collections;
@@ -104,7 +124,7 @@ public abstract class ChainItem<T extends XmlConstraintsConclusion> {
 				informOrWarn(constraint.getLevel());
 				break;
 			default:
-				LOG.warn("Unknown level : " + constraint.getLevel());
+				LOG.warn("Unknown level : {}", constraint.getLevel());
 				break;
 			}
 		}
@@ -112,9 +132,9 @@ public abstract class ChainItem<T extends XmlConstraintsConclusion> {
 
 	protected abstract boolean process();
 
-	protected abstract MessageTag getMessageTag();
+	protected abstract IMessageTag getMessageTag();
 
-	protected abstract MessageTag getErrorMessageTag();
+	protected abstract IMessageTag getErrorMessageTag();
 
 	protected List<XmlName> getPreviousErrors() {
 		return Collections.emptyList();
@@ -192,10 +212,10 @@ public abstract class ChainItem<T extends XmlConstraintsConclusion> {
 		result.getConstraint().add(constraint);
 	}
 
-	private XmlName buildXmlName(MessageTag messageTag) {
+	private XmlName buildXmlName(IMessageTag messageTag) {
 		XmlName xmlName = new XmlName();
 		if (messageTag != null) {
-			xmlName.setNameId(messageTag.name());
+			xmlName.setNameId(messageTag.getId());
 			xmlName.setValue(messageTag.getMessage());
 		} else {
 			LOG.error("MessageTag is null");

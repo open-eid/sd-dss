@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -36,6 +36,7 @@ import org.w3c.dom.Text;
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.DSSUtils;
+import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.DomUtils;
 import eu.europa.esig.dss.EncryptionAlgorithm;
 import eu.europa.esig.dss.InMemoryDocument;
@@ -76,11 +77,20 @@ class EnvelopingSignatureBuilder extends XAdESSignatureBuilder {
 		final DSSReference reference = new DSSReference();
 		reference.setId("r-id-" + referenceIndex);
 		reference.setContents(document);
-		reference.setDigestMethodAlgorithm(params.getDigestAlgorithm());
+		DigestAlgorithm digestAlgorithm = params.getReferenceDigestAlgorithm() != null ? params.getReferenceDigestAlgorithm() : params.getDigestAlgorithm();
+		reference.setDigestMethodAlgorithm(digestAlgorithm);
 
 		if (params.isManifestSignature()) {
 			reference.setType(HTTP_WWW_W3_ORG_2000_09_XMLDSIG_MANIFEST);
-			reference.setUri("#" + ((params.getManifestId() == null) ? "manifest" : params.getManifestId()));
+			Document manifestDoc = DomUtils.buildDOM(document);
+			Element manifestElement = manifestDoc.getDocumentElement();
+			reference.setUri("#" + manifestElement.getAttribute(ID));
+			DSSTransform xmlTransform = new DSSTransform();
+			xmlTransform.setAlgorithm(Canonicalizer.ALGO_ID_C14N11_OMIT_COMMENTS);
+			reference.setTransforms(Arrays.asList(xmlTransform));
+		} else if (params.isEmbedXML()) {
+			reference.setType(HTTP_WWW_W3_ORG_2000_09_XMLDSIG_OBJECT);
+			reference.setUri("#o-id-" + referenceIndex);
 
 			DSSTransform xmlTransform = new DSSTransform();
 			xmlTransform.setAlgorithm(Canonicalizer.ALGO_ID_C14N11_OMIT_COMMENTS);
@@ -122,10 +132,7 @@ class EnvelopingSignatureBuilder extends XAdESSignatureBuilder {
 
 		final List<DSSReference> references = params.getReferences();
 		for (final DSSReference reference : references) {
-
-			final String id = reference.getUri().substring(1);
 			// <ds:Object>
-			DSSDocument tbsDoc = reference.getContents();
 			if (params.isManifestSignature()) {
 
 				Document doc = DomUtils.buildDOM(reference.getContents());
@@ -144,9 +151,20 @@ class EnvelopingSignatureBuilder extends XAdESSignatureBuilder {
 				final Element dom = documentDom.createElementNS(XMLSignature.XMLNS, DS_OBJECT);
 				dom.appendChild(manifestDom);
 				signatureDom.appendChild(dom);
+			} else if (params.isEmbedXML()) {
+				Document doc = DomUtils.buildDOM(reference.getContents());
+				Element root = doc.getDocumentElement();
+				Node adopted = documentDom.adoptNode(root);
+
+				final Element dom = documentDom.createElementNS(XMLSignature.XMLNS, DS_OBJECT);
+				final String id = reference.getUri().substring(1);
+				dom.setAttribute(ID, id);
+				dom.appendChild(adopted);
+				signatureDom.appendChild(dom);
 			} else {
 				final String base64EncodedOriginalDocument = Utils.toBase64(DSSUtils.toByteArray(reference.getContents()));
 				final Element objectDom = DomUtils.addTextElement(documentDom, signatureDom, XMLSignature.XMLNS, DS_OBJECT, base64EncodedOriginalDocument);
+				final String id = reference.getUri().substring(1);
 				objectDom.setAttribute(ID, id);
 			}
 		}

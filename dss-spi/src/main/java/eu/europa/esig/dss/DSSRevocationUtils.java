@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -46,11 +46,9 @@ import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.x509.CertificateToken;
 
 /**
- * Utility class used to convert OCSPResp to BasicOCSPResp
- *
+ * Utility class used to manipulate revocation data (OCSP, CRL)
  *
  */
-
 public final class DSSRevocationUtils {
 
 	private static JcaDigestCalculatorProviderBuilder jcaDigestCalculatorProviderBuilder;
@@ -67,9 +65,10 @@ public final class DSSRevocationUtils {
 	 * Convert a OCSPResp in a BasicOCSPResp
 	 *
 	 * @param ocspResp
-	 * @return
+	 *            the {@code OCSPResp} to be converted to {@code BasicOCSPResp}
+	 * @return the conversion result
 	 */
-	public static final BasicOCSPResp fromRespToBasic(OCSPResp ocspResp) {
+	public static BasicOCSPResp fromRespToBasic(OCSPResp ocspResp) {
 		try {
 			return (BasicOCSPResp) ocspResp.getResponseObject();
 		} catch (OCSPException e) {
@@ -82,13 +81,13 @@ public final class DSSRevocationUtils {
 	 * SUCCESSFUL).
 	 *
 	 * @param basicOCSPResp
-	 * @return
+	 *            the {@code BasicOCSPResp} to be converted to {@code OCSPResp}
+	 * @return the result of the conversion
 	 */
-	public static final OCSPResp fromBasicToResp(final BasicOCSPResp basicOCSPResp) {
+	public static OCSPResp fromBasicToResp(final BasicOCSPResp basicOCSPResp) {
 		try {
 			final byte[] encoded = basicOCSPResp.getEncoded();
-			final OCSPResp ocspResp = fromBasicToResp(encoded);
-			return ocspResp;
+			return fromBasicToResp(encoded);
 		} catch (IOException e) {
 			throw new DSSException(e);
 		}
@@ -98,18 +97,18 @@ public final class DSSRevocationUtils {
 	 * Convert a BasicOCSPResp in OCSPResp (connection status is set to
 	 * SUCCESSFUL).
 	 *
-	 * @param basicOCSPResp
-	 * @return
+	 * @param basicOCSPRespBinary
+	 *            the binary of BasicOCSPResp
+	 * @return an instance of OCSPResp
 	 */
-	public static final OCSPResp fromBasicToResp(final byte[] basicOCSPResp) {
+	public static OCSPResp fromBasicToResp(final byte[] basicOCSPRespBinary) {
 		final OCSPResponseStatus responseStatus = new OCSPResponseStatus(OCSPResponseStatus.SUCCESSFUL);
-		final DEROctetString derBasicOCSPResp = new DEROctetString(basicOCSPResp);
+		final DEROctetString derBasicOCSPResp = new DEROctetString(basicOCSPRespBinary);
 		final ResponseBytes responseBytes = new ResponseBytes(OCSPObjectIdentifiers.id_pkix_ocsp_basic, derBasicOCSPResp);
 		final OCSPResponse ocspResponse = new OCSPResponse(responseStatus, responseBytes);
-		final OCSPResp ocspResp = new OCSPResp(ocspResponse);
 		// !!! todo to be checked: System.out.println("===> RECREATED: " +
 		// ocspResp.hashCode());
-		return ocspResp;
+		return new OCSPResp(ocspResponse);
 	}
 
 	/**
@@ -150,27 +149,24 @@ public final class DSSRevocationUtils {
 	 * @param issuerCert
 	 *            {@code CertificateToken} issuer certificate of the {@code cert}
 	 * @return {@code CertificateID}
-	 * @throws eu.europa.esig.dss.DSSException
 	 */
-	public static CertificateID getOCSPCertificateID(final CertificateToken cert, final CertificateToken issuerCert) throws DSSException {
+	public static CertificateID getOCSPCertificateID(final CertificateToken cert, final CertificateToken issuerCert) {
 		try {
 			final BigInteger serialNumber = cert.getSerialNumber();
 			final DigestCalculator digestCalculator = getSHA1DigestCalculator();
 			final X509CertificateHolder x509CertificateHolder = DSSASN1Utils.getX509CertificateHolder(issuerCert);
-			final CertificateID certificateID = new CertificateID(digestCalculator, x509CertificateHolder, serialNumber);
-			return certificateID;
+			return new CertificateID(digestCalculator, x509CertificateHolder, serialNumber);
 		} catch (OCSPException e) {
-			throw new DSSException(e);
+			throw new DSSException("Unable to create CertificateID", e);
 		}
 	}
 
-	public static DigestCalculator getSHA1DigestCalculator() throws DSSException {
+	public static DigestCalculator getSHA1DigestCalculator() {
 		try {
 			final DigestCalculatorProvider digestCalculatorProvider = jcaDigestCalculatorProviderBuilder.build();
-			final DigestCalculator digestCalculator = digestCalculatorProvider.get(CertificateID.HASH_SHA1);
-			return digestCalculator;
+			return digestCalculatorProvider.get(CertificateID.HASH_SHA1);
 		} catch (OperatorCreationException e) {
-			throw new DSSException(e);
+			throw new DSSException("Unable to create a DigestCalculator instance", e);
 		}
 	}
 
@@ -179,21 +175,19 @@ public final class DSSRevocationUtils {
 	 *
 	 * @param base64Encoded
 	 *            base 64 encoded OCSP response
-	 * @return {@code BasicOCSPResp}
+	 * @return the {@code BasicOCSPResp} object
 	 * @throws IOException
-	 * @throws OCSPException
+	 *             if IO error occurred
 	 */
-	public static BasicOCSPResp loadOCSPBase64Encoded(final String base64Encoded) throws IOException, OCSPException {
+	public static BasicOCSPResp loadOCSPBase64Encoded(final String base64Encoded) throws IOException {
 		final byte[] derEncoded = Utils.fromBase64(base64Encoded);
 		final OCSPResp ocspResp = new OCSPResp(derEncoded);
-		final BasicOCSPResp basicOCSPResp = (BasicOCSPResp) ocspResp.getResponseObject();
-		return basicOCSPResp;
+		return fromRespToBasic(ocspResp);
 	}
 
 	public static byte[] getEncoded(OCSPResp ocspResp) {
 		try {
-			final byte[] encoded = ocspResp.getEncoded();
-			return encoded;
+			return ocspResp.getEncoded();
 		} catch (IOException e) {
 			throw new DSSException(e);
 		}

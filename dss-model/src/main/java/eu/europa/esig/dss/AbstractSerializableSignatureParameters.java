@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -32,6 +32,12 @@ public abstract class AbstractSerializableSignatureParameters implements Seriali
 	 * This variable indicates if it is possible to sign with an expired certificate.
 	 */
 	private boolean signWithExpiredCertificate = false;
+
+	/**
+	 * This variable indicates if it is possible to generate ToBeSigned data without
+	 * the signing certificate.
+	 */
+	private boolean generateTBSWithoutCertificate = false;
 
 	/**
 	 * This variable indicates the expected signature level
@@ -57,6 +63,11 @@ public abstract class AbstractSerializableSignatureParameters implements Seriali
 	 * XAdES: The digest algorithm used to hash ds:SignedInfo.
 	 */
 	private DigestAlgorithm digestAlgorithm = signatureAlgorithm.getDigestAlgorithm();
+
+	/**
+	 * XAdES: The digest algorithm used to hash ds:Reference.
+	 */
+	private DigestAlgorithm referenceDigestAlgorithm;
 
 	/**
 	 * The mask generation function
@@ -100,6 +111,27 @@ public abstract class AbstractSerializableSignatureParameters implements Seriali
 	 */
 	public void setSignWithExpiredCertificate(final boolean signWithExpiredCertificate) {
 		this.signWithExpiredCertificate = signWithExpiredCertificate;
+	}
+
+	/**
+	 * Indicates if it is possible to generate ToBeSigned data without the signing certificate.
+	 * The default values is false.
+	 *
+	 * @return true if signing certificate is not required when generating ToBeSigned data.
+	 */
+	public boolean isGenerateTBSWithoutCertificate() {
+		return generateTBSWithoutCertificate;
+	}
+
+	/**
+	 * Allows to change the default behaviour regarding the requirements of signing certificate
+	 * to generate ToBeSigned data.
+	 *
+	 * @param generateTBSWithoutCertificate
+	 *            true if it should be possible to generate ToBeSigned data without certificate.
+	 */
+	public void setGenerateTBSWithoutCertificate(final boolean generateTBSWithoutCertificate) {
+		this.generateTBSWithoutCertificate = generateTBSWithoutCertificate;
 	}
 
 	/**
@@ -209,6 +241,19 @@ public abstract class AbstractSerializableSignatureParameters implements Seriali
 	}
 
 	/**
+	 * Get the digest algorithm for ds:Reference or message-digest attribute
+	 * 
+	 * @return the digest algorithm for ds:Reference or message-digest attribute
+	 */
+	public DigestAlgorithm getReferenceDigestAlgorithm() {
+		return referenceDigestAlgorithm;
+	}
+
+	public void setReferenceDigestAlgorithm(DigestAlgorithm referenceDigestAlgorithm) {
+		this.referenceDigestAlgorithm = referenceDigestAlgorithm;
+	}
+
+	/**
 	 * Get Baseline B parameters (signed properties)
 	 * 
 	 * @return the Baseline B parameters
@@ -304,27 +349,31 @@ public abstract class AbstractSerializableSignatureParameters implements Seriali
 
 	@Override
 	public String toString() {
-		return "SignatureParameters{" + "signWithExpiredCertificate=" + signWithExpiredCertificate + ", signatureLevel=" + signatureLevel
-				+ ", signaturePackaging=" + signaturePackaging + ", signatureAlgorithm=" + signatureAlgorithm + ", encryptionAlgorithm=" + encryptionAlgorithm
-				+ ", digestAlgorithm=" + digestAlgorithm + ", bLevelParams=" + bLevelParams + ", signatureTimestampParameters="
-				+ ((signatureTimestampParameters == null) ? null : signatureTimestampParameters.toString()) + ", archiveTimestampParameters="
-				+ ((archiveTimestampParameters == null) ? null : archiveTimestampParameters.toString()) + '}';
+		return "AbstractSerializableSignatureParameters [signWithExpiredCertificate=" + signWithExpiredCertificate + ", generateTBSWithoutCertificate="
+				+ generateTBSWithoutCertificate + ", signatureLevel=" + signatureLevel + ", signaturePackaging=" + signaturePackaging + ", signatureAlgorithm="
+				+ signatureAlgorithm + ", encryptionAlgorithm=" + encryptionAlgorithm + ", digestAlgorithm=" + digestAlgorithm + ", referenceDigestAlgorithm="
+				+ referenceDigestAlgorithm + ", maskGenerationFunction=" + maskGenerationFunction + ", bLevelParams=" + bLevelParams
+				+ ", contentTimestampParameters=" + contentTimestampParameters + ", signatureTimestampParameters=" + signatureTimestampParameters
+				+ ", archiveTimestampParameters=" + archiveTimestampParameters + "]";
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = (prime * result) + ((archiveTimestampParameters == null) ? 0 : archiveTimestampParameters.hashCode());
-		result = (prime * result) + ((bLevelParams == null) ? 0 : bLevelParams.hashCode());
-		result = (prime * result) + ((contentTimestampParameters == null) ? 0 : contentTimestampParameters.hashCode());
-		result = (prime * result) + ((digestAlgorithm == null) ? 0 : digestAlgorithm.hashCode());
-		result = (prime * result) + ((encryptionAlgorithm == null) ? 0 : encryptionAlgorithm.hashCode());
-		result = (prime * result) + (signWithExpiredCertificate ? 1231 : 1237);
-		result = (prime * result) + ((signatureAlgorithm == null) ? 0 : signatureAlgorithm.hashCode());
-		result = (prime * result) + ((signatureLevel == null) ? 0 : signatureLevel.hashCode());
-		result = (prime * result) + ((signaturePackaging == null) ? 0 : signaturePackaging.hashCode());
-		result = (prime * result) + ((signatureTimestampParameters == null) ? 0 : signatureTimestampParameters.hashCode());
+		result = prime * result + ((archiveTimestampParameters == null) ? 0 : archiveTimestampParameters.hashCode());
+		result = prime * result + ((bLevelParams == null) ? 0 : bLevelParams.hashCode());
+		result = prime * result + ((contentTimestampParameters == null) ? 0 : contentTimestampParameters.hashCode());
+		result = prime * result + ((digestAlgorithm == null) ? 0 : digestAlgorithm.hashCode());
+		result = prime * result + ((encryptionAlgorithm == null) ? 0 : encryptionAlgorithm.hashCode());
+		result = prime * result + (generateTBSWithoutCertificate ? 1231 : 1237);
+		result = prime * result + ((maskGenerationFunction == null) ? 0 : maskGenerationFunction.hashCode());
+		result = prime * result + ((referenceDigestAlgorithm == null) ? 0 : referenceDigestAlgorithm.hashCode());
+		result = prime * result + (signWithExpiredCertificate ? 1231 : 1237);
+		result = prime * result + ((signatureAlgorithm == null) ? 0 : signatureAlgorithm.hashCode());
+		result = prime * result + ((signatureLevel == null) ? 0 : signatureLevel.hashCode());
+		result = prime * result + ((signaturePackaging == null) ? 0 : signaturePackaging.hashCode());
+		result = prime * result + ((signatureTimestampParameters == null) ? 0 : signatureTimestampParameters.hashCode());
 		return result;
 	}
 
@@ -365,6 +414,15 @@ public abstract class AbstractSerializableSignatureParameters implements Seriali
 			return false;
 		}
 		if (encryptionAlgorithm != other.encryptionAlgorithm) {
+			return false;
+		}
+		if (generateTBSWithoutCertificate != other.generateTBSWithoutCertificate) {
+			return false;
+		}
+		if (maskGenerationFunction != other.maskGenerationFunction) {
+			return false;
+		}
+		if (referenceDigestAlgorithm != other.referenceDigestAlgorithm) {
 			return false;
 		}
 		if (signWithExpiredCertificate != other.signWithExpiredCertificate) {

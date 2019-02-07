@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.validation.reports.wrapper;
 
 import java.util.ArrayList;
@@ -10,6 +30,7 @@ import java.util.Set;
 import eu.europa.esig.dss.jaxb.diagnostic.XmlBasicSignature;
 import eu.europa.esig.dss.jaxb.diagnostic.XmlCertifiedRole;
 import eu.europa.esig.dss.jaxb.diagnostic.XmlChainItem;
+import eu.europa.esig.dss.jaxb.diagnostic.XmlDigestMatcher;
 import eu.europa.esig.dss.jaxb.diagnostic.XmlPolicy;
 import eu.europa.esig.dss.jaxb.diagnostic.XmlSignature;
 import eu.europa.esig.dss.jaxb.diagnostic.XmlSignatureScope;
@@ -30,6 +51,11 @@ public class SignatureWrapper extends AbstractTokenProxy {
 	@Override
 	public String getId() {
 		return signature.getId();
+	}
+
+	@Override
+	public List<XmlDigestMatcher> getDigestMatchers() {
+		return signature.getDigestMatchers();
 	}
 
 	@Override
@@ -213,10 +239,9 @@ public class SignatureWrapper extends AbstractTokenProxy {
 	private boolean isTimestampValid(List<TimestampWrapper> timestampList) {
 		for (final TimestampWrapper timestamp : timestampList) {
 			final boolean signatureValid = timestamp.isSignatureValid();
-			final boolean messageImprintIntact = timestamp.isMessageImprintDataIntact();
-			if (signatureValid && messageImprintIntact) { // TODO correct ?
-															// return true if at
-															// least 1 TSP OK
+			final XmlDigestMatcher messageImprint = timestamp.getMessageImprint();
+			final boolean messageImprintIntact = messageImprint.isDataFound() && messageImprint.isDataIntact();
+			if (signatureValid && messageImprintIntact) {
 				return true;
 			}
 		}

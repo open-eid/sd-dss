@@ -1,12 +1,34 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.pades;
 
 import eu.europa.esig.dss.SignatureForm;
 import eu.europa.esig.dss.SignatureLevel;
 import eu.europa.esig.dss.cades.CAdESSignatureParameters;
+import eu.europa.esig.dss.pdf.PAdESConstants;
 
 public class PAdESSignatureParameters extends CAdESSignatureParameters {
 
 	private static final long serialVersionUID = -1632557456487796227L;
+
 	private String reason;
 	private String contactInfo;
 	private String location;
@@ -19,14 +41,20 @@ public class PAdESSignatureParameters extends CAdESSignatureParameters {
 	 * 
 	 * Default value is Adobe.PPKLite
 	 */
-	private String signatureFilter;
+	private String signatureFilter = PAdESConstants.SIGNATURE_DEFAULT_FILTER;
 
 	/**
 	 * This attribute allows to override the used subFilter for a Signature.
 	 * 
 	 * Default value is ETSI.CAdES.detached
 	 */
-	private String signatureSubFilter;
+	private String signatureSubFilter = PAdESConstants.SIGNATURE_DEFAULT_SUBFILTER;
+
+	/**
+	 * This attribute allows to explicitly specify the name for a Signature.
+	 * The person or authority signing the document.
+	 */
+	private String signatureName;
 
 	/**
 	 * This attribute is used to create visible signature in PAdES form
@@ -38,16 +66,22 @@ public class PAdESSignatureParameters extends CAdESSignatureParameters {
 	 * 
 	 * Default value is Adobe.PPKLite
 	 */
-	private String timestampFilter;
+	private String timestampFilter = PAdESConstants.TIMESTAMP_DEFAULT_FILTER;
 
 	/**
 	 * This attribute allows to override the used subFilter for a Timestamp.
 	 * 
 	 * Default value is ETSI.RFC3161
 	 */
-	private String timestampSubFilter;
+	private String timestampSubFilter = PAdESConstants.TIMESTAMP_DEFAULT_SUBFILTER;
 
 	private SignatureImageParameters timestampImageParameters;
+
+	/**
+	 * This attribute allows to create a "certification signature". That allows to remove permission(s) in case of
+	 * future change(s).
+	 */
+	private CertificationPermission permission;
 
 	@Override
 	public void setSignatureLevel(SignatureLevel signatureLevel) {
@@ -101,6 +135,14 @@ public class PAdESSignatureParameters extends CAdESSignatureParameters {
 
 	public void setSignatureSubFilter(String signatureSubFilter) {
 		this.signatureSubFilter = signatureSubFilter;
+	}
+
+	public String getSignatureName() {
+		return signatureName;
+	}
+
+	public void setSignatureName(final String signatureName) {
+		this.signatureName = signatureName;
 	}
 
 	public SignatureImageParameters getSignatureImageParameters() {
@@ -165,6 +207,14 @@ public class PAdESSignatureParameters extends CAdESSignatureParameters {
 	 */
 	public void setSignatureSize(int signatureSize) {
 		this.signatureSize = signatureSize;
+	}
+
+	public CertificationPermission getPermission() {
+		return permission;
+	}
+
+	public void setPermission(CertificationPermission permission) {
+		this.permission = permission;
 	}
 
 }

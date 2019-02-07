@@ -1,12 +1,35 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.asic.validation;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import eu.europa.esig.dss.ASiCContainerType;
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.asic.ASiCUtils;
 import eu.europa.esig.dss.asic.ASiCWithXAdESContainerExtractor;
 import eu.europa.esig.dss.asic.AbstractASiCContainerExtractor;
+import eu.europa.esig.dss.asic.OpenDocumentSupportUtils;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.DocumentValidator;
 import eu.europa.esig.dss.validation.ManifestFile;
 
@@ -27,7 +50,7 @@ public class ASiCContainerWithXAdESValidator extends AbstractASiCContainerValida
 
 	@Override
 	public boolean isSupported(DSSDocument dssDocument) {
-		return ASiCUtils.isASiCContainer(dssDocument) && ASiCUtils.isArchiveContainsCorrectSignatureExtension(dssDocument, ".xml");
+		return ASiCUtils.isASiCContainer(dssDocument) && ASiCUtils.isArchiveContainsCorrectSignatureFileWithExtension(dssDocument, ".xml");
 	}
 
 	@Override
@@ -45,7 +68,13 @@ public class ASiCContainerWithXAdESValidator extends AbstractASiCContainerValida
 				xadesValidator.setProcessExecutor(processExecutor);
 				xadesValidator.setValidationCertPool(validationCertPool);
 				xadesValidator.setSignaturePolicyProvider(signaturePolicyProvider);
-				xadesValidator.setDetachedContents(getSignedDocuments());
+
+				if (ASiCUtils.isOpenDocument(getMimeTypeDocument())) {
+					xadesValidator.setDetachedContents(OpenDocumentSupportUtils.getOpenDocumentCoverage(extractResult));
+				} else {
+					xadesValidator.setDetachedContents(getSignedDocuments());
+				}
+
 				validators.add(xadesValidator);
 			}
 		}
@@ -65,6 +94,28 @@ public class ASiCContainerWithXAdESValidator extends AbstractASiCContainerValida
 			}
 		}
 		return descriptions;
+	}
+
+	@Override
+	public List<DSSDocument> getOriginalDocuments(String signatureId) {
+		List<DSSDocument> result = new ArrayList<DSSDocument>();
+		List<DSSDocument> potentials = getSignedDocuments();
+		for (final DSSDocument signature : getSignatureDocuments()) {
+			XMLDocumentForASiCValidator xadesValidator = new XMLDocumentForASiCValidator(signature);
+			xadesValidator.setCertificateVerifier(certificateVerifier);
+			xadesValidator.setDetachedContents(potentials);
+			List<DSSDocument> retrievedDocs = xadesValidator.getOriginalDocuments(signatureId);
+			if (Utils.isCollectionNotEmpty(retrievedDocs)) {
+				if (ASiCContainerType.ASiC_S.equals(getContainerType())) {
+					result.addAll(getSignedDocumentsASiCS(retrievedDocs));
+				} else {
+					result.addAll(retrievedDocs);
+				}
+				break;
+			}
+		}
+
+		return result;
 	}
 
 }

@@ -1,12 +1,35 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.asic.validation;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import eu.europa.esig.dss.ASiCContainerType;
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.DSSException;
-import eu.europa.esig.dss.DSSUnsupportedOperationException;
 import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.asic.ASiCExtractResult;
 import eu.europa.esig.dss.asic.ASiCUtils;
@@ -23,7 +46,7 @@ public abstract class AbstractASiCContainerValidator extends SignedDocumentValid
 
 	protected List<DocumentValidator> validators;
 
-	private ASiCExtractResult extractResult;
+	protected ASiCExtractResult extractResult;
 
 	private ASiCContainerType containerType;
 
@@ -73,7 +96,7 @@ public abstract class AbstractASiCContainerValidator extends SignedDocumentValid
 	/**
 	 * This method allows to retrieve the container information (ASiC Container)
 	 * 
-	 * @return
+	 * @return a DTO with the container information
 	 */
 	@Override
 	protected ContainerInfo getContainerInfo() {
@@ -139,10 +162,35 @@ public abstract class AbstractASiCContainerValidator extends SignedDocumentValid
 		return extractResult.getArchiveManifestDocuments();
 	}
 
-	@Override
-	public List<DSSDocument> getOriginalDocuments(String signatureId) throws DSSException {
-		// TODO
-		throw new DSSUnsupportedOperationException("This method is not applicable for this kind of file!");
+	protected DSSDocument getMimeTypeDocument() {
+		return extractResult.getMimeTypeDocument();
+	}
+
+	protected List<DSSDocument> getSignedDocumentsASiCS(List<DSSDocument> retrievedDocs) {
+		if (Utils.collectionSize(retrievedDocs) > 1) {
+			throw new DSSException("ASiC-S : More than one file");
+		}
+		DSSDocument uniqueDoc = retrievedDocs.get(0);
+		List<DSSDocument> result = new ArrayList<DSSDocument>();
+		if (Utils.areStringsEqual(ASiCUtils.PACKAGE_ZIP, uniqueDoc.getName())) {
+			result.addAll(getPackageZipContent(uniqueDoc));
+		} else {
+			result.add(uniqueDoc);
+		}
+		return result;
+	}
+
+	private List<DSSDocument> getPackageZipContent(DSSDocument packageZip) {
+		List<DSSDocument> result = new ArrayList<DSSDocument>();
+		try (InputStream is = packageZip.openStream(); ZipInputStream packageZipInputStream = new ZipInputStream(is)) {
+			ZipEntry entry;
+			while ((entry = packageZipInputStream.getNextEntry()) != null) {
+				result.add(ASiCUtils.getCurrentDocument(entry.getName(), packageZipInputStream));
+			}
+		} catch (IOException e) {
+			throw new DSSException("Unable to extract package.zip", e);
+		}
+		return result;
 	}
 
 }

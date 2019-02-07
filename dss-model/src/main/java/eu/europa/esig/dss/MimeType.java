@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -38,6 +38,7 @@ public class MimeType implements Serializable {
 
 	public static final MimeType BINARY = new MimeType("application/octet-stream");
 	public static final MimeType XML = new MimeType("text/xml");
+	public static final MimeType HTML = new MimeType("text/html");
 	public static final MimeType PDF = new MimeType("application/pdf");
 	public static final MimeType PKCS7 = new MimeType("application/pkcs7-signature");
 	public static final MimeType TST = new MimeType("application/vnd.etsi.timestamp-token");
@@ -46,6 +47,8 @@ public class MimeType implements Serializable {
 	public static final MimeType ODT = new MimeType("application/vnd.oasis.opendocument.text");
 	public static final MimeType ODS = new MimeType("application/vnd.oasis.opendocument.spreadsheet");
 	public static final MimeType TEXT = new MimeType("text/plain");
+	public static final MimeType CRL = new MimeType("application/pkix-crl");
+	public static final MimeType CER = new MimeType("application/pkix-cert");
 
 	public static final MimeType PNG = new MimeType("image/png");
 	public static final MimeType JPEG = new MimeType("image/jpeg");
@@ -54,6 +57,7 @@ public class MimeType implements Serializable {
 
 	static {
 		fileExtensions.put("xml", XML);
+		fileExtensions.put("html", HTML);
 
 		fileExtensions.put("pkcs7", PKCS7);
 		fileExtensions.put("p7s", PKCS7);
@@ -195,10 +199,8 @@ public class MimeType implements Serializable {
 	 * @return the extrapolated mime-type of the file
 	 */
 	public static MimeType fromFile(final File file) {
-
 		final String fileName = file.getName();
-		final MimeType mimeType = fromFileName(fileName);
-		return mimeType;
+		return fromFileName(fileName);
 	}
 
 	/**

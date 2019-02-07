@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.crl;
 
 import java.util.Collection;
@@ -47,25 +67,28 @@ public abstract class AbstractCRLUtils {
 			final boolean onlyUserCerts = issuingDistributionPoint.onlyContainsUserCerts();
 			final boolean indirectCrl = issuingDistributionPoint.isIndirectCRL();
 			ReasonFlags onlySomeReasons = issuingDistributionPoint.getOnlySomeReasons();
-			DistributionPointName distributionPoint = issuingDistributionPoint.getDistributionPoint();
-			boolean urlFound = false;
-			if (DistributionPointName.FULL_NAME == distributionPoint.getType()) {
-				final GeneralNames generalNames = (GeneralNames) distributionPoint.getName();
-				if ((generalNames != null) && (generalNames.getNames() != null && generalNames.getNames().length > 0)) {
-					for (GeneralName generalName : generalNames.getNames()) {
-						if (GeneralName.uniformResourceIdentifier == generalName.getTagNo()) {
-							ASN1String str = (ASN1String) ((DERTaggedObject) generalName.toASN1Primitive()).getObject();
-							validity.setUrl(str.getString());
-							urlFound = true;
-						}
-					}
-				}
-			}
-
+			final String url = getUrl(issuingDistributionPoint.getDistributionPoint());
+			validity.setUrl(url);
+			final boolean urlFound = url != null;
 			if (!(onlyAttributeCerts && onlyCaCerts && onlyUserCerts && indirectCrl) && (onlySomeReasons == null) && urlFound) {
 				validity.setUnknownCriticalExtension(false);
 			}
 		}
+	}
+
+	private String getUrl(DistributionPointName distributionPoint) {
+		if ((distributionPoint != null) && (DistributionPointName.FULL_NAME == distributionPoint.getType())) {
+			final GeneralNames generalNames = (GeneralNames) distributionPoint.getName();
+			if ((generalNames != null) && (generalNames.getNames() != null && generalNames.getNames().length > 0)) {
+				for (GeneralName generalName : generalNames.getNames()) {
+					if (GeneralName.uniformResourceIdentifier == generalName.getTagNo()) {
+						ASN1String str = (ASN1String) ((DERTaggedObject) generalName.toASN1Primitive()).getObject();
+						return str.getString();
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 }

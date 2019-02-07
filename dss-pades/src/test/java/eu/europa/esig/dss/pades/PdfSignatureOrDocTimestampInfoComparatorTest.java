@@ -1,7 +1,29 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.pades;
 
 import static org.junit.Assert.assertEquals;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -11,7 +33,7 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
-import eu.europa.esig.dss.pdf.PdfDict;
+import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.pdf.PdfDssDict;
 import eu.europa.esig.dss.pdf.PdfSignatureOrDocTimestampInfo;
 import eu.europa.esig.dss.pdf.PdfSignatureOrDocTimestampInfoComparator;
@@ -19,11 +41,15 @@ import eu.europa.esig.dss.pdf.PdfSignatureOrDocTimestampInfoComparator;
 public class PdfSignatureOrDocTimestampInfoComparatorTest {
 
 	private MockPdfSignature mock0;
+	private MockPdfSignature strange;
+	private MockPdfSignature mock0bis;
 	private MockPdfSignature mock1;
 	private MockPdfSignature mock2;
 
 	@Before
-	public void init() {
+	public void init() throws ParseException {
+
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
 		/*
 		 * [0, 91747, 124517, 723]
@@ -31,9 +57,12 @@ public class PdfSignatureOrDocTimestampInfoComparatorTest {
 		 * [0, 160367, 193137, 642]
 		 */
 
-		mock0 = new MockPdfSignature(new int[] { 0, 91747, 124517, 723 });
+		mock0 = new MockPdfSignature(new int[] { 0, 91747, 124517, 723 }, sdf.parse("2002-01-01"));
+		strange = new MockPdfSignature(new int[] { 40000, 120000, 140000, 500 }); // length = 100 500
 		mock1 = new MockPdfSignature(new int[] { 0, 126092, 158862, 626 });
 		mock2 = new MockPdfSignature(new int[] { 0, 160367, 193137, 642 });
+
+		mock0bis = new MockPdfSignature(new int[] { 0, 91747, 124517, 723 }, sdf.parse("2004-01-01"));
 	}
 
 	@Test
@@ -82,12 +111,41 @@ public class PdfSignatureOrDocTimestampInfoComparatorTest {
 		assertEquals(mock2, listToSort.get(2));
 	}
 
+	@Test
+	public void test4() {
+		List<PdfSignatureOrDocTimestampInfo> listToSort = new ArrayList<PdfSignatureOrDocTimestampInfo>();
+
+		listToSort.add(mock0bis);
+		listToSort.add(mock0);
+
+		Collections.sort(listToSort, new PdfSignatureOrDocTimestampInfoComparator());
+
+		assertEquals(mock0, listToSort.get(0));
+		assertEquals(mock0bis, listToSort.get(1));
+	}
+
+	@Test(expected = DSSException.class)
+	public void testStrange() {
+		List<PdfSignatureOrDocTimestampInfo> listToSort = new ArrayList<PdfSignatureOrDocTimestampInfo>();
+
+		listToSort.add(strange);
+		listToSort.add(mock0);
+
+		Collections.sort(listToSort, new PdfSignatureOrDocTimestampInfoComparator());
+	}
+
 	private class MockPdfSignature implements PdfSignatureOrDocTimestampInfo {
 
 		private int[] byteRange;
+		private Date signingDate;
 
 		MockPdfSignature(int[] byteRange) {
+			this(byteRange, null);
+		}
+
+		MockPdfSignature(int[] byteRange, Date signingDate) {
 			this.byteRange = byteRange;
+			this.signingDate = signingDate;
 		}
 
 		@Override
@@ -121,16 +179,11 @@ public class PdfSignatureOrDocTimestampInfoComparatorTest {
 
 		@Override
 		public Date getSigningDate() {
-			return null;
+			return signingDate;
 		}
 
 		@Override
 		public byte[] getSignedDocumentBytes() {
-			return null;
-		}
-
-		@Override
-		public byte[] getOriginalBytes() {
 			return null;
 		}
 
@@ -169,8 +222,8 @@ public class PdfSignatureOrDocTimestampInfoComparatorTest {
 		}
 
 		@Override
-		public PdfDict getSignatureDictionary() {
-			return null;
+		public boolean isCoverAllOriginalBytes() {
+			return false;
 		}
 
 	}

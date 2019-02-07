@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.validation.process.vpfswatsp;
 
 import java.util.Collections;
@@ -13,6 +33,7 @@ import eu.europa.esig.dss.jaxb.detailedreport.XmlConstraintsConclusion;
 import eu.europa.esig.dss.jaxb.detailedreport.XmlPSV;
 import eu.europa.esig.dss.jaxb.detailedreport.XmlSignature;
 import eu.europa.esig.dss.jaxb.detailedreport.XmlValidationProcessArchivalData;
+import eu.europa.esig.dss.jaxb.detailedreport.XmlValidationProcessLongTermData;
 import eu.europa.esig.dss.jaxb.detailedreport.XmlValidationProcessTimestamps;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.policy.Context;
@@ -34,7 +55,7 @@ public class ValidationProcessForSignaturesWithArchivalData extends Chain<XmlVal
 
 	private static final Logger LOG = LoggerFactory.getLogger(ValidationProcessForSignaturesWithArchivalData.class);
 
-	private final XmlConstraintsConclusion validationProcessLongTermData;
+	private final XmlValidationProcessLongTermData validationProcessLongTermData;
 	private final List<XmlValidationProcessTimestamps> validationProcessTimestamps;
 	private final SignatureWrapper signature;
 	private final DiagnosticData diagnosticData;
@@ -96,6 +117,7 @@ public class ValidationProcessForSignaturesWithArchivalData extends Chain<XmlVal
 		 * - In all other cases, the long term validation process shall fail with returned code and information.
 		 */
 		ChainItem<XmlValidationProcessArchivalData> item = firstItem = longTermValidation();
+		result.setBestSignatureTime(validationProcessLongTermData.getBestSignatureTime());
 		if (isValid(validationProcessLongTermData)) {
 			return;
 		}
@@ -160,7 +182,7 @@ public class ValidationProcessForSignaturesWithArchivalData extends Chain<XmlVal
 					 */
 
 				} else { // timestampValidation is null
-					LOG.error("No timestamp validation found for timestamp " + newestTimestamp.getId());
+					LOG.error("No timestamp validation found for timestamp {}", newestTimestamp.getId());
 				}
 			}
 		}

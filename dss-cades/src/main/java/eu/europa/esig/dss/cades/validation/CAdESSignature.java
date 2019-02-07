@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -37,7 +37,6 @@ import static org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers.id_aa_signatureTi
 import static org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers.id_aa_signingCertificate;
 import static org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers.id_aa_signingCertificateV2;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,7 +46,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
@@ -58,6 +59,10 @@ import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.ASN1String;
 import org.bouncycastle.asn1.ASN1UTCTime;
+import org.bouncycastle.asn1.BEROctetString;
+import org.bouncycastle.asn1.BERSequence;
+import org.bouncycastle.asn1.BERSet;
+import org.bouncycastle.asn1.BERTaggedObject;
 import org.bouncycastle.asn1.DERNull;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
@@ -108,6 +113,7 @@ import org.bouncycastle.cms.SignerId;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationVerifier;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.bc.BcDigestCalculatorProvider;
 import org.bouncycastle.tsp.TimeStampToken;
 import org.slf4j.Logger;
@@ -117,15 +123,19 @@ import eu.europa.esig.dss.DSSASN1Utils;
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.DSSUtils;
+import eu.europa.esig.dss.Digest;
 import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.DigestDocument;
 import eu.europa.esig.dss.EncryptionAlgorithm;
+import eu.europa.esig.dss.InMemoryDocument;
 import eu.europa.esig.dss.MaskGenerationFunction;
+import eu.europa.esig.dss.OID;
 import eu.europa.esig.dss.SignatureAlgorithm;
 import eu.europa.esig.dss.SignatureForm;
 import eu.europa.esig.dss.SignatureLevel;
 import eu.europa.esig.dss.TokenIdentifier;
 import eu.europa.esig.dss.cades.CMSUtils;
+import eu.europa.esig.dss.cades.SignerAttributeV2;
 import eu.europa.esig.dss.cades.signature.CadesLevelBaselineLTATimestampExtractor;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
@@ -137,7 +147,9 @@ import eu.europa.esig.dss.validation.CertificateValidity;
 import eu.europa.esig.dss.validation.CertifiedRole;
 import eu.europa.esig.dss.validation.CommitmentType;
 import eu.europa.esig.dss.validation.DefaultAdvancedSignature;
+import eu.europa.esig.dss.validation.DigestMatcherType;
 import eu.europa.esig.dss.validation.OCSPRef;
+import eu.europa.esig.dss.validation.ReferenceValidation;
 import eu.europa.esig.dss.validation.SignatureCryptographicVerification;
 import eu.europa.esig.dss.validation.SignaturePolicyProvider;
 import eu.europa.esig.dss.validation.SignatureProductionPlace;
@@ -193,7 +205,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	 * @throws org.bouncycastle.cms.CMSException
 	 */
 	public CAdESSignature(final byte[] data) throws CMSException {
-		this(new CMSSignedData(data), new CertificatePool());
+		this(data, new CertificatePool());
 	}
 
 	/**
@@ -250,19 +262,8 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 		this.signerInformation = signerInformation;
 	}
 
-	/**
-	 * This method returns the certificate pool used by this instance to handle
-	 * encapsulated certificates.
-	 *
-	 * @return the certificate pool associated with the signature
-	 */
-	public CertificatePool getCertPool() {
-		return certPool;
-	}
-
 	@Override
 	public SignatureForm getSignatureForm() {
-
 		return SignatureForm.CAdES;
 	}
 
@@ -331,9 +332,9 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			}
 		}
 		if (signingCertificateValidity == null) {
-			LOG.warn("Signing certificate not found: " + signerId.getIssuer() + " " + signerId.getSerialNumber());
+			LOG.warn("Signing certificate not found: {} {}", signerId.getIssuer(), signerId.getSerialNumber());
 		} else if (!verifySignedReferencesToSigningCertificate()) {
-			LOG.warn("There is no valid signed reference to the signing certificate: " + signingCertificateValidity.getCertificateToken().getAbbreviation());
+			LOG.warn("There is no valid signed reference to the signing certificate: {}", signingCertificateValidity.getCertificateToken().getAbbreviation());
 		}
 		return candidatesForSigningCertificate;
 	}
@@ -368,7 +369,8 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 		final DigestAlgorithm digestAlgorithm = DigestAlgorithm.SHA1;
 		final byte[] signingTokenCertHash = signingCertificateValidity.getCertificateToken().getDigest(digestAlgorithm);
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Candidate Certificate Hash {} with algorithm {}", Utils.toHex(signingTokenCertHash), digestAlgorithm.getName());
+			LOG.debug("Candidate Certificate Hash {} with algorithm {}", Utils.toHex(signingTokenCertHash),
+					digestAlgorithm);
 		}
 
 		final ASN1Set attrValues = signingCertificateAttributeV1.getAttrValues();
@@ -382,7 +384,8 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 				final byte[] certHash = essCertID.getCertHash();
 				signingCertificateValidity.setDigestPresent(true);
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("Found Certificate Hash in signingCertificateAttributeV1 {} with algorithm {}", Utils.toHex(certHash), digestAlgorithm.getName());
+					LOG.debug("Found Certificate Hash in signingCertificateAttributeV1 {} with algorithm {}",
+							Utils.toHex(certHash), digestAlgorithm);
 				}
 				final IssuerSerial issuerSerial = essCertID.getIssuerSerial();
 				final boolean match = verifySigningCertificateReferences(signingTokenSerialNumber, signingTokenIssuerName, signingTokenCertHash, certHash,
@@ -417,18 +420,19 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 
 				final String algorithmId = essCertIDv2.getHashAlgorithm().getAlgorithm().getId();
 				final DigestAlgorithm digestAlgorithm = DigestAlgorithm.forOID(algorithmId);
-				signingCertificateValidity.setDigestAlgorithm(digestAlgorithm);
 				if (digestAlgorithm != lastDigestAlgorithm) {
 					signingTokenCertHash = signingCertificateValidity.getCertificateToken().getDigest(digestAlgorithm);
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("Candidate Certificate Hash {} with algorithm {}", Utils.toHex(signingTokenCertHash), digestAlgorithm.getName());
+						LOG.debug("Candidate Certificate Hash {} with algorithm {}", Utils.toHex(signingTokenCertHash),
+								digestAlgorithm);
 					}
 					lastDigestAlgorithm = digestAlgorithm;
 				}
 				final byte[] certHash = essCertIDv2.getCertHash();
 				signingCertificateValidity.setDigestPresent(true);
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("Found Certificate Hash in SigningCertificateV2 {} with algorithm {}", Utils.toHex(certHash), digestAlgorithm.getName());
+					LOG.debug("Found Certificate Hash in SigningCertificateV2 {} with algorithm {}",
+							Utils.toHex(certHash), digestAlgorithm);
 				}
 				final IssuerSerial issuerSerial = essCertIDv2.getIssuerSerial();
 				final boolean match = verifySigningCertificateReferences(signingTokenSerialNumber, signingTokenIssuerName, signingTokenCertHash, certHash,
@@ -445,7 +449,6 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	private boolean verifySigningCertificateReferences(final BigInteger signingTokenSerialNumber, final GeneralNames signingTokenIssuerName,
 			final byte[] signingTokenCertHash, final byte[] certHash, final IssuerSerial issuerSerial) {
 
-		signingCertificateValidity.setDigest(Utils.toBase64(signingTokenCertHash));
 		final boolean hashEqual = Arrays.equals(certHash, signingTokenCertHash);
 		signingCertificateValidity.setDigestEqual(hashEqual);
 
@@ -477,6 +480,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 
 		final ASN1Encodable attrValue = attribute.getAttrValues().getObjectAt(0);
 		if (attrValue instanceof DERNull) {
+			signaturePolicy = new SignaturePolicy();
 			return;
 		}
 
@@ -516,7 +520,8 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 						signaturePolicy.setUrl(policyQualifierInfoValue);
 						signaturePolicy.setPolicyContent(signaturePolicyProvider.getSignaturePolicyByUrl(policyQualifierInfoValue));
 					} else {
-						LOG.error("Unknown signature policy qualifier id: " + policyQualifierInfoId + " with value: " + policyQualifierInfoValue);
+						LOG.error("Unknown signature policy qualifier id: {} with value: {}", policyQualifierInfoId,
+								policyQualifierInfoValue);
 					}
 				} catch (Exception e) {
 					LOG.error("Unable to read SigPolicyQualifierInfo " + ii, e.getMessage());
@@ -550,14 +555,14 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 				if (!(attrValue instanceof ASN1UTCTime)) {
 					LOG.error(
 							"RFC 3852 states that dates between January 1, 1950 and December 31, 2049 (inclusive) must be encoded as UTCTime. Any dates with year values before 1950 or after 2049 must be encoded as GeneralizedTime. Date found is {} encoded as {}",
-							signingDate.toString(), attrValue.getClass());
+							signingDate, attrValue.getClass());
 					return null;
 				}
 			}
 			return signingDate;
 		}
 		if (LOG.isErrorEnabled()) {
-			LOG.error("Error when reading signing time. Unrecognized " + attrValue.getClass());
+			LOG.error("Error when reading signing time. Unrecognized {}", attrValue.getClass());
 		}
 		return null;
 	}
@@ -644,7 +649,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 						final ASN1ObjectIdentifier commitmentTypeId = commitmentTypeIndication.getCommitmentTypeId();
 						commitmentType.addIdentifier(commitmentTypeId.getId());
 					} else {
-						LOG.warn("Unsupported type for CommitmentType : " + attrValues.getObjectAt(ii).getClass());
+						LOG.warn("Unsupported type for CommitmentType : {}", attrValues.getObjectAt(ii).getClass());
 					}
 				}
 			}
@@ -656,29 +661,28 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 
 	@Override
 	public String[] getClaimedSignerRoles() {
-		final Attribute id_aa_ets_signerAttr = getSignedAttribute(PKCSObjectIdentifiers.id_aa_ets_signerAttr);
-		if (id_aa_ets_signerAttr == null) {
-			return null;
-		}
-		final ASN1Set attrValues = id_aa_ets_signerAttr.getAttrValues();
-		final ASN1Encodable attrValue = attrValues.getObjectAt(0);
+		final SignerAttribute signerAttr = getSignerAttributeV1();
+		final SignerAttributeV2 signerAttrV2 = getSignerAttributeV2();
+
+		Object[] signerAttrValues = null;
 		try {
 
-			final SignerAttribute signerAttr = SignerAttribute.getInstance(attrValue);
-			if (signerAttr == null) {
+			if (signerAttr != null) {
+				signerAttrValues = signerAttr.getValues();
+			} else if (signerAttrV2 != null) {
+				signerAttrValues = signerAttrV2.getValues();
+			}
+			if (signerAttrValues == null) {
 				return null;
 			}
+
 			final List<String> claimedRoles = new ArrayList<String>();
-			final Object[] signerAttrValues = signerAttr.getValues();
 			for (final Object signerAttrValue : signerAttrValues) {
-
 				if (!(signerAttrValue instanceof org.bouncycastle.asn1.x509.Attribute[])) {
-
 					continue;
 				}
 				final org.bouncycastle.asn1.x509.Attribute[] signerAttrValueArray = (org.bouncycastle.asn1.x509.Attribute[]) signerAttrValue;
 				for (final org.bouncycastle.asn1.x509.Attribute claimedRole : signerAttrValueArray) {
-
 					final ASN1Encodable[] attrValues1 = claimedRole.getAttrValues().toArray();
 					for (final ASN1Encodable asn1Encodable : attrValues1) {
 						if (asn1Encodable instanceof ASN1String) {
@@ -692,33 +696,30 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			final String[] strings = claimedRoles.toArray(new String[claimedRoles.size()]);
 			return strings;
 		} catch (Exception e) {
-			LOG.error("Error when dealing with claimed signer roles: [" + attrValue.toString() + "]", e);
+			LOG.error("Error when dealing with claimed signer roles: [" + signerAttrValues + "]", e);
 			return null;
 		}
 	}
 
 	@Override
 	public List<CertifiedRole> getCertifiedSignerRoles() {
-		final Attribute id_aa_ets_signerAttr = getSignedAttribute(PKCSObjectIdentifiers.id_aa_ets_signerAttr);
-		if (id_aa_ets_signerAttr == null) {
-			return null;
-		}
-		final ASN1Set attrValues = id_aa_ets_signerAttr.getAttrValues();
-		final ASN1Encodable asn1EncodableAttrValue = attrValues.getObjectAt(0);
-		try {
+		final SignerAttribute signerAttr = getSignerAttributeV1();
+		final SignerAttributeV2 signerAttrV2 = getSignerAttributeV2();
 
-			final SignerAttribute signerAttr = SignerAttribute.getInstance(asn1EncodableAttrValue);
-			if (signerAttr == null) {
+		Object[] signerAttrValues = null;
+		try {
+			if (signerAttr != null) {
+				signerAttrValues = signerAttr.getValues();
+			} else if (signerAttrV2 != null) {
+				signerAttrValues = signerAttrV2.getValues();
+			}
+			if (signerAttrValues == null) {
 				return null;
 			}
 			List<CertifiedRole> roles = null;
-			final Object[] signerAttrValues = signerAttr.getValues();
 			for (final Object signerAttrValue : signerAttrValues) {
-
 				if (signerAttrValue instanceof AttributeCertificate) {
-
 					if (roles == null) {
-
 						roles = new ArrayList<CertifiedRole>();
 					}
 					final AttributeCertificate attributeCertificate = (AttributeCertificate) signerAttrValue;
@@ -742,14 +743,42 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			}
 			return roles;
 		} catch (Exception e) {
-			LOG.error("Error when dealing with certified signer roles: [" + asn1EncodableAttrValue.toString() + "]", e);
+			LOG.error("Error when dealing with certified signer roles: [" + signerAttrValues + "]", e);
 			return null;
 		}
 	}
 
+	private SignerAttribute getSignerAttributeV1() {
+		final Attribute id_aa_ets_signerAttr = getSignedAttribute(PKCSObjectIdentifiers.id_aa_ets_signerAttr);
+		if (id_aa_ets_signerAttr != null) {
+			final ASN1Set attrValues = id_aa_ets_signerAttr.getAttrValues();
+			final ASN1Encodable attrValue = attrValues.getObjectAt(0);
+			try {
+				return SignerAttribute.getInstance(attrValue);
+			} catch (Exception e) {
+				LOG.warn("Unable to parse signerAttr " + Utils.toBase64(DSSASN1Utils.getDEREncoded(attrValue)) + "", e);
+			}
+		}
+		return null;
+	}
+
+	private SignerAttributeV2 getSignerAttributeV2() {
+		final Attribute id_aa_ets_signerAttrV2 = getSignedAttribute(OID.id_aa_ets_signerAttrV2);
+		if (id_aa_ets_signerAttrV2 != null) {
+			final ASN1Set attrValues = id_aa_ets_signerAttrV2.getAttrValues();
+			final ASN1Encodable attrValue = attrValues.getObjectAt(0);
+			try {
+				return SignerAttributeV2.getInstance(attrValue);
+			} catch (Exception e) {
+				LOG.warn("Unable to parse signerAttrV2 " + Utils.toBase64(DSSASN1Utils.getDEREncoded(attrValue)) + "", e);
+			}
+		}
+		return null;
+	}
+
 	@Override
 	public byte[] getContentTimestampData(final TimestampToken timestampToken) {
-		return getOriginalDocumentBinaries();
+		return DSSUtils.toByteArray(getOriginalDocument());
 	}
 
 	@Override
@@ -870,7 +899,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 				final ASN1Set attrValues = attribute.getAttrValues();
 				for (final ASN1Encodable value : attrValues.toArray()) {
 					if (value instanceof DEROctetString) {
-						LOG.warn("Illegal content for timestamp (OID : " + attrType + ") : OCTET STRING is not allowed !");
+						LOG.warn("Illegal content for timestamp (OID : {}) : OCTET STRING is not allowed !", attrType);
 					} else {
 						try {
 							byte[] encoded = value.toASN1Primitive().getEncoded();
@@ -977,11 +1006,69 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 
 	@Override
 	public DigestAlgorithm getDigestAlgorithm() {
-		final String digestAlgOID = signerInformation.getDigestAlgOID();
+		final SignatureAlgorithm signatureAlgorithm = getEncryptedDigestAlgo();
+		if (signatureAlgorithm != null) {
+			if (SignatureAlgorithm.RSA_SSA_PSS_SHA1_MGF1.equals(signatureAlgorithm)) {
+				return getPSSHashAlgorithm();
+			}
+			return signatureAlgorithm.getDigestAlgorithm();
+		} else {
+			try {
+				final String digestAlgOID = signerInformation.getDigestAlgOID();
+				return DigestAlgorithm.forOID(digestAlgOID);
+			} catch (DSSException e) {
+				LOG.warn(e.getMessage());
+				return null;
+			}
+		}
+	}
+
+	private SignatureAlgorithm getEncryptedDigestAlgo() {
 		try {
-			return DigestAlgorithm.forOID(digestAlgOID);
-		} catch (Exception e) {
-			LOG.error("Unable to retrieve digest algorithm : " + e.getMessage());
+			// RFC 3852 states that's a "signature algorithm" (encryption + digest algorithms) and gives as examples :
+			// RSA, DSA and ECDSA (encryption algorithm only)
+			return SignatureAlgorithm.forOID(signerInformation.getEncryptionAlgOID());
+		} catch (RuntimeException e) {
+			// purposely empty
+			return null;
+		}
+	}
+
+	public DigestAlgorithm getPSSHashAlgorithm() {
+		try {
+			byte[] encryptionAlgParams = signerInformation.getEncryptionAlgParams();
+			if (Utils.isArrayNotEmpty(encryptionAlgParams) && !Arrays.equals(DERNull.INSTANCE.getEncoded(), encryptionAlgParams)) {
+				RSASSAPSSparams param = RSASSAPSSparams.getInstance(encryptionAlgParams);
+				AlgorithmIdentifier pssHashAlgo = param.getHashAlgorithm();
+				return DigestAlgorithm.forOID(pssHashAlgo.getAlgorithm().getId());
+			}
+		} catch (IOException e) {
+			LOG.warn("Unable to analyze EncryptionAlgParams", e);
+		}
+		return null;
+	}
+
+	@Override
+	public MaskGenerationFunction getMaskGenerationFunction() {
+		try {
+			final SignatureAlgorithm signatureAlgorithm = getEncryptedDigestAlgo();
+			if (signatureAlgorithm != null) {
+				if (SignatureAlgorithm.RSA_SSA_PSS_SHA1_MGF1.equals(signatureAlgorithm)) {
+
+					byte[] encryptionAlgParams = signerInformation.getEncryptionAlgParams();
+					if (Utils.isArrayNotEmpty(encryptionAlgParams) && !Arrays.equals(DERNull.INSTANCE.getEncoded(), encryptionAlgParams)) {
+						RSASSAPSSparams param = RSASSAPSSparams.getInstance(encryptionAlgParams);
+						AlgorithmIdentifier maskGenAlgorithm = param.getMaskGenAlgorithm();
+						if (PKCSObjectIdentifiers.id_mgf1.equals(maskGenAlgorithm.getAlgorithm())) {
+							return MaskGenerationFunction.MGF1;
+						} else {
+							LOG.warn("Unsupported mask algorithm : {}", maskGenAlgorithm.getAlgorithm());
+						}
+					}
+				}
+			}
+		} catch (IOException e) {
+			LOG.warn("Unable to analyze EncryptionAlgParams", e);
 		}
 		return null;
 	}
@@ -989,26 +1076,6 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	@Override
 	public SignatureAlgorithm getSignatureAlgorithm() {
 		return SignatureAlgorithm.getAlgorithm(getEncryptionAlgorithm(), getDigestAlgorithm(), getMaskGenerationFunction());
-	}
-
-	@Override
-	public MaskGenerationFunction getMaskGenerationFunction() {
-		try {
-			byte[] encryptionAlgParams = signerInformation.getEncryptionAlgParams();
-			if (Utils.isArrayNotEmpty(encryptionAlgParams) && !Arrays.equals(DERNull.INSTANCE.getEncoded(), encryptionAlgParams)) {
-				RSASSAPSSparams param = RSASSAPSSparams.getInstance(encryptionAlgParams);
-				AlgorithmIdentifier maskGenAlgorithm = param.getMaskGenAlgorithm();
-				if (PKCSObjectIdentifiers.id_mgf1.equals(maskGenAlgorithm.getAlgorithm())) {
-					AlgorithmIdentifier hashAlgo = param.getHashAlgorithm();
-					return MaskGenerationFunction.fromDigestAlgo(hashAlgo.getAlgorithm().getId());
-				} else {
-					LOG.warn("Unsupported mask algorithm : {}", maskGenAlgorithm.getAlgorithm());
-				}
-			}
-		} catch (IOException e) {
-			LOG.warn("Unable to analyze EncryptionAlgParams", e);
-		}
-		return null;
 	}
 
 	@Override
@@ -1036,44 +1103,86 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			} else {
 				signerInformationToCheck = signerInformation;
 			}
-			signatureCryptographicVerification.setReferenceDataFound(true);
+
+			boolean referenceDataFound = true;
+			boolean referenceDataIntact = true;
+			List<ReferenceValidation> refValidations = getReferenceValidations();
+			for (ReferenceValidation referenceValidation : refValidations) {
+				referenceDataFound = referenceDataFound && referenceValidation.isFound();
+				referenceDataIntact = referenceDataIntact && referenceValidation.isIntact();
+			}
+			signatureCryptographicVerification.setReferenceDataFound(referenceDataFound);
+			signatureCryptographicVerification.setReferenceDataIntact(referenceDataIntact);
+
 			LOG.debug("CHECK SIGNATURE VALIDITY: ");
 			if (signingCertificateValidity != null) {
 				// for (final CertificateValidity certificateValidity :
 				// certificateValidityList) {
 
 				try {
-
-					// In the case where one of the mandatory attributes is
-					// missing we set already the candidate for the signing
-					// certificate.
-					// see: validation.at.nqs.bdc.TestNotQualifiedBDC.test1()
 					candidatesForSigningCertificate.setTheCertificateValidity(signingCertificateValidity);
 
 					final JcaSimpleSignerInfoVerifierBuilder verifier = new JcaSimpleSignerInfoVerifierBuilder();
+					verifier.setProvider(BouncyCastleProvider.PROVIDER_NAME);
+
 					final CertificateToken certificateToken = signingCertificateValidity.getCertificateToken();
 					final PublicKey publicKey = certificateToken.getPublicKey();
 					final SignerInformationVerifier signerInformationVerifier = verifier.build(publicKey);
-					LOG.debug(" - WITH SIGNING CERTIFICATE: " + certificateToken.getAbbreviation());
+					LOG.debug(" - WITH SIGNING CERTIFICATE: {}", certificateToken.getAbbreviation());
 					boolean signatureIntact = signerInformationToCheck.verify(signerInformationVerifier);
-					signatureCryptographicVerification.setReferenceDataIntact(signatureIntact);
 					signatureCryptographicVerification.setSignatureIntact(signatureIntact);
 
 				} catch (Exception e) {
 					LOG.error("Unable to validate CMS Signature : " + e.getMessage(), e);
 					signatureCryptographicVerification.setErrorMessage(e.getMessage());
-					signatureCryptographicVerification.setReferenceDataIntact(false);
 					signatureCryptographicVerification.setSignatureIntact(false);
 				}
 			}
-		} catch (CMSException e) {
-			LOG.error(e.getMessage(), e);
-			signatureCryptographicVerification.setErrorMessage(e.getMessage());
-		} catch (IOException e) {
+		} catch (CMSException | IOException e) {
 			LOG.error(e.getMessage(), e);
 			signatureCryptographicVerification.setErrorMessage(e.getMessage());
 		}
-		LOG.debug(" - RESULT: " + signatureCryptographicVerification.toString());
+		LOG.debug(" - RESULT: {}", signatureCryptographicVerification);
+	}
+
+	@Override
+	public List<ReferenceValidation> getReferenceValidations() {
+		if (referenceValidations == null) {
+			referenceValidations = new ArrayList<ReferenceValidation>();
+			ReferenceValidation validation = new ReferenceValidation();
+			validation.setType(DigestMatcherType.MESSAGE_DIGEST);
+
+			DSSDocument originalDocument = null;
+			try {
+				originalDocument = getOriginalDocument();
+			} catch (DSSException e) {
+				validation.setFound(false);
+			}
+
+			Set<DigestAlgorithm> messageDigestAlgorithms = getMessageDigestAlgorithms();
+			byte[] expectedMessageDigestValue = getMessageDigestValue();
+			if (Utils.isCollectionNotEmpty(messageDigestAlgorithms) && Utils.isArrayNotEmpty(expectedMessageDigestValue)
+					&& (originalDocument != null)) {
+
+				validation.setFound(true);
+				Digest messageDigest = new Digest();
+				messageDigest.setValue(expectedMessageDigestValue);
+
+				// try to match with found digest algorithm(s)
+				for (DigestAlgorithm digestAlgorithm : messageDigestAlgorithms) {
+					String digest = originalDocument.getDigest(digestAlgorithm);
+					if (Arrays.equals(expectedMessageDigestValue, Utils.fromBase64(digest))) {
+						messageDigest.setAlgorithm(digestAlgorithm);
+						validation.setIntact(true);
+						break;
+					}
+				}
+				validation.setDigest(messageDigest);
+			}
+
+			referenceValidations.add(validation);
+		}
+		return referenceValidations;
 	}
 
 	/**
@@ -1125,6 +1234,29 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	public void checkSigningCertificate() {
 
 		// TODO-Bob (13/07/2014):
+	}
+
+	public Set<DigestAlgorithm> getMessageDigestAlgorithms() {
+		Set<DigestAlgorithm> result = new HashSet<DigestAlgorithm>();
+		Set<AlgorithmIdentifier> digestAlgorithmIDs = cmsSignedData.getDigestAlgorithmIDs();
+		for (AlgorithmIdentifier algorithmIdentifier : digestAlgorithmIDs) {
+			String oid = algorithmIdentifier.getAlgorithm().getId();
+			try {
+				result.add(DigestAlgorithm.forOID(oid));
+			} catch (DSSException e) {
+				LOG.warn("Not a digest algorithm {} : {}", oid, e.getMessage());
+			}
+		}
+		return result;
+	}
+
+	public byte[] getMessageDigestValue() {
+		final Attribute messageDigestAttribute = getSignedAttribute(PKCSObjectIdentifiers.pkcs_9_at_messageDigest);
+		if (messageDigestAttribute == null) {
+			return null;
+		}
+		final ASN1OctetString asn1OctetString = (ASN1OctetString) messageDigestAttribute.getAttrValues().getObjectAt(0);
+		return asn1OctetString.getOctets();
 	}
 
 	@Override
@@ -1352,10 +1484,18 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	public byte[] getArchiveTimestampData(final TimestampToken timestampToken, String canonicalizationMethod) throws DSSException {
 
 		final ArchiveTimestampType archiveTimestampType = timestampToken.getArchiveTimestampType();
-		final byte[] archiveTimestampData;
+		byte[] archiveTimestampData;
 		switch (archiveTimestampType) {
 		case CAdES_V2:
+			/**
+			 * There is a difference between message imprint calculation in ETSI TS 101 733 version 1.8.3 and version 2.2.1.
+			 * So we first check the message imprint according to 2.2.1 version and then if it fails get the message imprint
+			 * data for the 1.8.3 version message imprint calculation. 
+			 */
 			archiveTimestampData = getArchiveTimestampDataV2(timestampToken);
+			if (!timestampToken.matchData(archiveTimestampData, true)) {
+				archiveTimestampData = getArchiveTimestampDataV2(timestampToken, false);
+			}
 			break;
 		case CAdES_v3:
 			archiveTimestampData = getArchiveTimestampDataV3(timestampToken);
@@ -1371,28 +1511,18 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 		final CadesLevelBaselineLTATimestampExtractor timestampExtractor = new CadesLevelBaselineLTATimestampExtractor(this);
 		final Attribute atsHashIndexAttribute = timestampExtractor.getVerifiedAtsHashIndex(signerInformation, timestampToken);
 
-		byte[] originalDocumentBytes = getOriginalDocumentBinaries();
 		final DigestAlgorithm signedDataDigestAlgorithm = timestampToken.getSignedDataDigestAlgo();
-		byte[] originalDocumentDigest = DSSUtils.digest(signedDataDigestAlgorithm, originalDocumentBytes);
+		byte[] originalDocumentDigest = DSSUtils.digest(signedDataDigestAlgorithm, getOriginalDocument());
 		byte[] archiveTimestampData = timestampExtractor.getArchiveTimestampDataV3(signerInformation, atsHashIndexAttribute, originalDocumentDigest);
 		return archiveTimestampData;
 	}
 
-	public byte[] getOriginalDocumentBinaries() {
-		try (InputStream is = getOriginalDocumentStream()) {
-			return Utils.toByteArray(is);
-		} catch (Exception e) {
-			LOG.warn("Unable to retrieve original document binaries", e);
-			return DSSUtils.EMPTY_BYTE_ARRAY;
-		}
-	}
-
-	public InputStream getOriginalDocumentStream() throws DSSException {
+	public DSSDocument getOriginalDocument() throws DSSException {
 		final CMSTypedData signedContent = cmsSignedData.getSignedContent();
 		if (signedContent != null) {
-			return new ByteArrayInputStream(CMSUtils.getSignedContent(signedContent));
+			return new InMemoryDocument(CMSUtils.getSignedContent(signedContent));
 		} else if (Utils.collectionSize(detachedContents) == 1) {
-			return detachedContents.get(0).openStream();
+			return detachedContents.get(0);
 		} else {
 			throw new DSSException("Only enveloping and detached signatures are supported");
 		}
@@ -1434,40 +1564,75 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	 * @throws DSSException
 	 */
 	private byte[] getArchiveTimestampDataV2(TimestampToken timestampToken) throws DSSException {
+		return getArchiveTimestampDataV2(timestampToken, true);
+	}
+	
+	/**
+	 * There is a difference in ETSI TS 101 733 version 1.8.3 and version 2.2.1 in archive-timestamp-v2 hash calculation.
+	 * In the 1.8.3 version the calculation did not include the tag and the length octets of the unsigned attributes set.
+	 * The hash calculation is described in Annex K in both versions of ETSI TS 101 733.
+	 * The differences are in TableK.3: Signed Data in rows 22 and 23.
+	 * However, there is a note in 2.2.1 version (Annex K, Table K.3: SignedData, Note 3) that says:
+	 * "A previous version of CAdES did not include the tag and length octets of this SET OF type
+	 * of unsignedAttrs element in this annex, which contradicted the normative section. To maximize
+	 * interoperability, it is recommended to simultaneously compute the two hash values
+	 * (including and not including the tag and length octets of SET OF type) and to test
+	 * the value of the timestamp against both."
+	 * The includeUnsignedAttrsTagAndLength parameter decides whether the tag and length octets are included.
+	 * 
+	 * According to RFC 5652 it is possible to use DER or BER encoding for SignedData structure.
+	 * The exception is the signed attributes attribute and authenticated attributes attributes which
+	 * have to be DER encoded. 
+	 * 
+	 * @param timestampToken
+	 * @param includeUnsignedAttrsTagAndLength
+	 * @return
+	 * @throws DSSException
+	 */
+	private byte[] getArchiveTimestampDataV2(TimestampToken timestampToken, boolean includeUnsignedAttrsTagAndLength) throws DSSException {
 
 		try (ByteArrayOutputStream data = new ByteArrayOutputStream(); ByteArrayOutputStream signerByteArrayOutputStream = new ByteArrayOutputStream()) {
 
 			final ContentInfo contentInfo = cmsSignedData.toASN1Structure();
 			final SignedData signedData = SignedData.getInstance(contentInfo.getContent());
-
-			ContentInfo content = signedData.getEncapContentInfo();
-			if ((content == null) || (content.getContent() == null)) {
+			final ContentInfo content = signedData.getEncapContentInfo();
+			byte[] contentInfoBytes;
+			if (content.getContent() instanceof BEROctetString) {
+				contentInfoBytes = DSSASN1Utils.getBEREncoded(content);
+			} else {
+				contentInfoBytes = DSSASN1Utils.getDEREncoded(content);
+			}
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("Content Info: {}", DSSUtils.toHex(contentInfoBytes));
+			}
+			data.write(contentInfoBytes);
+			if (isDetachedSignature()) {
 				/*
-				 * Detached signatures have either no encapContentInfo in
-				 * signedData, or it exists but has no eContent
+				 * Detached signatures have either no encapContentInfo in signedData, or it
+				 * exists but has no eContent
 				 */
-				byte[] originalDocumentBinaries = getOriginalDocumentBinaries();
+				byte[] originalDocumentBinaries = DSSUtils.toByteArray(getOriginalDocument());
 				if (Utils.isArrayNotEmpty(originalDocumentBinaries)) {
-					data.write(content.toASN1Primitive().getEncoded());
 					data.write(originalDocumentBinaries);
 				} else {
 					throw new DSSException("Signature is detached and no original data provided.");
 				}
-			} else {
-
-				ASN1OctetString octet = (ASN1OctetString) content.getContent();
-
-				ContentInfo info2 = new ContentInfo(PKCSObjectIdentifiers.data, octet);
-				final byte[] contentInfoBytes = info2.getEncoded();
-				if (LOG.isTraceEnabled()) {
-					LOG.trace("Content Info: {}", DSSUtils.toHex(contentInfoBytes));
-				}
-				data.write(contentInfoBytes);
 			}
+			
 			final ASN1Set certificates = signedData.getCertificates();
 			if (certificates != null) {
 
-				final byte[] certificatesBytes = new DERTaggedObject(false, 0, new DERSequence(certificates.toArray())).getEncoded();
+				byte[] certificatesBytes = null;
+				/*
+				 * In order to calculate correct message imprint it is important
+				 * to use the correct encoding.
+				 */
+				if (certificates instanceof BERSet) {
+					certificatesBytes = new BERTaggedObject(false, 0, new BERSequence(certificates.toArray())).getEncoded();
+				} else {
+					certificatesBytes = new DERTaggedObject(false, 0, new DERSequence(certificates.toArray())).getEncoded();
+				}
+				
 				if (LOG.isTraceEnabled()) {
 					LOG.trace("Certificates: {}", DSSUtils.toHex(certificatesBytes));
 				}
@@ -1485,7 +1650,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			final SignerInfo signerInfo = signerInformation.toASN1Structure();
 			final ASN1Set unauthenticatedAttributes = signerInfo.getUnauthenticatedAttributes();
 			final ASN1Sequence filteredUnauthenticatedAttributes = filterUnauthenticatedAttributes(unauthenticatedAttributes, timestampToken);
-			final ASN1Sequence asn1Object = getSignerInfoEncoded(signerInfo, filteredUnauthenticatedAttributes);
+			final ASN1Sequence asn1Object = getSignerInfoEncoded(signerInfo, filteredUnauthenticatedAttributes, includeUnsignedAttrsTagAndLength);
 			for (int ii = 0; ii < asn1Object.size(); ii++) {
 				final byte[] signerInfoBytes = DSSASN1Utils.getDEREncoded(asn1Object.getObjectAt(ii).toASN1Primitive());
 				signerByteArrayOutputStream.write(signerInfoBytes);
@@ -1512,13 +1677,26 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	/**
 	 * Copied from org.bouncycastle.asn1.cms.SignerInfo#toASN1Object() and
 	 * adapted to be able to use the custom unauthenticatedAttributes
+	 * 
+	 * There is a difference in ETSI TS 101 733 version 1.8.3 and version 2.2.1 in archive-timestamp-v2 hash calculation.
+	 * In the 1.8.3 version the calculation did not include the tag and the length octets of the unsigned attributes set.
+	 * The hash calculation is described in Annex K in both versions of ETSI TS 101 733.
+	 * The differences are in TableK.3: Signed Data in rows 22 and 23.
+	 * However, there is a note in 2.2.1 version (Annex K, Table K.3: SignedData, Note 3) that says:
+	 * "A previous version of CAdES did not include the tag and length octets of this SET OF type
+	 * of unsignedAttrs element in this annex, which contradicted the normative section. To maximize
+	 * interoperability, it is recommended to imultaneously compute the two hash values
+	 * (including and not including the tag and length octets of SET OF type) and to test
+	 * the value of the timestamp against both."
+	 * The includeUnsignedAttrsTagAndLength parameter decides whether the tag and length octets are included.
 	 *
 	 * @param signerInfo
 	 * @param signerInfo
 	 * @param unauthenticatedAttributes
+	 * @param includeUnsignedAttrsTagAndLength
 	 * @return
 	 */
-	private ASN1Sequence getSignerInfoEncoded(final SignerInfo signerInfo, final ASN1Encodable unauthenticatedAttributes) {
+	private ASN1Sequence getSignerInfoEncoded(final SignerInfo signerInfo, final ASN1Sequence unauthenticatedAttributes, final boolean includeUnsignedAttrsTagAndLength) {
 
 		ASN1EncodableVector v = new ASN1EncodableVector();
 
@@ -1535,8 +1713,15 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 		v.add(signerInfo.getEncryptedDigest());
 
 		if (unauthenticatedAttributes != null) {
-			v.add(new DERTaggedObject(false, 1, unauthenticatedAttributes));
+			if (includeUnsignedAttrsTagAndLength) {
+				v.add(new DERTaggedObject(false, 1, unauthenticatedAttributes));
+			} else {
+				for (int i = 0; i < unauthenticatedAttributes.size(); i++) {
+					v.add(unauthenticatedAttributes.getObjectAt(i));
+				}
+			}
 		}
+		
 
 		return new DERSequence(v);
 	}

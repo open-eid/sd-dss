@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.2.d4j.4</version>
+		<version>5.4.d4j.1</version>
 	</parent>
 	<artifactId>dss-reports</artifactId>
 	<name>DSS Reports</name>
@@ -30,6 +30,10 @@
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-simple-report-jaxb</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-simple-certificate-report-jaxb</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>${dss.groupId}</groupId>

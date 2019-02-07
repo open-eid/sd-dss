@@ -1,6 +1,5 @@
+*.versionsBackup
+.*
 *.iml
-.idea
-.svn
 target
-log.out
-pom.xml.asc
+**/*.asc

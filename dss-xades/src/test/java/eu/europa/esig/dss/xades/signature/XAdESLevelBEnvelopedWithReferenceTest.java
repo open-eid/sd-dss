@@ -1,26 +1,25 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 package eu.europa.esig.dss.xades.signature;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -29,8 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.xml.namespace.NamespaceContext;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
@@ -45,18 +42,18 @@ import org.w3c.dom.Node;
 
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.DigestAlgorithm;
+import eu.europa.esig.dss.DomUtils;
 import eu.europa.esig.dss.FileDocument;
-import eu.europa.esig.dss.MimeType;
 import eu.europa.esig.dss.SignatureLevel;
 import eu.europa.esig.dss.SignaturePackaging;
-import eu.europa.esig.dss.signature.AbstractPkiFactoryTestDocumentSignatureService;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
+import eu.europa.esig.dss.validation.reports.wrapper.DiagnosticData;
 import eu.europa.esig.dss.xades.DSSReference;
 import eu.europa.esig.dss.xades.DSSTransform;
 import eu.europa.esig.dss.xades.SantuarioInitializer;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 
-public class XAdESLevelBEnvelopedWithReferenceTest extends AbstractPkiFactoryTestDocumentSignatureService<XAdESSignatureParameters> {
+public class XAdESLevelBEnvelopedWithReferenceTest extends AbstractXAdESTestSignature {
 
 	private DocumentSignatureService<XAdESSignatureParameters> service;
 	private XAdESSignatureParameters signatureParameters;
@@ -107,12 +104,10 @@ public class XAdESLevelBEnvelopedWithReferenceTest extends AbstractPkiFactoryTes
 
 	@Override
 	protected void onDocumentSigned(byte[] byteArray) {
-		try {
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			dbf.setNamespaceAware(true);
+		super.onDocumentSigned(byteArray);
 
-			DocumentBuilder db = dbf.newDocumentBuilder();
-			Document doc = db.parse(new ByteArrayInputStream(byteArray));
+		try {
+			Document doc = DomUtils.buildDOM(byteArray);
 
 			XPathFactory f = XPathFactory.newInstance();
 			XPath xPath = f.newXPath();
@@ -136,6 +131,11 @@ public class XAdESLevelBEnvelopedWithReferenceTest extends AbstractPkiFactoryTes
 	}
 
 	@Override
+	protected void getOriginalDocument(DSSDocument signedDocument, DiagnosticData diagnosticData) {
+		// Ignored sampleWithPlaceOfSignature itself is not covered
+	}
+
+	@Override
 	protected DocumentSignatureService<XAdESSignatureParameters> getService() {
 		return service;
 	}
@@ -143,21 +143,6 @@ public class XAdESLevelBEnvelopedWithReferenceTest extends AbstractPkiFactoryTes
 	@Override
 	protected XAdESSignatureParameters getSignatureParameters() {
 		return signatureParameters;
-	}
-
-	@Override
-	protected MimeType getExpectedMime() {
-		return MimeType.XML;
-	}
-
-	@Override
-	protected boolean isBaselineT() {
-		return false;
-	}
-
-	@Override
-	protected boolean isBaselineLTA() {
-		return false;
 	}
 
 	@Override

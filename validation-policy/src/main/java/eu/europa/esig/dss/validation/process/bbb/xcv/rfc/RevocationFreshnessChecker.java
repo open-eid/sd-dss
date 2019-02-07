@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.validation.process.bbb.xcv.rfc;
 
 import java.util.Date;
@@ -35,8 +55,7 @@ public class RevocationFreshnessChecker extends Chain<XmlRFC> {
 	private final Context context;
 	private final SubContext subContext;
 
-	public RevocationFreshnessChecker(RevocationWrapper revocationData, Date validationDate, Context context,
-			SubContext subContext, ValidationPolicy policy) {
+	public RevocationFreshnessChecker(RevocationWrapper revocationData, Date validationDate, Context context, SubContext subContext, ValidationPolicy policy) {
 		super(new XmlRFC());
 
 		this.revocationData = revocationData;
@@ -53,6 +72,9 @@ public class RevocationFreshnessChecker extends Chain<XmlRFC> {
 		ChainItem<XmlRFC> item = firstItem = revocationDataAvailable(revocationData);
 
 		if (revocationData != null) {
+
+			result.setId(revocationData.getId());
+
 			/*
 			 * 1) The building block shall get the maximum accepted revocation
 			 * freshness from the X.509 validation constraints for the given
@@ -112,15 +134,13 @@ public class RevocationFreshnessChecker extends Chain<XmlRFC> {
 		 * freshness.
 		 */
 		else {
-			return new RevocationDataFreshCheckWithNullConstraint(result, revocationData, validationDate,
-					getFailLevelConstraint());
+			return new RevocationDataFreshCheckWithNullConstraint(result, revocationData, validationDate, getFailLevelConstraint());
 		}
 
 	}
 
 	private ChainItem<XmlRFC> revocationCryptographic(RevocationWrapper revocationData) {
-		CryptographicConstraint cryptographicConstraint = policy.getCertificateCryptographicConstraint(context,
-				subContext);
+		CryptographicConstraint cryptographicConstraint = policy.getCertificateCryptographicConstraint(context, subContext);
 		return new CryptographicCheck<XmlRFC>(result, revocationData, validationDate, cryptographicConstraint);
 	}
 

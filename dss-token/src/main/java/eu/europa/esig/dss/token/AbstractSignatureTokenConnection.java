@@ -1,25 +1,26 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 package eu.europa.esig.dss.token;
 
+import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.MGF1ParameterSpec;
@@ -61,11 +62,11 @@ public abstract class AbstractSignatureTokenConnection implements SignatureToken
 		LOG.info("Signature algorithm : {}", javaSignatureAlgorithm);
 
 		try {
-			final Signature signature = Signature.getInstance(javaSignatureAlgorithm);
+			final Signature signature = getSignatureInstance(javaSignatureAlgorithm);
 			signature.initSign(((KSPrivateKeyEntry) keyEntry).getPrivateKey());
 
 			if (mgf != null) {
-				signature.setParameter(createPSSParam(mgf));
+				signature.setParameter(createPSSParam(digestAlgorithm));
 			}
 
 			signature.update(toBeSigned.getBytes());
@@ -80,8 +81,12 @@ public abstract class AbstractSignatureTokenConnection implements SignatureToken
 
 	}
 
-	private AlgorithmParameterSpec createPSSParam(MaskGenerationFunction mgf) {
-		String digestJavaName = mgf.getDigestAlgorithm().getJavaName();
-		return new PSSParameterSpec(digestJavaName, "MGF1", new MGF1ParameterSpec(digestJavaName), mgf.getSaltLength(), 1);
+	protected Signature getSignatureInstance(final String javaSignatureAlgorithm) throws NoSuchAlgorithmException {
+		return Signature.getInstance(javaSignatureAlgorithm);
+	}
+
+	protected AlgorithmParameterSpec createPSSParam(DigestAlgorithm digestAlgo) {
+		String digestJavaName = digestAlgo.getJavaName();
+		return new PSSParameterSpec(digestJavaName, "MGF1", new MGF1ParameterSpec(digestJavaName), digestAlgo.getSaltLength(), 1);
 	}
 }

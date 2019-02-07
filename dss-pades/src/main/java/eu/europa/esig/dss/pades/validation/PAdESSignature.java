@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -22,9 +22,11 @@ package eu.europa.esig.dss.pades.validation;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -89,6 +91,9 @@ public class PAdESSignature extends CAdESSignature {
 
 	@Override
 	public SignatureForm getSignatureForm() {
+		if (hasPKCS7SubFilter()) {
+			return SignatureForm.PKCS7;
+		}
 		return SignatureForm.PAdES;
 	}
 
@@ -163,9 +168,9 @@ public class PAdESSignature extends CAdESSignature {
 
 			if (outerSignature.isTimestamp() && (outerSignature instanceof PdfDocTimestampInfo)) {
 
-				final PdfDocTimestampInfo pdfBoxTimestampInfo = (PdfDocTimestampInfo) outerSignature;
+				final PdfDocTimestampInfo timestampInfo = (PdfDocTimestampInfo) outerSignature;
 				// do not return this timestamp if it's an archive timestamp
-				final TimestampToken timestampToken = pdfBoxTimestampInfo.getTimestampToken();
+				final TimestampToken timestampToken = timestampInfo.getTimestampToken();
 				if (timestampToken.getTimeStampType() == TimestampType.SIGNATURE_TIMESTAMP) {
 
 					timestampToken.setTimestampedReferences(getSignatureTimestampedReferences());
@@ -203,9 +208,9 @@ public class PAdESSignature extends CAdESSignature {
 
 			if (outerSignature.isTimestamp()) {
 
-				PdfDocTimestampInfo pdfBoxTimestampInfo = (PdfDocTimestampInfo) outerSignature;
+				PdfDocTimestampInfo timestampInfo = (PdfDocTimestampInfo) outerSignature;
 				// return this timestamp if it's an archive timestamp
-				final TimestampToken timestampToken = pdfBoxTimestampInfo.getTimestampToken();
+				final TimestampToken timestampToken = timestampInfo.getTimestampToken();
 				if (timestampToken.getTimeStampType() == TimestampType.ARCHIVE_TIMESTAMP) {
 					final List<TimestampReference> references = getSignatureTimestampedReferences();
 					for (final String timestampId : timestampedTimestamps) {
@@ -257,16 +262,23 @@ public class PAdESSignature extends CAdESSignature {
 	@Override
 	public List<CertificateRef> getCertificateRefs() {
 		List<CertificateRef> refs = new ArrayList<CertificateRef>();
+		// other are unsigned and should be added in the DSS Dictionary
+		List<CertificateToken> encapsulatedCertificates = getCAdESSignature().getCertificateSource().getKeyInfoCertificates();
+		addCertRefs(refs, encapsulatedCertificates);
 		if (dssDictionary != null) {
-			Set<CertificateToken> certList = dssDictionary.getCertList();
-			for (CertificateToken certificateToken : certList) {
-				CertificateRef ref = new CertificateRef();
-				ref.setDigestAlgorithm(DigestAlgorithm.SHA1);
-				ref.setDigestValue(certificateToken.getDigest(DigestAlgorithm.SHA1));
-				refs.add(ref);
-			}
+			Map<Long, CertificateToken> certMap = dssDictionary.getCertMap();
+			addCertRefs(refs, certMap.values());
 		}
 		return refs;
+	}
+
+	private void addCertRefs(List<CertificateRef> refs, Collection<CertificateToken> encapsulatedCertificates) {
+		for (CertificateToken certificateToken : encapsulatedCertificates) {
+			CertificateRef ref = new CertificateRef();
+			ref.setDigestAlgorithm(DigestAlgorithm.SHA1);
+			ref.setDigestValue(certificateToken.getDigest(DigestAlgorithm.SHA1));
+			refs.add(ref);
+		}
 	}
 
 	@Override
@@ -345,6 +357,10 @@ public class PAdESSignature extends CAdESSignature {
 		return DSSUtils.getMD5Digest(baos.toByteArray());
 	}
 
+	public int[] getSignatureByteRange() {
+		return pdfSignatureInfo.getSignatureByteRange();
+	}
+
 	@Override
 	public List<TimestampReference> getTimestampedReferences() {
 		/* Not applicable for PAdES */
@@ -358,41 +374,42 @@ public class PAdESSignature extends CAdESSignature {
 		case PDF_NOT_ETSI:
 			break;
 		case PAdES_BASELINE_LTA:
-			dataForLevelPresent = hasLTAProfile();
-			// c &= fct() will process fct() all time ; c = c && fct() will process fct() only if c is true
-			dataForLevelPresent = dataForLevelPresent && isDataForSignatureLevelPresent(SignatureLevel.PAdES_BASELINE_LT);
+			dataForLevelPresent = hasLTAProfile() && hasLTProfile() && hasCAdESDetachedSubFilter();
 			break;
 		case PKCS7_LTA:
-			dataForLevelPresent = hasLTAProfile();
-			dataForLevelPresent = dataForLevelPresent && isDataForSignatureLevelPresent(SignatureLevel.PKCS7_LT);
+			dataForLevelPresent = hasLTAProfile() && hasLTProfile() && hasPKCS7SubFilter();
 			break;
 		case PAdES_BASELINE_LT:
-			dataForLevelPresent = hasLTProfile();
-			dataForLevelPresent = dataForLevelPresent && isDataForSignatureLevelPresent(SignatureLevel.PAdES_BASELINE_T);
+			dataForLevelPresent = hasLTProfile() && (hasTProfile() || hasLTAProfile()) && hasCAdESDetachedSubFilter();
 			break;
 		case PKCS7_LT:
-			dataForLevelPresent = hasLTProfile();
-			dataForLevelPresent = dataForLevelPresent && isDataForSignatureLevelPresent(SignatureLevel.PKCS7_T);
+			dataForLevelPresent = hasLTProfile() && (hasTProfile() || hasLTAProfile()) && hasPKCS7SubFilter();
 			break;
 		case PAdES_BASELINE_T:
-			dataForLevelPresent = hasTProfile();
-			dataForLevelPresent = dataForLevelPresent && isDataForSignatureLevelPresent(SignatureLevel.PAdES_BASELINE_B);
+			dataForLevelPresent = hasTProfile() && hasCAdESDetachedSubFilter();
 			break;
 		case PKCS7_T:
-			dataForLevelPresent = hasTProfile();
-			dataForLevelPresent = dataForLevelPresent && isDataForSignatureLevelPresent(SignatureLevel.PKCS7_B);
+			dataForLevelPresent = hasTProfile() && hasPKCS7SubFilter();
 			break;
 		case PAdES_BASELINE_B:
-			dataForLevelPresent = (pdfSignatureInfo != null) && "ETSI.CAdES.detached".equals(pdfSignatureInfo.getSubFilter());
+			dataForLevelPresent = hasCAdESDetachedSubFilter();
 			break;
 		case PKCS7_B:
-			dataForLevelPresent = (pdfSignatureInfo != null) && "adbe.pkcs7.detached".equals(pdfSignatureInfo.getSubFilter());
+			dataForLevelPresent = hasPKCS7SubFilter();
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown level " + signatureLevel);
 		}
-		LOG.debug("Level {} found on document {} = {}", new Object[] { signatureLevel, document.getName(), dataForLevelPresent });
+		LOG.debug("Level {} found on document {} = {}", signatureLevel, document.getName(), dataForLevelPresent);
 		return dataForLevelPresent;
+	}
+
+	private boolean hasCAdESDetachedSubFilter() {
+		return (pdfSignatureInfo != null) && "ETSI.CAdES.detached".equals(pdfSignatureInfo.getSubFilter());
+	}
+
+	private boolean hasPKCS7SubFilter() {
+		return (pdfSignatureInfo != null) && "adbe.pkcs7.detached".equals(pdfSignatureInfo.getSubFilter());
 	}
 
 	@Override

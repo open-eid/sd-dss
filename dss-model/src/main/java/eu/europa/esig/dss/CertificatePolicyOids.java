@@ -1,6 +1,26 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss;
 
-public enum CertificatePolicyOids implements EtsiOid {
+public enum CertificatePolicyOids implements OidDescription {
 
 	// ------------ ETSI TS 101 456
 
@@ -18,6 +38,50 @@ public enum CertificatePolicyOids implements EtsiOid {
 	 * qcp-public-with-sscd(1)}
 	 */
 	QCP_PUBLIC_WITH_SSCD("qcp-public-with-sscd", "0.4.0.1456.1.1"),
+
+	// ------------ ETSI EN 319 411-1
+
+	/**
+	 * NCP: Normalized Certificate Policy
+	 * itu-t(0) identified-organization(4) etsi(0) other-certificate-policies(2042) policy-identifiers(1) ncp (1)
+	 */
+	NCP("normalized-certificate-policy", "0.4.0.2042.1.1"),
+
+	/**
+	 * NCP+: Normalized Certificate Policy requiring a secure cryptographic device
+	 * itu-t(0)identified-organization(4)etsi(0)other-certificate-policies(2042)policy-identifiers(1)ncpplus(2)
+	 */
+	NCPP("normalized-certificate-policy-sscd", "0.4.0.2042.1.2"),
+
+	/**
+	 * LCP: Lightweight Certificate Policy
+	 * itu-t(0)identified-organization(4)etsi(0)other-certificate-policies(2042)policy-identifiers(1)lcp(3)
+	 */
+	LCP("lightweight-certificate-policy", "0.4.0.2042.1.3"),
+
+	/**
+	 * EVCP: Extended Validation Certificate Policy
+	 * itu-t(0)identified-organization(4)etsi(0)other-certificate-policies(2042)policy-identifiers(1)evcp(4)
+	 */
+	EVCP("extended-validation-certificate-policy", "0.4.0.2042.1.4"),
+
+	/**
+	 * DVCP: Domain Validation Certificate Policy
+	 * itu-t(0)identified-organization(4)etsi(0)other-certificate-policies(2042)policy-identifiers(1)dvcp(6)
+	 */
+	DVCP("domain-validation-certificate-policy", "0.4.0.2042.1.6"),
+
+	/**
+	 * OVCP: Organizational Validation Certificate Policy
+	 * itu-t(0)identified-organization(4)etsi(0)other-certificate-policies(2042)policy-identifiers(1)ovcp(7)
+	 */
+	OVCP("organizational-validation-certificate-policy", "0.4.0.2042.1.7"),
+
+	/**
+	 * IVCP: Individual Validation Certificate Policy
+	 * itu-t(0)identified-organization(4)etsi(0)other-certificate-policies(2042)policy-identifiers(1)ivcp(8)
+	 */
+	IVCP("individual-validation-certificate-policy", "0.4.0.2042.1.8"),
 
 	// ------------ ETSI EN 319 411-2
 

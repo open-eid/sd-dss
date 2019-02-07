@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.cades.signature;
 
 import static org.junit.Assert.assertEquals;
@@ -47,7 +67,7 @@ public class CAdESDoubleLTATest extends PKIFactoryAccess {
 		DSSDocument ltaDoc = service.signDocument(doc, params, signatureValue);
 
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(ltaDoc);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 		Reports reports = validator.validateDocument();
 
 		// reports.print();
@@ -66,7 +86,7 @@ public class CAdESDoubleLTATest extends PKIFactoryAccess {
 		DSSDocument doubleLtaDoc = service.extendDocument(ltaDoc, extendParams);
 
 		validator = SignedDocumentValidator.fromDocument(doubleLtaDoc);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 		reports = validator.validateDocument();
 
 		// reports.print();
@@ -97,13 +117,14 @@ public class CAdESDoubleLTATest extends PKIFactoryAccess {
 		}
 	}
 
-	private void checkAllRevocationOnce(DiagnosticData diagnosticData) throws CMSException {
+	private void checkAllRevocationOnce(DiagnosticData diagnosticData) {
 		List<CertificateWrapper> usedCertificates = diagnosticData.getUsedCertificates();
 		for (CertificateWrapper certificateWrapper : usedCertificates) {
-			if (certificateWrapper.isTrusted() || certificateWrapper.isIdPkixOcspNoCheck()) {
+			if (certificateWrapper.isTrusted() || certificateWrapper.isSelfSigned() || certificateWrapper.isIdPkixOcspNoCheck()) {
 				continue;
 			}
-			assertEquals(1, certificateWrapper.getRevocationData().size());
+			int nbRevoc = certificateWrapper.getRevocationData().size();
+			assertEquals("Nb revoc for cert " + certificateWrapper.getCommonName() + " = " + nbRevoc, 1, nbRevoc);
 		}
 	}
 

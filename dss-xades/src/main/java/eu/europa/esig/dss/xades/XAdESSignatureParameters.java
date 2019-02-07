@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.xades;
 
 import java.util.List;
@@ -11,12 +31,12 @@ import eu.europa.esig.dss.SignatureLevel;
 
 public class XAdESSignatureParameters extends AbstractSignatureParameters {
 
-	ProfileParameters context;
+	private ProfileParameters context;
 
 	/**
 	 * The digest method used to create the digest of the signer's certificate.
 	 */
-	private DigestAlgorithm signingCertificateDigestMethod = DigestAlgorithm.SHA256;
+	private DigestAlgorithm signingCertificateDigestMethod = DigestAlgorithm.SHA512;
 
 	/**
 	 * ds:CanonicalizationMethod indicates the canonicalization algorithm: Algorithm="..." for SignedInfo.
@@ -32,6 +52,12 @@ public class XAdESSignatureParameters extends AbstractSignatureParameters {
 
 	private String xPathLocationString;
 
+	/**
+	 * In case of ENVELOPING signature, this parameter allows to include the complete XML and not its base64 encoded
+	 * value
+	 */
+	private boolean embedXML;
+
 	private boolean en319132 = true;
 
 	/**
@@ -40,11 +66,21 @@ public class XAdESSignatureParameters extends AbstractSignatureParameters {
 	private Document rootDocument;
 
 	/**
-	 * This parameter allows to produce Manifest signature (https://www.w3.org/TR/xmldsig-core/#sec-o-Manifest)
+	 * This parameter allows to produce Manifest signature (https://www.w3.org/TR/xmldsig-core/#sec-o-Manifest).
 	 */
 	private boolean manifestSignature;
 
-	private String manifestId;
+	/**
+	 * This parameter allows to add optional X509SubjectName in the tag X509Data
+	 */
+	private boolean addX509SubjectName;
+
+	/**
+	 * Optional parameter that contains the canonicalized XML of the XAdES object that was digested,
+	 * referenced from the SigningInfo, and indirectly signed when the signature value was created.
+	 * If this parameter is specified it will be used in the signed XML document.
+	 */
+	private byte[] signedAdESObject;
 
 	@Override
 	public void setSignatureLevel(SignatureLevel signatureLevel) {
@@ -67,7 +103,7 @@ public class XAdESSignatureParameters extends AbstractSignatureParameters {
 	}
 
 	/**
-	 * See {@link #setSigningCertificateDigestMethod(DigestAlgorithm).
+	 * See {@link #setSigningCertificateDigestMethod(DigestAlgorithm)}.
 	 *
 	 * @return
 	 */
@@ -154,6 +190,14 @@ public class XAdESSignatureParameters extends AbstractSignatureParameters {
 		this.en319132 = en319132;
 	}
 
+	public boolean isEmbedXML() {
+		return embedXML;
+	}
+
+	public void setEmbedXML(boolean embedXML) {
+		this.embedXML = embedXML;
+	}
+
 	public boolean isManifestSignature() {
 		return manifestSignature;
 	}
@@ -162,12 +206,20 @@ public class XAdESSignatureParameters extends AbstractSignatureParameters {
 		this.manifestSignature = manifestSignature;
 	}
 
-	public String getManifestId() {
-		return manifestId;
+	public boolean isAddX509SubjectName() {
+		return addX509SubjectName;
 	}
 
-	public void setManifestId(String manifestId) {
-		this.manifestId = manifestId;
+	public void setAddX509SubjectName(boolean addX509SubjectName) {
+		this.addX509SubjectName = addX509SubjectName;
+	}
+
+	public byte[] getSignedAdESObject() {
+		return signedAdESObject;
+	}
+
+	public void setSignedAdESObject(byte[] signedAdESObject) {
+		this.signedAdESObject = signedAdESObject;
 	}
 
 }

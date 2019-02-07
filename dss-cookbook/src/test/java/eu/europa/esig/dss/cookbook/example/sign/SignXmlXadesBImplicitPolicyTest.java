@@ -1,26 +1,24 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 package eu.europa.esig.dss.cookbook.example.sign;
-
-import java.io.IOException;
 
 import org.junit.Test;
 
@@ -33,6 +31,8 @@ import eu.europa.esig.dss.SignaturePackaging;
 import eu.europa.esig.dss.SignatureValue;
 import eu.europa.esig.dss.ToBeSigned;
 import eu.europa.esig.dss.cookbook.example.CookbookTools;
+import eu.europa.esig.dss.token.DSSPrivateKeyEntry;
+import eu.europa.esig.dss.token.SignatureTokenConnection;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 import eu.europa.esig.dss.xades.signature.XAdESService;
@@ -43,50 +43,53 @@ import eu.europa.esig.dss.xades.signature.XAdESService;
 public class SignXmlXadesBImplicitPolicyTest extends CookbookTools {
 
 	@Test
-	public void testWithImplicitPolicy() throws IOException {
+	public void testWithImplicitPolicy() throws Exception {
 
 		prepareXmlDoc();
 
-		preparePKCS12TokenAndKey();
+		try (SignatureTokenConnection signingToken = getPkcs12Token()) {
 
-		// tag::demo[]
+			DSSPrivateKeyEntry privateKey = signingToken.getKeys().get(0);
 
-		XAdESSignatureParameters parameters = new XAdESSignatureParameters();
-		parameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
-		parameters.setSignaturePackaging(SignaturePackaging.ENVELOPED);
-		parameters.setDigestAlgorithm(DigestAlgorithm.SHA256);
+			// tag::demo[]
 
-		// We set the signing certificate
-		parameters.setSigningCertificate(privateKey.getCertificate());
-		// We set the certificate chain
-		parameters.setCertificateChain(privateKey.getCertificateChain());
+			XAdESSignatureParameters parameters = new XAdESSignatureParameters();
+			parameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
+			parameters.setSignaturePackaging(SignaturePackaging.ENVELOPED);
+			parameters.setDigestAlgorithm(DigestAlgorithm.SHA256);
 
-		BLevelParameters bLevelParameters = parameters.bLevel();
+			// We set the signing certificate
+			parameters.setSigningCertificate(privateKey.getCertificate());
+			// We set the certificate chain
+			parameters.setCertificateChain(privateKey.getCertificateChain());
 
-		Policy policy = new Policy();
-		policy.setId("");
+			BLevelParameters bLevelParameters = parameters.bLevel();
 
-		bLevelParameters.setSignaturePolicy(policy);
+			Policy policy = new Policy();
+			policy.setId("");
 
-		// Create common certificate verifier
-		CommonCertificateVerifier commonCertificateVerifier = new CommonCertificateVerifier();
-		// Create xadesService for signature
-		XAdESService service = new XAdESService(commonCertificateVerifier);
+			bLevelParameters.setSignaturePolicy(policy);
 
-		// Get the SignedInfo segment that need to be signed.
-		ToBeSigned dataToSign = service.getDataToSign(toSignDocument, parameters);
+			// Create common certificate verifier
+			CommonCertificateVerifier commonCertificateVerifier = new CommonCertificateVerifier();
+			// Create xadesService for signature
+			XAdESService service = new XAdESService(commonCertificateVerifier);
 
-		// This function obtains the signature value for signed information using the
-		// private key and specified algorithm
-		DigestAlgorithm digestAlgorithm = parameters.getDigestAlgorithm();
-		SignatureValue signatureValue = signingToken.sign(dataToSign, digestAlgorithm, privateKey);
+			// Get the SignedInfo segment that need to be signed.
+			ToBeSigned dataToSign = service.getDataToSign(toSignDocument, parameters);
 
-		// We invoke the xadesService to sign the document with the signature value obtained in
-		// the previous step.
-		DSSDocument signedDocument = service.signDocument(toSignDocument, parameters, signatureValue);
+			// This function obtains the signature value for signed information using the
+			// private key and specified algorithm
+			DigestAlgorithm digestAlgorithm = parameters.getDigestAlgorithm();
+			SignatureValue signatureValue = signingToken.sign(dataToSign, digestAlgorithm, privateKey);
 
-		// end::demo[]
+			// We invoke the xadesService to sign the document with the signature value obtained in
+			// the previous step.
+			DSSDocument signedDocument = service.signDocument(toSignDocument, parameters, signatureValue);
 
-		testFinalDocument(signedDocument);
+			// end::demo[]
+
+			testFinalDocument(signedDocument);
+		}
 	}
 }

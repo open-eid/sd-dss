@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -21,15 +21,18 @@
 package eu.europa.esig.dss.extension;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.util.List;
 
 import org.junit.Test;
 
 import eu.europa.esig.dss.AbstractSignatureParameters;
 import eu.europa.esig.dss.DSSDocument;
+import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.SignatureLevel;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.signature.PKIFactoryAccess;
@@ -40,22 +43,35 @@ import eu.europa.esig.dss.validation.reports.DetailedReport;
 import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.dss.validation.reports.SimpleReport;
 import eu.europa.esig.dss.validation.reports.wrapper.DiagnosticData;
+import eu.europa.esig.dss.x509.tsp.TSPSource;
 
 public abstract class AbstractTestExtension<SP extends AbstractSignatureParameters> extends PKIFactoryAccess {
 
-	protected abstract DSSDocument getSignedDocument() throws Exception;
+	protected abstract DSSDocument getOriginalDocument();
+
+	protected abstract DSSDocument getSignedDocument(DSSDocument originalDoc);
 
 	protected abstract SignatureLevel getOriginalSignatureLevel();
 
 	protected abstract SignatureLevel getFinalSignatureLevel();
 
-	protected abstract DocumentSignatureService<SP> getSignatureServiceToExtend() throws Exception;
+	protected abstract DocumentSignatureService<SP> getSignatureServiceToExtend();
+
+	protected abstract TSPSource getUsedTSPSourceAtSignatureTime();
+
+	protected abstract TSPSource getUsedTSPSourceAtExtensionTime();
 
 	@Test
 	public void test() throws Exception {
-		DSSDocument signedDocument = getSignedDocument();
+		DSSDocument originalDocument = getOriginalDocument();
+
+		DSSDocument signedDocument = getSignedDocument(originalDocument);
+
+		String signedFilePath = "target/" + signedDocument.getName();
+		signedDocument.save(signedFilePath);
+
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(signedDocument);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 		Reports reports = validator.validateDocument();
 
 		// reports.print();
@@ -69,15 +85,18 @@ public abstract class AbstractTestExtension<SP extends AbstractSignatureParamete
 
 		DSSDocument extendedDocument = extendSignature(signedDocument);
 
-		// extendedDocument.save("target/" + extendedDocument.getName());
+		String extendedFilePath = "target/" + extendedDocument.getName();
+		extendedDocument.save(extendedFilePath);
+
+		compare(signedDocument, extendedDocument);
 
 		assertNotNull(extendedDocument);
 		assertNotNull(extendedDocument.getMimeType());
-		assertNotNull(Utils.toByteArray(extendedDocument.openStream()));
+		assertNotNull(DSSUtils.toByteArray(extendedDocument));
 		assertNotNull(extendedDocument.getName());
 
 		validator = SignedDocumentValidator.fromDocument(extendedDocument);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 		reports = validator.validateDocument();
 
 		// reports.print();
@@ -89,6 +108,24 @@ public abstract class AbstractTestExtension<SP extends AbstractSignatureParamete
 		checkFinalLevel(diagnosticData);
 		checkBLevelValid(diagnosticData);
 		checkTLevelAndValid(diagnosticData);
+
+		File fileToBeDeleted = new File(originalDocument.getAbsolutePath());
+		assertTrue(fileToBeDeleted.exists());
+		assertTrue("Cannot delete original document (IO error)", fileToBeDeleted.delete());
+		assertFalse(fileToBeDeleted.exists());
+
+		fileToBeDeleted = new File(signedFilePath);
+		assertTrue(fileToBeDeleted.exists());
+		assertTrue("Cannot delete signed document (IO error)", fileToBeDeleted.delete());
+		assertFalse(fileToBeDeleted.exists());
+
+		fileToBeDeleted = new File(extendedFilePath);
+		assertTrue(fileToBeDeleted.exists());
+		assertTrue("Cannot delete extended document (IO error)", fileToBeDeleted.delete());
+		assertFalse(fileToBeDeleted.exists());
+	}
+
+	protected void compare(DSSDocument signedDocument, DSSDocument extendedDocument) {
 	}
 
 	private DSSDocument extendSignature(DSSDocument signedDocument) throws Exception {

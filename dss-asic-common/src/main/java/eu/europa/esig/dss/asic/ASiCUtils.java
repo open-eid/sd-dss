@@ -1,5 +1,26 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.asic;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -12,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import eu.europa.esig.dss.ASiCContainerType;
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.DSSException;
+import eu.europa.esig.dss.InMemoryDocument;
 import eu.europa.esig.dss.MimeType;
 import eu.europa.esig.dss.utils.Utils;
 
@@ -22,6 +44,7 @@ public final class ASiCUtils {
 	private static final String MIME_TYPE = "mimetype";
 	public static final String MIME_TYPE_COMMENT = MIME_TYPE + "=";
 	private static final String META_INF_FOLDER = "META-INF/";
+	public static final String PACKAGE_ZIP = "package.zip";
 
 	private ASiCUtils() {
 	}
@@ -51,9 +74,9 @@ public final class ASiCUtils {
 	}
 
 	public static ASiCContainerType getASiCContainerType(final MimeType asicMimeType) {
-		if (MimeType.ASICS == asicMimeType) {
+		if (MimeType.ASICS.equals(asicMimeType)) {
 			return ASiCContainerType.ASiC_S;
-		} else if (MimeType.ASICE == asicMimeType || MimeType.ODT == asicMimeType || MimeType.ODS.equals(asicMimeType)) {
+		} else if (MimeType.ASICE.equals(asicMimeType) || MimeType.ODT.equals(asicMimeType) || MimeType.ODS.equals(asicMimeType)) {
 			return ASiCContainerType.ASiC_E;
 		} else {
 			throw new IllegalArgumentException("Not allowed mimetype " + asicMimeType);
@@ -72,19 +95,19 @@ public final class ASiCUtils {
 		return isASiCE(asicParameters) ? MimeType.ASICE : MimeType.ASICS;
 	}
 
-	public static boolean isArchiveContainsCorrectSignatureExtension(DSSDocument toSignDocument, String extension) {
-		boolean isSignatureTypeCorrect = true;
+	public static boolean isArchiveContainsCorrectSignatureFileWithExtension(DSSDocument toSignDocument, String extension) {
 		try (InputStream is = toSignDocument.openStream(); ZipInputStream zis = new ZipInputStream(is)) {
 			ZipEntry entry;
 			while ((entry = zis.getNextEntry()) != null) {
-				if (isSignature(entry.getName())) {
-					isSignatureTypeCorrect &= entry.getName().endsWith(extension);
+				String entryName = entry.getName();
+				if (isSignature(entryName) && entryName.endsWith(extension)) {
+					return true;
 				}
 			}
 		} catch (IOException e) {
 			throw new DSSException("Unable to analyze the archive content", e);
 		}
-		return isSignatureTypeCorrect;
+		return false;
 	}
 
 	public static boolean isArchive(List<DSSDocument> docs) {
@@ -95,6 +118,9 @@ public final class ASiCUtils {
 	}
 
 	public static boolean isASiCContainer(DSSDocument dssDocument) {
+		if (dssDocument == null) {
+			return false;
+		}
 		byte[] preamble = new byte[2];
 		try (InputStream is = dssDocument.openStream()) {
 			int r = is.read(preamble, 0, 2);
@@ -116,7 +142,12 @@ public final class ASiCUtils {
 		return isSignature(entryName) && (entryName.endsWith(".p7s"));
 	}
 
-	public static MimeType getMimeType(final DSSDocument mimeTypeDocument) throws DSSException {
+	public static boolean isOpenDocument(final DSSDocument mimeTypeDocument) {
+		MimeType mimeType = ASiCUtils.getMimeType(mimeTypeDocument);
+		return MimeType.ODS == mimeType || MimeType.ODT == mimeType;
+	}
+
+	public static MimeType getMimeType(final DSSDocument mimeTypeDocument) {
 		try (InputStream is = mimeTypeDocument.openStream()) {
 			byte[] byteArray = Utils.toByteArray(is);
 			final String mimeTypeString = new String(byteArray, "UTF-8");
@@ -178,6 +209,25 @@ public final class ASiCUtils {
 		String numStr = String.valueOf(num);
 		String zeroPad = "000";
 		return zeroPad.substring(numStr.length()) + numStr; // 2 -> 002
+	}
+
+	public static boolean isAsic(List<DSSDocument> documents) {
+		if (ASiCUtils.isArchive(documents)) {
+			DSSDocument archive = documents.get(0);
+			boolean cades = ASiCUtils.isArchiveContainsCorrectSignatureFileWithExtension(archive, "p7s");
+			boolean xades = ASiCUtils.isArchiveContainsCorrectSignatureFileWithExtension(archive, "xml");
+			return cades || xades;
+		}
+
+		return false;
+	}
+
+	public static DSSDocument getCurrentDocument(String filepath, ZipInputStream zis) throws IOException {
+		try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+			Utils.copy(zis, baos);
+			baos.flush();
+			return new InMemoryDocument(baos.toByteArray(), filepath);
+		}
 	}
 
 }

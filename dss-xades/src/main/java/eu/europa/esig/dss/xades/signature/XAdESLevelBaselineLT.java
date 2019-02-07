@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -52,7 +52,7 @@ public class XAdESLevelBaselineLT extends XAdESLevelBaselineT implements Seriali
 	}
 
 	/**
-	 * Adds <CertificateValues> and <RevocationValues> segments to <UnsignedSignatureProperties>.<br>
+	 * Adds CertificateValues and RevocationValues segments to UnsignedSignatureProperties.<br>
 	 * An XML electronic signature MAY contain at most one:<br>
 	 * - CertificateValues element and<br>
 	 * - RevocationValues element.
@@ -62,7 +62,7 @@ public class XAdESLevelBaselineLT extends XAdESLevelBaselineT implements Seriali
 	@Override
 	protected void extendSignatureTag() throws DSSException {
 
-		assertExtendSignaturePossible();
+		assertExtendSignatureToLTPossible();
 		super.extendSignatureTag();
 
 		if (xadesSignature.hasLTAProfile()) {
@@ -77,13 +77,13 @@ public class XAdESLevelBaselineLT extends XAdESLevelBaselineT implements Seriali
 		 */
 		checkSignatureIntegrity();
 
-		final ValidationContext valContext = xadesSignature.getSignatureValidationContext(certificateVerifier);
+		final ValidationContext validationContext = xadesSignature.getSignatureValidationContext(certificateVerifier);
 
 		removeOldCertificateValues();
 		removeOldRevocationValues();
 
-		incorporateCertificateValues(unsignedSignaturePropertiesDom, valContext);
-		incorporateRevocationValues(unsignedSignaturePropertiesDom, valContext);
+		incorporateCertificateValues(unsignedSignaturePropertiesDom, validationContext);
+		incorporateRevocationValues(unsignedSignaturePropertiesDom, validationContext);
 
 		/**
 		 * Certificate(s), revocation data where added, XAdES signature certificate source must be reset.
@@ -109,10 +109,8 @@ public class XAdESLevelBaselineLT extends XAdESLevelBaselineT implements Seriali
 	 * This method removes old revocation values from the unsigned signature properties element.
 	 */
 	private void removeOldRevocationValues() {
-
 		final Element toRemove = xadesSignature.getRevocationValues();
 		if (toRemove != null) {
-
 			unsignedSignaturePropertiesDom.removeChild(toRemove);
 			xadesSignature.resetRevocationSources();
 		}
@@ -122,10 +120,8 @@ public class XAdESLevelBaselineLT extends XAdESLevelBaselineT implements Seriali
 	 * This method removes old certificates values from the unsigned signature properties element.
 	 */
 	private void removeOldCertificateValues() {
-
 		final Element toRemove = xadesSignature.getCertificateValues();
 		if (toRemove != null) {
-
 			unsignedSignaturePropertiesDom.removeChild(toRemove);
 			xadesSignature.resetCertificateSource();
 		}
@@ -133,16 +129,20 @@ public class XAdESLevelBaselineLT extends XAdESLevelBaselineT implements Seriali
 
 	/**
 	 * This method incorporates revocation values.
+	 * 
+	 * <pre>
+	 * 	{@code
+	 * 		<xades:RevocationValues>
+	 * 	}
+	 * </pre>
 	 *
 	 * @param parentDom
+	 *            the parent element
 	 * @param validationContext
+	 *            the validation context with the revocation data
 	 */
 	protected void incorporateRevocationValues(final Element parentDom, final ValidationContext validationContext) {
-
-		// <xades:RevocationValues>
-
 		final DefaultAdvancedSignature.RevocationDataForInclusion revocationsForInclusion = xadesSignature.getRevocationDataForInclusion(validationContext);
-
 		if (!revocationsForInclusion.isEmpty()) {
 
 			final Element revocationValuesDom = DomUtils.addElement(documentDom, parentDom, XAdESNamespaces.XAdES, "xades:RevocationValues");
@@ -152,32 +152,57 @@ public class XAdESLevelBaselineLT extends XAdESLevelBaselineT implements Seriali
 		}
 	}
 
+	/**
+	 * This method incorporates the CRLValues :
+	 * 
+	 * <pre>
+	 * 	{@code
+	 * 		<xades:CRLValues>
+	 * 			<xades:EncapsulatedCRLValue>...</xades:EncapsulatedCRLValue>
+	 * 			...
+	 * 		</xades:CRLValues>
+	 * 	}
+	 * </pre>
+	 * 
+	 * @param parentDom
+	 *            the parent element
+	 * @param crlTokens
+	 *            the list of CRL Tokens to be added
+	 */
 	private void incorporateCrlTokens(final Element parentDom, final List<CRLToken> crlTokens) {
-
 		if (crlTokens.isEmpty()) {
-
 			return;
 		}
-		// ...<xades:CRLValues/>
 		final Element crlValuesDom = DomUtils.addElement(documentDom, parentDom, XAdESNamespaces.XAdES, "xades:CRLValues");
 
 		for (final RevocationToken revocationToken : crlTokens) {
-
 			final byte[] encodedCRL = revocationToken.getEncoded();
 			final String base64EncodedCRL = Utils.toBase64(encodedCRL);
 			DomUtils.addTextElement(documentDom, crlValuesDom, XAdESNamespaces.XAdES, "xades:EncapsulatedCRLValue", base64EncodedCRL);
 		}
 	}
 
+	/**
+	 * This method incorporates the OCSP responses :
+	 * 
+	 * <pre>
+	 * 	{@code
+	 * 		<xades:OCSPValues>
+	 * 			<xades:EncapsulatedOCSPValue>...</xades:EncapsulatedOCSPValue>
+	 * 			...
+	 * 		</xades:OCSPValues>
+	 * 	}
+	 * </pre>
+	 * 
+	 * @param parentDom
+	 *            the parent element
+	 * @param ocspTokens
+	 *            the list of OCSP Tokens to be added
+	 */
 	private void incorporateOcspTokens(Element parentDom, final List<OCSPToken> ocspTokens) {
-
 		if (ocspTokens.isEmpty()) {
-
 			return;
 		}
-
-		// ...<xades:OCSPValues>
-		// .........<xades:EncapsulatedOCSPValue>MIIERw...
 		final Element ocspValuesDom = DomUtils.addElement(documentDom, parentDom, XAdESNamespaces.XAdES, "xades:OCSPValues");
 
 		for (final RevocationToken revocationToken : ocspTokens) {
@@ -191,13 +216,12 @@ public class XAdESLevelBaselineLT extends XAdESLevelBaselineT implements Seriali
 	/**
 	 * Checks if the extension is possible.
 	 */
-	private void assertExtendSignaturePossible() throws DSSException {
-
+	private void assertExtendSignatureToLTPossible() {
 		final SignatureLevel signatureLevel = params.getSignatureLevel();
 		if (SignatureLevel.XAdES_BASELINE_LT.equals(signatureLevel) && xadesSignature.hasLTAProfile()) {
-
 			final String exceptionMessage = "Cannot extend signature. The signedData is already extended with [%s].";
 			throw new DSSException(String.format(exceptionMessage, "XAdES LTA"));
 		}
 	}
+
 }

@@ -1,25 +1,26 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 package eu.europa.esig.dss;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -36,17 +37,12 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.Provider;
 import java.security.Security;
-import java.security.cert.CRLException;
-import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -81,8 +77,6 @@ public final class DSSUtils {
 
 	private static final BouncyCastleProvider securityProvider = new BouncyCastleProvider();
 
-	private static final CertificateFactory certificateFactory;
-
 	public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
 	public static final String DEFAULT_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
@@ -93,16 +87,7 @@ public final class DSSUtils {
 	public static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd";
 
 	static {
-		try {
-			Security.addProvider(securityProvider);
-			certificateFactory = CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME);
-		} catch (CertificateException e) {
-			LOG.error(e.getMessage(), e);
-			throw new DSSException("Platform does not support X509 certificate", e);
-		} catch (NoSuchProviderException e) {
-			LOG.error(e.getMessage(), e);
-			throw new DSSException("Platform does not support BouncyCastle", e);
-		}
+		Security.addProvider(securityProvider);
 	}
 
 	/**
@@ -119,8 +104,7 @@ public final class DSSUtils {
 	 * @return the textual representation (a null date will result in "N/A")
 	 */
 	public static String formatInternal(final Date date) {
-		final String formatedDate = (date == null) ? "N/A" : new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT).format(date);
-		return formatedDate;
+		return (date == null) ? "N/A" : new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT).format(date);
 	}
 
 	/**
@@ -129,7 +113,8 @@ public final class DSSUtils {
 	 * the input array is null then null is returned. The obtained string is converted to uppercase.
 	 *
 	 * @param value
-	 * @return
+	 *            the value to be converted to hexadecimal
+	 * @return the hexadecimal String
 	 */
 	public static String toHex(final byte[] value) {
 		return (value != null) ? Utils.toHex(value) : null;
@@ -207,25 +192,12 @@ public final class DSSUtils {
 	 * @param cert
 	 *            the token to be converted to PEM
 	 * @return PEM encoded certificate
-	 * @throws DSSException
 	 */
-	public static String convertToPEM(final CertificateToken cert) throws DSSException {
+	public static String convertToPEM(final CertificateToken cert) {
 		return convertToPEM(cert.getCertificate());
 	}
 
-	/**
-	 * This method converts the given CRL into its PEM string.
-	 *
-	 * @param crl
-	 *            the DER encoded CRL to be converted
-	 *
-	 * @return the PEM encoded CRL
-	 */
-	public static String convertCrlToPEM(final X509CRL crl) throws DSSException {
-		return convertToPEM(crl);
-	}
-
-	private static String convertToPEM(Object obj) throws DSSException {
+	private static String convertToPEM(Object obj) {
 		try (StringWriter out = new StringWriter(); PemWriter pemWriter = new PemWriter(out)) {
 			pemWriter.writeObject(new JcaMiscPEMGenerator(obj));
 			pemWriter.flush();
@@ -236,11 +208,13 @@ public final class DSSUtils {
 	}
 
 	/**
-	 * This method returns true if the inputStream contains a DER encoded item
+	 * This method returns true if the inputStream starts with an ASN.1 Sequence
 	 * 
+	 * @param is
+	 *            the inputstream to be tested
 	 * @return true if DER encoded
 	 */
-	public static boolean isDER(InputStream is) {
+	public static boolean isStartWithASN1SequenceTag(InputStream is) {
 		byte firstByte = readFirstByte(new InMemoryDocument(is));
 		return DSSASN1Utils.isASN1SequenceTag(firstByte);
 	}
@@ -263,52 +237,49 @@ public final class DSSUtils {
 
 	/**
 	 * This method loads a certificate from the given resource. The certificate must be DER-encoded and may be supplied
-	 * in binary or printable
-	 * (Base64) encoding. If the certificate is provided in Base64 encoding, it must be bounded at the beginning by
-	 * -----BEGIN CERTIFICATE-----, and
-	 * must be bounded at the end by -----END CERTIFICATE-----. It throws an {@code DSSException} or return {@code null}
-	 * when the
-	 * certificate cannot be loaded.
+	 * in binary or printable (PEM / Base64) encoding.
+	 * 
+	 * If the certificate is provided in Base64 encoding, it must be bounded at the beginning by
+	 * {@code -----BEGIN CERTIFICATE-----}, and must be bounded at the end by {@code -----END CERTIFICATE-----}.
+	 * 
 	 *
 	 * @param path
 	 *            resource location.
-	 * @return
+	 * @return the certificate token
 	 */
-	public static CertificateToken loadCertificate(final String path) throws DSSException {
+	public static CertificateToken loadCertificate(final String path) {
 		final InputStream inputStream = DSSUtils.class.getResourceAsStream(path);
 		return loadCertificate(inputStream);
 	}
 
 	/**
 	 * This method loads a certificate from the given location. The certificate must be DER-encoded and may be supplied
-	 * in binary or printable
-	 * (Base64) encoding. If the certificate is provided in Base64 encoding, it must be bounded at the beginning by
-	 * -----BEGIN CERTIFICATE-----, and
-	 * must be bounded at the end by -----END CERTIFICATE-----. It throws an {@code DSSException} or return {@code null}
-	 * when the
-	 * certificate cannot be loaded.
-	 *
+	 * in binary or printable (PEM / Base64) encoding.
+	 * 
+	 * If the certificate is provided in Base64 encoding, it must be bounded at the beginning by
+	 * {@code -----BEGIN CERTIFICATE-----}, and must be bounded at the end by {@code -----END CERTIFICATE-----}.
+	 * 
 	 * @param file
-	 * @return
+	 *            the file with the certificate
+	 * @return the certificate token
 	 */
-	public static CertificateToken loadCertificate(final File file) throws DSSException {
+	public static CertificateToken loadCertificate(final File file) {
 		final InputStream inputStream = DSSUtils.toByteArrayInputStream(file);
-		final CertificateToken x509Certificate = loadCertificate(inputStream);
-		return x509Certificate;
+		return loadCertificate(inputStream);
 	}
 
 	/**
 	 * This method loads a certificate from the given location. The certificate must be DER-encoded and may be supplied
-	 * in binary or printable (Base64) encoding. If the
-	 * certificate is provided in Base64 encoding, it must be bounded at the beginning by -----BEGIN CERTIFICATE-----,
-	 * and must be bounded at the end by -----END CERTIFICATE-----.
-	 * It throws an {@code DSSException} or return {@code null} when the certificate cannot be loaded.
-	 *
+	 * in binary or printable (PEM / Base64) encoding.
+	 * 
+	 * If the certificate is provided in Base64 encoding, it must be bounded at the beginning by
+	 * {@code -----BEGIN CERTIFICATE-----}, and must be bounded at the end by {@code -----END CERTIFICATE-----}.
+	 * 
 	 * @param inputStream
 	 *            input stream containing the certificate
-	 * @return
+	 * @return the certificate token
 	 */
-	public static CertificateToken loadCertificate(final InputStream inputStream) throws DSSException {
+	public static CertificateToken loadCertificate(final InputStream inputStream) {
 		List<CertificateToken> certificates = loadCertificates(inputStream);
 		if (certificates.size() == 1) {
 			return certificates.get(0);
@@ -324,7 +295,8 @@ public final class DSSUtils {
 		final List<CertificateToken> certificates = new ArrayList<CertificateToken>();
 		try {
 			@SuppressWarnings("unchecked")
-			final Collection<X509Certificate> certificatesCollection = (Collection<X509Certificate>) certificateFactory.generateCertificates(is);
+			final Collection<X509Certificate> certificatesCollection = (Collection<X509Certificate>) CertificateFactory
+					.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME).generateCertificates(is);
 			if (certificatesCollection != null) {
 				for (X509Certificate cert : certificatesCollection) {
 					certificates.add(new CertificateToken(cert));
@@ -335,7 +307,7 @@ public final class DSSUtils {
 			}
 			return certificates;
 		} catch (Exception e) {
-			throw new DSSException(e);
+			throw new DSSException("Unable to load certificates", e);
 		}
 	}
 
@@ -350,9 +322,9 @@ public final class DSSUtils {
 	 *
 	 * @param input
 	 *            array of bytes containing the certificate
-	 * @return
+	 * @return the certificate token
 	 */
-	public static CertificateToken loadCertificate(final byte[] input) throws DSSException {
+	public static CertificateToken loadCertificate(final byte[] input) {
 		if (input == null) {
 			throw new NullPointerException("X509 certificate");
 		}
@@ -367,7 +339,8 @@ public final class DSSUtils {
 	 * This method loads a certificate from a base 64 encoded String
 	 *
 	 * @param base64Encoded
-	 * @return
+	 *            the base64 encoded certificate
+	 * @return the certificate token
 	 */
 	public static CertificateToken loadCertificateFromBase64EncodedString(final String base64Encoded) {
 		final byte[] bytes = Utils.fromBase64(base64Encoded);
@@ -397,9 +370,17 @@ public final class DSSUtils {
 
 		for (String url : urls) {
 			LOG.debug("Loading certificate(s) from {}", url);
-			byte[] bytes = loader.get(url);
+			byte[] bytes = null;
+			try {
+				bytes = loader.get(url);
+			} catch (Exception e) {
+				LOG.warn("Unable to download certificate from '{}': {}", url, e.getMessage());
+				continue;
+			}
 			if (Utils.isArrayNotEmpty(bytes)) {
-				LOG.debug("Base64 content : {}", Utils.toBase64(bytes));
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Base64 content : {}", Utils.toBase64(bytes));
+				}
 				try (InputStream is = new ByteArrayInputStream(bytes)) {
 					return loadCertificates(is);
 				} catch (Exception e) {
@@ -414,22 +395,6 @@ public final class DSSUtils {
 	}
 
 	/**
-	 * This method loads a CRL from the given location.
-	 *
-	 * @param inputStream
-	 * @return
-	 * @deprecated for performance reasons, the X509CRL object needs to be avoided
-	 */
-	@Deprecated
-	public static X509CRL loadCRL(final InputStream inputStream) {
-		try {
-			return (X509CRL) certificateFactory.generateCRL(inputStream);
-		} catch (CRLException e) {
-			throw new DSSException(e);
-		}
-	}
-
-	/**
 	 * This method digests the given string with SHA1 algorithm and encode returned array of bytes as hex string.
 	 *
 	 * @param stringToDigest
@@ -437,8 +402,7 @@ public final class DSSUtils {
 	 * @return hex encoded digest value
 	 */
 	public static String getSHA1Digest(final String stringToDigest) {
-		final byte[] digest = getMessageDigest(DigestAlgorithm.SHA1).digest(stringToDigest.getBytes());
-		return Utils.toHex(digest);
+		return Utils.toHex(digest(DigestAlgorithm.SHA1, stringToDigest.getBytes(StandardCharsets.UTF_8)));
 	}
 
 	/**
@@ -450,22 +414,22 @@ public final class DSSUtils {
 	 *            the data to digest
 	 * @return digested array of bytes
 	 */
-	public static byte[] digest(final DigestAlgorithm digestAlgorithm, final byte[] data) throws DSSException {
+	public static byte[] digest(final DigestAlgorithm digestAlgorithm, final byte[] data) {
 		final MessageDigest messageDigest = getMessageDigest(digestAlgorithm);
-		final byte[] digestValue = messageDigest.digest(data);
-		return digestValue;
+		return messageDigest.digest(data);
 	}
 
 	/**
+	 * Returns a new instance of MessageDigest for a given digest algorithm
+	 * 
 	 * @param digestAlgorithm
-	 * @return
-	 * @throws NoSuchAlgorithmException
+	 *            the digest algoritm
+	 * @return a new instance of MessageDigest
 	 */
 	public static MessageDigest getMessageDigest(final DigestAlgorithm digestAlgorithm) {
 		try {
 			final String digestAlgorithmOid = digestAlgorithm.getOid();
-			final MessageDigest messageDigest = MessageDigest.getInstance(digestAlgorithmOid, BouncyCastleProvider.PROVIDER_NAME);
-			return messageDigest;
+			return MessageDigest.getInstance(digestAlgorithmOid, BouncyCastleProvider.PROVIDER_NAME);
 		} catch (GeneralSecurityException e) {
 			throw new DSSException("Digest algorithm '" + digestAlgorithm.getName() + "' error: " + e.getMessage(), e);
 		}
@@ -480,7 +444,7 @@ public final class DSSUtils {
 	 *            the data to digest
 	 * @return digested array of bytes
 	 */
-	public static byte[] digest(final DigestAlgorithm digestAlgo, final InputStream inputStream) throws DSSException {
+	public static byte[] digest(final DigestAlgorithm digestAlgo, final InputStream inputStream) {
 		try {
 
 			final MessageDigest messageDigest = getMessageDigest(digestAlgo);
@@ -489,8 +453,7 @@ public final class DSSUtils {
 			while ((count = inputStream.read(buffer)) > 0) {
 				messageDigest.update(buffer, 0, count);
 			}
-			final byte[] digestValue = messageDigest.digest();
-			return digestValue;
+			return messageDigest.digest();
 		} catch (IOException e) {
 			throw new DSSException(e);
 		}
@@ -507,15 +470,14 @@ public final class DSSUtils {
 	public static byte[] digest(DigestAlgorithm digestAlgorithm, byte[]... data) {
 		final MessageDigest messageDigest = getMessageDigest(digestAlgorithm);
 		for (final byte[] bytes : data) {
-
 			messageDigest.update(bytes);
 		}
-		final byte[] digestValue = messageDigest.digest();
-		return digestValue;
+		return messageDigest.digest();
 	}
 
 	/**
-	 * This method returns an {@code InputStream} which needs to be closed, based on {@code FileInputStream}.
+	 * This method returns an {@code InputStream} which needs to be closed, based on
+	 * {@code FileInputStream}.
 	 *
 	 * @param filePath
 	 *            The path to the file to read
@@ -532,17 +494,16 @@ public final class DSSUtils {
 	 * This method returns an {@code InputStream} which needs to be closed, based on {@code FileInputStream}.
 	 *
 	 * @param file
-	 *            {@code File} to read.
-	 * @return an {@code InputStream} materialized by a {@code FileInputStream} representing the contents of the file
-	 * @throws DSSException
+	 *             {@code File} to read.
+	 * @return an {@code InputStream} materialized by a {@code FileInputStream}
+	 *         representing the contents of the file @ if an I/O error occurred
 	 */
-	public static InputStream toInputStream(final File file) throws DSSException {
+	public static InputStream toInputStream(final File file) {
 		if (file == null) {
 			throw new NullPointerException();
 		}
 		try {
-			final FileInputStream fileInputStream = openInputStream(file);
-			return fileInputStream;
+			return openInputStream(file);
 		} catch (IOException e) {
 			throw new DSSException(e);
 		}
@@ -591,36 +552,7 @@ public final class DSSUtils {
 	 * @return {@code InputStream} based on {@code ByteArrayInputStream}
 	 */
 	public static InputStream toByteArrayInputStream(final File file) {
-		if (file == null) {
-			throw new NullPointerException();
-		}
-		try {
-			final byte[] bytes = readFileToByteArray(file);
-			final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
-			return byteArrayInputStream;
-		} catch (IOException e) {
-			throw new DSSException(e);
-		}
-	}
-
-	/**
-	 * This method returns the byte array representing the contents of the file.
-	 *
-	 * @param file
-	 *            {@code File} to read
-	 * @return an array of {@code byte}
-	 * @throws DSSException
-	 */
-	public static byte[] toByteArray(final File file) throws DSSException {
-		if (file == null) {
-			throw new NullPointerException();
-		}
-		try {
-			final byte[] bytes = readFileToByteArray(file);
-			return bytes;
-		} catch (IOException e) {
-			throw new DSSException(e);
-		}
+		return new ByteArrayInputStream(toByteArray(file));
 	}
 
 	/**
@@ -631,42 +563,67 @@ public final class DSSUtils {
 	 * @param file
 	 *            the file to read, must not be {@code null}
 	 * @return the file contents, never {@code null}
-	 * @throws IOException
-	 *             in case of an I/O error
-	 * @since Commons IO 1.1
 	 */
-	private static byte[] readFileToByteArray(final File file) throws IOException {
-		InputStream in = null;
-		try {
-			in = openInputStream(file);
-			return Utils.toByteArray(in);
-		} finally {
-			Utils.closeQuietly(in);
+	public static byte[] toByteArray(final File file) {
+		try (InputStream is = openInputStream(file)) {
+			return toByteArray(is);
+		} catch (Exception e) {
+			throw new DSSException(e);
 		}
 	}
 
 	/**
-	 * FROM: Apache
-	 * Opens a {@link java.io.FileInputStream} for the specified file, providing better
-	 * error messages than simply calling {@code new FileInputStream(file)}.
-	 * At the end of the method either the stream will be successfully opened,
-	 * or an exception will have been thrown.
-	 * An exception is thrown if the file does not exist.
-	 * An exception is thrown if the file object exists but is a directory.
-	 * An exception is thrown if the file exists but cannot be read.
+	 * This method create a new document from a sub-part of another document
+	 * 
+	 * @param origin
+	 *            the original document
+	 * @param start
+	 *            the start position to retrieve
+	 * @param end
+	 *            the end position to retrieve
+	 * @return a new DSSDocument
+	 */
+	public static DSSDocument splitDocument(DSSDocument origin, int start, int end) {
+		try (InputStream is = origin.openStream();
+				BufferedInputStream bis = new BufferedInputStream(is);
+				ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+
+			int i = 0;
+			int r;
+			while ((r = bis.read()) != -1) {
+				if (i >= start && i <= end) {
+					baos.write(r);
+				}
+				i++;
+			}
+			baos.flush();
+			return new InMemoryDocument(baos.toByteArray());
+		} catch (Exception e) {
+			throw new DSSException("Unable to split document", e);
+		}
+	}
+
+	/**
+	 * FROM: Apache Opens a {@link java.io.FileInputStream} for the specified file,
+	 * providing better error messages than simply calling
+	 * {@code new FileInputStream(file)}. At the end of the method either the stream
+	 * will be successfully opened, or an exception will have been thrown. An
+	 * exception is thrown if the file does not exist. An exception is thrown if the
+	 * file object exists but is a directory. An exception is thrown if the file
+	 * exists but cannot be read.
 	 *
 	 * @param file
-	 *            the file to open for input, must not be {@code null}
+	 *             the file to open for input, must not be {@code null}
 	 * @return a new {@link java.io.FileInputStream} for the specified file
-	 * @throws java.io.FileNotFoundException
-	 *             if the file does not exist
+	 * @throws NullPointerException
+	 *                              if the file is null
 	 * @throws IOException
-	 *             if the file object is a directory
-	 * @throws IOException
-	 *             if the file cannot be read
-	 * @since Commons IO 1.3
+	 *                              if the file cannot be read
 	 */
 	private static FileInputStream openInputStream(final File file) throws IOException {
+		if (file == null) {
+			throw new NullPointerException();
+		}
 		if (file.exists()) {
 			if (file.isDirectory()) {
 				throw new IOException("File '" + file + "' exists but is a directory");
@@ -684,7 +641,8 @@ public final class DSSUtils {
 	 * Get the contents of an {@code DSSDocument} as a {@code byte[]}.
 	 *
 	 * @param document
-	 * @return
+	 *            the document to read
+	 * @return the content as byte array
 	 */
 	public static byte[] toByteArray(final DSSDocument document) {
 		try (InputStream is = document.openStream()) {
@@ -698,15 +656,15 @@ public final class DSSUtils {
 	 * Get the contents of an {@code InputStream} as a {@code byte[]}.
 	 *
 	 * @param inputStream
-	 * @return
+	 *            the inputstream to read
+	 * @return the content of the inputstream as byte array
 	 */
 	public static byte[] toByteArray(final InputStream inputStream) {
 		if (inputStream == null) {
 			throw new NullPointerException();
 		}
 		try {
-			final byte[] bytes = Utils.toByteArray(inputStream);
-			return bytes;
+			return Utils.toByteArray(inputStream);
 		} catch (IOException e) {
 			throw new DSSException(e);
 		}
@@ -716,11 +674,11 @@ public final class DSSUtils {
 	 * This method saves the given array of {@code byte} to the provided {@code File}.
 	 *
 	 * @param bytes
-	 *            to save
+	 *            the binary to save
 	 * @param file
-	 * @throws DSSException
+	 *            the file where to store
 	 */
-	public static void saveToFile(final byte[] bytes, final File file) throws DSSException {
+	public static void saveToFile(final byte[] bytes, final File file) {
 		file.getParentFile().mkdirs();
 		try (InputStream is = new ByteArrayInputStream(bytes); OutputStream os = new FileOutputStream(file)) {
 			Utils.copy(is, os);
@@ -730,79 +688,38 @@ public final class DSSUtils {
 	}
 
 	/**
-	 * This method saves the given {@code InputStream} to a file representing by the provided path. The
-	 * {@code InputStream} is not closed.
-	 *
-	 * @param inputStream
-	 *            {@code InputStream} to save
-	 * @param path
-	 *            the path to the file to be created
-	 */
-	public static void saveToFile(final InputStream inputStream, final String path) throws IOException {
-		final FileOutputStream fileOutputStream = toFileOutputStream(path);
-		Utils.copy(inputStream, fileOutputStream);
-		Utils.closeQuietly(fileOutputStream);
-	}
-
-	public static byte[] getEncoded(X509CRL x509CRL) {
-		try {
-			final byte[] encoded = x509CRL.getEncoded();
-			return encoded;
-		} catch (CRLException e) {
-			throw new DSSException(e);
-		}
-	}
-
-	/**
-	 * return a unique id for a date and the certificateToken id.
+	 * Return a unique id for a date and the certificateToken id.
 	 *
 	 * @param signingTime
+	 *            the signing time
 	 * @param id
-	 * @return
+	 *            the token identifier
+	 * @return an unique string
 	 */
 	public static String getDeterministicId(final Date signingTime, TokenIdentifier id) {
-		try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); DataOutputStream dos = new DataOutputStream(baos);) {
+		try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); DataOutputStream dos = new DataOutputStream(baos)) {
 			if (signingTime != null) {
 				dos.writeLong(signingTime.getTime());
 			}
 			if (id != null) {
 				dos.writeChars(id.asXmlId());
 			}
-			dos.close();
-			final String deterministicId = "id-" + getMD5Digest(baos.toByteArray());
-			return deterministicId;
+			dos.flush();
+			return "id-" + getMD5Digest(baos.toByteArray());
 		} catch (IOException e) {
 			throw new DSSException(e);
 		}
 	}
 
 	/**
-	 * Returns a Hex encoded of the MD5 digest of ByteArrayOutputStream
+	 * Returns a Hex encoded of the MD5 digest of binaries
 	 *
 	 * @param bytes
-	 * @return
+	 *            the bytes to be digested
+	 * @return the hex encoded MD5 digest
 	 */
 	public static String getMD5Digest(byte[] bytes) {
-		try {
-			byte[] digestValue = digest(DigestAlgorithm.MD5, bytes);
-			return Utils.toHex(digestValue);
-		} catch (Exception e) {
-			throw new DSSException(e);
-		}
-	}
-
-	public static Date getLocalDate(final Date gtmDate, final Date localDate) {
-		final Date newLocalDate = new Date(gtmDate.getTime() + TimeZone.getDefault().getOffset(localDate.getTime()));
-		return newLocalDate;
-	}
-
-	public static long toLong(final byte[] bytes) {
-		// Long.valueOf(new String(bytes)).longValue();
-		ByteBuffer buffer = ByteBuffer.allocate(8);
-		buffer.put(bytes, 0, Long.SIZE / 8);
-		// TODO: (Bob: 2014 Jan 22) To be checked if it is not platform dependent?
-		buffer.flip();// need flip
-		return buffer.getLong();
+		return Utils.toHex(digest(DigestAlgorithm.MD5, bytes));
 	}
 
 	/**
@@ -815,22 +732,22 @@ public final class DSSUtils {
 	 */
 	public static X500Principal getX500PrincipalOrNull(final String x500PrincipalString) {
 		try {
-			final X500Principal x500Principal = new X500Principal(x500PrincipalString);
-			return x500Principal;
+			return new X500Principal(x500PrincipalString);
 		} catch (Exception e) {
 			LOG.warn(e.getMessage());
+			return null;
 		}
-		return null;
 	}
 
 	/**
 	 * This method compares two {@code X500Principal}s. {@code X500Principal.CANONICAL} and
 	 * {@code X500Principal.RFC2253} forms are compared.
-	 * TODO: (Bob: 2014 Feb 20) To be investigated why the standard equals does not work!?
 	 *
 	 * @param firstX500Principal
+	 *            the first X500Principal object to be compared
 	 * @param secondX500Principal
-	 * @return
+	 *            the second X500Principal object to be compared
+	 * @return true if the two parameters contain the same key/values
 	 */
 	public static boolean x500PrincipalAreEquals(final X500Principal firstX500Principal, final X500Principal secondX500Principal) {
 		if ((firstX500Principal == null) || (secondX500Principal == null)) {
@@ -841,33 +758,19 @@ public final class DSSUtils {
 		}
 		final Map<String, String> firstStringStringHashMap = DSSASN1Utils.get(firstX500Principal);
 		final Map<String, String> secondStringStringHashMap = DSSASN1Utils.get(secondX500Principal);
-		final boolean containsAll = firstStringStringHashMap.entrySet().containsAll(secondStringStringHashMap.entrySet());
-
-		return containsAll;
+		return firstStringStringHashMap.entrySet().containsAll(secondStringStringHashMap.entrySet());
 	}
 
 	/**
-	 * @param x509SubjectName
-	 * @return
-	 */
-	public static X500Principal getX500Principal(String x509SubjectName) throws DSSException {
-		try {
-			final X500Principal x500Principal = new X500Principal(x509SubjectName);
-			return getNormalizedX500Principal(x500Principal);
-		} catch (IllegalArgumentException e) {
-			throw new DSSException(e);
-		}
-	}
-
-	/**
+	 * This method normalizes the X500Principal object
+	 *
 	 * @param x500Principal
 	 *            to be normalized
 	 * @return {@code X500Principal} normalized
 	 */
 	public static X500Principal getNormalizedX500Principal(final X500Principal x500Principal) {
 		final String utf8Name = DSSASN1Utils.getUtf8String(x500Principal);
-		final X500Principal x500PrincipalNormalized = new X500Principal(utf8Name);
-		return x500PrincipalNormalized;
+		return new X500Principal(utf8Name);
 	}
 
 	public static InputStream getResource(final String resourcePath) {
@@ -890,39 +793,7 @@ public final class DSSUtils {
 	public static Date getUtcDate(final int year, final int month, final int day) {
 		final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 		calendar.set(year, month, day, 0, 0, 0);
-		final Date date = calendar.getTime();
-		return date;
-	}
-
-	/**
-	 * This method adds or subtract the given number of days from the date
-	 *
-	 * @param date
-	 *            {@code Date} to change
-	 * @param days
-	 *            number of days (can be negative)
-	 * @return new {@code Date}
-	 */
-	public static Date getDate(final Date date, int days) {
-
-		final Calendar calendar = Calendar.getInstance();
-		calendar.setTime(date);
-		calendar.add(Calendar.DATE, days);
-		final Date newDate = calendar.getTime();
-		return newDate;
-	}
-
-	public static byte[] getUtf8Bytes(final String string) {
-
-		if (string == null) {
-			return null;
-		}
-		try {
-			final byte[] bytes = string.getBytes("UTF-8");
-			return bytes;
-		} catch (UnsupportedEncodingException e) {
-			throw new DSSException(e);
-		}
+		return calendar.getTime();
 	}
 
 	/**
@@ -976,16 +847,14 @@ public final class DSSUtils {
 	/**
 	 * This method lists all defined security providers.
 	 */
-	public static void printSecurityProvides() {
-
+	public static void printSecurityProviders() {
 		final Provider[] providers = Security.getProviders();
 		for (final Provider provider : providers) {
-
-			System.out.println("PROVIDER: " + provider.getName());
+			LOG.info("PROVIDER: {}", provider.getName());
 			final Set<Provider.Service> services = provider.getServices();
 			for (final Provider.Service service : services) {
-
-				System.out.println("\tALGORITHM: " + service.getAlgorithm() + " / " + service.getType() + " / " + service.getClassName());
+				LOG.info("\tALGORITHM: {} / {} / {}", service.getAlgorithm(), service.getType(),
+						service.getClassName());
 			}
 		}
 	}
@@ -1028,12 +897,11 @@ public final class DSSUtils {
 	 *            {@code int}: maximum number of bytes to read
 	 * @param destinationByteArray
 	 *            destination {@code byte} array
-	 * @return
+	 * @return the number of read bytes
 	 */
 	public static int readToArray(final DSSDocument dssDocument, final int headerLength, final byte[] destinationByteArray) {
 		try (InputStream inputStream = dssDocument.openStream()) {
-			int read = inputStream.read(destinationByteArray, 0, headerLength);
-			return read;
+			return inputStream.read(destinationByteArray, 0, headerLength);
 		} catch (IOException e) {
 			throw new DSSException(e);
 		}
@@ -1056,23 +924,23 @@ public final class DSSUtils {
 		return timeUnit.convert(diff, TimeUnit.MILLISECONDS);
 	}
 
-  /**
-   * Reads the first byte from the DSSDocument
-   *
-   * @param dssDocument
-   *            the document
-   * @return the first byte
-   * @throws DSSException
-   */
-  public static byte readFirstByte(final DSSDocument dssDocument) throws DSSException {
-    byte[] result = new byte[1];
-    try (InputStream inputStream = dssDocument.openStream()) {
-      inputStream.read(result, 0, 1);
-    } catch (IOException e) {
-      throw new DSSException(e);
-    }
-    return result[0];
-  }
+	/**
+	 * Reads the first byte from the DSSDocument
+	 * 
+	 * @param dssDocument
+	 *            the document
+	 * @return the first byte
+	 */
+	public static byte readFirstByte(final DSSDocument dssDocument) {
+		byte[] result = new byte[1];
+		try (InputStream inputStream = dssDocument.openStream()) {
+			inputStream.read(result, 0, 1);
+		} catch (IOException e) {
+			throw new DSSException(e);
+		}
+		return result[0];
+
+	}
 
 	/**
 	 * Concatenates all the arrays into a new array. The new array contains all of the element of each array followed by

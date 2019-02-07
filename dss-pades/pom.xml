@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.2.d4j.4</version>
+		<version>5.4.d4j.1</version>
 	</parent>
 
 	<artifactId>dss-pades</artifactId>
@@ -19,18 +19,6 @@
             <artifactId>dss-cades</artifactId>
         </dependency>
 		
-		<dependency>
-			<groupId>org.apache.pdfbox</groupId>
-			<artifactId>pdfbox</artifactId>
-		</dependency>
-		
-		<!-- Allows to test PDF/A -->
-		<dependency>
-		    <groupId>org.apache.pdfbox</groupId>
-		    <artifactId>preflight</artifactId>
-		    <scope>test</scope>
-		</dependency>
-        
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-test</artifactId>

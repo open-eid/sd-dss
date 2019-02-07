@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -64,7 +64,7 @@ public abstract class OfflineCRLSource implements CRLSource {
 	private Map<CertificateToken, CRLToken> validCRLTokenList = new HashMap<CertificateToken, CRLToken>();
 
 	@Override
-	public final CRLToken findCrl(final CertificateToken certificateToken) {
+	public final CRLToken getRevocationToken(final CertificateToken certificateToken, final CertificateToken issuerToken) {
 		if (certificateToken == null) {
 			throw new NullPointerException();
 		}
@@ -75,9 +75,8 @@ public abstract class OfflineCRLSource implements CRLSource {
 			return validCRLToken;
 		}
 
-		final CertificateToken issuerToken = certificateToken.getIssuerToken();
 		if (issuerToken == null) {
-			throw new NullPointerException();
+			return null;
 		}
 
 		final CRLValidity bestCRLValidity = getBestCrlValidity(certificateToken, issuerToken);
@@ -109,10 +108,10 @@ public abstract class OfflineCRLSource implements CRLSource {
 
 		for (final Entry<String, byte[]> crlEntry : crlsMap.entrySet()) {
 			final CRLValidity crlValidity = getCrlValidity(crlEntry.getKey(), crlEntry.getValue(), issuerToken);
-			if (crlValidity == null) {
+			if (crlValidity == null || !crlValidity.isValid()) {
 				continue;
 			}
-			if (issuerToken.equals(crlValidity.getIssuerToken()) && crlValidity.isValid()) {
+			if (issuerToken.getPublicKey().equals(crlValidity.getIssuerToken().getPublicKey())) {
 				// check the overlapping of the [thisUpdate, nextUpdate] from the CRL and [notBefore, notAfter] from
 				// the X509Certificate
 				final Date thisUpdate = crlValidity.getThisUpdate();
@@ -121,7 +120,7 @@ public abstract class OfflineCRLSource implements CRLSource {
 				final Date notBefore = certificateToken.getNotBefore();
 				boolean periodAreIntersecting = thisUpdate.before(notAfter) && (nextUpdate != null && nextUpdate.after(notBefore));
 				if (!periodAreIntersecting) {
-					LOG.warn("The CRL was not issued during the validity period of the certificate! Certificate: " + certificateToken.getDSSIdAsString());
+					LOG.warn("The CRL was not issued during the validity period of the certificate! Certificate: {}", certificateToken.getDSSIdAsString());
 					continue;
 				}
 

@@ -1,37 +1,32 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 package eu.europa.esig.dss.pades.signature;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.DSSException;
-import eu.europa.esig.dss.InMemoryDocument;
-import eu.europa.esig.dss.MimeType;
-import eu.europa.esig.dss.SignatureLevel;
 import eu.europa.esig.dss.pades.PAdESSignatureParameters;
 import eu.europa.esig.dss.pades.validation.PAdESSignature;
 import eu.europa.esig.dss.pades.validation.PDFDocumentValidator;
@@ -39,9 +34,11 @@ import eu.europa.esig.dss.pdf.DSSDictionaryCallback;
 import eu.europa.esig.dss.pdf.PDFSignatureService;
 import eu.europa.esig.dss.pdf.PdfObjFactory;
 import eu.europa.esig.dss.signature.SignatureExtension;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.DefaultAdvancedSignature;
+import eu.europa.esig.dss.validation.TimestampToken;
 import eu.europa.esig.dss.validation.ValidationContext;
 import eu.europa.esig.dss.x509.CertificateToken;
 import eu.europa.esig.dss.x509.tsp.TSPSource;
@@ -66,7 +63,7 @@ class PAdESLevelBaselineLT implements SignatureExtension<PAdESSignatureParameter
 	 * @throws IOException
 	 */
 	@Override
-	public InMemoryDocument extendSignatures(DSSDocument document, final PAdESSignatureParameters parameters) throws DSSException {
+	public DSSDocument extendSignatures(DSSDocument document, final PAdESSignatureParameters parameters) throws DSSException {
 
 		// check if needed to extends with PAdESLevelBaselineT
 		PDFDocumentValidator pdfDocumentValidator = new PDFDocumentValidator(document);
@@ -74,7 +71,7 @@ class PAdESLevelBaselineLT implements SignatureExtension<PAdESSignatureParameter
 
 		List<AdvancedSignature> signatures = pdfDocumentValidator.getSignatures();
 		for (final AdvancedSignature signature : signatures) {
-			if (!signature.isDataForSignatureLevelPresent(SignatureLevel.PAdES_BASELINE_T)) {
+			if (isRequireDocumentTimestamp(signature)) {
 				final PAdESLevelBaselineT padesLevelBaselineT = new PAdESLevelBaselineT(tspSource);
 				document = padesLevelBaselineT.extendSignatures(document, parameters);
 
@@ -94,19 +91,21 @@ class PAdESLevelBaselineLT implements SignatureExtension<PAdESSignatureParameter
 			}
 		}
 
-		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		final PDFSignatureService signatureService = PdfObjFactory.newPAdESSignatureService();
+		return signatureService.addDssDictionary(document, callbacks);
 
-		final PDFSignatureService signatureService = PdfObjFactory.getInstance().newPAdESSignatureService();
-		signatureService.addDssDictionary(document.openStream(), baos, callbacks);
+	}
 
-		final InMemoryDocument inMemoryDocument = new InMemoryDocument(baos.toByteArray());
-		inMemoryDocument.setMimeType(MimeType.PDF);
-		return inMemoryDocument;
+	private boolean isRequireDocumentTimestamp(AdvancedSignature signature) {
+		List<TimestampToken> signatureTimestamps = signature.getSignatureTimestamps();
+		List<TimestampToken> archiveTimestamps = signature.getArchiveTimestamps();
+		return Utils.isCollectionEmpty(signatureTimestamps) && Utils.isCollectionEmpty(archiveTimestamps);
 	}
 
 	private DSSDictionaryCallback validate(PAdESSignature signature) {
 
 		ValidationContext validationContext = signature.getSignatureValidationContext(certificateVerifier);
+
 		DefaultAdvancedSignature.RevocationDataForInclusion revocationsForInclusionInProfileLT = signature.getRevocationDataForInclusion(validationContext);
 
 		DSSDictionaryCallback validationCallback = new DSSDictionaryCallback();
@@ -114,8 +113,10 @@ class PAdESLevelBaselineLT implements SignatureExtension<PAdESSignatureParameter
 		validationCallback.setCrls(revocationsForInclusionInProfileLT.crlTokens);
 		validationCallback.setOcsps(revocationsForInclusionInProfileLT.ocspTokens);
 
-		Set<CertificateToken> certs = new HashSet<CertificateToken>(signature.getCertificates());
-		validationCallback.setCertificates(certs);
+		Set<CertificateToken> certificatesForInclusion = signature.getCertificatesForInclusion(validationContext);
+		certificatesForInclusion.addAll(signature.getCertificatesWithinSignatureAndTimestamps());
+		// DSS dictionary includes current certs + discovered with AIA,...
+		validationCallback.setCertificates(certificatesForInclusion);
 
 		return validationCallback;
 	}

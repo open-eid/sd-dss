@@ -1,14 +1,35 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.cades.validation;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 import org.bouncycastle.util.encoders.Base64;
-import org.junit.Assert;
 import org.junit.Test;
 
 import eu.europa.esig.dss.DSSDocument;
-import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.InMemoryDocument;
 import eu.europa.esig.dss.SignatureLevel;
@@ -48,11 +69,11 @@ public class GetOriginalDocumentTest extends PKIFactoryAccess {
 		Reports reports = validator.validateDocument();
 
 		List<DSSDocument> results = validator.getOriginalDocuments(reports.getDiagnosticData().getFirstSignatureId());
-		Assert.assertEquals(1, results.size());
+		assertEquals(1, results.size());
 
 		String firstDocument = new String(Utils.toByteArray(document.openStream()));
 		String secondDocument = new String(Utils.toByteArray(results.get(0).openStream()));
-		Assert.assertEquals(firstDocument, secondDocument);
+		assertEquals(firstDocument, secondDocument);
 	}
 
 	@Test
@@ -77,15 +98,15 @@ public class GetOriginalDocumentTest extends PKIFactoryAccess {
 		Reports reports = validator.validateDocument();
 
 		List<DSSDocument> results = validator.getOriginalDocuments(reports.getDiagnosticData().getFirstSignatureId());
-		Assert.assertEquals(1, results.size());
+		assertEquals(1, results.size());
 
 		String digest = document.getDigest(DigestAlgorithm.SHA256);
 		String digest2 = results.get(0).getDigest(DigestAlgorithm.SHA256);
 
-		Assert.assertEquals(digest, digest2);
+		assertEquals(digest, digest2);
 	}
 
-	@Test(expected = DSSException.class)
+	@Test
 	public final void getOriginalDocumentFromDetachedSignature() throws Exception {
 		DSSDocument document = new InMemoryDocument(HELLO_WORLD.getBytes());
 
@@ -103,10 +124,16 @@ public class GetOriginalDocumentTest extends PKIFactoryAccess {
 		final DSSDocument signedDocument = service.signDocument(document, signatureParameters, signatureValue);
 
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(signedDocument);
+		validator.setDetachedContents(Arrays.asList(document));
 		validator.setCertificateVerifier(getCompleteCertificateVerifier());
 		Reports reports = validator.validateDocument();
+		List<DSSDocument> results = validator.getOriginalDocuments(reports.getDiagnosticData().getFirstSignatureId());
+		assertEquals(1, results.size());
 
-		validator.getOriginalDocuments(reports.getDiagnosticData().getFirstSignatureId());
+		String digest = document.getDigest(DigestAlgorithm.SHA256);
+		String digest2 = results.get(0).getDigest(DigestAlgorithm.SHA256);
+
+		assertEquals(digest, digest2);
 	}
 
 	@Override

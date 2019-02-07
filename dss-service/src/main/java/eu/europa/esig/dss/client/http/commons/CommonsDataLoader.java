@@ -94,8 +94,8 @@ import eu.europa.esig.dss.utils.Utils;
 
 /**
  * Implementation of DataLoader for any protocol.
- * <p/>
- * HTTP & HTTPS: using HttpClient which is more flexible for HTTPS without
+ * <p>
+ * HTTP and HTTPS: using HttpClient which is more flexible for HTTPS without
  * having to add the certificate to the JVM TrustStore. It takes into account a
  * proxy management through {@code ProxyPreferenceManager}. The authentication
  * is also supported.
@@ -167,8 +167,7 @@ public class CommonsDataLoader implements DataLoader {
 	/**
 	 * The constructor for CommonsDataLoader with defined content-type.
 	 *
-	 * @param contentType
-	 *            The content type of each request
+	 * @param contentType The content type of each request
 	 */
 	public CommonsDataLoader(final String contentType) {
 		this.contentType = contentType;
@@ -217,11 +216,11 @@ public class CommonsDataLoader implements DataLoader {
 				LOG.debug("Use provided info for SSL");
 				fis = new FileInputStream(new File(sslKeystorePath));
 				DefaultKeyManager dkm = new DefaultKeyManager(fis, sslKeystoreType, sslKeystorePassword);
-				keysManager = new KeyManager[] { dkm };
+				keysManager = new KeyManager[]{dkm};
 			}
 
 			SSLContext sslContext = SSLContext.getInstance("TLS");
-			sslContext.init(keysManager, new TrustManager[] { trustManager }, new SecureRandom());
+			sslContext.init(keysManager, new TrustManager[]{trustManager}, new SecureRandom());
 
 			SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContext);
 			return socketFactoryRegistryBuilder.register("https", sslConnectionSocketFactory);
@@ -399,10 +398,8 @@ public class CommonsDataLoader implements DataLoader {
 	 * This method is useful only with the cache handling implementation of the
 	 * {@code DataLoader}.
 	 *
-	 * @param url
-	 *            to access
-	 * @param refresh
-	 *            if true indicates that the cached data should be refreshed
+	 * @param url     to access
+	 * @param refresh if true indicates that the cached data should be refreshed
 	 * @return {@code byte} array of obtained data
 	 */
 	@Override
@@ -446,7 +443,7 @@ public class CommonsDataLoader implements DataLoader {
 			}
 
 			final DirContext ctx = new InitialDirContext(env);
-			final Attributes attributes = ctx.getAttributes(Utils.EMPTY_STRING, new String[] { attributeName });
+			final Attributes attributes = ctx.getAttributes(Utils.EMPTY_STRING, new String[]{attributeName});
 			if (attributes == null || attributes.size() < 1) {
 				LOG.warn("Cannot download CRL from: " + urlString + ", no attributes with name: " + attributeName + " returned");
 			} else {
@@ -488,8 +485,7 @@ public class CommonsDataLoader implements DataLoader {
 	/**
 	 * This method retrieves data using HTTP or HTTPS protocol and 'get' method.
 	 *
-	 * @param url
-	 *            to access
+	 * @param url to access
 	 * @return {@code byte} array of obtained data or null
 	 */
 	protected byte[] httpGet(final String url) {
@@ -663,8 +659,7 @@ public class CommonsDataLoader implements DataLoader {
 	/**
 	 * Used when the {@code HttpClient} is created.
 	 *
-	 * @param timeoutConnection
-	 *            the value (millis)
+	 * @param timeoutConnection the value (millis)
 	 */
 	public void setTimeoutConnection(final int timeoutConnection) {
 
@@ -683,8 +678,7 @@ public class CommonsDataLoader implements DataLoader {
 	/**
 	 * Used when the {@code HttpClient} is created.
 	 *
-	 * @param timeoutSocket
-	 *            the value (millis)
+	 * @param timeoutSocket the value (millis)
 	 */
 	public void setTimeoutSocket(final int timeoutSocket) {
 
@@ -703,8 +697,7 @@ public class CommonsDataLoader implements DataLoader {
 	/**
 	 * Used when the {@code HttpClient} is created.
 	 *
-	 * @param connectionsMaxTotal
-	 *            maximum number of connections
+	 * @param connectionsMaxTotal maximum number of connections
 	 */
 	public void setConnectionsMaxTotal(int connectionsMaxTotal) {
 		this.connectionsMaxTotal = connectionsMaxTotal;
@@ -722,8 +715,7 @@ public class CommonsDataLoader implements DataLoader {
 	/**
 	 * Used when the {@code HttpClient} is created.
 	 *
-	 * @param connectionsMaxPerRoute
-	 *            maximum number of connections per one route
+	 * @param connectionsMaxPerRoute maximum number of connections per one route
 	 */
 	public void setConnectionsMaxPerRoute(int connectionsMaxPerRoute) {
 		this.connectionsMaxPerRoute = connectionsMaxPerRoute;
@@ -741,8 +733,7 @@ public class CommonsDataLoader implements DataLoader {
 	/**
 	 * Used when the {@code HttpClient} is created.
 	 *
-	 * @param redirectsEnabled
-	 *            true if http redirects are allowed
+	 * @param redirectsEnabled true if http redirects are allowed
 	 */
 	public void setRedirectsEnabled(boolean redirectsEnabled) {
 		this.redirectsEnabled = redirectsEnabled;
@@ -775,8 +766,7 @@ public class CommonsDataLoader implements DataLoader {
 	}
 
 	/**
-	 * @param proxyConfig
-	 *            the proxyConfig to set
+	 * @param proxyConfig the proxyConfig to set
 	 */
 	public void setProxyConfig(final ProxyConfig proxyConfig) {
 		this.proxyConfig = proxyConfig;
@@ -807,16 +797,11 @@ public class CommonsDataLoader implements DataLoader {
 	}
 
 	/**
-	 * @param host
-	 *            host
-	 * @param port
-	 *            port
-	 * @param scheme
-	 *            scheme
-	 * @param login
-	 *            login
-	 * @param password
-	 *            password
+	 * @param host     host
+	 * @param port     port
+	 * @param scheme   scheme
+	 * @param login    login
+	 * @param password password
 	 * @return this for fluent addAuthentication
 	 */
 	public CommonsDataLoader addAuthentication(final String host, final int port, final String scheme, final String login, final String password) {
@@ -832,9 +817,8 @@ public class CommonsDataLoader implements DataLoader {
 	 * This method allows to propagate the authentication information from the
 	 * current object.
 	 *
-	 * @param commonsDataLoader
-	 *            {@code CommonsDataLoader} to be initialized with
-	 *            authentication information
+	 * @param commonsDataLoader {@code CommonsDataLoader} to be initialized with
+	 *                          authentication information
 	 */
 	public void propagateAuthentication(final CommonsDataLoader commonsDataLoader) {
 

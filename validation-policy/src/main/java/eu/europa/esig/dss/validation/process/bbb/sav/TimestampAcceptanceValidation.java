@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.validation.process.bbb.sav;
 
 import java.util.Date;
@@ -7,12 +27,9 @@ import eu.europa.esig.dss.validation.policy.Context;
 import eu.europa.esig.dss.validation.policy.ValidationPolicy;
 import eu.europa.esig.dss.validation.process.ChainItem;
 import eu.europa.esig.dss.validation.process.bbb.sav.checks.CryptographicCheck;
-import eu.europa.esig.dss.validation.process.bbb.sav.checks.TimestampMessageImprintDataFoundCheck;
-import eu.europa.esig.dss.validation.process.bbb.sav.checks.TimestampMessageImprintDataIntactCheck;
 import eu.europa.esig.dss.validation.reports.wrapper.DiagnosticData;
 import eu.europa.esig.dss.validation.reports.wrapper.TimestampWrapper;
 import eu.europa.esig.jaxb.policy.CryptographicConstraint;
-import eu.europa.esig.jaxb.policy.LevelConstraint;
 
 /**
  * 5.2.8 Signature acceptance validation (SAV) This building block covers any
@@ -27,27 +44,13 @@ public class TimestampAcceptanceValidation extends AbstractAcceptanceValidation<
 
 	@Override
 	protected void initChain() {
-		ChainItem<XmlSAV> item = firstItem = timestampCryptographic();
+		firstItem = timestampCryptographic();
 
-		// PVA : best place to validate MessageImprintData here
-		// This allows to configure the validation with policy and to get a feedback in the UI
-		item = item.setNextItem(messageImprintDataFound());
-		item = item.setNextItem(messageImprintDataIntact());
 	}
 
 	private ChainItem<XmlSAV> timestampCryptographic() {
 		CryptographicConstraint constraint = validationPolicy.getSignatureCryptographicConstraint(Context.TIMESTAMP);
 		return new CryptographicCheck<XmlSAV>(result, token, currentTime, constraint);
-	}
-
-	private ChainItem<XmlSAV> messageImprintDataFound() {
-		LevelConstraint constraint = validationPolicy.getMessageImprintDataFoundConstraint();
-		return new TimestampMessageImprintDataFoundCheck(result, token, constraint);
-	}
-
-	private ChainItem<XmlSAV> messageImprintDataIntact() {
-		LevelConstraint constraint = validationPolicy.getMessageImprintDataIntactConstraint();
-		return new TimestampMessageImprintDataIntactCheck(result, token, constraint);
 	}
 
 }

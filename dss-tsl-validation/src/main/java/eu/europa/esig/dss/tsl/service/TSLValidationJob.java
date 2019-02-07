@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -35,8 +35,11 @@ import java.util.concurrent.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.DSSException;
+import eu.europa.esig.dss.FileDocument;
 import eu.europa.esig.dss.client.http.DataLoader;
+import eu.europa.esig.dss.tsl.OtherTrustedList;
 import eu.europa.esig.dss.tsl.TSLLoaderResult;
 import eu.europa.esig.dss.tsl.TSLParserResult;
 import eu.europa.esig.dss.tsl.TSLPointer;
@@ -72,6 +75,8 @@ public class TSLValidationJob {
 	private boolean checkLOTLSignature = true;
 	private boolean checkTSLSignatures = true;
 	private List<String> filterTerritories;
+
+	private List<OtherTrustedList> otherTrustedLists;
 
 	public void setExecutorService(ExecutorService executorService) {
 		if (this.executorService != null && !this.executorService.isShutdown()) {
@@ -143,6 +148,16 @@ public class TSLValidationJob {
 		this.filterTerritories = filterTerritories;
 	}
 
+	/**
+	 * This parameter allows to add non EU trusted lists.
+	 * 
+	 * @param otherTrustedLists
+	 *            a list of additional trusted lists to be supported
+	 */
+	public void setOtherTrustedLists(List<OtherTrustedList> otherTrustedLists) {
+		this.otherTrustedLists = otherTrustedLists;
+	}
+
 	public void initRepository() {
 		LOG.info("Initialization of the TSL repository ...");
 		int loadedTSL = 0;
@@ -151,7 +166,7 @@ public class TSLValidationJob {
 			List<Future<TSLParserResult>> futureParseResults = new ArrayList<Future<TSLParserResult>>();
 			for (File file : cachedFiles) {
 				try {
-					futureParseResults.add(executorService.submit(new TSLParser(file.getAbsolutePath())));
+					futureParseResults.add(executorService.submit(new TSLParser(new FileDocument(file))));
 				} catch (Exception e) {
 					LOG.error("Unable to parse file '" + file.getAbsolutePath() + "' : " + e.getMessage(), e);
 				}
@@ -179,15 +194,22 @@ public class TSLValidationJob {
 			}
 
 			if (checkTSLSignatures && ((europeanModel != null) && (europeanModel.getParseResult() != null))) {
-				List<TSLPointer> pointers = europeanModel.getParseResult().getPointers();
+				List<TSLPointer> lotlPointers = europeanModel.getParseResult().getPointers();
 				List<Future<TSLValidationResult>> futureValidationResults = new ArrayList<Future<TSLValidationResult>>();
 				Map<String, TSLValidationModel> map = repository.getAllMapTSLValidationModels();
 				for (Entry<String, TSLValidationModel> entry : map.entrySet()) {
 					String countryCode = entry.getKey();
+
 					if (!lotlCode.equals(countryCode)) {
 						TSLValidationModel countryModel = entry.getValue();
-						TSLValidator tslValidator = new TSLValidator(new File(countryModel.getFilepath()), countryCode,
-								getPotentialSigners(pointers, countryCode));
+						OtherTrustedList otherTL = getNonEUTrustedList(countryCode);
+						List<CertificateToken> potentialSigners = null;
+						if (otherTL != null) {
+							potentialSigners = otherTL.getTrustStore().getCertificates();
+						} else {
+							potentialSigners = getPotentialSigners(lotlPointers, countryCode);
+						}
+						TSLValidator tslValidator = new TSLValidator(new FileDocument(countryModel.getFilepath()), countryCode, potentialSigners);
 						futureValidationResults.add(executorService.submit(tslValidator));
 					}
 				}
@@ -197,7 +219,18 @@ public class TSLValidationJob {
 
 			repository.synchronize();
 		}
-		LOG.info(loadedTSL + " loaded TSL from cached files in the repository");
+		LOG.info("{} loaded TSL from cached files in the repository", loadedTSL);
+	}
+
+	private OtherTrustedList getNonEUTrustedList(String countryCode) {
+		if (Utils.isCollectionNotEmpty(otherTrustedLists)) {
+			for (OtherTrustedList otherTrustedList : otherTrustedLists) {
+				if (Utils.areStringsEqual(countryCode, otherTrustedList.getCountryCode())) {
+					return otherTrustedList;
+				}
+			}
+		}
+		return null;
 	}
 
 	public void refresh() {
@@ -259,6 +292,8 @@ public class TSLValidationJob {
 
 		analyzeCountryPointers(parseResult.getPointers(), newLotl);
 
+		analyzeNonEUCountryPointers();
+
 		repository.synchronize();
 
 		LOG.debug("TSL Validation Job is finishing ...");
@@ -294,15 +329,21 @@ public class TSLValidationJob {
 						pivotModel = repository.getPivotByUrl(loaderResult.getUrl());
 					}
 
+					if (pivotModel.getFilepath() == null) {
+						LOG.warn("No file found for url '{}'", loaderResult.getUrl());
+						continue;
+					}
+					DSSDocument trustedList = new FileDocument(pivotModel.getFilepath());
+
 					TSLParserResult pivotParseResult = pivotModel.getParseResult();
 					if (pivotParseResult == null) {
-						Future<TSLParserResult> parseResultFuture = executorService.submit(new TSLParser(pivotModel.getFilepath()));
+						Future<TSLParserResult> parseResultFuture = executorService.submit(new TSLParser(trustedList));
 						pivotParseResult = parseResultFuture.get();
 					}
 
 					TSLValidationResult pivotValidationResult = pivotModel.getValidationResult();
 					if (checkLOTLSignature && (pivotValidationResult == null)) {
-						TSLValidator tslValidator = new TSLValidator(new File(pivotModel.getFilepath()), loaderResult.getCountryCode(), allowedLotlSigners);
+						TSLValidator tslValidator = new TSLValidator(trustedList, loaderResult.getCountryCode(), allowedLotlSigners);
 						Future<TSLValidationResult> pivotValidationFuture = executorService.submit(tslValidator);
 						pivotValidationResult = pivotValidationFuture.get();
 					}
@@ -312,7 +353,7 @@ public class TSLValidationJob {
 						allowedLotlSigners.clear();
 						allowedLotlSigners.addAll(certs);
 					} else {
-						LOG.warn("Pivot '" + loaderResult.getUrl() + "' is not valid");
+						LOG.warn("Pivot '{}' is not valid", loaderResult.getUrl());
 					}
 
 				}
@@ -330,7 +371,7 @@ public class TSLValidationJob {
 				return tslPointer.getPotentialSigners();
 			}
 		}
-		LOG.warn("No LOTL pointer in pivot '" + loaderResult.getUrl() + "'");
+		LOG.warn("No LOTL pointer in pivot '{}'", loaderResult.getUrl());
 		return new ArrayList<CertificateToken>();
 	}
 
@@ -357,7 +398,7 @@ public class TSLValidationJob {
 		Iterator<String> itr = englishSchemeInformationURIs.descendingIterator();
 		while (itr.hasNext()) {
 			String uri = itr.next();
-			if (!Utils.areStringsEqual(ojUrl, uri) && !uri.startsWith(lotlRootSchemeInfoUri)) {
+			if (lotlRootSchemeInfoUri != null && !Utils.areStringsEqual(ojUrl, uri) && !uri.startsWith(lotlRootSchemeInfoUri)) {
 				pivotUris.add(uri);
 			}
 		}
@@ -382,7 +423,7 @@ public class TSLValidationJob {
 					LOG.error("Failed to load TSl for country '" + loaderResult.getCountryCode() + "' from '" + loaderResult.getUrl() + "'");
 					continue;
 				}
-				if (loaderResult != null && loaderResult.getContent() != null) {
+				if (loaderResult != null) {
 					TSLValidationModel countryModel = null;
 					if (!repository.isLastCountryVersion(loaderResult)) {
 						countryModel = repository.storeInCache(loaderResult);
@@ -390,13 +431,20 @@ public class TSLValidationJob {
 						countryModel = repository.getByCountry(loaderResult.getCountryCode());
 					}
 
+
+					if (countryModel.getFilepath() == null) {
+						LOG.warn("No file found for url '{}'", loaderResult.getUrl());
+						continue;
+					}
+					DSSDocument trustedList = new FileDocument(countryModel.getFilepath());
+
 					TSLParserResult countryParseResult = countryModel.getParseResult();
 					if (countryParseResult == null) {
-						futureParseResults.add(executorService.submit(new TSLParser(countryModel.getFilepath())));
+						futureParseResults.add(executorService.submit(new TSLParser(trustedList)));
 					}
 
 					if (checkTSLSignatures && (countryModel.getValidationResult() == null || newLotl)) {
-						TSLValidator tslValidator = new TSLValidator(new File(countryModel.getFilepath()), loaderResult.getCountryCode(),
+						TSLValidator tslValidator = new TSLValidator(trustedList, loaderResult.getCountryCode(),
 								getPotentialSigners(pointers, loaderResult.getCountryCode()));
 						futureValidationResults.add(executorService.submit(tslValidator));
 					}
@@ -406,6 +454,25 @@ public class TSLValidationJob {
 			}
 		}
 
+		storeParseResults(futureParseResults);
+		storeValidationResults(futureValidationResults);
+	}
+
+	private void analyzeNonEUCountryPointers() {
+		if (Utils.isCollectionNotEmpty(otherTrustedLists)) {
+			List<TSLPointer> pointers = new ArrayList<TSLPointer>();
+			for (OtherTrustedList otherTrustedList : otherTrustedLists) {
+				TSLPointer customPointer = new TSLPointer();
+				customPointer.setTerritory(otherTrustedList.getCountryCode());
+				customPointer.setUrl(otherTrustedList.getUrl());
+				customPointer.setPotentialSigners(otherTrustedList.getTrustStore().getCertificates());
+				pointers.add(customPointer);
+			}
+			analyzeCountryPointers(pointers, false);
+		}
+	}
+
+	private void storeParseResults(List<Future<TSLParserResult>> futureParseResults) {
 		for (Future<TSLParserResult> futureParseResult : futureParseResults) {
 			try {
 				TSLParserResult tslParserResult = futureParseResult.get();
@@ -414,8 +481,6 @@ public class TSLValidationJob {
 				LOG.error("Unable to get parsing result : " + e.getMessage(), e);
 			}
 		}
-
-		storeValidationResults(futureValidationResults);
 	}
 
 	private void storeValidationResults(List<Future<TSLValidationResult>> futureValidationResults) {
@@ -442,13 +507,13 @@ public class TSLValidationJob {
 
 	private TSLValidationResult validateLOTL(TSLValidationModel validationModel, List<CertificateToken> allowedSigners) throws Exception {
 		validationModel.setLotl(true);
-		TSLValidator tslValidator = new TSLValidator(new File(validationModel.getFilepath()), lotlCode, allowedSigners);
+		TSLValidator tslValidator = new TSLValidator(new FileDocument(validationModel.getFilepath()), lotlCode, allowedSigners);
 		Future<TSLValidationResult> future = executorService.submit(tslValidator);
 		return future.get();
 	}
 
 	private TSLParserResult parseLOTL(TSLValidationModel validationModel) throws Exception {
-		Future<TSLParserResult> future = executorService.submit(new TSLParser(validationModel.getFilepath()));
+		Future<TSLParserResult> future = executorService.submit(new TSLParser(new FileDocument(validationModel.getFilepath())));
 		return future.get();
 	}
 

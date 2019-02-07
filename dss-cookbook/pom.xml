@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.2.d4j.4</version>
+		<version>5.4.d4j.1</version>
 	</parent>
 
 	<name>CookBook</name>
@@ -42,9 +42,13 @@
       <groupId>${dss.groupId}</groupId>
 			<artifactId>dss-cades</artifactId>
 		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>eu.europa.ec.joinup.sd-dss</groupId> -->
+<!-- 			<artifactId>dss-pades-pdfbox</artifactId> -->
+<!-- 		</dependency> -->
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
-			<artifactId>dss-pades</artifactId>
+			<artifactId>dss-pades-openpdf</artifactId>
 		</dependency>
 		<dependency>
       <groupId>${dss.groupId}</groupId>
@@ -54,72 +58,83 @@
 			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-token</artifactId>
 		</dependency>
-		
 	</dependencies>
 	
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.asciidoctor</groupId>
-				<artifactId>asciidoctor-maven-plugin</artifactId>
-				<version>1.5.6</version>
-				<dependencies>
-                    <dependency>
-                        <groupId>org.asciidoctor</groupId>
-                        <artifactId>asciidoctorj-pdf</artifactId>
-                        <version>1.5.0-alpha.16</version>
-                    </dependency>
-                    <dependency>
-					    <groupId>org.jruby</groupId>
-					    <artifactId>jruby-complete</artifactId>
-					    <version>9.1.8.0</version>
-					</dependency>
-				</dependencies>
-				<executions>
-			        <execution>
-			            <id>output-html</id>
-			            <phase>generate-resources</phase>
-			            <goals>
-			                <goal>process-asciidoc</goal>
-			            </goals>
-			            <configuration>
-			                <backend>html</backend>
-			                <sourceHighlighter>coderay</sourceHighlighter>
-			                <attributes>
-                                <toc>left</toc>
-                                <sectanchors>true</sectanchors>
-                                <linkcss>true</linkcss>
-    							<dssVersion>${project.version}</dssVersion>
-			                </attributes>
-			            </configuration>
-			        </execution>
-			        <execution>
-                        <id>output-pdf</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>process-asciidoc</goal>
-                        </goals>
-						<configuration>
-							<backend>pdf</backend>
-			                <sourceHighlighter>coderay</sourceHighlighter>
+	<profiles>
+		<profile>
+			<id>asciidoctor</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.asciidoctor</groupId>
+						<artifactId>asciidoctor-maven-plugin</artifactId>
+						<version>1.5.7.1</version>
+						<dependencies>
+		                    <dependency>
+		                        <groupId>org.asciidoctor</groupId>
+		                        <artifactId>asciidoctorj-pdf</artifactId>
+		                        <version>1.5.0-alpha.16</version>
+		                    </dependency>
+		                    <dependency>
+							    <groupId>org.jruby</groupId>
+							    <artifactId>jruby-complete</artifactId>
+							    <version>9.1.17.0</version>
+							</dependency>
+						</dependencies>
+						<executions>
+					        <execution>
+					            <id>output-html</id>
+			            		<phase>package</phase>
+					            <goals>
+					                <goal>process-asciidoc</goal>
+					            </goals>
+					            <configuration>
+					                <backend>html</backend>
+					                <sourceHighlighter>coderay</sourceHighlighter>
+					                <attributes>
+		                                <toc>left</toc>
+		                                <sectanchors>true</sectanchors>
+		                                <linkcss>true</linkcss>
+		    							<dssVersion>${project.version}</dssVersion>
+					                </attributes>
+					            </configuration>
+					        </execution>
+					        <execution>
+		                        <id>output-pdf</id>
+			            		<phase>package</phase>
+		                        <goals>
+		                            <goal>process-asciidoc</goal>
+		                        </goals>
+								<configuration>
+									<backend>pdf</backend>
+					                <sourceHighlighter>coderay</sourceHighlighter>
+									<attributes>
+										<icons>font</icons>
+										<pagenums />
+										<toc />
+										<idseparator>-</idseparator>
+		    							<dssVersion>${project.version}</dssVersion>
+									</attributes>
+								</configuration>
+							</execution>
+					    </executions>
+					    <configuration>
+					        <sourceDirectory>src/main/asciidoc</sourceDirectory>
+					        <imagesDir>./images</imagesDir>
+					        <headerFooter>true</headerFooter>
+					    	<preserveDirectories>true</preserveDirectories>
+							<encoding>UTF-8</encoding>
 							<attributes>
-								<icons>font</icons>
-								<pagenums />
-								<toc />
-								<idseparator>-</idseparator>
-    							<dssVersion>${project.version}</dssVersion>
+								<sourcetestdir>${project.build.testSourceDirectory}</sourcetestdir>
 							</attributes>
-						</configuration>
-					</execution>
-			    </executions>
-			    <configuration>
-			        <sourceDirectory>src/main/asciidoc</sourceDirectory>
-			        <imagesDir>./images</imagesDir>
-			        <headerFooter>true</headerFooter>
-			    	<preserveDirectories>true</preserveDirectories>
-					<encoding>UTF-8</encoding>
-			    </configuration>
-			</plugin>
-		</plugins>
-	</build>
+					    </configuration>
+					</plugin>
+				</plugins>		
+			</build>
+		</profile>
+	</profiles>
+
 </project>

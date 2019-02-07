@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.crl;
 
 import java.io.InputStream;
@@ -53,8 +73,8 @@ public class CRLUtilsX509CRLImpl extends AbstractCRLUtils implements ICRLUtils {
 	 * out. A dedicated object based on
 	 * {@code CRLValidity} is created and accordingly updated.
 	 *
-	 * @param x509CRL
-	 *            {@code X509CRL} to be verified (cannot be null)
+	 * @param crlStream
+	 *            {@code InputStream} to be verified (cannot be null)
 	 * @param issuerToken
 	 *            {@code CertificateToken} used to sign the {@code X509CRL} (cannot be null)
 	 * @return {@code CRLValidity}
@@ -128,7 +148,8 @@ public class CRLUtilsX509CRLImpl extends AbstractCRLUtils implements ICRLUtils {
 	 * This method loads a CRL from the given location.
 	 *
 	 * @param inputStream
-	 * @return
+	 *            the {@code InputStream}
+	 * @return a new instance of {@code X509CRL}
 	 */
 	private X509CRL loadCRL(final InputStream inputStream) {
 		try {

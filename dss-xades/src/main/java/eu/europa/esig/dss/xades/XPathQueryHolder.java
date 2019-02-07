@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -80,6 +80,7 @@ public class XPathQueryHolder implements Serializable {
 	public final String XPATH_X509_DATA = XPATH_KEY_INFO + "/ds:X509Data";
 	public final String XPATH__ALL_DATA_OBJECTS_TIMESTAMP = "xades:AllDataObjectsTimeStamp";
 	public final String XPATH__INDIVIDUAL_DATA_OBJECTS_TIMESTAMP = "xades:IndividualDataObjectsTimeStamp";
+	public final String XPATH__COMMITMENT_TYPE_INDICATION = "xades:CommitmentTypeIndication";
 
 	public final String XPATH_KEY_INFO_X509_CERTIFICATE = XPATH_X509_DATA + "/ds:X509Certificate";
 
@@ -121,6 +122,9 @@ public class XPathQueryHolder implements Serializable {
 	public String XPATH__POLICY_SPURI = "./xades:SignaturePolicyId/xades:SigPolicyQualifiers/xades:SigPolicyQualifier/xades:SPURI";
 	public String XPATH__INCLUDE = "./xades:Include";
 
+	public String XPATH_COMMITMENT_IDENTIFICATION = XPATH_SIGNED_DATA_OBJECT_PROPERTIES + "/" + XPATH__COMMITMENT_TYPE_INDICATION;
+	public String XPATH_COMITMENT_IDENTIFIERS = "./xades:CommitmentTypeId/xades:Identifier";
+
 	public String XPATH__X509_ISSUER_NAME = "./xades:IssuerSerial/ds:X509IssuerName";
 	public String XPATH__X509_SERIAL_NUMBER = "./xades:IssuerSerial/ds:X509SerialNumber";
 	public String XPATH__X509_ISSUER_V2 = "./xades:IssuerSerialV2";
@@ -147,6 +151,7 @@ public class XPathQueryHolder implements Serializable {
 	public String XPATH_REVOCATION_CRL_REFS = XPATH_COMPLETE_REVOCATION_REFS + "/xades:CRLRefs";
 
 	public final String XPATH__DIGEST_METHOD_ALGORITHM = "./ds:DigestMethod/@Algorithm";
+	public final String XPATH__DS_TRANSFORM = "./ds:Transforms/ds:Transform";
 
 	public String XPATH__CRL_REF = "./xades:CRLRef";
 	public String XPATH__COMPLETE_CERTIFICATE_REFS__CERT_DIGEST = "./xades:CertRefs/xades:Cert/xades:CertDigest";

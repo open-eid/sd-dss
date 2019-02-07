@@ -1,25 +1,26 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 package eu.europa.esig.dss;
 
+import java.security.Key;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,6 +34,8 @@ public enum EncryptionAlgorithm {
 	DSA("DSA", "1.2.840.10040.4.1", "DSA"),
 
 	ECDSA("ECDSA", "1.2.840.10045.2.1", "ECDSA"),
+
+	PLAIN_ECDSA("PLAIN-ECDSA", "0.4.0.127.0.7.1.1.4.1", "PLAIN-ECDSA"),
 
 	HMAC("HMAC", "", "");
 
@@ -62,12 +65,23 @@ public enum EncryptionAlgorithm {
 	 * @throws DSSException
 	 *             if the oid doesn't match any algorithm
 	 */
-	public static EncryptionAlgorithm forOID(String oid) throws DSSException {
+	public static EncryptionAlgorithm forOID(String oid) {
 		EncryptionAlgorithm algorithm = Registry.OID_ALGORITHMS.get(oid);
 		if (algorithm == null) {
 			throw new DSSException("Unsupported algorithm: " + oid);
 		}
 		return algorithm;
+	}
+
+	/**
+	 * Returns the encryption algorithm associated to the given key.
+	 *
+	 * @param key the key
+	 * @return the linked encryption algorithm
+	 * @throws DSSException if the key doesn't match any algorithm
+	 */
+	public static EncryptionAlgorithm forKey(Key key) {
+		return forName(key.getAlgorithm());
 	}
 
 	/**
@@ -79,7 +93,7 @@ public enum EncryptionAlgorithm {
 	 * @throws DSSException
 	 *             if the name doesn't match any algorithm
 	 */
-	public static EncryptionAlgorithm forName(final String name) throws DSSException {
+	public static EncryptionAlgorithm forName(final String name) {
 		// To be checked if ECC exists also .
 		if ("EC".equals(name) || "ECC".equals(name)) {
 			return ECDSA;
@@ -108,14 +122,13 @@ public enum EncryptionAlgorithm {
 		}
 
 		try {
-			final EncryptionAlgorithm encryptionAlgorithm = valueOf(name);
-			return encryptionAlgorithm;
+			return valueOf(name);
 		} catch (Exception e) {
 			return defaultValue;
 		}
 	}
 
-	private EncryptionAlgorithm(String name, String oid, String padding) {
+	EncryptionAlgorithm(String name, String oid, String padding) {
 		this.name = name;
 		this.oid = oid;
 		this.padding = padding;

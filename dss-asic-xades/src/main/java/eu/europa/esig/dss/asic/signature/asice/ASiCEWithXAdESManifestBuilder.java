@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.asic.signature.asice;
 
 import java.util.List;
@@ -16,15 +36,15 @@ import eu.europa.esig.dss.asic.ManifestNamespace;
  * Sample:
  * 
  * <pre>
- * <code>
+ * {@code
  * 		<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">
  * 			<manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.etsi.asic-e+zip"/>
  * 			<manifest:file-entry manifest:full-path="test.txt" manifest:media-type="text/plain"/>
  * 			<manifest:file-entry manifest:full-path="test-data-file.bin" manifest:media-type=
 "application/octet-stream"/>
  * 		</manifest:manifest>
+ * }
  * </pre>
- * </code>
  *
  */
 public class ASiCEWithXAdESManifestBuilder {

@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.token;
 
 import java.util.ArrayList;
@@ -5,6 +25,7 @@ import java.util.List;
 
 import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.DigestAlgorithm;
+import eu.europa.esig.dss.MaskGenerationFunction;
 import eu.europa.esig.dss.RemoteCertificate;
 import eu.europa.esig.dss.RemoteKeyEntry;
 import eu.europa.esig.dss.SignatureValue;
@@ -22,13 +43,7 @@ public class RemoteSignatureTokenConnectionImpl implements RemoteSignatureTokenC
 	@Override
 	public List<RemoteKeyEntry> getKeys() throws DSSException {
 		List<RemoteKeyEntry> result = new ArrayList<RemoteKeyEntry>();
-		List<DSSPrivateKeyEntry> keys = new ArrayList<DSSPrivateKeyEntry>();
-		try {
-			keys = token.getKeys();
-		} finally {
-			token.close();
-		}
-
+		List<DSSPrivateKeyEntry> keys = token.getKeys();
 		for (DSSPrivateKeyEntry keyEntry : keys) {
 			result.add(convert((KSPrivateKeyEntry) keyEntry));
 		}
@@ -37,25 +52,19 @@ public class RemoteSignatureTokenConnectionImpl implements RemoteSignatureTokenC
 
 	@Override
 	public RemoteKeyEntry getKey(String alias) throws DSSException {
-		KSPrivateKeyEntry key = null;
-		try {
-			key = token.getKey(alias);
-		} finally {
-			token.close();
-		}
+		KSPrivateKeyEntry key = (KSPrivateKeyEntry) token.getKey(alias);
 		return convert(key);
 	}
 
 	@Override
 	public SignatureValue sign(ToBeSigned toBeSigned, DigestAlgorithm digestAlgorithm, String alias) throws DSSException {
-		SignatureValue signatureValue = null;
-		try {
-			DSSPrivateKeyEntry key = token.getKey(alias);
-			signatureValue = token.sign(toBeSigned, digestAlgorithm, key);
-		} finally {
-			token.close();
-		}
-		return signatureValue;
+		return sign(toBeSigned, digestAlgorithm, null, alias);
+	}
+
+	@Override
+	public SignatureValue sign(ToBeSigned toBeSigned, DigestAlgorithm digestAlgorithm, MaskGenerationFunction mgf, String alias) throws DSSException {
+		DSSPrivateKeyEntry key = token.getKey(alias);
+		return token.sign(toBeSigned, digestAlgorithm, mgf, key);
 	}
 
 	private RemoteKeyEntry convert(KSPrivateKeyEntry key) {

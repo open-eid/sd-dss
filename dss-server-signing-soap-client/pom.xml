@@ -3,12 +3,11 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.2.d4j.4</version>
+		<version>5.4.d4j.1</version>
 	</parent>
 	
 	<name>DSS Server signing SOAP Client</name>
 	<artifactId>dss-server-signing-soap-client</artifactId>
-	
 	
 	<dependencies>
 	  	<dependency>
@@ -16,4 +15,21 @@
 	    	<artifactId>dss-model</artifactId>
 	  	</dependency>
 	</dependencies>
+
+	<profiles>
+		<profile>
+            <id>jdk19-plus</id>
+            <activation>
+                <jdk>[9,)</jdk>
+            </activation>
+            
+            <dependencies>
+	            <dependency>
+				    <groupId>com.sun.xml.ws</groupId>
+				    <artifactId>jaxws-ri</artifactId>
+			    	<type>pom</type>
+				</dependency>
+            </dependencies>
+    	</profile>
+    </profiles>
 </project>

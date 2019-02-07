@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.xades.signature;
 
 import static org.junit.Assert.assertEquals;
@@ -14,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.DSSDocument;
-import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.FileDocument;
 import eu.europa.esig.dss.MimeType;
@@ -41,7 +60,7 @@ public class ManifestBuilderTest {
 			String xmlContent = new String(Utils.toByteArray(is), "UTF-8");
 			assertTrue(xmlContent.contains(XAdESBuilder.DS_MANIFEST));
 			assertTrue(xmlContent.contains(file1.getName()));
-			assertTrue(xmlContent.contains(Utils.toBase64(DSSUtils.digest(DigestAlgorithm.SHA512, file1))));
+			assertTrue(xmlContent.contains(file1.getDigest(DigestAlgorithm.SHA512)));
 			LOG.info(xmlContent);
 		}
 	}

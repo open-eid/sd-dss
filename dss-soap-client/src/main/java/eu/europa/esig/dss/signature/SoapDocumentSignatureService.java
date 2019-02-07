@@ -1,19 +1,19 @@
 /**
  * DSS - Digital Signature Services
  * Copyright (C) 2015 European Commission, provided under the CEF programme
- *
+ * 
  * This file is part of the "DSS - Digital Signature Services" project.
- *
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -50,6 +50,7 @@ public interface SoapDocumentSignatureService extends Serializable {
 	 *            a DTO which contains the document to sign and parameters
 	 * @return the data to be signed
 	 * @throws DSSException
+	 *             if an error occurred
 	 */
 	@WebResult(name = "response")
 	ToBeSigned getDataToSign(@WebParam(name = "dataToSignDTO") DataToSignOneDocumentDTO dataToSign) throws DSSException;
@@ -62,6 +63,7 @@ public interface SoapDocumentSignatureService extends Serializable {
 	 *            a DTO which contains the document to be signed, the parameters and the signature value
 	 * @return the signed document
 	 * @throws DSSException
+	 *             if an error occurred
 	 */
 	@WebResult(name = "response")
 	RemoteDocument signDocument(@WebParam(name = "signDocumentDTO") SignOneDocumentDTO signDocument) throws DSSException;
@@ -74,6 +76,7 @@ public interface SoapDocumentSignatureService extends Serializable {
 	 *            a DTO which contains the document to be extented and the parameters
 	 * @return the document with an extended signature
 	 * @throws DSSException
+	 *             if an error occurred
 	 */
 	@WebResult(name = "response")
 	RemoteDocument extendDocument(@WebParam(name = "extendDocumentDTO") ExtendDocumentDTO extendDocument) throws DSSException;
