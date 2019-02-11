@@ -89,7 +89,7 @@ public class OnlineTSPSourceTest {
 		assertNotNull(timeStampResponse);
 	}
 
-	@Test(expected = NullPointerException.class)
+	@Test(expected = DSSException.class)
 	public void testNotTSA() {
 		OnlineTSPSource tspSource = new OnlineTSPSource();
 		tspSource.setDataLoader(new TimestampDataLoader());

@@ -16,6 +16,9 @@ import javax.net.ssl.X509KeyManager;
 
 /**
  * Default Keys Manager.
+ * TODO: Remove once SSL context is forced
+ * @see <a href="https://github.com/esig/dss/commit/3bf3cffeda6e44a1ed17297caf06aac34fc15704#diff-dd0604e08dcdb1b89e09016e4424f667">https://github.com/esig/dss/commit/3bf3cffeda6e44a1ed17297caf06aac34fc15704#diff-dd0604e08dcdb1b89e09016e4424f667</a>
+ *
  *
  * @author lodermatt
  */
