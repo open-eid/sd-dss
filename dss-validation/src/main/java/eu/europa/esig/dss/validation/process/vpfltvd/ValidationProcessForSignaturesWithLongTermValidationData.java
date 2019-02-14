@@ -43,6 +43,7 @@ import eu.europa.esig.dss.diagnostic.TimestampWrapper;
 import eu.europa.esig.dss.diagnostic.TokenProxy;
 import eu.europa.esig.dss.enumerations.Context;
 import eu.europa.esig.dss.enumerations.Indication;
+import eu.europa.esig.dss.enumerations.RevocationOrigin;
 import eu.europa.esig.dss.enumerations.RevocationReason;
 import eu.europa.esig.dss.enumerations.SubIndication;
 import eu.europa.esig.dss.i18n.I18nProvider;
@@ -95,6 +96,8 @@ import java.util.Map;
  * 5.5 Validation process for Signatures with Time and Signatures with Long-Term Validation Data
  */
 public class ValidationProcessForSignaturesWithLongTermValidationData extends Chain<XmlValidationProcessLongTermData> {
+
+	private static final String BDOC_TM_POLICY_ID = "1.3.6.1.4.1.10015.1000.3.2.1";
 
 	/** Basic signature validation conclusion */
 	private final XmlConstraintsConclusion basicSignatureValidation;
@@ -285,6 +288,23 @@ public class ValidationProcessForSignaturesWithLongTermValidationData extends Ch
 
 			}
 
+		} else {
+			/*
+			 * In case of BDOC-TM there are no timestamps, therefore best signature time is OCSP production date
+			 */
+			if (BDOC_TM_POLICY_ID.equals(currentSignature.getPolicyId())) {
+				if (Utils.isMapNotEmpty(certificateRevocationMap)) {
+					for (Map.Entry<CertificateWrapper, CertificateRevocationWrapper> revocation : certificateRevocationMap.entrySet()) {
+						if (RevocationOrigin.INPUT_DOCUMENT.equals(revocation.getValue().getOrigin())) {
+							Date productionDate = revocation.getValue().getProductionDate();
+							if (productionDate.before(bestSignatureTime.getTime())) {
+								bestSignatureTime = new XmlProofOfExistence();
+								bestSignatureTime.setTime(productionDate);
+							}
+						}
+					}
+				}
+			}
 		}
 
 		// If no LTA material, perform *-level timestamp validation
