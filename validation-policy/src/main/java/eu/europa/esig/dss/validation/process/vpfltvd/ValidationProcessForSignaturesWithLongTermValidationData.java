@@ -67,6 +67,8 @@ public class ValidationProcessForSignaturesWithLongTermValidationData extends Ch
 
 	private static final Logger LOG = LoggerFactory.getLogger(ValidationProcessForSignaturesWithLongTermValidationData.class);
 
+	private static final String BDOC_TM_POLICY_ID = "1.3.6.1.4.1.10015.1000.3.2.1";
+
 	private final XmlConstraintsConclusion basicSignatureValidation;
 	private final List<XmlValidationProcessTimestamps> timestampValidations;
 
@@ -149,6 +151,22 @@ public class ValidationProcessForSignaturesWithLongTermValidationData extends Ch
 				Date productionTime = timestampWrapper.getProductionTime();
 				if (productionTime.before(bestSignatureTime)) {
 					bestSignatureTime = productionTime;
+				}
+			}
+		} else {
+			/*
+			 * In case of BDOC-TM there are no timestamps, therefore best signature time is OCSP production date
+			 */
+			if (BDOC_TM_POLICY_ID.equals(currentSignature.getPolicyId())) {
+				if (Utils.isCollectionNotEmpty(revocationData)) {
+					for (RevocationWrapper revocation : revocationData) {
+						if ("SIGNATURE".equalsIgnoreCase(revocation.getOrigin())) {
+							Date productionDate = revocation.getProductionDate();
+							if (productionDate.before(bestSignatureTime)) {
+								bestSignatureTime = productionDate;
+							}
+						}
+					}
 				}
 			}
 		}
