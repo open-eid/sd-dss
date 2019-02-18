@@ -279,7 +279,7 @@ public class Pkcs11SignatureToken extends AbstractKeyStoreTokenConnection {
 		pkcs11Config.append("name = SmartCard").append(UUID.randomUUID());
 		pkcs11Config.append(NEW_LINE).append("library = ").append(DOUBLE_QUOTE).append(aPKCS11LibraryFileName)
 				.append(DOUBLE_QUOTE);
-		pkcs11Config.append(NEW_LINE).append("slot = ").append(slotId);
+		pkcs11Config.append(NEW_LINE).append("slotListIndex = ").append(slotId);
 
 		if (extraPkcs11Config != null && !extraPkcs11Config.isEmpty()) {
 			pkcs11Config.append(NEW_LINE).append(extraPkcs11Config);
