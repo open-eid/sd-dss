@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="5.2.d4j.4"
+version="5.4.d4j.1"
 staging_url="https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 #staging_url=file:/Users/rainer/tmp/test-local-repo
 repositoryId="ossrh"
@@ -14,7 +14,7 @@ export GPG_AGENT_INFO
 mvn gpg:sign-and-deploy-file -DpomFile=pom.xml -Dfile=pom.xml -Durl=$staging_url -DrepositoryId=$repositoryId
 
 # Deploy each sub module artifacts
-for submodule in dss-common-validation-jaxb dss-detailed-report-jaxb dss-diagnostic-jaxb dss-document dss-model dss-policy-jaxb dss-reports dss-service dss-simple-report-jaxb dss-spi dss-token dss-tsl-jaxb dss-tsl-validation dss-xades validation-policy dss-pades dss-cades dss-utils dss-soap dss-utils-apache-commons dss-rest-client dss-server-signing-common dss-asic-xades dss-crl-parser-stream dss-server-signing-soap dss-asic-common dss-utils-google-guava dss-rest dss-test dss-crl-parser dss-cookbook dss-server-signing-rest dss-validation-rest dss-soap-client dss-validation-rest-client sscd-mocca-adapter dss-validation-soap-client dss-remote-services dss-asic-cades dss-validation-soap dss-server-signing-soap-client dss-server-signing-rest-client dss-crl-parser-x509crl
+for submodule in dss-asic-cades dss-asic-common dss-asic-xades dss-cades dss-common-validation-jaxb dss-cookbook dss-crl-parser dss-crl-parser-stream dss-crl-parser-x509crl dss-detailed-report-jaxb dss-diagnostic-jaxb dss-document dss-model dss-pades dss-pades-openpdf dss-pades-pdfbox dss-policy-jaxb dss-remote-services dss-reports dss-rest dss-rest-client dss-server-signing-common dss-server-signing-rest dss-server-signing-rest-client dss-server-signing-soap dss-server-signing-soap-client dss-service dss-simple-certificate-report-jaxb dss-simple-report-jaxb dss-soap dss-soap-client dss-spi dss-test dss-token dss-tsl-jaxb dss-tsl-validation dss-utils dss-utils-apache-commons dss-utils-google-guava dss-validation-rest dss-validation-rest-client dss-validation-soap dss-validation-soap-client dss-xades sscd-mocca-adapter validation-policy
 do
 	echo "Deploying submodule $submodule"
     cd $submodule
