@@ -21,7 +21,7 @@
 package org.digidoc4j.dss.xades;
 
 import eu.europa.esig.dss.DomUtils;
-import eu.europa.esig.dss.Policy;
+import eu.europa.esig.dss.model.Policy;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 import eu.europa.esig.dss.xades.XPathQueryHolder;

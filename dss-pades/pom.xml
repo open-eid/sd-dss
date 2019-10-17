@@ -6,13 +6,17 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.4.d4j.1</version>
+		<version>5.5.d4j.1</version>
 	</parent>
 
 	<artifactId>dss-pades</artifactId>
 	<name>DSS PAdES</name>
 	<description>DSS PAdES contains the code for the creation and validation of PAdES signatures.</description>
 	
+	<properties>
+		<module-name>jpms_dss_pades</module-name>
+	</properties>
+
   	<dependencies>
         <dependency>
             <groupId>${dss.groupId}</groupId>

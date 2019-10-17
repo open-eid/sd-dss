@@ -3,13 +3,17 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.4.d4j.1</version>
+		<version>5.5.d4j.1</version>
 	</parent>
 
 	<artifactId>dss-asic-common</artifactId>
 	<name>DSS ASiC Common</name>
 	<description>DSS ASiC-common contains common classes between ASiC C/XAdES.</description>
 
+	<properties>
+		<module-name>jpms_dss_asic_common</module-name>
+	</properties>
+	
 	<dependencies>
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
@@ -24,6 +28,11 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

@@ -36,7 +36,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import eu.europa.esig.dss.DomUtils;
-import eu.europa.esig.dss.FileDocument;
+import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.utils.Utils;
 
 public class DSSXMLUtilsTest {
@@ -92,6 +92,12 @@ public class DSSXMLUtilsTest {
 		DSSXMLUtils.setIDIdentifier((Element) list.item(0));
 
 		assertNotNull(dom.getElementById("signedData"));
+	}
+
+	@Test
+	public void isDuplicateIdsDetected() {
+		assertTrue(DSSXMLUtils.isDuplicateIdsDetected(new FileDocument("src/test/resources/sample-duplicate-ids.xml")));
+		assertFalse(DSSXMLUtils.isDuplicateIdsDetected(new FileDocument("src/test/resources/sample.xml")));
 	}
 
 }

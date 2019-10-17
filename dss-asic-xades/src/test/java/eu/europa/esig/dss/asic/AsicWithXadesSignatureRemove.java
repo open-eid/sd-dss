@@ -7,9 +7,9 @@ import java.util.zip.ZipInputStream;
 import org.junit.Assert;
 import org.junit.Test;
 
-import eu.europa.esig.dss.DSSDocument;
-import eu.europa.esig.dss.FileDocument;
-import eu.europa.esig.dss.asic.signature.ASiCWithXAdESService;
+import eu.europa.esig.dss.model.DSSDocument;
+import eu.europa.esig.dss.model.FileDocument;
+import eu.europa.esig.dss.asic.xades.signature.ASiCWithXAdESService;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
 
