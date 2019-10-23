@@ -75,8 +75,8 @@ public class ASiCEWithCAdESManifestBuilderTest {
 		documents.add(new InMemoryDocument(new byte[] { 1, 2, 3 }, "test", MimeType.BINARY));
 		List<DSSDocument> manifests = new ArrayList<DSSDocument>();
 		documents.add(new InMemoryDocument(new byte[] { 1, 2, 3 }, "test.xml", MimeType.XML));
-		ASiCEWithCAdESArchiveManifestBuilder builder = new ASiCEWithCAdESArchiveManifestBuilder(signatures, timestamps, 
-				documents, manifests, DigestAlgorithm.SHA256, "timestamp.tst");
+		ASiCEWithCAdESArchiveManifestBuilder builder = new ASiCEWithCAdESArchiveManifestBuilder(signatures, timestamps,
+				documents, manifests, null, DigestAlgorithm.SHA256, "timestamp.tst");
 		Document build = builder.build();
 
 		validator.validate(new DOMSource(build));

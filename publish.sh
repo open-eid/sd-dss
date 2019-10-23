@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="5.4.d4j.1"
+version="5.5.d4j.1"
 staging_url="https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 #staging_url=file:/Users/rainer/tmp/test-local-repo
 repositoryId="ossrh"
@@ -14,7 +14,7 @@ export GPG_AGENT_INFO
 mvn gpg:sign-and-deploy-file -DpomFile=pom.xml -Dfile=pom.xml -Durl=$staging_url -DrepositoryId=$repositoryId
 
 # Deploy each sub module artifacts
-for submodule in dss-asic-cades dss-asic-common dss-asic-xades dss-cades dss-common-validation-jaxb dss-cookbook dss-crl-parser dss-crl-parser-stream dss-crl-parser-x509crl dss-detailed-report-jaxb dss-diagnostic-jaxb dss-document dss-model dss-pades dss-pades-openpdf dss-pades-pdfbox dss-policy-jaxb dss-remote-services dss-reports dss-rest dss-rest-client dss-server-signing-common dss-server-signing-rest dss-server-signing-rest-client dss-server-signing-soap dss-server-signing-soap-client dss-service dss-simple-certificate-report-jaxb dss-simple-report-jaxb dss-soap dss-soap-client dss-spi dss-test dss-token dss-tsl-jaxb dss-tsl-validation dss-utils dss-utils-apache-commons dss-utils-google-guava dss-validation-rest dss-validation-rest-client dss-validation-soap dss-validation-soap-client dss-xades sscd-mocca-adapter validation-policy
+for submodule in dss-asic-cades dss-asic-common dss-asic-xades dss-cades dss-certificate-validation-common dss-certificate-validation-dto dss-certificate-validation-rest-client dss-certificate-validation-rest dss-certificate-validation-soap-client dss-certificate-validation-soap dss-common-remote-converter dss-common-remote-dto dss-cookbook dss-crl-parser-stream dss-crl-parser-x509crl dss-crl-parser dss-detailed-report-jaxb dss-diagnostic-jaxb dss-document dss-enumerations dss-jaxb-parsers dss-model dss-pades-openpdf dss-pades-pdfbox dss-pades dss-policy-jaxb dss-server-signing-common dss-server-signing-dto dss-server-signing-rest-client dss-server-signing-rest dss-server-signing-soap-client dss-server-signing-soap dss-service dss-signature-dto dss-signature-remote dss-signature-rest-client dss-signature-rest dss-signature-soap-client dss-signature-soap dss-simple-certificate-report-jaxb dss-simple-report-jaxb dss-spi dss-test dss-token dss-tsl-validation dss-utils-apache-commons dss-utils-google-guava dss-utils dss-validation-dto dss-validation-rest-client dss-validation-rest dss-validation-server-common dss-validation-soap-client dss-validation-soap dss-xades specs-trusted-list specs-validation-report specs-xades specs-xmldsig validation-policy
 do
 	echo "Deploying submodule $submodule"
     cd $submodule

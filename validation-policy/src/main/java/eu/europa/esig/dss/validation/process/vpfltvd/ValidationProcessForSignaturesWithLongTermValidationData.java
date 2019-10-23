@@ -43,6 +43,10 @@ import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
 import eu.europa.esig.dss.diagnostic.TimestampWrapper;
+import eu.europa.esig.dss.enumerations.Context;
+import eu.europa.esig.dss.enumerations.Indication;
+import eu.europa.esig.dss.enumerations.SubIndication;
+import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.policy.SubContext;
 import eu.europa.esig.dss.policy.ValidationPolicy;
 import eu.europa.esig.dss.policy.jaxb.LevelConstraint;
@@ -217,7 +221,7 @@ public class ValidationProcessForSignaturesWithLongTermValidationData extends Ch
 			item = item.setNextItem(algorithmReliableAtBestSignatureTime(bestSignatureTime.getTime()));
 
 			// check validity of Cryptographic Constraints for the Signing Certificate and CA Certificates
-			item = certificatesChainReliableAtBestSignatureTime(item, bestSignatureTime.getTime());
+			item = item.setNextItem(certificatesChainReliableAtBestSignatureTime(item, bestSignatureTime.getTime()));
 			
 		}
 

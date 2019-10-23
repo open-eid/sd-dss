@@ -61,6 +61,7 @@ import eu.europa.esig.dss.enumerations.MaskGenerationFunction;
 import eu.europa.esig.dss.enumerations.SignatureAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureForm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
+import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.Digest;
 import eu.europa.esig.dss.model.identifier.TokenIdentifier;
@@ -394,20 +395,24 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 
 		final CandidatesForSigningCertificate candidates = getCandidatesForSigningCertificate();
 		final List<CertificateRef> potentialSigningCertificates = getCertificateSource().getSigningCertificateValues();
+		
+		if (Utils.isCollectionNotEmpty(potentialSigningCertificates)) {
+			// must contain only one reference
+			final CertificateRef signingCert = potentialSigningCertificates.get(0);
+			Digest certDigest = signingCert.getCertDigest();
+			IssuerSerialInfo issuerInfo = signingCert.getIssuerInfo();
 
-		final List<CertificateValidity> certificateValidityList = candidates.getCertificateValidityList();
-		for (final CertificateValidity certificateValidity : certificateValidityList) {
-			certificateValidity.setAttributePresent(Utils.isCollectionNotEmpty(potentialSigningCertificates));
-
-			final CertificateToken certificateToken = certificateValidity.getCertificateToken();
-			
-			if (Utils.isCollectionNotEmpty(potentialSigningCertificates)) {
-				// must contain only one reference
-				final CertificateRef signingCert = potentialSigningCertificates.get(0);
-
-				Digest certDigest = signingCert.getCertDigest();
+			final List<CertificateValidity> certificateValidityList = candidates.getCertificateValidityList();
+			for (final CertificateValidity certificateValidity : certificateValidityList) {
+				certificateValidity.setAttributePresent(signingCert != null);
+				certificateValidity.setDigestPresent(certDigest != null);
+	
+				final CertificateToken certificateToken = certificateValidity.getCertificateToken();
+				if (certificateToken == null) {
+					continue;
+				}
+	
 				if (certDigest != null) {
-					certificateValidity.setDigestPresent(true);
 					DigestAlgorithm digestAlgorithm = certDigest.getAlgorithm();
 					byte[] expectedDigest = certDigest.getValue();
 					byte[] currentDigest = certificateToken.getDigest(digestAlgorithm);
@@ -415,7 +420,6 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 					certificateValidity.setDigestEqual(digestEqual);
 				}
 
-				IssuerSerialInfo issuerInfo = signingCert.getIssuerInfo();
 				if (issuerInfo != null) {
 					BigInteger serialNumber = issuerInfo.getSerialNumber();
 					X500Principal issuerName = issuerInfo.getIssuerName();
@@ -839,8 +843,8 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 					} catch (ReferenceNotInitializedException e) {
 						// continue, exception will be catched later
 					}
-					
-					final String uri = validation.getUri();
+
+					final String uri = validation.getUriOrEmpty();
 					
 					boolean noDuplicateIdFound = XMLUtils.protectAgainstWrappingAttack(santuarioSignature.getDocument(), DomUtils.getId(uri));
 					boolean isElementReference = DomUtils.isElementReference(uri);
@@ -938,8 +942,11 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	private Node getSignedPropertiesById(String uri) {
-		String signedPropertiesById = xPathQueryHolder.XPATH_SIGNED_PROPERTIES + DomUtils.getXPathByIdAttribute(uri);
-		return DomUtils.getNode(signatureElement, signedPropertiesById);
+		if (Utils.isStringNotBlank(uri)) {
+			String signedPropertiesById = xPathQueryHolder.XPATH_SIGNED_PROPERTIES + DomUtils.getXPathByIdAttribute(uri);
+			return DomUtils.getNode(signatureElement, signedPropertiesById);
+		}
+		return null;
 	}
 
 	private boolean findObjectById(String uri) {
@@ -947,13 +954,19 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	public Node getObjectById(String uri) {
-		String objectById = XPathQueryHolder.XPATH_OBJECT + DomUtils.getXPathByIdAttribute(uri);
-		return DomUtils.getNode(signatureElement, objectById);
+		if (Utils.isStringNotBlank(uri)) {
+			String objectById = XPathQueryHolder.XPATH_OBJECT + DomUtils.getXPathByIdAttribute(uri);
+			return DomUtils.getNode(signatureElement, objectById);
+		}
+		return null;
 	}
 
 	public Node getManifestById(String uri) {
-		String manifestById = XPathQueryHolder.XPATH_MANIFEST + DomUtils.getXPathByIdAttribute(uri);
-		return DomUtils.getNode(signatureElement, manifestById);
+		if (Utils.isStringNotBlank(uri)) {
+			String manifestById = XPathQueryHolder.XPATH_MANIFEST + DomUtils.getXPathByIdAttribute(uri);
+			return DomUtils.getNode(signatureElement, manifestById);
+		}
+		return null;
 	}
 
 	private ReferenceValidation notFound(DigestMatcherType type) {
@@ -977,11 +990,24 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 			// Secure validation disabled to support all signature algos
 			santuarioSignature = new XMLSignature(signatureElement, "", false);
 			if (Utils.isCollectionNotEmpty(detachedContents)) {
-				santuarioSignature.addResourceResolver(new DetachedSignatureResolver(detachedContents, getSignatureAlgorithm().getDigestAlgorithm()));
+				initDetachedSignatureResolvers(detachedContents);
 			}
 			return santuarioSignature;
 		} catch (XMLSecurityException e) {
 			throw new DSSException("Unable to initialize santuario XMLSignature", e);
+		}
+	}
+
+	private void initDetachedSignatureResolvers(List<DSSDocument> detachedContents) {
+		List<Reference> currentReferences = getReferences();
+		for (Reference reference : currentReferences) {
+			try {
+				DigestAlgorithm digestAlgorithm = DigestAlgorithm.forXML(reference.getMessageDigestAlgorithm().getAlgorithmURI());
+				santuarioSignature
+						.addResourceResolver(new DetachedSignatureResolver(detachedContents, digestAlgorithm));
+			} catch (XMLSignatureException e) {
+				LOG.warn("Unable to retrieve reference digest algorithm {}", reference.getId(), e);
+			}
 		}
 	}
 
@@ -1043,12 +1069,19 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	 * @return
 	 */
 	protected List<CertificateValidity> getSigningCertificateValidityList(final PublicKey extractedPublicKey) {
-
+		
 		candidatesForSigningCertificate = new CandidatesForSigningCertificate();
-		final CertificateValidity certificateValidity = new CertificateValidity(extractedPublicKey);
-		candidatesForSigningCertificate.add(certificateValidity);
-		final List<CertificateValidity> certificateValidityList = candidatesForSigningCertificate.getCertificateValidityList();
-		return certificateValidityList;
+		// try to find out the signing certificate token by provided public key
+		List<CertificateToken> certsWithExtractedPublicKey = certPool.get(extractedPublicKey);
+		if (Utils.isCollectionNotEmpty(certsWithExtractedPublicKey)) {
+			for (CertificateToken certificateToken : certsWithExtractedPublicKey) {
+				candidatesForSigningCertificate.add(new CertificateValidity(certificateToken));
+			}
+		} else {
+			// process public key only if no certificates found
+			candidatesForSigningCertificate.add(new CertificateValidity(extractedPublicKey));
+		}
+		return candidatesForSigningCertificate.getCertificateValidityList();
 	}
 
 	/**

@@ -220,8 +220,9 @@
 							</compilerArgs>
 						</configuration>
 					</execution>
-				</executions>          
+				</executions>
 			</plugin>
+			
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -524,7 +525,7 @@
 		<url>https://ec.europa.eu/cefdigital/code/scm/esig/dss.git</url>
 		<connection>scm:git:https://ec.europa.eu/cefdigital/code/scm/esig/dss.git</connection>
 		<developerConnection>scm:git:https://ec.europa.eu/cefdigital/code/scm/esig/dss.git</developerConnection>
-		<tag>5.5.RC1</tag>
+		<tag>5.5</tag>
 	</scm>
 
 	<dependencyManagement>
@@ -665,6 +666,26 @@
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-signature-rest-client</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-signature-soap</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-signature-soap-client</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-validation-dto</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-validation-server-common</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
