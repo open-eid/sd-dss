@@ -263,7 +263,7 @@ public class CommonsDataLoader implements DataLoader {
 
 	private KeyStore loadKeyStore(String path, String type, String passwordStr) throws IOException, GeneralSecurityException {
 		if (Utils.isStringNotEmpty(path)) {
-			try (InputStream is = new FileInputStream(path)) {
+			try (InputStream is = openKeyStoreInputStream(path)) {
 				KeyStore ks = KeyStore.getInstance(type);
 				final char[] password = passwordStr != null ? passwordStr.toCharArray() : null;
 				ks.load(is, password);
@@ -272,6 +272,15 @@ public class CommonsDataLoader implements DataLoader {
 		} else {
 			return null;
 		}
+	}
+
+	private InputStream openKeyStoreInputStream(String path) throws IOException {
+		if (path.startsWith("classpath:")) {
+			return getClass().getClassLoader().getResourceAsStream(path.substring("classpath:".length()));
+		} else if (path.startsWith("file:")) {
+			path = path.substring("file:".length());
+		}
+		return new FileInputStream(path);
 	}
 
 	protected synchronized HttpClientBuilder getHttpClientBuilder() {
