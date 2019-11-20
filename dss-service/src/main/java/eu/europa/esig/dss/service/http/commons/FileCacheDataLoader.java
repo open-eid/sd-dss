@@ -40,7 +40,7 @@ import eu.europa.esig.dss.utils.Utils;
  * {@code java.io.tmpdir}. The urls of the resources is transformed to the
  * file name by replacing the special characters by {@code _}
  */
-public class FileCacheDataLoader extends CommonsDataLoader implements DataLoader {
+public class FileCacheDataLoader implements DataLoader {
 
 	private static final Logger LOG = LoggerFactory.getLogger(FileCacheDataLoader.class);
 
@@ -166,7 +166,7 @@ public class FileCacheDataLoader extends CommonsDataLoader implements DataLoader
 		if (!isNetworkProtocol(url)) {
 			bytes = getLocalFileContent(url);
 		} else {
-			bytes = super.get(url);
+			bytes = dataLoader.get(url);
 		}
 
 		if (Utils.isArrayNotEmpty(bytes)) {

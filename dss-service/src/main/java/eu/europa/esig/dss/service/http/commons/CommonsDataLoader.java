@@ -20,14 +20,16 @@
  */
 package eu.europa.esig.dss.service.http.commons;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -40,7 +42,7 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
-import javax.net.ssl.*;
+import javax.net.ssl.HostnameVerifier;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
@@ -79,16 +81,17 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.service.http.proxy.ProxyConfig;
+import eu.europa.esig.dss.service.http.proxy.ProxyProperties;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.client.http.DataLoader;
 import eu.europa.esig.dss.spi.client.http.Protocol;
-import eu.europa.esig.dss.service.http.proxy.ProxyConfig;
-import eu.europa.esig.dss.service.http.proxy.ProxyProperties;
 import eu.europa.esig.dss.utils.Utils;
 
 /**
@@ -98,27 +101,26 @@ import eu.europa.esig.dss.utils.Utils;
  * having to add the certificate to the JVM TrustStore. It takes into account a
  * proxy management through {@code ProxyPreferenceManager}. The authentication
  * is also supported.
- *
- * PS! This class has SSL context enforcement commit excluded
- * @see <a href="https://github.com/esig/dss/commit/3bf3cffeda6e44a1ed17297caf06aac34fc15704#diff-dd0604e08dcdb1b89e09016e4424f667">https://github.com/esig/dss/commit/3bf3cffeda6e44a1ed17297caf06aac34fc15704#diff-dd0604e08dcdb1b89e09016e4424f667</a>
  */
 public class CommonsDataLoader implements DataLoader {
 
+	private static final long serialVersionUID = -805432648564425522L;
+
 	private static final Logger LOG = LoggerFactory.getLogger(CommonsDataLoader.class);
 
-	public static final int TIMEOUT_CONNECTION = 6000;
+	private static final int TIMEOUT_CONNECTION = 6000;
 
-	public static final int TIMEOUT_SOCKET = 6000;
+	private static final int TIMEOUT_SOCKET = 6000;
 
-	public static final int CONNECTIONS_MAX_TOTAL = 20;
+	private static final int CONNECTIONS_MAX_TOTAL = 20;
 
-	public static final int CONNECTIONS_MAX_PER_ROUTE = 2;
+	private static final int CONNECTIONS_MAX_PER_ROUTE = 2;
 
-	public static final String CONTENT_TYPE = "Content-Type";
+	private static final String CONTENT_TYPE = "Content-Type";
 
-	public static final String DEFAULT_SSL_PROTOCOL = "TLSv1.2";
+	private static final String DEFAULT_SSL_PROTOCOL = "TLSv1.2";
 
-	public static final List<Integer> ACCEPTED_HTTP_STATUS = Arrays.asList(HttpStatus.SC_OK);
+	private static final List<Integer> ACCEPTED_HTTP_STATUS = Arrays.asList(HttpStatus.SC_OK);
 
 	protected String contentType;
 
@@ -221,39 +223,33 @@ public class CommonsDataLoader implements DataLoader {
 
 	private RegistryBuilder<ConnectionSocketFactory> setConnectionManagerSchemeHttps(
 			final RegistryBuilder<ConnectionSocketFactory> socketFactoryRegistryBuilder) {
-		FileInputStream fis = null;
-		FileInputStream trustStoreIs = null;
 		try {
 
-			X509TrustManager trustManager = null;
-			if (Utils.isStringEmpty(sslTruststorePath)) {
-				trustManager = new AcceptAllTrustManager();
-			} else {
-				trustStoreIs = new FileInputStream(new File(sslTruststorePath));
-				trustManager = new DefaultTrustManager(trustStoreIs, sslTruststoreType, sslTruststorePassword);
+			SSLContextBuilder sslContextBuilder = SSLContextBuilder.create();
+			sslContextBuilder.setProtocol(sslProtocol);
+
+			final KeyStore sslTrustStore = getSSLTrustStore();
+			if (sslTrustStore != null) {
+				LOG.debug("Set the SSL trust store as trust materials");
+				sslContextBuilder.loadTrustMaterial(sslTrustStore, getTrustStrategy());
 			}
 
-			KeyManager[] keysManager = null;
-			if (Utils.isStringEmpty(sslKeystorePath)) {
-				LOG.debug("Use default SSL configuration");
-				keysManager = new KeyManager[0];
-			} else {
-				LOG.debug("Use provided info for SSL");
-				fis = new FileInputStream(new File(sslKeystorePath));
-				DefaultKeyManager dkm = new DefaultKeyManager(fis, sslKeystoreType, sslKeystorePassword);
-				keysManager = new KeyManager[] { dkm };
+			final KeyStore sslKeystore = getSSLKeyStore();
+			if (sslKeystore != null) {
+				LOG.debug("Set the SSL keystore as key materials");
+				final char[] password = sslKeystorePassword != null ? sslKeystorePassword.toCharArray() : null;
+				sslContextBuilder.loadKeyMaterial(sslKeystore, password);
+				if (loadKeyStoreAsTrustMaterial) {
+					LOG.debug("Set the SSL keystore as trust materials");
+					sslContextBuilder.loadTrustMaterial(sslKeystore, getTrustStrategy());
+				}
 			}
 
-			SSLContext sslContext = SSLContext.getInstance(sslProtocol);
-			sslContext.init(keysManager, new TrustManager[] { trustManager }, new SecureRandom());
-
-			SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContext);
+			SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContextBuilder.build(), getSupportedSSLProtocols(),
+					getSupportedSSLCipherSuites(), getHostnameVerifier());
 			return socketFactoryRegistryBuilder.register("https", sslConnectionSocketFactory);
 		} catch (final Exception e) {
-			throw new DSSException(e);
-		} finally {
-			Utils.closeQuietly(fis);
-			Utils.closeQuietly(trustStoreIs);
+			throw new DSSException("Unable to configure the SSLContext/SSLConnectionSocketFactory", e);
 		}
 	}
 
@@ -461,7 +457,9 @@ public class CommonsDataLoader implements DataLoader {
 	 * @param urlString
 	 * @return
 	 */
-	protected byte[] ldapGet(final String urlString) {
+	protected byte[] ldapGet(String urlString) {
+
+		urlString = LdapURLUtils.encode(urlString);
 
 		final Hashtable<String, String> env = new Hashtable<String, String>();
 		env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");

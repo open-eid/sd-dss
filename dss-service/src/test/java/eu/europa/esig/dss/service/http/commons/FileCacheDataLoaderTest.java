@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -55,7 +54,6 @@ public class FileCacheDataLoaderTest {
 		dataLoader.setFileCacheDirectory(cacheDirectory);
 	}
 
-	@Ignore
 	@Test(expected = NullPointerException.class)
 	public void testNotDefineSubDataLoader() {
 		FileCacheDataLoader fcdl = new FileCacheDataLoader();
