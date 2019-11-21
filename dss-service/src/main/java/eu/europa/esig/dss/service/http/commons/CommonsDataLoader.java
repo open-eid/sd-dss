@@ -22,6 +22,7 @@ package eu.europa.esig.dss.service.http.commons;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -276,7 +277,12 @@ public class CommonsDataLoader implements DataLoader {
 
 	private InputStream openKeyStoreInputStream(String path) throws IOException {
 		if (path.startsWith("classpath:")) {
-			return getClass().getClassLoader().getResourceAsStream(path.substring("classpath:".length()));
+			path = path.substring("classpath:".length());
+			URL url = getClass().getClassLoader().getResource(path);
+			if (url == null) {
+				throw new FileNotFoundException("Resource not found: " + path);
+			}
+			return url.openStream();
 		} else if (path.startsWith("file:")) {
 			path = path.substring("file:".length());
 		}
