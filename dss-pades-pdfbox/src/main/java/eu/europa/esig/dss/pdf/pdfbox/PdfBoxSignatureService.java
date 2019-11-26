@@ -336,7 +336,8 @@ public class PdfBoxSignatureService extends AbstractPDFSignatureService {
 
 						final byte[] cms = signatureDictionary.getContents();
 						byte[] signedContent = new byte[] {};
-						if (!isContentValueEqualsByteRangeExtraction(document, byteRange, cms, signature.getName())) {
+						// DD4J-477: temporary fix until DSS-1888 (https://ec.europa.eu/cefdigital/tracker/browse/DSS-1888) is solved
+						if (!isContentValueEqualsByteRangeExtraction(document, byteRange, cms, signatureField.getPartialName())) {
 							LOG.warn("Signature '{}' is skipped. SIWA detected !", signatureField.getPartialName());
 						} else {
 							signedContent = getSignedContent(document, byteRange);
@@ -368,7 +369,8 @@ public class PdfBoxSignatureService extends AbstractPDFSignatureService {
 							signatures.add(signatureInfo);
 						}
 					} catch (Exception e) {
-						LOG.error("Unable to parse signature '" + signature.getName() + "' : ", e);
+						// DD4J-477: temporary fix until DSS-1888 (https://ec.europa.eu/cefdigital/tracker/browse/DSS-1888) is solved
+						LOG.error("Unable to parse signature '" + signatureField.getPartialName() + "' : ", e);
 					}
 				}
 				linkSignatures(signatures);
