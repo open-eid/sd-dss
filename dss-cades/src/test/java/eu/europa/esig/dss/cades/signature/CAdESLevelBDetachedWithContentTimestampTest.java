@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import eu.europa.esig.dss.cades.CAdESSignatureParameters;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
@@ -38,13 +38,13 @@ import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 
 public class CAdESLevelBDetachedWithContentTimestampTest extends AbstractCAdESTestSignature {
 
-	private DocumentSignatureService<CAdESSignatureParameters> service;
+	private DocumentSignatureService<CAdESSignatureParameters, CAdESTimestampParameters> service;
 	private CAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
-		service = new CAdESService(getCompleteCertificateVerifier());
+		service = new CAdESService(getOfflineCertificateVerifier());
 		service.setTspSource(getAlternateGoodTsa());
 
 		documentToSign = new InMemoryDocument("Hello World".getBytes());
@@ -63,15 +63,15 @@ public class CAdESLevelBDetachedWithContentTimestampTest extends AbstractCAdESTe
 	@Override
 	protected SignedDocumentValidator getValidator(final DSSDocument signedDocument) {
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(signedDocument);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
-		List<DSSDocument> detachedContents = new ArrayList<DSSDocument>();
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
+		List<DSSDocument> detachedContents = new ArrayList<>();
 		detachedContents.add(documentToSign);
 		validator.setDetachedContents(detachedContents);
 		return validator;
 	}
 
 	@Override
-	protected DocumentSignatureService<CAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<CAdESSignatureParameters, CAdESTimestampParameters> getService() {
 		return service;
 	}
 

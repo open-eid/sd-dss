@@ -38,7 +38,7 @@ import eu.europa.esig.dss.enumerations.RevocationType;
 public class RevocationWrapper extends AbstractTokenProxy {
 
 	private final XmlRevocation revocation;
-
+	
 	public RevocationWrapper(XmlRevocation revocation) {
 		Objects.requireNonNull(revocation, "XMLRevocation cannot be null!");
 		this.revocation = revocation;
@@ -62,6 +62,16 @@ public class RevocationWrapper extends AbstractTokenProxy {
 	@Override
 	protected XmlSigningCertificate getCurrentSigningCertificate() {
 		return revocation.getSigningCertificate();
+	}
+
+	/**
+	 * Returns FoundCertificatesProxy to access embedded certificates
+	 * 
+	 * @return {@link FoundCertificatesProxy}
+	 */
+	@Override
+	public FoundCertificatesProxy foundCertificates() {
+		return new FoundCertificatesProxy(revocation.getFoundCertificates());
 	}
 
 	public Date getProductionDate() {

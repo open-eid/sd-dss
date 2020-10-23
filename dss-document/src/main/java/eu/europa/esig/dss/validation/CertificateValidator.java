@@ -21,22 +21,31 @@
 package eu.europa.esig.dss.validation;
 
 import java.util.Date;
+import java.util.Locale;
 import java.util.Objects;
 
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDiagnosticData;
+import eu.europa.esig.dss.enumerations.TokenExtractionStategy;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.policy.ValidationPolicy;
 import eu.europa.esig.dss.policy.ValidationPolicyFacade;
-import eu.europa.esig.dss.validation.executor.CertificateProcessExecutor;
-import eu.europa.esig.dss.validation.executor.DefaultCertificateProcessExecutor;
+import eu.europa.esig.dss.validation.executor.certificate.CertificateProcessExecutor;
+import eu.europa.esig.dss.validation.executor.certificate.DefaultCertificateProcessExecutor;
 import eu.europa.esig.dss.validation.reports.CertificateReports;
 
 public class CertificateValidator implements ProcessExecutorProvider<CertificateProcessExecutor> {
 
-	private Date validationTime = new Date();
+	private Date validationTime;
 	private final CertificateToken token;
 	private CertificateVerifier certificateVerifier;
+	private TokenExtractionStategy tokenExtractionStategy = TokenExtractionStategy.NONE;
+	
+	/**
+	 * Locale to use for reports generation
+	 * By default a Locale from OS is used
+	 */
+	private Locale locale = Locale.getDefault();
 	
 	private CertificateProcessExecutor processExecutor;
 
@@ -53,8 +62,24 @@ public class CertificateValidator implements ProcessExecutorProvider<Certificate
 		this.certificateVerifier = certificateVerifier;
 	}
 
+	public void setTokenExtractionStategy(TokenExtractionStategy tokenExtractionStategy) {
+		Objects.requireNonNull(tokenExtractionStategy);
+		this.tokenExtractionStategy = tokenExtractionStategy;
+	}
+
 	public void setValidationTime(Date validationTime) {
 		this.validationTime = validationTime;
+	}
+	
+	public void setLocale(Locale locale) {
+		this.locale = locale;
+	}
+	
+	private Date getValidationTime() {
+		if (validationTime == null) {
+			validationTime = new Date();
+		}
+		return validationTime;
 	}
 
 	public CertificateReports validate() {
@@ -72,21 +97,22 @@ public class CertificateValidator implements ProcessExecutorProvider<Certificate
 		SignatureValidationContext svc = new SignatureValidationContext();
 		svc.initialize(certificateVerifier);
 		svc.addCertificateTokenForVerification(token);
-		svc.setCurrentTime(validationTime);
+		svc.setCurrentTime(getValidationTime());
 		svc.validate();
 
 		final XmlDiagnosticData diagnosticData = new DiagnosticDataBuilder().usedCertificates(svc.getProcessedCertificates())
-				.usedRevocations(svc.getProcessedRevocations()).includeRawCertificateTokens(certificateVerifier.isIncludeCertificateTokenValues())
-				.includeRawRevocationData(certificateVerifier.isIncludeCertificateRevocationValues())
+				.usedRevocations(svc.getProcessedRevocations()).tokenExtractionStategy(
+						tokenExtractionStategy)
 				.certificateSourceTypes(svc.getCertificateSourceTypes())
-				.trustedCertificateSource(certificateVerifier.getTrustedCertSource())
-				.validationDate(svc.getCurrentTime()).build();
+				.trustedCertificateSources(certificateVerifier.getTrustedCertSources())
+				.validationDate(getValidationTime()).build();
 
 		CertificateProcessExecutor executor = provideProcessExecutorInstance();
 		executor.setValidationPolicy(validationPolicy);
 		executor.setDiagnosticData(diagnosticData);
 		executor.setCertificateId(token.getDSSIdAsString());
-		executor.setCurrentTime(svc.getCurrentTime());
+		executor.setLocale(locale);
+		executor.setCurrentTime(getValidationTime());
 		return executor.execute();
 	}
 
@@ -97,9 +123,14 @@ public class CertificateValidator implements ProcessExecutorProvider<Certificate
 
 	public CertificateProcessExecutor provideProcessExecutorInstance() {
 		if (processExecutor == null) {
-			processExecutor = new DefaultCertificateProcessExecutor();
+			processExecutor = getDefaultProcessExecutor();
 		}
 		return processExecutor;
+	}
+
+	@Override
+	public CertificateProcessExecutor getDefaultProcessExecutor() {
+		return new DefaultCertificateProcessExecutor();
 	}
 
 }

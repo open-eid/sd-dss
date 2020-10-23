@@ -25,18 +25,19 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.bouncycastle.tsp.TimeStampToken;
+import org.bouncycastle.cms.CMSException;
+import org.bouncycastle.tsp.TSPException;
 
 import eu.europa.esig.dss.DomUtils;
 import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
-import eu.europa.esig.dss.model.TimestampParameters;
+import eu.europa.esig.dss.model.TimestampBinary;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
-import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 import eu.europa.esig.dss.xades.DSSXMLUtils;
+import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 
 /**
  * This class allows to create a XAdES content-timestamp which covers all documents (AllDataObjectsTimeStamp).
@@ -45,9 +46,9 @@ import eu.europa.esig.dss.xades.DSSXMLUtils;
 public class AllDataObjectsTimeStampBuilder {
 
 	private final TSPSource tspSource;
-	private final TimestampParameters timestampParameters;
+	private final XAdESTimestampParameters timestampParameters;
 
-	public AllDataObjectsTimeStampBuilder(TSPSource tspSource, TimestampParameters timestampParameters) {
+	public AllDataObjectsTimeStampBuilder(TSPSource tspSource, XAdESTimestampParameters timestampParameters) {
 		this.tspSource = tspSource;
 		this.timestampParameters = timestampParameters;
 	}
@@ -57,7 +58,6 @@ public class AllDataObjectsTimeStampBuilder {
 	}
 
 	public TimestampToken build(List<DSSDocument> documents) {
-		boolean canonicalizationUsed = false;
 		byte[] dataToBeDigested = null;
 
 		/*
@@ -67,12 +67,17 @@ public class AllDataObjectsTimeStampBuilder {
 		 * 3) concatenate the resulting octets to those resulting from previously processed ds:Reference elements in
 		 * ds:SignedInfo.
 		 */
+		
+		/*
+		 * A canonicalization method must be always used, 4.4.3.2:
+		 * If the data object is a node-set and the next transform requires octets, the signature application must 
+		 * attempt to convert the node-set to an octet stream using Canonical XML [XML-C14N].
+		 */
 		try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 			for (DSSDocument document : documents) {
 				byte[] binaries = DSSUtils.toByteArray(document);
-				if (Utils.isStringNotEmpty(timestampParameters.getCanonicalizationMethod()) && DomUtils.isDOM(binaries)) {
+				if (DomUtils.isDOM(binaries)) {
 					binaries = DSSXMLUtils.canonicalize(timestampParameters.getCanonicalizationMethod(), binaries);
-					canonicalizationUsed = true;
 				}
 				baos.write(binaries);
 			}
@@ -82,14 +87,14 @@ public class AllDataObjectsTimeStampBuilder {
 		}
 
 		byte[] digestToTimestamp = DSSUtils.digest(timestampParameters.getDigestAlgorithm(), dataToBeDigested);
-		TimeStampToken timeStampResponse = tspSource.getTimeStampResponse(timestampParameters.getDigestAlgorithm(), digestToTimestamp);
-		TimestampToken token = new TimestampToken(timeStampResponse, TimestampType.ALL_DATA_OBJECTS_TIMESTAMP);
-
-		if (canonicalizationUsed) {
+		TimestampBinary timeStampResponse = tspSource.getTimeStampResponse(timestampParameters.getDigestAlgorithm(), digestToTimestamp);
+		try {
+			TimestampToken token = new TimestampToken(timeStampResponse.getBytes(), TimestampType.ALL_DATA_OBJECTS_TIMESTAMP);
 			token.setCanonicalizationMethod(timestampParameters.getCanonicalizationMethod());
+			return token;
+		} catch (TSPException | IOException | CMSException e) {
+			throw new DSSException("Cannot build an AllDataObjectsTimestamp", e);
 		}
-
-		return token;
 	}
 
 }

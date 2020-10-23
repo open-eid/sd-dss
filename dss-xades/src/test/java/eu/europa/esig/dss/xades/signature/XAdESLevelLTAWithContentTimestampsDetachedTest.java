@@ -20,33 +20,41 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
-import eu.europa.esig.dss.enumerations.CommitmentType;
-import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.diagnostic.CertificateWrapper;
+import eu.europa.esig.dss.diagnostic.DiagnosticData;
+import eu.europa.esig.dss.diagnostic.RelatedCertificateWrapper;
+import eu.europa.esig.dss.diagnostic.TimestampWrapper;
+import eu.europa.esig.dss.enumerations.CommitmentTypeEnum;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
+import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.SignerLocation;
-import eu.europa.esig.dss.model.TimestampParameters;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
+import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 
 public class XAdESLevelLTAWithContentTimestampsDetachedTest extends AbstractXAdESTestSignature {
 
-	private DocumentSignatureService<XAdESSignatureParameters> service;
+	private DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> service;
 	private XAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		service = new XAdESService(getCompleteCertificateVerifier());
 		service.setTspSource(getGoodTsa());
@@ -64,27 +72,61 @@ public class XAdESLevelLTAWithContentTimestampsDetachedTest extends AbstractXAdE
 		signerLocation.setLocality("Brussels");
 		signerLocation.setStreet("Anspach");
 		signatureParameters.bLevel().setSignerLocation(signerLocation);
-
 		signatureParameters.bLevel()
-				.setCommitmentTypeIndications(Arrays.asList(CommitmentType.ProofOfSender.getUri(), CommitmentType.ProofOfCreation.getUri()));
-
+				.setCommitmentTypeIndications(Arrays.asList(CommitmentTypeEnum.ProofOfSender, CommitmentTypeEnum.ProofOfCreation));
 		signatureParameters.bLevel().setClaimedSignerRoles(Arrays.asList("Manager", "Administrator"));
-
 		signatureParameters.setAddX509SubjectName(true);
 
-		TimestampParameters contentTimestampParameters = new TimestampParameters();
-		contentTimestampParameters.setCanonicalizationMethod(null); // The file cannot be canonicalized
-		signatureParameters.setContentTimestampParameters(contentTimestampParameters);
 		TimestampToken contentTimestamp = service.getContentTimestamp(documentToSign, signatureParameters);
-
-		contentTimestampParameters = new TimestampParameters();
-		contentTimestampParameters.setDigestAlgorithm(DigestAlgorithm.SHA512);
-		contentTimestampParameters.setCanonicalizationMethod(null); // The file cannot be canonicalized
-		signatureParameters.setContentTimestampParameters(contentTimestampParameters);
 		TimestampToken contentTimestamp2 = service.getContentTimestamp(documentToSign, signatureParameters);
 
 		signatureParameters.setContentTimestamps(Arrays.asList(contentTimestamp, contentTimestamp2));
 
+	}
+
+	@Override
+	protected SignedDocumentValidator getValidator(final DSSDocument signedDocument) {
+		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(signedDocument);
+		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		List<DSSDocument> detachedContents = new ArrayList<>();
+		detachedContents.add(documentToSign);
+		validator.setDetachedContents(detachedContents);
+		return validator;
+	}
+	
+	@Override
+	protected void checkTimestamps(DiagnosticData diagnosticData) {
+		super.checkTimestamps(diagnosticData);
+		List<TimestampWrapper> timestampList = diagnosticData.getTimestampList();
+		assertEquals(4, timestampList.size());
+		
+		TimestampWrapper contentTimestamp = timestampList.get(0);
+		assertTrue(contentTimestamp.getType().isContentTimestamp());
+		assertEquals(TimestampType.ALL_DATA_OBJECTS_TIMESTAMP, contentTimestamp.getType());
+		
+		List<RelatedCertificateWrapper> foundCertificates = contentTimestamp.foundCertificates().getRelatedCertificates();
+		List<TimestampWrapper> contentTimestamps = new ArrayList<>();
+		for (TimestampWrapper timestampWrapper : timestampList) {
+			if (timestampWrapper.getType().isContentTimestamp()) {
+				contentTimestamps.add(timestampWrapper);
+			} else {
+				List<String> certIds = timestampWrapper.getTimestampedCertificates().stream().map(CertificateWrapper::getId).collect(Collectors.toList());
+				for (CertificateWrapper certificate : foundCertificates) {
+					assertTrue(certIds.contains(certificate.getId()));
+				}
+				List<String> tstIds = timestampWrapper.getTimestampedTimestamps().stream().map(TimestampWrapper::getId).collect(Collectors.toList());
+				for (TimestampWrapper contentTst : contentTimestamps) {
+					assertTrue(tstIds.contains(contentTst.getId()));
+				}
+			}
+			if (timestampWrapper.getType().isSignatureTimestamp()) {
+				assertEquals(2, timestampWrapper.getTimestampedTimestamps().size());
+			}
+			if (timestampWrapper.getType().isArchivalTimestamp()) {
+				assertEquals(3, timestampWrapper.getTimestampedTimestamps().size());
+			}
+		}
+		assertEquals(2, contentTimestamps.size());
 	}
 
 	@Override
@@ -93,17 +135,7 @@ public class XAdESLevelLTAWithContentTimestampsDetachedTest extends AbstractXAdE
 	}
 
 	@Override
-	protected SignedDocumentValidator getValidator(final DSSDocument signedDocument) {
-		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(signedDocument);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
-		List<DSSDocument> detachedContents = new ArrayList<DSSDocument>();
-		detachedContents.add(documentToSign);
-		validator.setDetachedContents(detachedContents);
-		return validator;
-	}
-
-	@Override
-	protected DocumentSignatureService<XAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> getService() {
 		return service;
 	}
 

@@ -20,20 +20,13 @@
  */
 package eu.europa.esig.dss.asic.xades.validation;
 
-import eu.europa.esig.dss.asic.common.validation.ASiCSignatureValidator;
 import eu.europa.esig.dss.model.DSSDocument;
-import eu.europa.esig.dss.spi.x509.CertificatePool;
 import eu.europa.esig.dss.xades.validation.XMLDocumentValidator;
 
-public class XMLDocumentForASiCValidator extends XMLDocumentValidator implements ASiCSignatureValidator {
+public class XMLDocumentForASiCValidator extends XMLDocumentValidator {
 
 	public XMLDocumentForASiCValidator(DSSDocument signature) {
 		super(signature);
-	}
-
-	@Override
-	public void setValidationCertPool(CertificatePool validationCertPool) {
-		this.validationCertPool = validationCertPool;
 	}
 
 }

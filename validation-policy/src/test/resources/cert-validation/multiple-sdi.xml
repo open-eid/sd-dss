@@ -22,6 +22,7 @@
             <NotBefore>2017-06-27T09:49:44</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-083B05E17DDB9E83B08F3E1D0EDD4CD01915A8213AE76689205FC36C473E417B</EntityKey>
             <KeyUsageBits/>
             <ExtendedKeyUsages>
                 <extendedKeyUsagesOid Description="ocspSigning">1.3.6.1.5.5.7.3.9</extendedKeyUsagesOid>
@@ -41,27 +42,26 @@
             <QCStatementIds/>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>TSP-4.2 Name</TSPName>
-                    <TSPRegistrationIdentifier>VATDE-203204628</TSPRegistrationIdentifier>
-                    <CountryCode>FR</CountryCode>
+                <TrustedServiceProvider TL="TL-433E6C4CF87F07071EB1290A9D23E95C6D81F89E76233383457477747249118F" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames><TSPName lang="en">TSP-4.2 Name</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATDE-203204628</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-083B05E17DDB9E83B08F3E1D0EDD4CD01915A8213AE76689205FC36C473E417B">
-                            <ServiceName>TS-4.2.2 Name</ServiceName>
+                            <ServiceNames><ServiceName lang="en">TS-4.2.2 Name</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-06-30T22:00:00</StartDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-083B05E17DDB9E83B08F3E1D0EDD4CD01915A8213AE76689205FC36C473E417B">
-                            <ServiceName>TS-4.2.3 Name</ServiceName>
+                            <ServiceNames><ServiceName lang="en">TS-4.2.3 Name</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-06-30T22:00:00</StartDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                     </TrustedServices>
@@ -96,6 +96,7 @@
             <NotBefore>2017-06-27T09:49:46</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-C011F11E98AEFF48798AD5874A7A7F0C8192ADD1AB6D37825FE42C2F9F5847EB</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>nonRepudiation</KeyUsage>
                 <KeyUsage>digitalSignature</KeyUsage>
@@ -124,13 +125,12 @@
                 <qcTypeOid Description="qc-type-esign">0.4.0.1862.1.6.1</qcTypeOid>
             </QCTypes>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>TSP-4.2 Name</TSPName>
-                    <TSPRegistrationIdentifier>VATDE-203204628</TSPRegistrationIdentifier>
-                    <CountryCode>FR</CountryCode>
+                <TrustedServiceProvider TL="TL-433E6C4CF87F07071EB1290A9D23E95C6D81F89E76233383457477747249118F" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+					<TSPNames><TSPName lang="en">TSP-4.2 Name</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATDE-203204628</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-083B05E17DDB9E83B08F3E1D0EDD4CD01915A8213AE76689205FC36C473E417B">
-                            <ServiceName>TS-4.2.2 Name</ServiceName>
+                            <ServiceNames><ServiceName lang="en">TS-4.2.2 Name</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-06-30T22:00:00</StartDate>
@@ -138,17 +138,17 @@
                                 <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/NotQualified</Qualifier>
                             </CapturedQualifiers>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-083B05E17DDB9E83B08F3E1D0EDD4CD01915A8213AE76689205FC36C473E417B">
-                            <ServiceName>TS-4.2.3 Name</ServiceName>
+                            <ServiceNames><ServiceName lang="en">TS-4.2.3 Name</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-06-30T22:00:00</StartDate>
                             <CapturedQualifiers/>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                     </TrustedServices>
@@ -156,7 +156,7 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-c011f11e98aeff48798ad5874a7a7f0c8192add1ab6d37825fe42c2f9f5847ebc706b823277299734990996f5beb815915af1dc1a709a5351530fcd93ae49028">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <Base64Encoded>MIIEeTCCA2GgAwIBAgIBETANBgkqhkiG9w0BAQsFADBQMRIwEAYDVQQDDAlTREktNC4yLjIxFTATBgNVBAoMDFRTUC00LjIgTmFtZTEWMBQGA1UECwwNQ0VSVCBGT1IgVEVTVDELMAkGA1UEBhMCRlIwHhcNMTcwNjI3MDk0OTQ2WhcNMTkwNjI3MDk0OTQ2WjBaMRgwFgYDVQQDDA9DRVJULVRFU1QtNC4yLjIxGTAXBgNVBAoMEFRMNCBPcmdhbml6YXRpb24xFjAUBgNVBAsMDUNFUlQgRk9SIFRFU1QxCzAJBgNVBAYTAkZSMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAi5mKmI2xP/DsKwS6Z8zwM2ce8Ec2yPRdAiNDmmtYppnsQDk7UV7iVHaljctZxcsxr/d4TTAbLYZQ8LuwKVuUGA7BtYkcPBdvnznuopwDPhx6RR0ssnCz/yWO9yKhSK3+P5QX9AhUVIeYTAeiFpUJbDkc3z3sx/NC+f28z/zGeow48/MRDzh+wlQ8hTUmL0Vd7y9CUhvAgdIdBgWBHWCrGbe0p/OlfFGSXNH5s9xHikmE3OZPsrVfstDle5J7h0iieKJ1rDI4GAMK9ass8kmkhxlTQR2egk5rITmFf8vIPWBlUsRkBo3KDj79PkTaTNkrTRP5x0Gwk4pJpthOh+63yQIDAQABo4IBUjCCAU4wDgYDVR0PAQH/BAQDAgbAMDAGCCsGAQUFBwEDAQH/BCEwHzAIBgYEAI5GAQEwEwYGBACORgEGMAkGBwQAjkYBBgEwSwYDVR0fBEQwQjBAoD6gPIY6aHR0cDovL2xvY2FsaG9zdDo4MDgwL3Flcy12YWxpZGF0aW9uLXdlYi9jcmwvU0RJLTQuMi4yLmNybDCBnQYIKwYBBQUHAQEEgZAwgY0wQwYIKwYBBQUHMAGGN2h0dHA6Ly9sb2NhbGhvc3Q6ODA4MC9xZXMtdmFsaWRhdGlvbi13ZWIvb2NzcC9TREktNC4yLjIwRgYIKwYBBQUHMAKGOmh0dHA6Ly9sb2NhbGhvc3Q6ODA4MC9xZXMtdmFsaWRhdGlvbi13ZWIvY3J0L1NESS00LjIuMi5jcnQwHQYDVR0OBBYEFPu3AMx40VhyMyLWvJrbsoRWi+goMA0GCSqGSIb3DQEBCwUAA4IBAQBcCb5z7PgUfm/bZyurJwDh1YTkdIGTDINtLva6ViyOJg1J2gAP7IE36n8Zxhmf3VMUbj7qvs03c6rwMfauINaYLeMzI5zG5QvV/vI255Vab5+LcA/UJEKsWXARbW86d0CwTRKdpWCwlqqZLr0AFDJtMYBUdRMnEOyKPTiGUj+cchQpzFwRloVnl5VlzRv3DakBzaYvAR/HC1prnQiXACKutIUKr4n7Y9f+1poj+bNylCbhUzXmrREwfxvne6oaj5iKZB6fBZfa4igd0Sl7f/b+dm6K2A+oOl8/z2V9YnnKE558eIrq0cpzfovSnRD+urrSTNIvWRkKLmguk81nGNz7</Base64Encoded>
@@ -187,7 +187,7 @@
         </Revocation>
     </UsedRevocations>
     <TrustedLists>
-        <TrustedList>
+        <TrustedList Id="TL-433E6C4CF87F07071EB1290A9D23E95C6D81F89E76233383457477747249118F">
             <CountryCode>FR</CountryCode>
             <Url>http://localhost:8080/qes-validation-web/tl/TL-4.xml</Url>
             <SequenceNumber>1</SequenceNumber>
@@ -197,15 +197,15 @@
             <NextUpdate>2018-07-28T09:49:13</NextUpdate>
             <WellSigned>true</WellSigned>
         </TrustedList>
+    	<TrustedList Id="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E" LOTL="true">
+	        <CountryCode>EU</CountryCode>
+	        <Url>http://localhost:8080/qes-validation-web/tl/LOTL-3.xml</Url>
+	        <SequenceNumber>1</SequenceNumber>
+	        <Version>5</Version>
+	        <LastLoading>2018-06-27T11:14:42</LastLoading>
+	        <IssueDate>2018-06-26T09:49:13</IssueDate>
+	        <NextUpdate>2018-07-28T09:49:13</NextUpdate>
+	        <WellSigned>true</WellSigned>
+	    </TrustedList>
     </TrustedLists>
-    <ListOfTrustedLists>
-        <CountryCode>EU</CountryCode>
-        <Url>http://localhost:8080/qes-validation-web/tl/LOTL-3.xml</Url>
-        <SequenceNumber>1</SequenceNumber>
-        <Version>5</Version>
-        <LastLoading>2018-06-27T11:14:42</LastLoading>
-        <IssueDate>2018-06-26T09:49:13</IssueDate>
-        <NextUpdate>2018-07-28T09:49:13</NextUpdate>
-        <WellSigned>true</WellSigned>
-    </ListOfTrustedLists>
 </DiagnosticData>

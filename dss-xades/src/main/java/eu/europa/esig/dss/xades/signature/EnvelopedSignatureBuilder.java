@@ -23,13 +23,8 @@ package eu.europa.esig.dss.xades.signature;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.crypto.dsig.CanonicalizationMethod;
-import javax.xml.crypto.dsig.XMLSignature;
-
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import eu.europa.esig.dss.DomUtils;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
@@ -39,11 +34,10 @@ import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.xades.DSSXMLUtils;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
-import eu.europa.esig.dss.xades.XPathQueryHolder;
 import eu.europa.esig.dss.xades.reference.CanonicalizationTransform;
 import eu.europa.esig.dss.xades.reference.DSSReference;
 import eu.europa.esig.dss.xades.reference.DSSTransform;
-import eu.europa.esig.dss.xades.reference.XPathEnvelopedSignatureTransform;
+import eu.europa.esig.dss.xades.reference.XPath2FilterEnvelopedSignatureTransform;
 
 /**
  * This class handles the specifics of the enveloped XML signature
@@ -64,7 +58,6 @@ class EnvelopedSignatureBuilder extends XAdESSignatureBuilder {
 	 */
 	public EnvelopedSignatureBuilder(final XAdESSignatureParameters params, final DSSDocument origDoc, final CertificateVerifier certificateVerifier) {
 		super(params, origDoc, certificateVerifier);
-		setCanonicalizationMethods(params, DEFAULT_CANONICALIZATION_METHOD);
 	}
 
 	/**
@@ -84,6 +77,37 @@ class EnvelopedSignatureBuilder extends XAdESSignatureBuilder {
 		}
 		return documentDom.getDocumentElement();
 	}
+	
+	@Override
+	protected void incorporateSignatureDom(Node parentNodeOfSignature) {
+	    if (params.getXPathElementPlacement() == null || Utils.isStringEmpty(params.getXPathLocationString())) {
+		parentNodeOfSignature.appendChild(signatureDom);
+		return;
+	    }
+
+	    switch (params.getXPathElementPlacement()) {
+		    case XPathAfter:
+			    // root element referenced by XPath
+			    if (parentNodeOfSignature.isEqualNode(documentDom.getDocumentElement())) { 
+				    // append signature at end of document
+				    parentNodeOfSignature.appendChild(signatureDom);
+				    
+			    } else {
+				    // insert signature before next sibling or as last child
+				    // if no sibling exists
+				    Node parent = parentNodeOfSignature.getParentNode();
+				    parent.insertBefore(signatureDom, parentNodeOfSignature.getNextSibling());
+			    }
+
+			    break;
+		    case XPathFirstChildOf:
+			    parentNodeOfSignature.insertBefore(signatureDom, parentNodeOfSignature.getFirstChild());
+			    break;
+		    default:
+			    parentNodeOfSignature.appendChild(signatureDom);
+			    break;
+	    }
+	}
 
 	@Override
 	protected DSSReference createReference(DSSDocument document, int referenceIndex) {
@@ -99,14 +123,15 @@ class EnvelopedSignatureBuilder extends XAdESSignatureBuilder {
 		DigestAlgorithm digestAlgorithm = getReferenceDigestAlgorithmOrDefault(params);
 		dssReference.setDigestMethodAlgorithm(digestAlgorithm);
 
-		final List<DSSTransform> dssTransformList = new ArrayList<DSSTransform>();
+		final List<DSSTransform> dssTransformList = new ArrayList<>();
 
 		// For parallel signatures
-		XPathEnvelopedSignatureTransform xPathTransform = new XPathEnvelopedSignatureTransform();
-		dssTransformList.add(xPathTransform);
+		XPath2FilterEnvelopedSignatureTransform xPath2FilterTransform = new XPath2FilterEnvelopedSignatureTransform(getXmldsigNamespace());
+		dssTransformList.add(xPath2FilterTransform);
 
 		// Canonicalization is the last operation, its better to operate the canonicalization on the smaller document
-		CanonicalizationTransform canonicalizationTransform = new CanonicalizationTransform(CanonicalizationMethod.EXCLUSIVE);
+		CanonicalizationTransform canonicalizationTransform = 
+				new CanonicalizationTransform(getXmldsigNamespace(), DSSXMLUtils.DEFAULT_CANONICALIZATION_METHOD);
 		dssTransformList.add(canonicalizationTransform);
 
 		dssReference.setTransforms(dssTransformList);
@@ -127,10 +152,6 @@ class EnvelopedSignatureBuilder extends XAdESSignatureBuilder {
 	protected DSSDocument transformReference(final DSSReference reference) {
 
 		DSSDocument dssDocument = reference.getContents();
-		final List<DSSTransform> transforms = reference.getTransforms();
-		if (Utils.isCollectionEmpty(transforms)) {
-			return dssDocument;
-		}
 
 		// In the case of ENVELOPED signature the document to sign is an XML. However one of the references can point to
 		// another document this test case is not taken into account!
@@ -139,36 +160,31 @@ class EnvelopedSignatureBuilder extends XAdESSignatureBuilder {
 		final String uri = reference.getUri();
 		// Check if the reference is related to the whole document
 		if (Utils.isStringNotBlank(uri) && uri.startsWith("#") && !isXPointer(uri)) {
-
 			final Document document = DomUtils.buildDOM(dssDocument);
 			DSSXMLUtils.recursiveIdBrowse(document.getDocumentElement());
-			final String uri_id = uri.substring(1);
-			nodeToTransform = document.getElementById(uri_id);
+			final String targetId = DomUtils.getId(uri);
+			nodeToTransform = document.getElementById(targetId);
+			
 		}
-		byte[] transformedReferenceBytes = applyTransformations(dssDocument, transforms, nodeToTransform);
+		if (Utils.isCollectionEmpty(reference.getTransforms())) {
+			if (nodeToTransform == null) {
+				return dssDocument;
+			} else {
+				byte[] nodeBytes = DSSXMLUtils.getNodeBytes(nodeToTransform);
+				return new InMemoryDocument(nodeBytes);
+			}
+		}
+		if (nodeToTransform == null) {
+			nodeToTransform = DomUtils.buildDOM(dssDocument);
+		}
+		
+		byte[] transformedReferenceBytes = applyTransformations(reference, nodeToTransform);
 		return new InMemoryDocument(transformedReferenceBytes);
 	}
 
 	private static boolean isXPointer(final String uri) {
 		final boolean xPointer = uri.startsWith("#xpointer(") || uri.startsWith("#xmlns(");
 		return xPointer;
-	}
-
-	/**
-	 * Bob --> This method is not used anymore, but it can replace {@code NOT_ANCESTOR_OR_SELF_DS_SIGNATURE}
-	 * transformation. Performance test should be performed!
-	 * In case of the enveloped signature the existing signatures are removed.
-	 *
-	 * @param domDoc
-	 *            {@code Document} containing the signatures to analyse
-	 */
-	protected void removeExistingSignatures(final Document domDoc) {
-
-		final NodeList signatureNodeList = domDoc.getElementsByTagNameNS(XMLSignature.XMLNS, XPathQueryHolder.XMLE_SIGNATURE);
-		for (int ii = signatureNodeList.getLength() - 1; ii >= 0; ii--) {
-			final Element signatureDOM = (Element) signatureNodeList.item(ii);
-			signatureDOM.getParentNode().removeChild(signatureDOM);
-		}
 	}
 
 }

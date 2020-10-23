@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.validation;
 
 import java.io.ByteArrayOutputStream;
@@ -9,19 +29,19 @@ import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.identifier.Identifier;
 import eu.europa.esig.dss.model.identifier.TokenIdentifier;
 
-public class SignatureIdentifier extends Identifier {
+public abstract class SignatureIdentifier extends Identifier {
 	
 	private static final long serialVersionUID = -6700888325973167656L;
 
-	public static SignatureIdentifier buildSignatureIdentifier(Date signingTime, TokenIdentifier tokenIdentifier) {
-		return buildSignatureIdentifier(signingTime, tokenIdentifier, null);
-	}
-	
-	public static SignatureIdentifier buildSignatureIdentifier(Date signingTime, TokenIdentifier tokenIdentifier, String customIdentifier) {
-		return buildSignatureIdentifier(signingTime, tokenIdentifier, null, customIdentifier);
+	protected SignatureIdentifier(byte[] bytes) {
+		super("S-", bytes);
 	}
 
-	public static SignatureIdentifier buildSignatureIdentifier(Date signingTime, TokenIdentifier tokenIdentifier, 
+	protected static byte[] buildSignatureIdentifier(Date signingTime, TokenIdentifier tokenIdentifier, String... customIdentifiers) {
+		return buildSignatureIdentifier(signingTime, tokenIdentifier, null, customIdentifiers);
+	}
+
+	protected static byte[] buildSignatureIdentifier(Date signingTime, TokenIdentifier tokenIdentifier, 
 			Integer customInteger, String... stringIdentifiers) {
 		try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); DataOutputStream dos = new DataOutputStream(baos)) {
 			if (signingTime != null) {
@@ -41,14 +61,10 @@ public class SignatureIdentifier extends Identifier {
 				}
 			}
 			dos.flush();
-			return new SignatureIdentifier(baos.toByteArray());
+			return baos.toByteArray();
 		} catch (IOException e) {
 			throw new DSSException(e);
 		}
-	}
-
-	SignatureIdentifier(byte[] bytes) {
-		super(bytes);
 	}
 
 }

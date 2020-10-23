@@ -20,9 +20,10 @@
  */
 package eu.europa.esig.dss.cades.signature;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -43,7 +44,6 @@ import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.ASN1TaggedObject;
-import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.asn1.cms.ContentInfo;
 import org.bouncycastle.asn1.cms.IssuerAndSerialNumber;
 import org.bouncycastle.asn1.cms.SignedData;
@@ -53,12 +53,14 @@ import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.DigestInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.util.encoders.Hex;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.cades.CAdESSignatureParameters;
 import eu.europa.esig.dss.cades.validation.CAdESSignature;
+import eu.europa.esig.dss.cades.validation.CMSDocumentValidator;
+import eu.europa.esig.dss.enumerations.CommitmentTypeEnum;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
@@ -70,20 +72,20 @@ import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.DSSUtils;
-import eu.europa.esig.dss.test.signature.AbstractPkiFactoryTestDocumentSignatureService;
 import eu.europa.esig.dss.utils.Utils;
+import eu.europa.esig.dss.validation.AdvancedSignature;
 
-public class CAdESLevelBETSITS101733Test extends AbstractPkiFactoryTestDocumentSignatureService<CAdESSignatureParameters> {
+public class CAdESLevelBETSITS101733Test extends AbstractCAdESTestSignature {
 
 	private static final String HELLO_WORLD = "Hello World";
 
 	private static Logger logger = LoggerFactory.getLogger(CAdESLevelBETSITS101733Test.class);
 
-	private DocumentSignatureService<CAdESSignatureParameters> service;
+	private DocumentSignatureService<CAdESSignatureParameters, CAdESTimestampParameters> service;
 	private CAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		documentToSign = new InMemoryDocument(HELLO_WORLD.getBytes());
 
@@ -97,7 +99,7 @@ public class CAdESLevelBETSITS101733Test extends AbstractPkiFactoryTestDocumentS
 		signatureParameters.bLevel().setSignerLocation(signerLocation);
 
 		signatureParameters.bLevel().setClaimedSignerRoles(Arrays.asList("supplier"));
-		signatureParameters.bLevel().setCommitmentTypeIndications(Arrays.asList("1.2.3", "2.4.5.6"));
+		signatureParameters.bLevel().setCommitmentTypeIndications(Arrays.asList(CommitmentTypeEnum.ProofOfOrigin, CommitmentTypeEnum.ProofOfApproval));
 
 		signatureParameters.setSigningCertificate(getSigningCert());
 		signatureParameters.setCertificateChain(getCertificateChain());
@@ -105,7 +107,7 @@ public class CAdESLevelBETSITS101733Test extends AbstractPkiFactoryTestDocumentS
 		signatureParameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_B);
 		signatureParameters.setEn319122(false);
 
-		service = new CAdESService(getCompleteCertificateVerifier());
+		service = new CAdESService(getOfflineCertificateVerifier());
 
 	}
 
@@ -113,7 +115,12 @@ public class CAdESLevelBETSITS101733Test extends AbstractPkiFactoryTestDocumentS
 	protected void onDocumentSigned(byte[] byteArray) {
 		try {
 
-			CAdESSignature signature = new CAdESSignature(byteArray);
+			CMSDocumentValidator cmsDocumentValidator = new CMSDocumentValidator(new InMemoryDocument(byteArray));
+			List<AdvancedSignature> signatures = cmsDocumentValidator.getSignatures();
+			assertEquals(1, signatures.size());
+			assertTrue(signatures.get(0) instanceof CAdESSignature);
+			
+			CAdESSignature signature = (CAdESSignature) signatures.get(0);
 			assertNotNull(signature.getCmsSignedData());
 
 			ASN1InputStream asn1sInput = new ASN1InputStream(byteArray);
@@ -127,7 +134,7 @@ public class CAdESLevelBETSITS101733Test extends AbstractPkiFactoryTestDocumentS
 			assertEquals(PKCSObjectIdentifiers.signedData, oid);
 			logger.info("OID : " + oid.toString());
 
-			ASN1TaggedObject taggedObj = DERTaggedObject.getInstance(asn1Seq.getObjectAt(1));
+			ASN1TaggedObject taggedObj = ASN1TaggedObject.getInstance(asn1Seq.getObjectAt(1));
 
 			logger.info("TAGGED OBJ : " + taggedObj.toString());
 
@@ -146,7 +153,7 @@ public class CAdESLevelBETSITS101733Test extends AbstractPkiFactoryTestDocumentS
 			ASN1Set certificates = signedData.getCertificates();
 			logger.info("CERTIFICATES (" + certificates.size() + ") : " + certificates);
 
-			List<X509Certificate> foundCertificates = new ArrayList<X509Certificate>();
+			List<X509Certificate> foundCertificates = new ArrayList<>();
 			for (int i = 0; i < certificates.size(); i++) {
 				ASN1Sequence seqCertif = ASN1Sequence.getInstance(certificates.getObjectAt(i));
 				logger.info("SEQ cert " + i + " : " + seqCertif);
@@ -214,7 +221,7 @@ public class CAdESLevelBETSITS101733Test extends AbstractPkiFactoryTestDocumentS
 			ASN1ObjectIdentifier oidContentType = ASN1ObjectIdentifier.getInstance(seqEncapsulatedInfo.getObjectAt(0));
 			logger.info("OID CONTENT TYPE : " + oidContentType.toString());
 
-			ASN1TaggedObject taggedContent = DERTaggedObject.getInstance(seqEncapsulatedInfo.getObjectAt(1));
+			ASN1TaggedObject taggedContent = ASN1TaggedObject.getInstance(seqEncapsulatedInfo.getObjectAt(1));
 
 			ASN1OctetString contentOctetString = ASN1OctetString.getInstance(taggedContent.getObject());
 			String content = new String(contentOctetString.getOctets());
@@ -283,7 +290,7 @@ public class CAdESLevelBETSITS101733Test extends AbstractPkiFactoryTestDocumentS
 	}
 
 	@Override
-	protected DocumentSignatureService<CAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<CAdESSignatureParameters, CAdESTimestampParameters> getService() {
 		return service;
 	}
 

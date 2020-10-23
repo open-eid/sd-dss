@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.ws.signature.dto.parameters;
 
 import java.io.Serializable;
@@ -6,7 +26,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import eu.europa.esig.dss.enumerations.CommitmentTypeEnum;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.enumerations.ObjectIdentifierQualifier;
 
 @SuppressWarnings("serial")
 public class RemoteBLevelParameters implements Serializable {
@@ -33,16 +55,16 @@ public class RemoteBLevelParameters implements Serializable {
 	/* Policy */
 	private String policyId;
 	/* Qualifier attribute for XAdES Identifier */
-	private String policyQualifier;
+	private ObjectIdentifierQualifier policyQualifier;
 	private String policyDescription;
 	private DigestAlgorithm policyDigestAlgorithm;
 	private byte[] policyDigestValue;
 	private String policySpuri;
 
-	private List<String> commitmentTypeIndications;
+	private List<CommitmentTypeEnum> commitmentTypeIndications;
 
 	/* SignerLocation */
-	private List<String> signerLocationPostalAddress = new ArrayList<String>();
+	private List<String> signerLocationPostalAddress = new ArrayList<>();
 	private String signerLocationPostalCode;
 	private String signerLocationLocality;
 	private String signerLocationStateOrProvince;
@@ -95,7 +117,7 @@ public class RemoteBLevelParameters implements Serializable {
 	 *
 	 * @return the qualifier
 	 */
-	public String getPolicyQualifier() {
+	public ObjectIdentifierQualifier getPolicyQualifier() {
 		return policyQualifier;
 	}
 
@@ -105,7 +127,7 @@ public class RemoteBLevelParameters implements Serializable {
 	 * @param qualifier
 	 *            the qualifier
 	 */
-	public void setPolicyQualifier(String qualifier) {
+	public void setPolicyQualifier(ObjectIdentifierQualifier qualifier) {
 		this.policyQualifier = qualifier;
 	}
 
@@ -228,17 +250,17 @@ public class RemoteBLevelParameters implements Serializable {
 	 * 
 	 * @return the list of commitment type indications
 	 */
-	public List<String> getCommitmentTypeIndications() {
+	public List<CommitmentTypeEnum> getCommitmentTypeIndications() {
 		return commitmentTypeIndications;
 	}
 
 	/**
-	 * Set the commitment type indications (predefined values are available in {@code CommitmentType})
+	 * Set the commitment type indications {@code CommitmentTypeEnum}
 	 * 
 	 * @param commitmentTypeIndications
 	 *            a list of commitment type indications
 	 */
-	public void setCommitmentTypeIndications(List<String> commitmentTypeIndications) {
+	public void setCommitmentTypeIndications(List<CommitmentTypeEnum> commitmentTypeIndications) {
 		this.commitmentTypeIndications = commitmentTypeIndications;
 	}
 
@@ -299,7 +321,7 @@ public class RemoteBLevelParameters implements Serializable {
 	 */
 	public void addSignerLocationPostalAddress(final String addressItem) {
 		if (signerLocationPostalAddress == null) {
-			signerLocationPostalAddress = new ArrayList<String>();
+			signerLocationPostalAddress = new ArrayList<>();
 		}
 		signerLocationPostalAddress.add(addressItem);
 	}

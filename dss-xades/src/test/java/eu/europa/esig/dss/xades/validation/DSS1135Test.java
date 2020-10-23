@@ -20,14 +20,12 @@
  */
 package eu.europa.esig.dss.xades.validation;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.junit.Test;
 
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
@@ -36,27 +34,32 @@ import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
 import eu.europa.esig.dss.validation.SignaturePolicyProvider;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
-import eu.europa.esig.dss.validation.reports.Reports;
 
-public class DSS1135Test {
+public class DSS1135Test extends AbstractXAdESTestValidation {
 
-	@Test
-	public void test() {
-		DSSDocument doc = new FileDocument("src/test/resources/validation/dss1135/factura_ejemplo2_32v1.xml");
-		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(doc);
+	@Override
+	protected DSSDocument getSignedDocument() {
+		return new FileDocument("src/test/resources/validation/dss1135/factura_ejemplo2_32v1.xml");
+	}
+	
+	@Override
+	protected SignedDocumentValidator getValidator(DSSDocument signedDocument) {
+		SignedDocumentValidator validator = super.getValidator(signedDocument);
 		CommonCertificateVerifier certificateVerifier = new CommonCertificateVerifier();
 		// certificateVerifier.setDataLoader(new CommonsDataLoader());
 		SignaturePolicyProvider signaturePolicyProvider = new SignaturePolicyProvider();
-		Map<String, DSSDocument> signaturePoliciesByUrl = new HashMap<String, DSSDocument>();
+		Map<String, DSSDocument> signaturePoliciesByUrl = new HashMap<>();
 		signaturePoliciesByUrl.put("http://www.facturae.es/politica_de_firma_formato_facturae/politica_de_firma_formato_facturae_v3_1.pdf",
 				new FileDocument("src/test/resources/validation/dss1135/politica_de_firma.pdf"));
 		signaturePolicyProvider.setSignaturePoliciesByUrl(signaturePoliciesByUrl);
 		validator.setSignaturePolicyProvider(signaturePolicyProvider);
 		validator.setCertificateVerifier(certificateVerifier);
-
-		Reports reports = validator.validateDocument();
-
-		DiagnosticData diagnosticData = reports.getDiagnosticData();
+		return validator;
+	}
+	
+	@Override
+	protected void checkSignaturePolicyIdentifier(DiagnosticData diagnosticData) {
+		super.checkSignaturePolicyIdentifier(diagnosticData);
 		String signatureId = diagnosticData.getFirstSignatureId();
 		String policyId = diagnosticData.getPolicyId(signatureId);
 		assertEquals("http://www.facturae.es/politica_de_firma_formato_facturae/politica_de_firma_formato_facturae_v3_1.pdf", policyId);
@@ -65,8 +68,12 @@ public class DSS1135Test {
 		assertEquals("http://www.facturae.es/politica_de_firma_formato_facturae/politica_de_firma_formato_facturae_v3_1.pdf", policyUrl);
 		assertTrue(signatureWrapper.isPolicyIdentified());
 		assertTrue(signatureWrapper.isPolicyStatus());
-		
-		List<DSSDocument> retrievedOriginalDocuments = validator.getOriginalDocuments(signatureId);
+	}
+	
+	@Override
+	protected void verifyOriginalDocuments(SignedDocumentValidator validator, DiagnosticData diagnosticData) {
+		super.verifyOriginalDocuments(validator, diagnosticData);
+		List<DSSDocument> retrievedOriginalDocuments = validator.getOriginalDocuments(diagnosticData.getFirstSignatureId());
 		assertEquals(1, retrievedOriginalDocuments.size());
 	}
 

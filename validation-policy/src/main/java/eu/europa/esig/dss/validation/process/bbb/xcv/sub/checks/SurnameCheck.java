@@ -24,16 +24,17 @@ import eu.europa.esig.dss.detailedreport.jaxb.XmlSubXCV;
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.enumerations.Indication;
 import eu.europa.esig.dss.enumerations.SubIndication;
+import eu.europa.esig.dss.i18n.I18nProvider;
+import eu.europa.esig.dss.i18n.MessageTag;
 import eu.europa.esig.dss.policy.jaxb.MultiValuesConstraint;
-import eu.europa.esig.dss.validation.process.MessageTag;
 import eu.europa.esig.dss.validation.process.bbb.AbstractMultiValuesCheckItem;
 
 public class SurnameCheck extends AbstractMultiValuesCheckItem<XmlSubXCV> {
 
 	private final CertificateWrapper certificate;
 
-	public SurnameCheck(XmlSubXCV result, CertificateWrapper certificate, MultiValuesConstraint constraint) {
-		super(result, constraint);
+	public SurnameCheck(I18nProvider i18nProvider, XmlSubXCV result, CertificateWrapper certificate, MultiValuesConstraint constraint) {
+		super(i18nProvider, result, constraint);
 
 		this.certificate = certificate;
 	}
@@ -55,12 +56,12 @@ public class SurnameCheck extends AbstractMultiValuesCheckItem<XmlSubXCV> {
 
 	@Override
 	protected Indication getFailedIndicationForConclusion() {
-		return Indication.FAILED;
+		return Indication.INDETERMINATE;
 	}
 
 	@Override
 	protected SubIndication getFailedSubIndicationForConclusion() {
-		return SubIndication.SIG_CONSTRAINTS_FAILURE;
+		return SubIndication.CHAIN_CONSTRAINTS_FAILURE;
 	}
 
 }

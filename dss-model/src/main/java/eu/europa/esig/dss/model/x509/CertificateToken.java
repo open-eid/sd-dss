@@ -21,13 +21,9 @@
 package eu.europa.esig.dss.model.x509;
 
 import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PublicKey;
-import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
@@ -41,8 +37,11 @@ import javax.security.auth.x500.X500Principal;
 
 import eu.europa.esig.dss.enumerations.KeyUsageBit;
 import eu.europa.esig.dss.enumerations.SignatureAlgorithm;
+import eu.europa.esig.dss.enumerations.SignatureValidity;
 import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.model.identifier.CertificateTokenIdentifier;
 import eu.europa.esig.dss.model.identifier.EntityIdentifier;
+import eu.europa.esig.dss.model.identifier.TokenIdentifier;
 
 /**
  * Whenever the signature validation process encounters an {@link java.security.cert.X509Certificate} a certificateToken
@@ -58,8 +57,6 @@ public class CertificateToken extends Token {
 	 */
 	private final X509Certificate x509Certificate;
 	
-	private final String canonicalizedSubject;
-
 	/**
 	 * Digest of the public key (cross certificates have same public key)
 	 */
@@ -70,17 +67,11 @@ public class CertificateToken extends Token {
 	 * {@link #isSelfSigned()} function.
 	 */
 	private Boolean selfSigned;
-
+	
 	/**
-	 * This method returns an instance of {@link eu.europa.esig.dss.model.x509.CertificateToken}.
-	 *
-	 * @param cert
-	 *            <code>X509Certificate</code>
-	 * @return the wrapper for the certificate
+	 * Cached list of KeyUsageBit
 	 */
-	static CertificateToken newInstance(X509Certificate cert) {
-		return new CertificateToken(cert);
-	}
+	private List<KeyUsageBit> keyUsageBits;
 
 	/**
 	 * Creates a CertificateToken wrapping the provided X509Certificate.
@@ -93,7 +84,6 @@ public class CertificateToken extends Token {
 
 		this.x509Certificate = x509Certificate;
 		this.entityKey = new EntityIdentifier(x509Certificate.getPublicKey());
-		this.canonicalizedSubject = x509Certificate.getSubjectX500Principal().getName(X500Principal.CANONICAL);
 
 		// The Algorithm OID is used and not the name {@code x509Certificate.getSigAlgName()}
 		this.signatureAlgorithm = SignatureAlgorithm.forOidAndParams(x509Certificate.getSigAlgOID(), x509Certificate.getSigAlgParams());
@@ -105,13 +95,13 @@ public class CertificateToken extends Token {
 	}
 
 	/**
-	 * Returns the digest of the current public key. Several certificate can have
+	 * Returns the identifier of the current public key. Several certificate can have
 	 * the same public key (cross-certificates)
 	 * 
-	 * @return
+	 * @return {@link EntityIdentifier}
 	 */
-	public String getEntityKey() {
-		return entityKey.asXmlId();
+	public EntityIdentifier getEntityKey() {
+		return entityKey;
 	}
 
 	/**
@@ -131,10 +121,6 @@ public class CertificateToken extends Token {
 		return x509Certificate.getPublicKey();
 	}
 	
-	public String getCanonicalizedSubject() {
-		return canonicalizedSubject;
-	}
-
 	/**
 	 * Returns the expiration date of the certificate.
 	 *
@@ -156,20 +142,6 @@ public class CertificateToken extends Token {
 	@Override
 	public Date getCreationDate() {
 		return getNotBefore();
-	}
-
-	/**
-	 * Checks if the certificate is expired on the given date.
-	 *
-	 * @param date
-	 *            the date to be tested
-	 * @return true if the certificate was expired on the given date
-	 */
-	public boolean isExpiredOn(final Date date) {
-		if ((x509Certificate == null) || (date == null)) {
-			return true;
-		}
-		return x509Certificate.getNotAfter().before(date);
 	}
 
 	/**
@@ -208,11 +180,13 @@ public class CertificateToken extends Token {
 				try {
 					x509Certificate.verify(x509Certificate.getPublicKey());
 					selfSigned = true;
-					signatureValid = true;
+					signatureValidity = SignatureValidity.VALID;
 				} catch (Exception e) {
 					selfSigned = false;
 				}
 			}
+		} else if (selfSigned) {
+			signatureValidity = SignatureValidity.VALID;
 		}
 		return selfSigned;
 	}
@@ -263,7 +237,7 @@ public class CertificateToken extends Token {
 		try {
 			return x509Certificate.getEncoded();
 		} catch (CertificateEncodingException e) {
-			throw new DSSException(e);
+			throw new DSSException("Unable to encode the certificate", e);
 		}
 	}
 
@@ -278,15 +252,21 @@ public class CertificateToken extends Token {
 	}
 
 	/**
-	 * Returns the subject (subject distinguished name) value from the certificate as an X500Principal. If the subject
-	 * value is empty, then the getName() method of the returned X500Principal object returns an empty string ("").
-	 *
-	 * @return the Subject X500Principal
+	 * Returns the subject as wrapped X500Principal with helpful methods
+	 * @return an instance of X500PrincipalHelper with the SubjectX500Principal
 	 */
-	public X500Principal getSubjectX500Principal() {
-		return x509Certificate.getSubjectX500Principal();
+	public X500PrincipalHelper getSubject() {
+		return new X500PrincipalHelper(x509Certificate.getSubjectX500Principal());
 	}
 
+	/**
+	 * Returns the issuer as wrapped X500Principal with helpful methods
+	 * @return an instance of X500PrincipalHelper with the IssuerX500Principal
+	 */
+	public X500PrincipalHelper getIssuer() {
+		return new X500PrincipalHelper(x509Certificate.getIssuerX500Principal());
+	}
+	
 	/**
 	 * Returns the {@code X500Principal} of the certificate which was used to sign
 	 * this token.
@@ -299,24 +279,18 @@ public class CertificateToken extends Token {
 	}
 
 	@Override
-	protected boolean checkIsSignedBy(final CertificateToken candidate) {
-		signatureValid = false;
+	protected SignatureValidity checkIsSignedBy(final CertificateToken candidate) {
+		signatureValidity = SignatureValidity.INVALID;
 		signatureInvalidityReason = "";
 		try {
 			x509Certificate.verify(candidate.getPublicKey());
-			signatureValid = true;
-		} catch (InvalidKeyException e) {
-			signatureInvalidityReason = "InvalidKeyException - on incorrect key.";
-		} catch (CertificateException e) {
-			signatureInvalidityReason = "CertificateException -  on encoding errors.";
-		} catch (NoSuchAlgorithmException e) {
-			signatureInvalidityReason = "NoSuchAlgorithmException - on unsupported signature algorithms.";
-		} catch (SignatureException e) {
-			signatureInvalidityReason = "SignatureException - on signature errors.";
+			signatureValidity = SignatureValidity.VALID;
 		} catch (NoSuchProviderException e) { // if there's no default provider.
 			throw new DSSException(e);
+		} catch (Exception e) {
+			signatureInvalidityReason = e.getClass().getSimpleName() + " : " + e.getMessage();
 		}
-		return signatureValid;
+		return signatureValidity;
 	}
 
 	/**
@@ -327,8 +301,7 @@ public class CertificateToken extends Token {
 	 * @return true if contains
 	 */
 	public boolean checkKeyUsage(final KeyUsageBit keyUsageBit) {
-		final List<KeyUsageBit> currentKUBs = getKeyUsageBits();
-		return currentKUBs.contains(keyUsageBit);
+		return getKeyUsageBits().contains(keyUsageBit);
 	}
 
 	@Override
@@ -341,8 +314,8 @@ public class CertificateToken extends Token {
 		out.append(indentStr).append("Identity Id         : ").append(getEntityKey()).append('\n');
 		out.append(indentStr).append("Validity period     : ").append(x509Certificate.getNotBefore()).append(" - ").append(x509Certificate.getNotAfter())
 				.append('\n');
-		out.append(indentStr).append("Subject name        : ").append(getSubjectX500Principal().getName(X500Principal.CANONICAL)).append('\n');
-		out.append(indentStr).append("Issuer subject name : ").append(getIssuerX500Principal().getName(X500Principal.CANONICAL)).append('\n');
+		out.append(indentStr).append("Subject name        : ").append(getSubject().getCanonical()).append('\n');
+		out.append(indentStr).append("Issuer subject name : ").append(getIssuer().getCanonical()).append('\n');
 		out.append(indentStr).append("Serial Number       : ").append(getSerialNumber()).append('\n');
 		out.append(indentStr).append("Signature algorithm : ").append(signatureAlgorithm == null ? "?" : signatureAlgorithm).append('\n');
 
@@ -361,12 +334,14 @@ public class CertificateToken extends Token {
 	 * @return {@code List} of {@code KeyUsageBit}s of different certificate's key usages
 	 */
 	public List<KeyUsageBit> getKeyUsageBits() {
-		List<KeyUsageBit> keyUsageBits = new ArrayList<KeyUsageBit>();
-		final boolean[] keyUsageArray = x509Certificate.getKeyUsage();
-		if (keyUsageArray != null) {
-			for (KeyUsageBit keyUsageBit : KeyUsageBit.values()) {
-				if (keyUsageArray[keyUsageBit.getIndex()]) {
-					keyUsageBits.add(keyUsageBit);
+		if (keyUsageBits == null) {
+			keyUsageBits = new ArrayList<>();
+			final boolean[] keyUsageArray = x509Certificate.getKeyUsage();
+			if (keyUsageArray != null) {
+				for (KeyUsageBit keyUsageBit : KeyUsageBit.values()) {
+					if (keyUsageArray[keyUsageBit.getIndex()]) {
+						keyUsageBits.add(keyUsageBit);
+					}
 				}
 			}
 		}
@@ -392,8 +367,8 @@ public class CertificateToken extends Token {
 	}
 
 	@Override
-	public String getDSSIdAsString() {
-		return "C-" + super.getDSSIdAsString();
+	protected TokenIdentifier buildTokenIdentifier() {
+		return new CertificateTokenIdentifier(this);
 	}
 
 }

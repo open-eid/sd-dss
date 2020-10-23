@@ -20,15 +20,14 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
@@ -43,7 +42,7 @@ import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
@@ -64,6 +63,8 @@ public class DSS1811Test extends PKIFactoryAccess {
 		ToBeSigned toBeSigned = service.getDataToSign(completeDocument, params);
 		SignatureValue signatureValue = getToken().sign(toBeSigned, params.getDigestAlgorithm(), getPrivateKeyEntry());
 		DSSDocument signedDoc = service.signDocument(completeDocument, params, signatureValue);
+
+		signedDoc.save("target/bla.xml");
 
 		validate(signedDoc, completeDocument);
 		validate(signedDoc, getDigestDocument());
@@ -193,7 +194,7 @@ public class DSS1811Test extends PKIFactoryAccess {
 	}
 
 	private XAdESService getService() {
-		XAdESService service = new XAdESService(getCompleteCertificateVerifier());
+		XAdESService service = new XAdESService(getOfflineCertificateVerifier());
 		service.setTspSource(getGoodTsa());
 		return service;
 	}

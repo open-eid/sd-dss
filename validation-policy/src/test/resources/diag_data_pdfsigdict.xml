@@ -5,7 +5,7 @@
     <Signatures>
         <Signature Id="id-eb2ce89008eb1ef77a4f96ee8738c07daceee2957537d5bdea0bd2e3af393f28">
             <SignatureFilename></SignatureFilename>
-            <DateTime>2017-04-28T00:58:24</DateTime>
+            <ClaimedSigningTime>2017-04-28T00:58:24</ClaimedSigningTime>
             <SignatureFormat>PDF-NOT-ETSI</SignatureFormat>
             <StructuralValidation>
                 <Valid>true</Valid>
@@ -25,12 +25,7 @@
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>true</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-F5ADDE9792A56C8C5FF3872560E3E85221E62D7A517DAD428D623299CCEF373B">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-F5ADDE9792A56C8C5FF3872560E3E85221E62D7A517DAD428D623299CCEF373B"/>
             <CertificateChain>
                 <ChainItem Certificate="C-F5ADDE9792A56C8C5FF3872560E3E85221E62D7A517DAD428D623299CCEF373B"/>
                 <ChainItem Certificate="C-498D3379F39A398AFCCA536C528F91A013D0A868FEAEFFA1114EC3B6938249F0"/>
@@ -38,7 +33,7 @@
                 <ChainItem Certificate="C-FB47D92A9909FD4FA9BEC02737543E1F3514CED747407A8D9CFA397B0915067C"/>
             </CertificateChain>
             <ContentType>application/pdf</ContentType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             
             <Policy>
                 <Id>2.16.76.1.7.1.11.1</Id>
@@ -53,14 +48,32 @@
                 <ProcessingError></ProcessingError>
                 <DigestAlgorithmsEqual>true</DigestAlgorithmsEqual>
             </Policy>
-            <PDFSignatureDictionary>
-                <Filter>PBAD_PAdES</Filter>
-                <SubFilter>PBAD.PAdES</SubFilter>
-                <ContactInfo></ContactInfo>
-                <Reason></Reason>
-                <SignatureByteRange>0 234543 300079 5547</SignatureByteRange>
-            </PDFSignatureDictionary>
-            <FoundCertificates/>
+           	<SignerInformationStore>
+           		<SignerInfo Current="true">
+			        <IssuerName>CN=AC SERASA RFB v2,OU=Secretaria da Receita Federal do Brasil - RFB,O=ICP-Brasil,C=BR</IssuerName>
+			        <SerialNumber>6258375866132076198</SerialNumber>
+           		</SignerInfo>
+           	</SignerInformationStore>
+            <PDFRevision>
+	            <PDFSignatureDictionary>
+	                <Filter>PBAD_PAdES</Filter>
+	                <SubFilter>PBAD.PAdES</SubFilter>
+	                <ContactInfo></ContactInfo>
+	                <Reason></Reason>
+	                <SignatureByteRange>0 234543 300079 5547</SignatureByteRange>
+	            </PDFSignatureDictionary>
+            </PDFRevision>
+            <FoundCertificates>
+            	<RelatedCertificate Certificate="C-F5ADDE9792A56C8C5FF3872560E3E85221E62D7A517DAD428D623299CCEF373B">
+                	<CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue match="true">
+                        	<DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>/pipMptQUv0MzOj1wTQ/ECzsq+Y=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
             <FoundRevocations/>
 			<FoundTimestamps>
 				<FoundTimestamp Timestamp="T-30662A206DBD6A4EB55C545C0EFD3101E9B0BBD31010B4A8CF0CD7C9FC58BD02"/>
@@ -79,7 +92,7 @@
         </Signature>
         <Signature Id="id-db705a41fda3e98f53acef69eae86ed559c9059a3cb67f9898d1488a8b8a1225">
             <SignatureFilename></SignatureFilename>
-            <DateTime>2017-04-28T00:58:36</DateTime>
+            <ClaimedSigningTime>2017-04-28T00:58:36</ClaimedSigningTime>
             <SignatureFormat>PKCS7-B</SignatureFormat>
             <StructuralValidation>
                 <Valid>true</Valid>
@@ -99,26 +112,39 @@
                 <SignatureIntact>false</SignatureIntact>
                 <SignatureValid>false</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-C4DCF22C04E2914AEB651F660A2558AF783D8C344E62D82D0DE5DBD5DC87F2F5">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>false</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-C4DCF22C04E2914AEB651F660A2558AF783D8C344E62D82D0DE5DBD5DC87F2F5"/>
             <CertificateChain>
                 <ChainItem Certificate="C-C4DCF22C04E2914AEB651F660A2558AF783D8C344E62D82D0DE5DBD5DC87F2F5"/>
             </CertificateChain>
             <ContentType>application/pdf</ContentType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             
-            <PDFSignatureDictionary>
-                <Filter>Adobe.PPKMS</Filter>
-                <SubFilter>adbe.pkcs7.detached</SubFilter>
-                <ContactInfo></ContactInfo>
-                <Reason>Digitally verifiable PDF exported from www.docusign.com</Reason>
-                <SignatureByteRange>0 305954 371490 5010</SignatureByteRange>
-            </PDFSignatureDictionary>
-            <FoundCertificates/>
+           	<SignerInformationStore>
+           		<SignerInfo Current="true">
+		            <IssuerName>CN=docusignhq-SEA-CAS-01-CA,DC=docusignhq,DC=com</IssuerName>
+		            <SerialNumber>450965617510987499327098</SerialNumber>
+           		</SignerInfo>
+           	</SignerInformationStore>
+            <PDFRevision>
+	            <PDFSignatureDictionary>
+	                <Filter>Adobe.PPKMS</Filter>
+	                <SubFilter>adbe.pkcs7.detached</SubFilter>
+	                <ContactInfo></ContactInfo>
+	                <Reason>Digitally verifiable PDF exported from www.docusign.com</Reason>
+	                <SignatureByteRange>0 305954 371490 5010</SignatureByteRange>
+	            </PDFSignatureDictionary>
+            </PDFRevision>
+            <FoundCertificates>
+            	<RelatedCertificate Certificate="C-C4DCF22C04E2914AEB651F660A2558AF783D8C344E62D82D0DE5DBD5DC87F2F5">
+                	<CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue match="true">
+                        	<DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>6bbxysLkcKLG1SIuF7XiuBEIT+o=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
             <FoundRevocations/>
             <FoundTimestamps/>
             <SignatureScopes>
@@ -163,6 +189,7 @@
             <NotBefore>2016-06-29T21:00:00</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-F5ADDE9792A56C8C5FF3872560E3E85221E62D7A517DAD428D623299CCEF373B</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
                 <KeyUsage>nonRepudiation</KeyUsage>
@@ -222,6 +249,7 @@
             <NotBefore>2010-06-21T19:04:57</NotBefore>
             <PublicKeySize>4096</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-FB47D92A9909FD4FA9BEC02737543E1F3514CED747407A8D9CFA397B09150CB</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -277,6 +305,7 @@
             <NotBefore>2017-02-20T00:00:00</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-2086827691ADF87520375749ADF3616AC5FACA0456E8F2DA54DDCF844D24B86E</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
                 <KeyUsage>nonRepudiation</KeyUsage>
@@ -335,6 +364,7 @@
             <NotBefore>2011-12-16T13:39:42</NotBefore>
             <PublicKeySize>4096</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-498D3379F39A398AFCCA536C528F91A013D0A868FEAEFFA1114EC3B6938249F0</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -392,6 +422,7 @@
             <NotBefore>2011-09-20T18:51:40</NotBefore>
             <PublicKeySize>4096</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-87FF04CEB4942FF4363217CACD7800987FA2751D8081AC7EFF612F7184D4B505</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -449,6 +480,7 @@
             <NotBefore>2017-01-10T19:04:16</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-C4DCF22C04E2914AEB651F660A2558AF783D8C344E62D82D0DE5DBD5DC87F2F5</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
                 <KeyUsage>keyEncipherment</KeyUsage>
@@ -499,6 +531,7 @@
             <NotBefore>2011-10-21T12:16:29</NotBefore>
             <PublicKeySize>4096</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-B123A861174F40C01E50D039652E64F9E34DF9F762F36891987E2AB371627EF9</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -552,6 +585,7 @@
             <NotBefore>2014-07-25T00:00:00</NotBefore>
             <PublicKeySize>4096</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-A21B5D840E294525B986A1E5741FC80192ACECCABD6D0196C6639B4B6AEEB33D</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -609,6 +643,8 @@
                 <ChainItem Certificate="C-87FF04CEB4942FF4363217CACD7800987FA2751D8081AC7EFF612F7184D4B505"/>
                 <ChainItem Certificate="C-FB47D92A9909FD4FA9BEC02737543E1F3514CED747407A8D9CFA397B0915067C"/>
             </CertificateChain>
+            <FoundCertificates/>
+            <FoundRevocations/>
             <TimestampedObjects>
                 <TimestampedObject Category="SIGNATURE" Token="id-eb2ce89008eb1ef77a4f96ee8738c07daceee2957537d5bdea0bd2e3af393f28" />
                 <TimestampedObject Category="CERTIFICATE" Token="C-F5ADDE9792A56C8C5FF3872560E3E85221E62D7A517DAD428D623299CCEF373B" />
@@ -635,5 +671,4 @@
             </DigestAlgoAndValue>
         </SignerData>
     </OriginalDocuments>
-    <TrustedLists/>
 </DiagnosticData>

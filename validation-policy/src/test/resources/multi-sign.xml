@@ -5,7 +5,7 @@
     <Signatures>
         <Signature Id="Signature-86c36a4a-5882-4984-848a-5febacfed192">
             <SignatureFilename>more_then_one_signature.xml</SignatureFilename>
-            <DateTime>2017-04-27T10:25:52</DateTime>
+            <ClaimedSigningTime>2017-04-27T10:25:52</ClaimedSigningTime>
             <SignatureFormat>XAdES-BASELINE-B</SignatureFormat>
             <StructuralValidation>
                 <Valid>true</Valid>
@@ -31,17 +31,12 @@
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>true</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-EAD587EB5F0C2793681D964A296BA4CB97B56651AD18813A44C06C4C59BF383D">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-EAD587EB5F0C2793681D964A296BA4CB97B56651AD18813A44C06C4C59BF383D"/>
             <CertificateChain>
                 <ChainItem Certificate="C-EAD587EB5F0C2793681D964A296BA4CB97B56651AD18813A44C06C4C59BF383D"/>
             </CertificateChain>
             <ContentType>text/xml</ContentType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             <SignerRole Category="claimed">
             	<Role>KalańskiMichał660426140762688287kalanskimkalanskim4</Role>
             </SignerRole>
@@ -53,7 +48,17 @@
                 <ProcessingError></ProcessingError>
                 <DigestAlgorithmsEqual>false</DigestAlgorithmsEqual>
             </Policy>
-            <FoundCertificates/>
+            <FoundCertificates>
+            	<RelatedCertificate Certificate="C-EAD587EB5F0C2793681D964A296BA4CB97B56651AD18813A44C06C4C59BF383D">
+                	<CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue match="true">
+                        	<DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>1luhGr3AFQ2HuDXvNThcAMGbLBQ=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
             <FoundRevocations/>
             <FoundTimestamps/>
             <SignatureScopes>
@@ -73,7 +78,7 @@
         </Signature>
         <Signature Id="Signature-52abf6c0-67ec-40d4-b73d-08ab4f6691d0">
             <SignatureFilename>more_then_one_signature.xml</SignatureFilename>
-            <DateTime>2016-10-10T12:13:46</DateTime>
+            <ClaimedSigningTime>2016-10-10T12:13:46</ClaimedSigningTime>
             <SignatureFormat>XAdES-BASELINE-B</SignatureFormat>
             <StructuralValidation>
                 <Valid>true</Valid>
@@ -99,17 +104,12 @@
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>true</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-EAD587EB5F0C2793681D964A296BA4CB97B56651AD18813A44C06C4C59BF383D">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-EAD587EB5F0C2793681D964A296BA4CB97B56651AD18813A44C06C4C59BF383D"/>
             <CertificateChain>
                 <ChainItem Certificate="C-EAD587EB5F0C2793681D964A296BA4CB97B56651AD18813A44C06C4C59BF383D"/>
             </CertificateChain>
             <ContentType>text/xml</ContentType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             <SignerRole Category="claimed">
             	<Role>KalańskiMichał660426140761013074kalanskimkalanskim1</Role>
             </SignerRole>
@@ -121,7 +121,17 @@
                 <ProcessingError></ProcessingError>
                 <DigestAlgorithmsEqual>false</DigestAlgorithmsEqual>
             </Policy>
-            <FoundCertificates/>
+            <FoundCertificates>
+            	<RelatedCertificate Certificate="C-EAD587EB5F0C2793681D964A296BA4CB97B56651AD18813A44C06C4C59BF383D">
+                	<CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue match="true">
+                        	<DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>1luhGr3AFQ2HuDXvNThcAMGbLBQ=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
             <FoundRevocations/>
             <FoundTimestamps/>
             <SignatureScopes>
@@ -141,7 +151,7 @@
         </Signature>
         <Signature Id="ID-8b009720-f82c-11e6-ae9c-0050569a5ac0">
             <SignatureFilename>more_then_one_signature.xml</SignatureFilename>
-            <DateTime>2017-02-21T12:11:37</DateTime>
+            <ClaimedSigningTime>2017-02-21T12:11:37</ClaimedSigningTime>
             <SignatureFormat>XAdES-BASELINE-B</SignatureFormat>
             <StructuralValidation>
                 <Valid>true</Valid>
@@ -167,18 +177,13 @@
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>true</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-D30FA7D4FA90904884DDEED35B989DA84D82D742580E2625D56625C07C572FF8">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-D30FA7D4FA90904884DDEED35B989DA84D82D742580E2625D56625C07C572FF8"/>
             <CertificateChain>
                 <ChainItem Certificate="C-D30FA7D4FA90904884DDEED35B989DA84D82D742580E2625D56625C07C572FF8"/>
                 <ChainItem Certificate="C-08DA906198FCD5C6A242B2A6BFFF0B5A445655D76BBC65BFCBDD13186C2C6A86"/>
             </CertificateChain>
             <ContentType>text/xml</ContentType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             <Policy>
                 <Id>IMPLICIT_POLICY</Id>
                 <Asn1Processable>false</Asn1Processable>
@@ -187,7 +192,17 @@
                 <ProcessingError></ProcessingError>
                 <DigestAlgorithmsEqual>false</DigestAlgorithmsEqual>
             </Policy>
-            <FoundCertificates/>
+            <FoundCertificates>
+            	<RelatedCertificate Certificate="C-D30FA7D4FA90904884DDEED35B989DA84D82D742580E2625D56625C07C572FF8">
+                	<CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue match="true">
+                        	<DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>b+BG1sVEoYGI2swsDr/3YkALOV4=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
             <FoundRevocations/>
             <FoundTimestamps/>
             <SignatureScopes>
@@ -207,7 +222,7 @@
         </Signature>
         <Signature Id="ID-e5b77ba0-1b6a-11e7-a15a-0050569a0676">
             <SignatureFilename>more_then_one_signature.xml</SignatureFilename>
-            <DateTime>2017-04-07T08:19:49</DateTime>
+            <ClaimedSigningTime>2017-04-07T08:19:49</ClaimedSigningTime>
             <SignatureFormat>XAdES-BASELINE-B</SignatureFormat>
             <StructuralValidation>
                 <Valid>true</Valid>
@@ -233,18 +248,13 @@
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>true</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-D30FA7D4FA90904884DDEED35B989DA84D82D742580E2625D56625C07C572FF8">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-D30FA7D4FA90904884DDEED35B989DA84D82D742580E2625D56625C07C572FF8"/>
             <CertificateChain>
                 <ChainItem Certificate="C-D30FA7D4FA90904884DDEED35B989DA84D82D742580E2625D56625C07C572FF8"/>
                 <ChainItem Certificate="C-08DA906198FCD5C6A242B2A6BFFF0B5A445655D76BBC65BFCBDD13186C2C6A86"/>
             </CertificateChain>
             <ContentType>text/xml</ContentType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             <Policy>
                 <Id>IMPLICIT_POLICY</Id>
                 <Asn1Processable>false</Asn1Processable>
@@ -253,7 +263,17 @@
                 <ProcessingError></ProcessingError>
                 <DigestAlgorithmsEqual>false</DigestAlgorithmsEqual>
             </Policy>
-            <FoundCertificates/>
+            <FoundCertificates>
+            	<RelatedCertificate Certificate="C-D30FA7D4FA90904884DDEED35B989DA84D82D742580E2625D56625C07C572FF8">
+                	<CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue match="true">
+                        	<DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>b+BG1sVEoYGI2swsDr/3YkALOV4=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
             <FoundRevocations/>
             <FoundTimestamps/>
             <SignatureScopes>
@@ -292,6 +312,7 @@
             <NotBefore>2015-05-08T07:01:06</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-08DA906198FCD5C6A242B2A6BFFF0B5A445655D76BBC65BFCBDD13186C2C6A86</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -313,25 +334,24 @@
             <QCStatementIds/>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>Polish Security Printing Works</TSPName>
-                    <TSPRegistrationIdentifier>VATDE-226080243</TSPRegistrationIdentifier>
-                    <CountryCode>PL</CountryCode>
+                <TrustedServiceProvider TL="TL-B1FD94CECADE070554A93C3AC56FC591B535B75BFFD69B882E3FAF1CAEF89E3C" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames><TSPName lang="en">Polish Security Printing Works</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATDE-226080243</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-08DA906198FCD5C6A242B2A6BFFF0B5A445655D76BBC65BFCBDD13186C2C6A86">
-                    		<ServiceName>Certification authority issuing qualified certificates</ServiceName>
+                    		<ServiceNames><ServiceName lang="en">Certification authority issuing qualified certificates</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-07-01T00:00:00</StartDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                             <ServiceSupplyPoints>
-                                <serviceSupplyPoint>http://193.178.164.4/repozytorium/ca1_2015.crl</serviceSupplyPoint>
+                                <ServiceSupplyPoint>http://193.178.164.4/repozytorium/ca1_2015.crl</ServiceSupplyPoint>
                             </ServiceSupplyPoints>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-08DA906198FCD5C6A242B2A6BFFF0B5A445655D76BBC65BFCBDD13186C2C6A86">
-                            <ServiceName>Certification authority issuing qualified certificates</ServiceName>
+                            <ServiceNames><ServiceName lang="en">Certification authority issuing qualified certificates</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision</Status>
                             <StartDate>2015-05-08T07:01:06</StartDate>
@@ -364,6 +384,7 @@
             <NotBefore>2016-08-24T14:47:04</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-EAD587EB5F0C2793681D964A296BA4CB97B56651AD18813A44C06C4C59BF383D</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>nonRepudiation</KeyUsage>
             </KeyUsageBits>
@@ -407,6 +428,7 @@
             <NotBefore>2015-11-03T23:00:00</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-D30FA7D4FA90904884DDEED35B989DA84D82D742580E2625D56625C07C572FF8</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>nonRepudiation</KeyUsage>
             </KeyUsageBits>
@@ -433,13 +455,12 @@
             </QCStatementIds>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>Polish Security Printing Works</TSPName>
-                    <TSPRegistrationIdentifier>VATDE-226080243</TSPRegistrationIdentifier>
-                    <CountryCode>PL</CountryCode>
+                <TrustedServiceProvider TL="TL-B1FD94CECADE070554A93C3AC56FC591B535B75BFFD69B882E3FAF1CAEF89E3C" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames><TSPName lang="en">Polish Security Printing Works</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATDE-226080243</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-08DA906198FCD5C6A242B2A6BFFF0B5A445655D76BBC65BFCBDD13186C2C6A86">
-                        	<ServiceName>Certification authority issuing qualified certificates</ServiceName>
+                        	<ServiceNames><ServiceName lang="en">Certification authority issuing qualified certificates</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-07-01T00:00:00</StartDate>
@@ -449,14 +470,14 @@
                                 <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCStatement</Qualifier>
                             </CapturedQualifiers>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                             <ServiceSupplyPoints>
-                                <serviceSupplyPoint>http://193.178.164.4/repozytorium/ca1_2015.crl</serviceSupplyPoint>
+                                <ServiceSupplyPoint>http://193.178.164.4/repozytorium/ca1_2015.crl</ServiceSupplyPoint>
                             </ServiceSupplyPoints>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-08DA906198FCD5C6A242B2A6BFFF0B5A445655D76BBC65BFCBDD13186C2C6A86">
-                        	<ServiceName>Certification authority issuing qualified certificates</ServiceName>
+                        	<ServiceNames><ServiceName lang="en">Certification authority issuing qualified certificates</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision</Status>
                             <StartDate>2015-05-08T07:01:06</StartDate>
@@ -472,7 +493,7 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-d30fa7d4fa90904884ddeed35b989da84d82d742580e2625d56625c07c572ff8c3e145f6a7765097e9f92aaff292e4f09bad7e2613dc2b6448f607c03e5ada91">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <Base64Encoded>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</Base64Encoded>
@@ -534,7 +555,7 @@
         </SignerData>
     </OriginalDocuments>
     <TrustedLists>
-        <TrustedList>
+        <TrustedList Id="TL-B1FD94CECADE070554A93C3AC56FC591B535B75BFFD69B882E3FAF1CAEF89E3C">
             <CountryCode>PL</CountryCode>
             <Url>https://www.nccert.pl/tsl/PL_TSL.xml</Url>
             <SequenceNumber>87</SequenceNumber>
@@ -544,15 +565,15 @@
             <NextUpdate>2018-01-27T00:00:00</NextUpdate>
             <WellSigned>true</WellSigned>
         </TrustedList>
+    	<TrustedList Id="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E" LOTL="true">
+	        <CountryCode>EU</CountryCode>
+	        <Url>https://ec.europa.eu/information_society/policy/esignature/trusted-list/tl-mp.xml</Url>
+	        <SequenceNumber>172</SequenceNumber>
+	        <Version>5</Version>
+	        <LastLoading>2017-08-04T05:39:13</LastLoading>
+	        <IssueDate>2017-05-16T04:00:00</IssueDate>
+	        <NextUpdate>2017-11-15T00:00:00</NextUpdate>
+	        <WellSigned>true</WellSigned>
+	    </TrustedList>
     </TrustedLists>
-    <ListOfTrustedLists>
-        <CountryCode>EU</CountryCode>
-        <Url>https://ec.europa.eu/information_society/policy/esignature/trusted-list/tl-mp.xml</Url>
-        <SequenceNumber>172</SequenceNumber>
-        <Version>5</Version>
-        <LastLoading>2017-08-04T05:39:13</LastLoading>
-        <IssueDate>2017-05-16T04:00:00</IssueDate>
-        <NextUpdate>2017-11-15T00:00:00</NextUpdate>
-        <WellSigned>true</WellSigned>
-    </ListOfTrustedLists>
 </DiagnosticData>

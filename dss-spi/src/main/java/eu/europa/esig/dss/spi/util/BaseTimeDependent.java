@@ -25,6 +25,8 @@ import java.util.Date;
 
 public class BaseTimeDependent implements TimeDependent, Serializable {
 
+	private static final long serialVersionUID = -6972849560865304279L;
+	
 	private Date startDate;
 	private Date endDate;
 	
@@ -42,18 +44,10 @@ public class BaseTimeDependent implements TimeDependent, Serializable {
 	public Date getStartDate() {
 		return startDate;
 	}
-
-	public void setStartDate( final Date d ) {
-		this.startDate = d;
-	}
 	
 	@Override
 	public Date getEndDate() {
 		return endDate;
-	}
-	
-	public void setEndDate( final Date d ) {
-		this.endDate = d;
 	}
 
 	@Override

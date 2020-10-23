@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.cookbook.example.sign;
 
 import java.io.IOException;
@@ -6,11 +26,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.xml.crypto.dsig.CanonicalizationMethod;
+import javax.xml.crypto.dsig.XMLSignature;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.cookbook.example.CookbookTools;
+import eu.europa.esig.dss.definition.DSSNamespace;
 import eu.europa.esig.dss.enumerations.CommitmentType;
+import eu.europa.esig.dss.enumerations.CommitmentTypeEnum;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
@@ -25,6 +48,7 @@ import eu.europa.esig.dss.token.DSSPrivateKeyEntry;
 import eu.europa.esig.dss.token.SignatureTokenConnection;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
+import eu.europa.esig.dss.xades.definition.XAdESNamespaces;
 import eu.europa.esig.dss.xades.reference.Base64Transform;
 import eu.europa.esig.dss.xades.reference.CanonicalizationTransform;
 import eu.europa.esig.dss.xades.reference.DSSReference;
@@ -50,18 +74,18 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 			// tag::demo[]
 			
 			// Prepare transformations in the proper order
-			List<DSSTransform> transforms = new ArrayList<DSSTransform>();
-			// tag::envelopedTransform[]
+			List<DSSTransform> transforms = new ArrayList<>();
+			// tag::demoEnvelopedTransform[]
 			DSSTransform envelopedTransform = new EnvelopedSignatureTransform();
-			// end::envelopedTransform[]
+			// end::demoEnvelopedTransform[]
 			transforms.add(envelopedTransform);
-			// tag::canonicalizationTransform[]
+			// tag::demoCanonicalizationTransform[]
 			DSSTransform canonicalization = new CanonicalizationTransform(CanonicalizationMethod.EXCLUSIVE_WITH_COMMENTS);
-			// end::canonicalizationTransform[]
+			// end::demoCanonicalizationTransform[]
 			transforms.add(canonicalization);
 			
 			// Assign reference to the document
-			List<DSSReference> references = new ArrayList<DSSReference>();
+			List<DSSReference> references = new ArrayList<>();
 			DSSReference dssReference = new DSSReference();
 			dssReference.setContents(toSignDocument);
 			dssReference.setId("r-" + toSignDocument.getName());
@@ -99,9 +123,9 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 			bLevelParameters.setSignerLocation(signerLocation);
 
 			// commitment type(s)
-			List<String> commitmentTypeIndications = new ArrayList<String>();
-			commitmentTypeIndications.add(CommitmentType.ProofOfOrigin.getUri());
-			commitmentTypeIndications.add(CommitmentType.ProofOfApproval.getUri());
+			List<CommitmentType> commitmentTypeIndications = new ArrayList<>();
+			commitmentTypeIndications.add(CommitmentTypeEnum.ProofOfOrigin);
+			commitmentTypeIndications.add(CommitmentTypeEnum.ProofOfApproval);
 			bLevelParameters.setCommitmentTypeIndications(commitmentTypeIndications);
 
 			CommonCertificateVerifier verifier = new CommonCertificateVerifier();
@@ -113,9 +137,25 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 			SignatureValue signatureValue = signingToken.sign(dataToSign, parameters.getDigestAlgorithm(), privateKey);
 			DSSDocument signedDocument = service.signDocument(toSignDocument, parameters, signatureValue);
 			
-			signedDocument.save("target/signed.xml");
+			// signedDocument.save("target/signed.xml");
 
 			testFinalDocument(signedDocument);
+
+			// tag::demoPrefixes[]
+			
+			// Allows setting of a XAdES namespace (changes a XAdES format)
+			// Default : XAdESNamespaces.XADES_132 (produces XAdES 1.3.2)
+			parameters.setXadesNamespace(XAdESNamespaces.XADES_132);
+			
+			// Defines an XmlDSig prefix
+			// Default : XAdESNamespaces.XMLDSIG
+			parameters.setXmldsigNamespace(new DSSNamespace(XMLSignature.XMLNS, "myPrefix"));
+			
+			// Defines a XAdES 1.4.1 format prefix
+			// Default : XAdESNamespaces.XADES_141
+			parameters.setXades141Namespace(XAdESNamespaces.XADES_141);
+			
+			// end::demoPrefixes[]
 		}
 		
 	}
@@ -127,14 +167,14 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 
 			DSSPrivateKeyEntry privateKey = signingToken.getKeys().get(0);
 
-			// tag::base64Transform[]
+			// tag::demoBase64Transform[]
 			DSSDocument document = new InMemoryDocument("Hello World!".getBytes(), "Hello.txt", MimeType.BINARY);
-			List<DSSTransform> transforms = new ArrayList<DSSTransform>();
+			List<DSSTransform> transforms = new ArrayList<>();
 			DSSTransform base64Transform = new Base64Transform();
 			transforms.add(base64Transform);
-			// end::base64Transform[]
+			// end::demoBase64Transform[]
 			
-			List<DSSReference> references = new ArrayList<DSSReference>();
+			List<DSSReference> references = new ArrayList<>();
 			DSSReference dssReference = new DSSReference();
 			dssReference.setContents(document);
 			dssReference.setId("r-" + document.getName());
@@ -148,7 +188,6 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 			parameters.setSignaturePackaging(SignaturePackaging.ENVELOPING);
 			parameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
 			parameters.setReferences(references);
-
 			
 			parameters.setDigestAlgorithm(DigestAlgorithm.SHA512);
 			parameters.setSigningCertificate(privateKey.getCertificate());
@@ -165,9 +204,9 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 			signerLocation.setLocality("SimCity");
 			bLevelParameters.setSignerLocation(signerLocation);
 
-			List<String> commitmentTypeIndications = new ArrayList<String>();
-			commitmentTypeIndications.add(CommitmentType.ProofOfOrigin.getUri());
-			commitmentTypeIndications.add(CommitmentType.ProofOfApproval.getUri());
+			List<CommitmentType> commitmentTypeIndications = new ArrayList<>();
+			commitmentTypeIndications.add(CommitmentTypeEnum.ProofOfOrigin);
+			commitmentTypeIndications.add(CommitmentTypeEnum.ProofOfApproval);
 			bLevelParameters.setCommitmentTypeIndications(commitmentTypeIndications);
 
 			CommonCertificateVerifier verifier = new CommonCertificateVerifier();
@@ -178,7 +217,7 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 			SignatureValue signatureValue = signingToken.sign(dataToSign, parameters.getDigestAlgorithm(), privateKey);
 			DSSDocument signedDocument = service.signDocument(document, parameters, signatureValue);
 			
-			signedDocument.save("target/signed.xml");
+			// signedDocument.save("target/signed.xml");
 
 			testFinalDocument(signedDocument);
 		}
@@ -193,13 +232,13 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 
 			DSSPrivateKeyEntry privateKey = signingToken.getKeys().get(0);
 			
-			// tag::envelopedXPathTransform[]
-			List<DSSTransform> transforms = new ArrayList<DSSTransform>();
+			// tag::demoEnvelopedXPathTransform[]
+			List<DSSTransform> transforms = new ArrayList<>();
 			DSSTransform envelopedTransform = new XPathTransform("not(ancestor-or-self::ds:Signature)");
 			transforms.add(envelopedTransform);
-			// end::envelopedXPathTransform[]
+			// end::demoEnvelopedXPathTransform[]
 			
-			List<DSSReference> references = new ArrayList<DSSReference>();
+			List<DSSReference> references = new ArrayList<>();
 			DSSReference dssReference = new DSSReference();
 			dssReference.setContents(toSignDocument);
 			dssReference.setId("r-" + toSignDocument.getName());
@@ -228,9 +267,9 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 			signerLocation.setLocality("SimCity");
 			bLevelParameters.setSignerLocation(signerLocation);
 
-			List<String> commitmentTypeIndications = new ArrayList<String>();
-			commitmentTypeIndications.add(CommitmentType.ProofOfOrigin.getUri());
-			commitmentTypeIndications.add(CommitmentType.ProofOfApproval.getUri());
+			List<CommitmentType> commitmentTypeIndications = new ArrayList<>();
+			commitmentTypeIndications.add(CommitmentTypeEnum.ProofOfOrigin);
+			commitmentTypeIndications.add(CommitmentTypeEnum.ProofOfApproval);
 			bLevelParameters.setCommitmentTypeIndications(commitmentTypeIndications);
 
 			CommonCertificateVerifier verifier = new CommonCertificateVerifier();
@@ -241,7 +280,7 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 			SignatureValue signatureValue = signingToken.sign(dataToSign, parameters.getDigestAlgorithm(), privateKey);
 			DSSDocument signedDocument = service.signDocument(toSignDocument, parameters, signatureValue);
 			
-			signedDocument.save("target/signed.xml");
+			// signedDocument.save("target/signed.xml");
 
 			testFinalDocument(signedDocument);
 		}
@@ -257,13 +296,13 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 
 			DSSPrivateKeyEntry privateKey = signingToken.getKeys().get(0);
 
-			// tag::envelopedXPath2FilterTransform[]
-			List<DSSTransform> transforms = new ArrayList<DSSTransform>();
+			// tag::demoEnvelopedXPath2FilterTransform[]
+			List<DSSTransform> transforms = new ArrayList<>();
 			DSSTransform envelopedTransform = new XPath2FilterTransform("descendant::ds:Signature", "subtract");
 			transforms.add(envelopedTransform);
-			// end::envelopedXPath2FilterTransform[]
+			// end::demoEnvelopedXPath2FilterTransform[]
 			
-			List<DSSReference> references = new ArrayList<DSSReference>();
+			List<DSSReference> references = new ArrayList<>();
 			DSSReference dssReference = new DSSReference();
 			dssReference.setContents(toSignDocument);
 			dssReference.setId("r-" + toSignDocument.getName());
@@ -292,9 +331,9 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 			signerLocation.setLocality("SimCity");
 			bLevelParameters.setSignerLocation(signerLocation);
 
-			List<String> commitmentTypeIndications = new ArrayList<String>();
-			commitmentTypeIndications.add(CommitmentType.ProofOfOrigin.getUri());
-			commitmentTypeIndications.add(CommitmentType.ProofOfApproval.getUri());
+			List<CommitmentType> commitmentTypeIndications = new ArrayList<>();
+			commitmentTypeIndications.add(CommitmentTypeEnum.ProofOfOrigin);
+			commitmentTypeIndications.add(CommitmentTypeEnum.ProofOfApproval);
 			bLevelParameters.setCommitmentTypeIndications(commitmentTypeIndications);
 
 			CommonCertificateVerifier verifier = new CommonCertificateVerifier();
@@ -305,7 +344,7 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 			SignatureValue signatureValue = signingToken.sign(dataToSign, parameters.getDigestAlgorithm(), privateKey);
 			DSSDocument signedDocument = service.signDocument(toSignDocument, parameters, signatureValue);
 			
-			signedDocument.save("target/signed.xml");
+			// signedDocument.save("target/signed.xml");
 
 			testFinalDocument(signedDocument);
 		}

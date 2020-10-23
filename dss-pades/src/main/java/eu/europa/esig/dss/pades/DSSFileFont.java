@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.pades;
 
 import java.awt.Font;
@@ -20,6 +40,7 @@ public class DSSFileFont extends AbstractDSSFont {
 	private static final String DEFAULT_FONT_EXTENSION = ".ttf";
 	
 	private DSSDocument fileFont;
+	private Font javaFont;
 	
 	public static DSSFileFont initializeDefault() {
 		return new DSSFileFont(DEFAULT_FONT);
@@ -37,7 +58,6 @@ public class DSSFileFont extends AbstractDSSFont {
 		this.fileFont = dssDocument;
 		this.size = size;
 		initFontName(dssDocument);
-		initJavaFont(dssDocument);
 	}
 	
 	private void initFontName(DSSDocument fileFont) {
@@ -46,33 +66,29 @@ public class DSSFileFont extends AbstractDSSFont {
 		}
 	}
 	
-	private void initJavaFont(DSSDocument fileFont) {
+	@Override
+	public Font getJavaFont() {
+		if (javaFont == null) {
+			javaFont = deriveJavaFont();
+		}
+		return javaFont;
+	}
+	
+	private Font deriveJavaFont() {
 		try (InputStream is = fileFont.openStream()) {
 			Font javaFont = Font.createFont(Font.TRUETYPE_FONT, is);
-			this.javaFont = javaFont.deriveFont(size);
+			return javaFont.deriveFont(size);
 		} catch (IOException | FontFormatException e) {
-			throw new DSSException("The assigned font cannot be initialized", e);
+			throw new DSSException(String.format("The Java font cannot be instantiated. Reason : %s", e.getMessage()), e);
 		}
 	}
 
-	@Override
 	public InputStream getInputStream() {
 		return fileFont.openStream();
 	}
 
-	@Override
 	public String getName() {
 		return fileFont.getName();
-	}
-
-	@Override
-	public void setSize(float size) {
-		this.size = size;
-	}
-
-	@Override
-	public boolean isLogicalFont() {
-		return false;
 	}
 
 }

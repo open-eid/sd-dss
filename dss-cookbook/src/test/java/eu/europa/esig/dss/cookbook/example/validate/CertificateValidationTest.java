@@ -20,21 +20,18 @@
  */
 package eu.europa.esig.dss.cookbook.example.validate;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.File;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.detailedreport.DetailedReport;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
+import eu.europa.esig.dss.enumerations.TokenExtractionStategy;
 import eu.europa.esig.dss.model.x509.CertificateToken;
-import eu.europa.esig.dss.service.crl.OnlineCRLSource;
-import eu.europa.esig.dss.service.http.commons.CommonsDataLoader;
-import eu.europa.esig.dss.service.ocsp.OnlineOCSPSource;
 import eu.europa.esig.dss.simplecertificatereport.SimpleCertificateReport;
 import eu.europa.esig.dss.spi.DSSUtils;
-import eu.europa.esig.dss.spi.x509.CertificateSource;
 import eu.europa.esig.dss.validation.CertificateValidator;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
@@ -44,10 +41,6 @@ public class CertificateValidationTest {
 
 	@Test
 	public void getCertificateStatus() {
-
-		// See Trusted Lists loading
-		CertificateSource trustedCertSource = null;
-		CertificateSource adjunctCertSource = null;
 
 		// tag::demo[]
 
@@ -60,6 +53,10 @@ public class CertificateValidationTest {
 		// We create an instance of the CertificateValidator with the certificate
 		CertificateValidator validator = CertificateValidator.fromCertificate(token);
 		validator.setCertificateVerifier(cv);
+		
+		// Allows specifying which tokens need to be extracted in the diagnostic data (Base64).
+		// Default : NONE)
+		validator.setTokenExtractionStategy(TokenExtractionStategy.EXTRACT_CERTIFICATES_AND_REVOCATION_DATA);
 
 		// We execute the validation
 		CertificateReports certificateReports = validator.validate();

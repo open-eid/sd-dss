@@ -20,28 +20,27 @@
  */
 package eu.europa.esig.dss.cades.requirements;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.ASN1TaggedObject;
-import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.asn1.cms.SignedData;
 import org.bouncycastle.asn1.cms.SignerInfo;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.cert.X509CertificateHolder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.utils.Utils;
 
 public abstract class AbstractRequirementChecks extends PKIFactoryAccess {
@@ -51,7 +50,7 @@ public abstract class AbstractRequirementChecks extends PKIFactoryAccess {
 	private SignedData signedData;
 	private SignerInfo signerInfo;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		DSSDocument signedDocument = getSignedDocument();
 
@@ -61,7 +60,7 @@ public abstract class AbstractRequirementChecks extends PKIFactoryAccess {
 		ASN1ObjectIdentifier oid = ASN1ObjectIdentifier.getInstance(asn1Seq.getObjectAt(0));
 		assertEquals(PKCSObjectIdentifiers.signedData, oid);
 
-		ASN1TaggedObject taggedObj = DERTaggedObject.getInstance(asn1Seq.getObjectAt(1));
+		ASN1TaggedObject taggedObj = ASN1TaggedObject.getInstance(asn1Seq.getObjectAt(1));
 		signedData = SignedData.getInstance(taggedObj.getObject());
 
 		ASN1Set signerInfosAsn1 = signedData.getSignerInfos();

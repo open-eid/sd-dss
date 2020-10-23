@@ -22,18 +22,20 @@ package eu.europa.esig.dss.enumerations;
 
 public enum CertificateOrigin {
 	
-	KEY_INFO,
+	KEY_INFO, /* XAdES specific */
+	
+	SIGNED_DATA, /* Certificates extracted from a signed attribute */
 	
 	CERTIFICATE_VALUES,
 	
-	ATTR_AUTORITIES_CERT_VALUES,
+	ATTR_AUTORITIES_CERT_VALUES, /* XAdES specific */
 	
-	TIMESTAMP_VALIDATION_DATA,
+	TIMESTAMP_VALIDATION_DATA, /* XAdES specific */
 	
-	DSS_DICTIONARY,
+	DSS_DICTIONARY, /* PAdES specific */
 	
-	VRI_DICTIONARY,
+	VRI_DICTIONARY, /* PAdES specific */
 	
-	TIMESTAMP_CERTIFICATE_VALUES,
+	BASIC_OCSP_RESP, /* OCSP Response */
 
 }

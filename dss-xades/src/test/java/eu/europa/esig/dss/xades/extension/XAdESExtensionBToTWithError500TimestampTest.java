@@ -20,14 +20,17 @@
  */
 package eu.europa.esig.dss.xades.extension;
 
-import org.junit.Ignore;
-import org.junit.Test;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
 
-public class XAdESExtensionBToTWithError500TimestampTest extends AbstractTestXAdESExtension {
+public class XAdESExtensionBToTWithError500TimestampTest extends AbstractXAdESTestExtension {
 
 	@Override
 	protected TSPSource getUsedTSPSourceAtExtensionTime() {
@@ -44,11 +47,14 @@ public class XAdESExtensionBToTWithError500TimestampTest extends AbstractTestXAd
 		return SignatureLevel.XAdES_BASELINE_T;
 	}
 
-	@Ignore("Due to usage of old CommonsDataLoader (without enforced SSL)")
 	@Override
-	@Test(expected = NullPointerException.class)
-	public void test() throws Exception {
-		super.test();
+
+	@Test
+	public void extendAndVerify() throws Exception {
+		Exception exception = assertThrows(DSSException.class, () -> {
+			super.extendAndVerify();
+		});
+		assertTrue(exception.getMessage().contains("Unable to process POST call for url [http://dss.nowina.lu/pki-factory//tsa/error-500/good-tsa]"));
 	}
 
 }

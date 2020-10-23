@@ -20,14 +20,15 @@
  */
 package eu.europa.esig.dss.cades.extension;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
 
-public class CAdESExtensionLTToLTAWithError500TimestampTest extends AbstractTestCAdESExtension {
+public class CAdESExtensionLTToLTAWithError500TimestampTest extends AbstractCAdESTestExtension {
 
 	@Override
 	protected TSPSource getUsedTSPSourceAtExtensionTime() {
@@ -44,11 +45,12 @@ public class CAdESExtensionLTToLTAWithError500TimestampTest extends AbstractTest
 		return SignatureLevel.CAdES_BASELINE_LTA;
 	}
 
-	@Ignore("Due to usage of old CommonsDataLoader (without enforced SSL)")
 	@Override
-	@Test(expected = DSSException.class)
-	public void test() throws Exception {
-		super.test();
+	@Test
+	public void extendAndVerify() throws Exception {
+		assertThrows(DSSException.class, () -> {
+			super.extendAndVerify();
+		});
 	}
 
 }

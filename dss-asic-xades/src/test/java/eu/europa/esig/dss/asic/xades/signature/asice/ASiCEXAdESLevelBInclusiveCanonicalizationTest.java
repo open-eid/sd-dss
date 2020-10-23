@@ -20,27 +20,34 @@
  */
 package eu.europa.esig.dss.asic.xades.signature.asice;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.Date;
 
 import javax.xml.crypto.dsig.CanonicalizationMethod;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import eu.europa.esig.dss.asic.xades.ASiCWithXAdESSignatureParameters;
 import eu.europa.esig.dss.asic.xades.signature.ASiCWithXAdESService;
+import eu.europa.esig.dss.detailedreport.DetailedReport;
+import eu.europa.esig.dss.detailedreport.jaxb.XmlBasicBuildingBlocks;
+import eu.europa.esig.dss.detailedreport.jaxb.XmlSAV;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
+import eu.europa.esig.dss.enumerations.Indication;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
+import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 
 public class ASiCEXAdESLevelBInclusiveCanonicalizationTest extends AbstractASiCEXAdESTestSignature {
 
-	private DocumentSignatureService<ASiCWithXAdESSignatureParameters> service;
+	private DocumentSignatureService<ASiCWithXAdESSignatureParameters, XAdESTimestampParameters> service;
 	private ASiCWithXAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text");
 
@@ -55,9 +62,18 @@ public class ASiCEXAdESLevelBInclusiveCanonicalizationTest extends AbstractASiCE
 
 		service = new ASiCWithXAdESService(getCompleteCertificateVerifier());
 	}
+	
+	@Override
+	protected void verifyDetailedReport(DetailedReport detailedReport) {
+		super.verifyDetailedReport(detailedReport);
+		
+		XmlBasicBuildingBlocks signatureBBB = detailedReport.getBasicBuildingBlockById(detailedReport.getFirstSignatureId());
+		XmlSAV sav = signatureBBB.getSAV();
+		assertEquals(Indication.PASSED, sav.getConclusion().getIndication());
+	}
 
 	@Override
-	protected DocumentSignatureService<ASiCWithXAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<ASiCWithXAdESSignatureParameters, XAdESTimestampParameters> getService() {
 		return service;
 	}
 

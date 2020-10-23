@@ -1,5 +1,5 @@
 <ConstraintsParameters Name="QES AdESQC TL based" xmlns="http://dss.esig.europa.eu/validation/policy">
-	<Description>Validate electronic signatures and indicates whether they are Advanced electronic Signatures (AdES), AdES supported by a Qualified Certificate (AdES/QC) or a
+	<Description>Default constraint policy. Validate electronic signatures and indicates whether they are Advanced electronic Signatures (AdES), AdES supported by a Qualified Certificate (AdES/QC) or a
 		Qualified electronic Signature (QES). All certificates and their related chains supporting the signatures are validated against the EU Member State Trusted Lists (this includes
 		signer's certificate and certificates used to validate certificate validity status services - CRLs, OCSP, and time-stamps).
 	</Description>
@@ -19,6 +19,7 @@
 			<Id>application/vnd.etsi.asic-e+zip</Id>
 		</AcceptableMimeTypeFileContent>
 		<ManifestFilePresent Level="FAIL" />
+		<SignedFilesPresent Level="FAIL" />
 		<AllFilesSigned Level="WARN" />
 	</ContainerConstraints>
 	<SignatureConstraints>
@@ -174,7 +175,7 @@
 	<Timestamp>
 		<TimestampDelay Level="IGNORE" Unit="DAYS" Value="0" />
 		<RevocationTimeAgainstBestSignatureTime	Level="FAIL" />
-		<BestSignatureTimeBeforeIssuanceDateOfSigningCertificate Level="FAIL" />
+		<BestSignatureTimeBeforeExpirationDateOfSigningCertificate Level="FAIL" />
 		<Coherence Level="WARN" />
 		<BasicSignatureConstraints>
 			<ReferenceDataExistence Level="FAIL" />
@@ -310,8 +311,7 @@
 	<eIDAS>
 		<TLFreshness Level="WARN" Unit="HOURS" Value="6" />
 		<TLNotExpired Level="WARN" />
-		<TLWellSigned Level="FAIL" />
+		<TLWellSigned Level="WARN" />
 		<TLVersion Level="FAIL" value="5" />
-		<TLConsistency Level="FAIL" />
 	</eIDAS>
 </ConstraintsParameters>

@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.cades.validation;
 
 import java.util.ArrayList;
@@ -41,11 +61,11 @@ public class CAdESAttribute implements ISignatureAttribute {
 	 * @return list of {@link ASN1Primitive}
 	 */
 	private List<ASN1Primitive> getASN1Primitives() {
-		final List<ASN1Primitive> primitives = new ArrayList<ASN1Primitive>();
+		final List<ASN1Primitive> primitives = new ArrayList<>();
 		final ASN1Set attrValues = attribute.getAttrValues();
 		for (final ASN1Encodable value : attrValues.toArray()) {
 			if (value instanceof DEROctetString) {
-				LOG.warn("Illegal content for timestamp (OID : {}) : OCTET STRING is not allowed !", toString());
+				LOG.warn("Illegal content for timestamp (OID : {}) : OCTET STRING is not allowed !", this);
 			} else {
 				primitives.add(value.toASN1Primitive());
 			}
@@ -61,7 +81,7 @@ public class CAdESAttribute implements ISignatureAttribute {
 		List<ASN1Primitive> asn1Primitives = getASN1Primitives();
 		if (Utils.isCollectionNotEmpty(asn1Primitives)) {
 			if (asn1Primitives.size() > 1) {
-				LOG.warn("More than one result in CAdES attribute with OID: [{}]. Return only the first one", toString()); 
+				LOG.warn("More than one result in CAdES attribute with OID: [{}]. Return only the first one", this);
 			}
 			return asn1Primitives.get(0);
 		}
@@ -75,13 +95,19 @@ public class CAdESAttribute implements ISignatureAttribute {
 	public ASN1Encodable getASN1Object() {
 		return attribute.getAttrValues().getObjectAt(0);
 	}
-	
+
 	/**
 	 * Returns a TimeStampToken if possible
-	 * @return {@link TimeStampToken}
+	 * 
+	 * @return a {@link TimeStampToken} or null
 	 */
 	public TimeStampToken toTimeStampToken() {
-		return DSSASN1Utils.getTimeStampToken(attribute);
+		try {
+			return DSSASN1Utils.getTimeStampToken(attribute);
+		} catch (Exception e) {
+			LOG.warn("Unable to build a timestamp token from the attribute [{}] : {}", this, e.getMessage());
+			return null;
+		}
 	}
 	
 	@Override

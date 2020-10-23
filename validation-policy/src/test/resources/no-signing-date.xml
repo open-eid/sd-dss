@@ -30,18 +30,13 @@
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>false</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-EFDF173DD8B570A0587980070EF0EFC8C79DD4F4EF1A206511967A7F7532FC74">
-                <AttributePresent>false</AttributePresent>
-                <DigestValuePresent>false</DigestValuePresent>
-                <DigestValueMatch>false</DigestValueMatch>
-                <IssuerSerialMatch>false</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-EFDF173DD8B570A0587980070EF0EFC8C79DD4F4EF1A206511967A7F7532FC74"/>
             <CertificateChain>
                 <ChainItem Certificate="C-EFDF173DD8B570A0587980070EF0EFC8C79DD4F4EF1A206511967A7F7532FC74"/>
                 <ChainItem Certificate="C-ADDFFA6FD0809A54A9F0B31FD25F74BF7F2D7AE11C80FD99DAA0FB603A65CD0E"/>
             </CertificateChain>
             <ContentType>text/xml</ContentType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             
             <FoundCertificates/>
             <FoundRevocations/>
@@ -85,6 +80,7 @@
             <NotBefore>2014-05-30T20:15:49</NotBefore>
             <PublicKeySize>4096</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-ADDFFA6FD0809A54A9F0B31FD25F74BF7F2D7AE11C80FD99DAA0FB603A65CD0E</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -105,22 +101,21 @@
             <QCStatementIds/>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>QuoVadis Trustlink B.V.</TSPName>
-                    <TSPRegistrationIdentifier>VATDE-280226043</TSPRegistrationIdentifier>
-                    <CountryCode>NL</CountryCode>
+                <TrustedServiceProvider TL="TL-2C9AB8299BAAD72CD5970EDC7F9D5AB766527E8EF65FB8447451A2E28637AD15" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames><TSPName lang="en">QuoVadis Trustlink B.V.</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATDE-280226043</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-ADDFFA6FD0809A54A9F0B31FD25F74BF7F2D7AE11C80FD99DAA0FB603A65CD0E">
-		                    <ServiceName>QuoVadis EU Issuing Certification Authority G3</ServiceName>
+		                    <ServiceNames><ServiceName lang="en">QuoVadis EU Issuing Certification Authority G3</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-07-01T02:00:00</StartDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-ADDFFA6FD0809A54A9F0B31FD25F74BF7F2D7AE11C80FD99DAA0FB603A65CD0E">
-		                    <ServiceName>QuoVadis EU Issuing Certification Authority G3</ServiceName>
+		                    <ServiceNames><ServiceName lang="en">QuoVadis EU Issuing Certification Authority G3</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/accredited</Status>
                             <StartDate>2014-07-02T15:00:00</StartDate>
@@ -155,6 +150,7 @@
             <NotBefore>2016-11-03T21:06:26</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-ADDFFA6FD0809A54A9F0B31FD25F74BF7F2D7AE11C80FD99DAA0FB603A65CD0E</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>
@@ -178,18 +174,17 @@
             <QCStatementIds/>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>QuoVadis Trustlink B.V.</TSPName>
-                    <TSPRegistrationIdentifier>VATDE-280226043</TSPRegistrationIdentifier>
-                    <CountryCode>NL</CountryCode>
+                <TrustedServiceProvider TL="TL-2C9AB8299BAAD72CD5970EDC7F9D5AB766527E8EF65FB8447451A2E28637AD15" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames><TSPName lang="en">QuoVadis Trustlink B.V.</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATDE-280226043</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-ADDFFA6FD0809A54A9F0B31FD25F74BF7F2D7AE11C80FD99DAA0FB603A65CD0E">
-		                    <ServiceName>QuoVadis EU Issuing Certification Authority G3</ServiceName>
+		                    <ServiceNames><ServiceName lang="en">QuoVadis EU Issuing Certification Authority G3</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-07-01T02:00:00</StartDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                     </TrustedServices>
@@ -228,6 +223,7 @@
             <NotBefore>2017-02-28T15:01:01</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-EFDF173DD8B570A0587980070EF0EFC8C79DD4F4EF1A206511967A7F7532FC74</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
                 <KeyUsage>nonRepudiation</KeyUsage>
@@ -257,19 +253,18 @@
             </QCStatementIds>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>QuoVadis Trustlink B.V.</TSPName>
-                    <TSPRegistrationIdentifier>VATDE-280226043</TSPRegistrationIdentifier>
-                    <CountryCode>NL</CountryCode>
+                <TrustedServiceProvider TL="TL-2C9AB8299BAAD72CD5970EDC7F9D5AB766527E8EF65FB8447451A2E28637AD15" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames><TSPName lang="en">QuoVadis Trustlink B.V.</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATDE-280226043</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-ADDFFA6FD0809A54A9F0B31FD25F74BF7F2D7AE11C80FD99DAA0FB603A65CD0E">
-		                    <ServiceName>QuoVadis EU Issuing Certification Authority G3</ServiceName>
+		                    <ServiceNames><ServiceName lang="en">QuoVadis EU Issuing Certification Authority G3</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-07-01T02:00:00</StartDate>
                             <CapturedQualifiers/>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                     </TrustedServices>
@@ -277,7 +272,7 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-efdf173dd8b570a0587980070ef0efc8c79dd4f4ef1a206511967a7f7532fc74e36f8862bbd580f5dcc4d07819d43045738d9921b691a7a3562f498239ae8f5a">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <DigestAlgoAndValue>
@@ -322,7 +317,7 @@
         </SignerData>
     </OriginalDocuments>
     <TrustedLists>
-        <TrustedList>
+        <TrustedList Id="TL-2C9AB8299BAAD72CD5970EDC7F9D5AB766527E8EF65FB8447451A2E28637AD15">
             <CountryCode>NL</CountryCode>
             <Url>https://www.acm.nl/download/bestand/current-tsl.xml</Url>
             <SequenceNumber>28</SequenceNumber>
@@ -332,15 +327,15 @@
             <NextUpdate>2017-06-12T08:00:00</NextUpdate>
             <WellSigned>true</WellSigned>
         </TrustedList>
+    	<TrustedList Id="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E" LOTL="true">
+	        <CountryCode>EU</CountryCode>
+	        <Url>https://ec.europa.eu/information_society/policy/esignature/trusted-list/tl-mp.xml</Url>
+	        <SequenceNumber>164</SequenceNumber>
+	        <Version>5</Version>
+	        <LastLoading>2017-03-02T08:50:49</LastLoading>
+	        <IssueDate>2017-02-28T16:00:00</IssueDate>
+	        <NextUpdate>2017-08-28T16:00:00</NextUpdate>
+	        <WellSigned>true</WellSigned>
+	    </TrustedList>
     </TrustedLists>
-    <ListOfTrustedLists>
-        <CountryCode>EU</CountryCode>
-        <Url>https://ec.europa.eu/information_society/policy/esignature/trusted-list/tl-mp.xml</Url>
-        <SequenceNumber>164</SequenceNumber>
-        <Version>5</Version>
-        <LastLoading>2017-03-02T08:50:49</LastLoading>
-        <IssueDate>2017-02-28T16:00:00</IssueDate>
-        <NextUpdate>2017-08-28T16:00:00</NextUpdate>
-        <WellSigned>true</WellSigned>
-    </ListOfTrustedLists>
 </DiagnosticData>

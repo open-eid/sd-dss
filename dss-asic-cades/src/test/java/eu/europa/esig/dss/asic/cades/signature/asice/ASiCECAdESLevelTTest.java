@@ -20,11 +20,10 @@
  */
 package eu.europa.esig.dss.asic.cades.signature.asice;
 
-import java.util.Date;
-
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESSignatureParameters;
+import eu.europa.esig.dss.asic.cades.ASiCWithCAdESTimestampParameters;
 import eu.europa.esig.dss.asic.cades.signature.ASiCWithCAdESService;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
@@ -34,27 +33,26 @@ import eu.europa.esig.dss.signature.DocumentSignatureService;
 
 public class ASiCECAdESLevelTTest extends AbstractASiCECAdESTestSignature {
 
-	private DocumentSignatureService<ASiCWithCAdESSignatureParameters> service;
+	private DocumentSignatureService<ASiCWithCAdESSignatureParameters, ASiCWithCAdESTimestampParameters> service;
 	private ASiCWithCAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text");
 
 		signatureParameters = new ASiCWithCAdESSignatureParameters();
-		signatureParameters.bLevel().setSigningDate(new Date());
 		signatureParameters.setSigningCertificate(getSigningCert());
 		signatureParameters.setCertificateChain(getCertificateChain());
 		signatureParameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_T);
 		signatureParameters.aSiC().setContainerType(ASiCContainerType.ASiC_E);
 
-		service = new ASiCWithCAdESService(getCompleteCertificateVerifier());
+		service = new ASiCWithCAdESService(getOfflineCertificateVerifier());
 		service.setTspSource(getGoodTsa());
 	}
 
 	@Override
-	protected DocumentSignatureService<ASiCWithCAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<ASiCWithCAdESSignatureParameters, ASiCWithCAdESTimestampParameters> getService() {
 		return service;
 	}
 

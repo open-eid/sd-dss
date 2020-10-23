@@ -20,17 +20,19 @@
  */
 package eu.europa.esig.dss.token;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.security.KeyStore.PasswordProtection;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 
@@ -49,7 +51,8 @@ public class Pkcs12SignatureTokenTest {
 			assertNotNull(dssPrivateKeyEntry);
 			assertNotNull(dssPrivateKeyEntry.getAlias());
 
-			DSSPrivateKeyEntry entry = signatureToken.getKey(dssPrivateKeyEntry.getAlias(), new PasswordProtection("password".toCharArray()));
+			DSSPrivateKeyEntry entry = signatureToken.getKey(dssPrivateKeyEntry.getAlias(),
+					new PasswordProtection("password".toCharArray()));
 			assertNotNull(entry);
 			assertNotNull(entry.getCertificate());
 			assertNotNull(entry.getCertificateChain());
@@ -63,12 +66,12 @@ public class Pkcs12SignatureTokenTest {
 		}
 	}
 
-	@Test(expected = DSSException.class)
+	@Test
 	public void wrongPassword() throws IOException {
-		try (Pkcs12SignatureToken signatureToken = new Pkcs12SignatureToken("src/test/resources/user_a_rsa.p12",
-				new PasswordProtection("wrong password".toCharArray()))) {
-
-		}
+		PasswordProtection passwordProtection = new PasswordProtection("wrong password".toCharArray());
+		Exception exception = assertThrows(DSSException.class,
+				() -> new Pkcs12SignatureToken("src/test/resources/user_a_rsa.p12", passwordProtection));
+		assertEquals("Unable to instantiate KeyStoreSignatureTokenConnection", exception.getMessage());
 	}
 
 }

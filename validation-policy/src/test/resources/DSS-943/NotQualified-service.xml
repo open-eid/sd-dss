@@ -5,7 +5,7 @@
     <Signatures>
 	    <Signature Id="id-5f10afd0f54237a13101adc397e64fd1">
 	    	<SignatureFilename>firmaok.zip.p7m</SignatureFilename>
-	        <DateTime>2016-06-10T16:50:58</DateTime>
+	        <ClaimedSigningTime>2016-06-10T16:50:58</ClaimedSigningTime>
 	        <SignatureFormat>CAdES-BASELINE-B</SignatureFormat>
 	        <DigestMatchers>
                 <DigestMatcher type="MESSAGE_DIGEST">
@@ -22,18 +22,23 @@
 	            <SignatureIntact>true</SignatureIntact>
 	            <SignatureValid>true</SignatureValid>
 	        </BasicSignature>
-	        <SigningCertificate Certificate="C-79513A7C5EFA8B43C0042CAAA132226FFD959EA9AA9B9331A5BF3F6383381DBC">
-	            <AttributePresent>true</AttributePresent>
-	            <DigestValuePresent>true</DigestValuePresent>
-	            <DigestValueMatch>true</DigestValueMatch>
-	            <IssuerSerialMatch>true</IssuerSerialMatch>
-	        </SigningCertificate>
+	        <SigningCertificate Certificate="C-79513A7C5EFA8B43C0042CAAA132226FFD959EA9AA9B9331A5BF3F6383381DBC"/>
 	        <CertificateChain>
 	            <ChainItem Certificate="C-79513A7C5EFA8B43C0042CAAA132226FFD959EA9AA9B9331A5BF3F6383381DBC"/>
 	            <ChainItem Certificate="C-B29224C320AD97D9D1E6DAA014B39F0A3577D4AE97AEFE02F4DBB059D08C3640"/>
 	        </CertificateChain>
 	        <ContentType>1.2.840.113549.1.7.1</ContentType>
-            <FoundCertificates/>
+            <FoundCertificates>
+            	<RelatedCertificate Certificate="C-79513A7C5EFA8B43C0042CAAA132226FFD959EA9AA9B9331A5BF3F6383381DBC">
+                	<CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue match="true">
+                        	<DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>LJpXPdNu6j8KlQvjObTGwTtmW2g=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
             <FoundRevocations/>
             <FoundTimestamps/>
 	        <SignatureScopes>
@@ -67,6 +72,7 @@
             <NotBefore>2014-11-24T09:43:33</NotBefore>
             <PublicKeySize>4096</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-B29224C320AD97D9D1E6DAA014B39F0A3577D4AE97AEFE02F4DBB059D08C3640</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>crlSign</KeyUsage>
                 <KeyUsage>keyCertSign</KeyUsage>
@@ -108,6 +114,7 @@
             <NotBefore>2014-11-27T08:20:32</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-90953EA55AFA03D97CCEEC3B2FF7C2BA007AFDFECA8E4E55EF76A05CDB0B796C</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>
@@ -153,6 +160,7 @@
             <NotBefore>2015-11-24T08:14:58</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-79513A7C5EFA8B43C0042CAAA132226FFD959EA9AA9B9331A5BF3F6383381DBC</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>nonRepudiation</KeyUsage>
             </KeyUsageBits>
@@ -181,13 +189,13 @@
             <TrustedServiceProviders />
 			<Revocations>
 	            <CertificateRevocation Revocation="R-AC40244C9404372BD81970D28266FB99021557A64101DA5D92232BCF1A9E7326">
-	                <Status>true</Status>
+	                <Status>GOOD</Status>
 	            </CertificateRevocation>
 	            <CertificateRevocation Revocation="R-C088D84D6BD4740306551C0780A9323896071255EF5509334E70FE593FEF14AC">
-	                <Status>true</Status>
+	                <Status>GOOD</Status>
 	            </CertificateRevocation>
 	            <CertificateRevocation Revocation="R-5AA34C169A86F12918C17B226D96475B97B6F1B1E99EA04773CB5330563A9717">
-	                <Status>true</Status>
+	                <Status>GOOD</Status>
 	            </CertificateRevocation>
 	        </Revocations>
             <DigestAlgoAndValue>

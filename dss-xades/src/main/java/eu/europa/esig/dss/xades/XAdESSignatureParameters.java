@@ -21,17 +21,34 @@
 package eu.europa.esig.dss.xades;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.w3c.dom.Document;
 
 import eu.europa.esig.dss.AbstractSignatureParameters;
+import eu.europa.esig.dss.definition.DSSNamespace;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureForm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
+import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.utils.Utils;
+import eu.europa.esig.dss.xades.definition.XAdESNamespaces;
 import eu.europa.esig.dss.xades.reference.Base64Transform;
 import eu.europa.esig.dss.xades.reference.DSSReference;
 
-public class XAdESSignatureParameters extends AbstractSignatureParameters {
+public class XAdESSignatureParameters extends AbstractSignatureParameters<XAdESTimestampParameters> {
+    
+	public enum XPathElementPlacement {
+
+		/**
+		 * Insert signature after the element referenced by XPath
+		 */
+		XPathAfter,
+		/**
+		 * Insert signature as first child of element referenced by XPath
+		 */
+		XPathFirstChildOf,
+	}
 
 	private ProfileParameters context;
 
@@ -53,8 +70,21 @@ public class XAdESSignatureParameters extends AbstractSignatureParameters {
 
 	/**
 	 * ds:CanonicalizationMethod indicates the canonicalization algorithm: Algorithm="..." for KeyInfo.
+	 * The EXCLUSIVE canonicalization is used by default
 	 */
-	private String keyInfoCanonicalizationMethod;
+	private String keyInfoCanonicalizationMethod = DSSXMLUtils.DEFAULT_CANONICALIZATION_METHOD;
+
+	/**
+	 * ds:CanonicalizationMethod indicates the canonicalization algorithm: Algorithm="..." for SignedInfo.
+	 * The EXCLUSIVE canonicalization is used by default
+	 */
+	private String signedInfoCanonicalizationMethod = DSSXMLUtils.DEFAULT_CANONICALIZATION_METHOD;
+
+	/**
+	 * ds:CanonicalizationMethod indicates the canonicalization algorithm: Algorithm="..." for SignedProperties.
+	 * The EXCLUSIVE canonicalization is used by default
+	 */
+	private String signedPropertiesCanonicalizationMethod = DSSXMLUtils.DEFAULT_CANONICALIZATION_METHOD;
 
 	/**
 	 * This parameter allows to produce Manifest signature (https://www.w3.org/TR/xmldsig-core/#sec-o-Manifest).
@@ -77,11 +107,6 @@ public class XAdESSignatureParameters extends AbstractSignatureParameters {
 	 * The digest method used to create the digest of the signer's certificate.
 	 */
 	private DigestAlgorithm signingCertificateDigestMethod = DigestAlgorithm.SHA512;
-
-	/**
-	 * ds:CanonicalizationMethod indicates the canonicalization algorithm: Algorithm="..." for SignedInfo.
-	 */
-	private String signedInfoCanonicalizationMethod;
 	
 	/**
 	 * Optional parameter defining should the "KeyInfo" element be signed.
@@ -90,18 +115,30 @@ public class XAdESSignatureParameters extends AbstractSignatureParameters {
 	 */
 	private boolean signKeyInfo = false;
 
-	/**
-	 * ds:CanonicalizationMethod indicates the canonicalization algorithm: Algorithm="..." for SignedProperties.
-	 */
-	private String signedPropertiesCanonicalizationMethod;
-
 	private String xPathLocationString;
+
+	private XPathElementPlacement xPathElementPlacement;
 	
 	/**
 	 * If true, prints each signature's tag to a new line with a relevant indent
 	 */
 	private boolean prettyPrint = false;
 
+	/**
+	 * XMLDSig definition
+	 */
+	private DSSNamespace xmldsigNamespace = XAdESNamespaces.XMLDSIG;
+	
+	/**
+	 * XAdES 1.1.1, 1.2.2 or 1.3.2 definition
+	 */
+	private DSSNamespace xadesNamespace = new DSSNamespace(XAdESNamespaces.XADES_132.getUri(), "xades");
+
+	/**
+	 * XAdES 1.4.1 definition
+	 */
+	private DSSNamespace xades141Namespace = XAdESNamespaces.XADES_141;
+	
 	@Override
 	public void setSignatureLevel(SignatureLevel signatureLevel) {
 		if (signatureLevel == null || SignatureForm.XAdES != signatureLevel.getSignatureForm()) {
@@ -119,6 +156,7 @@ public class XAdESSignatureParameters extends AbstractSignatureParameters {
 	 * @param signingCertificateDigestMethod
 	 */
 	public void setSigningCertificateDigestMethod(final DigestAlgorithm signingCertificateDigestMethod) {
+		Objects.requireNonNull(signingCertificateDigestMethod, "SigningCertificateDigestMethod cannot be null!");
 		this.signingCertificateDigestMethod = signingCertificateDigestMethod;
 	}
 
@@ -145,6 +183,9 @@ public class XAdESSignatureParameters extends AbstractSignatureParameters {
 	 *            the canonicalization algorithm to be used when dealing with SignedInfo.
 	 */
 	public void setSignedInfoCanonicalizationMethod(final String signedInfoCanonicalizationMethod) {
+		if (Utils.isStringEmpty(signedInfoCanonicalizationMethod)) {
+			throw new IllegalArgumentException("Canonicalization cannot be empty! See EN 319 132-1: 3.1.2 Signature Generation.");
+		}
 		this.signedInfoCanonicalizationMethod = signedInfoCanonicalizationMethod;
 	}
 
@@ -162,6 +203,9 @@ public class XAdESSignatureParameters extends AbstractSignatureParameters {
 	 *            the canonicalization algorithm to be used when dealing with SignedInfo.
 	 */
 	public void setSignedPropertiesCanonicalizationMethod(final String signedPropertiesCanonicalizationMethod) {
+		if (Utils.isStringEmpty(signedPropertiesCanonicalizationMethod)) {
+			throw new IllegalArgumentException("Canonicalization cannot be empty! See EN 319 132-1: 3.1.2 Signature Generation.");
+		}
 		this.signedPropertiesCanonicalizationMethod = signedPropertiesCanonicalizationMethod;
 	}
 	
@@ -178,6 +222,9 @@ public class XAdESSignatureParameters extends AbstractSignatureParameters {
 	 * @param keyInfoCanonicalizationMethod - name of the canonicalization algorithm for dealing with KeyInfo.
 	 */
 	public void setKeyInfoCanonicalizationMethod(final String keyInfoCanonicalizationMethod) {
+		if (Utils.isStringEmpty(keyInfoCanonicalizationMethod)) {
+			throw new IllegalArgumentException("Canonicalization cannot be empty! See EN 319 132-1: 3.1.2 Signature Generation.");
+		}
 		this.keyInfoCanonicalizationMethod = keyInfoCanonicalizationMethod;
 	}
 	
@@ -220,6 +267,21 @@ public class XAdESSignatureParameters extends AbstractSignatureParameters {
 	public void setXPathLocationString(String xPathLocationString) {
 		this.xPathLocationString = xPathLocationString;
 	}
+
+	public XPathElementPlacement getXPathElementPlacement() {
+        return xPathElementPlacement;
+    }
+
+	/**
+	 * Defines the area where the signature will be added (XAdES Enveloped) 
+	 * in relation to the element referenced by the XPath
+	 *
+	 * @param xPathElementPlacement
+	 *            the xpath location of the signature
+	 */
+    public void setXPathElementPlacement(XPathElementPlacement xPathElementPlacement) {
+        this.xPathElementPlacement = xPathElementPlacement;
+    }
 
 	public Document getRootDocument() {
 		return rootDocument;
@@ -284,4 +346,70 @@ public class XAdESSignatureParameters extends AbstractSignatureParameters {
 		this.prettyPrint = prettyPrint;
 	}
 
+	public DSSNamespace getXmldsigNamespace() {
+		return xmldsigNamespace;
+	}
+
+	public void setXmldsigNamespace(DSSNamespace xmldsigNamespace) {
+		Objects.requireNonNull(xmldsigNamespace);
+		String uri = xmldsigNamespace.getUri();
+		if (XAdESNamespaces.XMLDSIG.isSameUri(uri)) {
+			this.xmldsigNamespace = xmldsigNamespace;
+		} else {
+			throw new DSSException("Not accepted URI");
+		}
+	}
+
+	public DSSNamespace getXadesNamespace() {
+		return xadesNamespace;
+	}
+
+	public void setXadesNamespace(DSSNamespace xadesNamespace) {
+		Objects.requireNonNull(xadesNamespace);
+		String uri = xadesNamespace.getUri();
+		if (XAdESNamespaces.XADES_111.isSameUri(uri) || XAdESNamespaces.XADES_122.isSameUri(uri) || XAdESNamespaces.XADES_132.isSameUri(uri)) {
+			this.xadesNamespace = xadesNamespace;
+		} else {
+			throw new DSSException("Not accepted URI");
+		}
+	}
+
+	public DSSNamespace getXades141Namespace() {
+		return xades141Namespace;
+	}
+
+	public void setXades141Namespace(DSSNamespace xades141Namespace) {
+		Objects.requireNonNull(xades141Namespace);
+		String uri = xades141Namespace.getUri();
+		if (XAdESNamespaces.XADES_141.isSameUri(uri)) {
+			this.xades141Namespace = xades141Namespace;
+		} else {
+			throw new DSSException("Not accepted URI");
+		}
+	}
+
+	@Override
+	public XAdESTimestampParameters getContentTimestampParameters() {
+		if (contentTimestampParameters == null) {
+			contentTimestampParameters = new XAdESTimestampParameters();
+		}
+		return contentTimestampParameters;
+	}
+
+	@Override
+	public XAdESTimestampParameters getSignatureTimestampParameters() {
+		if (signatureTimestampParameters == null) {
+			signatureTimestampParameters = new XAdESTimestampParameters();
+		}
+		return signatureTimestampParameters;
+	}
+
+	@Override
+	public XAdESTimestampParameters getArchiveTimestampParameters() {
+		if (archiveTimestampParameters == null) {
+			archiveTimestampParameters = new XAdESTimestampParameters();
+		}
+		return archiveTimestampParameters;
+	}
+	
 }

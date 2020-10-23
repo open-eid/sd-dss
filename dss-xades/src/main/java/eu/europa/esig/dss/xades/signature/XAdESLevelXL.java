@@ -20,12 +20,19 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
+import java.util.List;
+import java.util.Set;
+
 import org.w3c.dom.Element;
 
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.model.x509.CertificateToken;
+import eu.europa.esig.dss.spi.x509.revocation.crl.CRLToken;
+import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPToken;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.ValidationContext;
+import eu.europa.esig.dss.validation.ValidationDataForInclusion;
 
 /**
  * XL profile of XAdES signature
@@ -58,16 +65,24 @@ public class XAdESLevelXL extends XAdESLevelX {
 
 		if (!xadesSignature.hasLTProfile() || SignatureLevel.XAdES_XL.equals(params.getSignatureLevel())) {
 
-			// Timestamps can already be loaded in memory (force reload)
+			// Data sources can already be loaded in memory (force reload)
+			xadesSignature.resetCertificateSource();
+			xadesSignature.resetRevocationSources();
 			xadesSignature.resetTimestampSource();
 
-			final ValidationContext valContext = xadesSignature.getSignatureValidationContext(certificateVerifier);
+			final ValidationContext validationContext = xadesSignature.getSignatureValidationContext(certificateVerifier);
 
 			String afterCertificateText = removeOldCertificateValues();
 			removeOldRevocationValues();
 
-			incorporateCertificateValues(unsignedSignaturePropertiesDom, valContext, afterCertificateText);
-			incorporateRevocationValues(unsignedSignaturePropertiesDom, valContext, afterCertificateText);
+			final ValidationDataForInclusion validationDataForInclusion = getValidationDataForInclusion(validationContext);
+
+			Set<CertificateToken> certificateValuesToAdd = validationDataForInclusion.getCertificateTokens();
+			List<CRLToken> crlsToAdd = validationDataForInclusion.getCrlTokens();
+			List<OCSPToken> ocspsToAdd = validationDataForInclusion.getOcspTokens();
+			
+			incorporateCertificateValues(unsignedSignaturePropertiesDom, certificateValuesToAdd, afterCertificateText);
+			incorporateRevocationValues(unsignedSignaturePropertiesDom, crlsToAdd, ocspsToAdd, afterCertificateText);
 			
 			unsignedSignaturePropertiesDom = indentIfPrettyPrint(unsignedSignaturePropertiesDom, levelXUnsignedProperties);
 		}

@@ -20,11 +20,13 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
-import java.io.File;
-import java.io.IOException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.Before;
-import org.junit.Test;
+import java.io.File;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
@@ -33,13 +35,14 @@ import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
+import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 
 public class EmbeddedNotXmlSignatureExceptionTest extends AbstractXAdESTestSignature {
 
 	private XAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		documentToSign = new FileDocument(new File("src/test/resources/sample.png"));
 
@@ -50,16 +53,19 @@ public class EmbeddedNotXmlSignatureExceptionTest extends AbstractXAdESTestSigna
 		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
 		signatureParameters.setEmbedXML(true);
 	}
-
+	
 	@Override
-	@Test(expected = DSSException.class)
-	public void signAndVerify() throws IOException {
-		super.signAndVerify(); // enveloping signature with embedded content only allow XML
+	@Test
+	public void signAndVerify() {
+		Exception exception = assertThrows(DSSException.class, () -> {
+			super.signAndVerify(); // enveloping signature with embedded content only allow XML
+		});
+		assertEquals("Unable to parse content (XML expected)", exception.getMessage());
 	}
 
 	@Override
-	protected DocumentSignatureService<XAdESSignatureParameters> getService() {
-		return new XAdESService(getCompleteCertificateVerifier());
+	protected DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> getService() {
+		return new XAdESService(getOfflineCertificateVerifier());
 	}
 
 	@Override

@@ -20,38 +20,35 @@
  */
 package eu.europa.esig.dss.xades.validation;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
-
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
+import eu.europa.esig.dss.diagnostic.SignerDataWrapper;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDigestMatcher;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlSignatureScope;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlSignerData;
 import eu.europa.esig.dss.enumerations.DigestMatcherType;
 import eu.europa.esig.dss.enumerations.SignatureScopeType;
+import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.utils.Utils;
-import eu.europa.esig.dss.validation.CommonCertificateVerifier;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
-import eu.europa.esig.dss.validation.reports.Reports;
 
-public class XPointerValidationTest {
+public class XPointerValidationTest extends AbstractXAdESTestValidation {
 
-	@Test
-	public void test() {
-		SignedDocumentValidator sdv = SignedDocumentValidator.fromDocument(new FileDocument("src/test/resources/validation/10963_signed.xml"));
-		sdv.setCertificateVerifier(new CommonCertificateVerifier());
-		Reports reports = sdv.validateDocument();
-		assertNotNull(reports);
-		
-		DiagnosticData diagnosticData = reports.getDiagnosticData();
+	@Override
+	protected DSSDocument getSignedDocument() {
+		return new FileDocument("src/test/resources/validation/10963_signed.xml");
+	}
+	
+	@Override
+	protected void checkBLevelValid(DiagnosticData diagnosticData) {
 		SignatureWrapper signature = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId());
 		List<XmlDigestMatcher> digestMatchers = signature.getDigestMatchers();
 		assertEquals(3, digestMatchers.size());
@@ -82,10 +79,10 @@ public class XPointerValidationTest {
 		assertNotNull(xmlSignatureScope.getDescription());
 		XmlSignerData xPointerSignerData = xmlSignatureScope.getSignerData();
 		
-		List<XmlSignerData> originalSignerDocuments = diagnosticData.getOriginalSignerDocuments();
+		List<SignerDataWrapper> originalSignerDocuments = diagnosticData.getOriginalSignerDocuments();
 		assertEquals(1, originalSignerDocuments.size());
 		
-		XmlSignerData xmlSignerData = originalSignerDocuments.get(0);
+		SignerDataWrapper xmlSignerData = originalSignerDocuments.get(0);
 		assertNotNull(xmlSignerData.getDigestAlgoAndValue());
 		
 		assertEquals(xPointerSignerData.getId(), xmlSignerData.getId());
@@ -93,6 +90,13 @@ public class XPointerValidationTest {
 		assertEquals(xPointerDigestMatcher.getDigestMethod(), xmlSignerData.getDigestAlgoAndValue().getDigestMethod());
 		assertEquals(Utils.toBase64(xPointerDigestMatcher.getDigestValue()), Utils.toBase64(xmlSignerData.getDigestAlgoAndValue().getDigestValue()));
 		assertTrue(Arrays.equals(xPointerDigestMatcher.getDigestValue(), xmlSignerData.getDigestAlgoAndValue().getDigestValue()));
+	}
+	
+	@Override
+	protected void verifyOriginalDocuments(SignedDocumentValidator validator, DiagnosticData diagnosticData) {
+		List<DSSDocument> originalDocuments = validator.getOriginalDocuments(diagnosticData.getFirstSignatureId());
+		assertEquals(0, originalDocuments.size());
+		// unable to extract by XPath expression, see LOG
 	}
 
 }

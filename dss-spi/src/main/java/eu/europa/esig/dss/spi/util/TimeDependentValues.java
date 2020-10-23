@@ -37,7 +37,7 @@ import java.util.List;
  */
 public class TimeDependentValues<T extends TimeDependent> implements Iterable<T>, Serializable {
 
-	protected final List<T> list = new LinkedList<T>();
+	protected final List<T> list = new LinkedList<>();
 	private final List<T> immutableList = Collections.unmodifiableList(list);
 
 	/**
@@ -81,7 +81,7 @@ public class TimeDependentValues<T extends TimeDependent> implements Iterable<T>
 	}
 
 	public List<T> getAfter(Date notBefore) {
-		List<T> result = new ArrayList<T>();
+		List<T> result = new ArrayList<>();
 		for (final T x : list) {
 			Date endDate = x.getEndDate();
 			if (endDate == null || (endDate.compareTo(notBefore) >= 0)) {

@@ -20,13 +20,19 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
+import eu.europa.esig.dss.diagnostic.DiagnosticData;
+import eu.europa.esig.dss.diagnostic.SignatureWrapper;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlDigestMatcher;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
@@ -35,20 +41,21 @@ import eu.europa.esig.dss.model.DigestDocument;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
+import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 
 public class XAdESManifestFromDigestDocumentsLevelBTest extends AbstractXAdESTestSignature {
 
-	private DocumentSignatureService<XAdESSignatureParameters> service;
+	private DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> service;
 	private XAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 
 		List<DSSDocument> documents = Arrays.<DSSDocument> asList(new FileDocument("src/test/resources/sample.png"),
 				new FileDocument("src/test/resources/sample.txt"), new FileDocument("src/test/resources/sample.xml"));
 
-		List<DSSDocument> digestDocuments = new ArrayList<DSSDocument>();
+		List<DSSDocument> digestDocuments = new ArrayList<>();
 		for (DSSDocument dssDocument : documents) {
 			DigestDocument digestDocument = new DigestDocument(DigestAlgorithm.SHA512, dssDocument.getDigest(DigestAlgorithm.SHA512));
 			digestDocument.setName(dssDocument.getName());
@@ -67,7 +74,38 @@ public class XAdESManifestFromDigestDocumentsLevelBTest extends AbstractXAdESTes
 		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
 		signatureParameters.setManifestSignature(true);
 
-		service = new XAdESService(getCompleteCertificateVerifier());
+		service = new XAdESService(getOfflineCertificateVerifier());
+	}
+
+	@Override
+	protected void verifyDiagnosticData(DiagnosticData diagnosticData) {
+		super.verifyDiagnosticData(diagnosticData);
+
+		SignatureWrapper signatureWrapper = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId());
+
+		int nbManifestEntries = 0;
+		boolean foundManifest = false;
+		boolean foundSignedProperties = false;
+		List<XmlDigestMatcher> digestMatchers = signatureWrapper.getDigestMatchers();
+		for (XmlDigestMatcher xmlDigestMatcher : digestMatchers) {
+			switch (xmlDigestMatcher.getType()) {
+			case MANIFEST:
+				foundManifest = true;
+				break;
+			case MANIFEST_ENTRY:
+				nbManifestEntries++;
+				break;
+			case SIGNED_PROPERTIES:
+				foundSignedProperties = true;
+				break;
+			default:
+				break;
+			}
+		}
+
+		assertTrue(foundManifest);
+		assertEquals(0, nbManifestEntries);
+		assertTrue(foundSignedProperties);
 	}
 
 	@Override
@@ -76,7 +114,7 @@ public class XAdESManifestFromDigestDocumentsLevelBTest extends AbstractXAdESTes
 	}
 
 	@Override
-	protected DocumentSignatureService<XAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> getService() {
 		return service;
 	}
 

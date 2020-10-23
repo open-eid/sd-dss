@@ -20,15 +20,15 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.xml.security.signature.Reference;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
@@ -39,7 +39,7 @@ import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
@@ -55,11 +55,11 @@ public class XAdESLevelBWith2ReferencesTest extends PKIFactoryAccess {
 
 	@Test
 	public void test1() throws Exception {
-		List<DSSReference> refs = new ArrayList<DSSReference>();
+		List<DSSReference> refs = new ArrayList<>();
 		DSSDocument doc1 = new FileDocument(FILE1);
 		DSSDocument doc2 = new FileDocument(FILE2);
 
-		List<DSSTransform> transforms = new ArrayList<DSSTransform>();
+		List<DSSTransform> transforms = new ArrayList<>();
 		Base64Transform dssTransform = new Base64Transform();
 		transforms.add(dssTransform);
 
@@ -90,7 +90,7 @@ public class XAdESLevelBWith2ReferencesTest extends PKIFactoryAccess {
 		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
 		signatureParameters.setReferences(refs);
 
-		XAdESService service = new XAdESService(getCompleteCertificateVerifier());
+		XAdESService service = new XAdESService(getOfflineCertificateVerifier());
 
 		ToBeSigned toSign1 = service.getDataToSign(new FileDocument("src/test/resources/empty.xml"), signatureParameters);
 		SignatureValue value = getToken().sign(toSign1, signatureParameters.getDigestAlgorithm(), getPrivateKeyEntry());
@@ -98,7 +98,7 @@ public class XAdESLevelBWith2ReferencesTest extends PKIFactoryAccess {
 		result.save("target/test.xml");
 
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(result);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 		Reports reports = validator.validateDocument();
 		// reports.print();
 
@@ -117,7 +117,7 @@ public class XAdESLevelBWith2ReferencesTest extends PKIFactoryAccess {
 
 	@Test
 	public void multiDocsEnveloping() throws Exception {
-		List<DSSDocument> docs = new ArrayList<DSSDocument>();
+		List<DSSDocument> docs = new ArrayList<>();
 		docs.add(new FileDocument(FILE1));
 		docs.add(new FileDocument(FILE2));
 
@@ -128,13 +128,13 @@ public class XAdESLevelBWith2ReferencesTest extends PKIFactoryAccess {
 		signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPING);
 		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
 
-		XAdESService service = new XAdESService(getCompleteCertificateVerifier());
+		XAdESService service = new XAdESService(getOfflineCertificateVerifier());
 		ToBeSigned toSign1 = service.getDataToSign(docs, signatureParameters);
 		SignatureValue value = getToken().sign(toSign1, signatureParameters.getDigestAlgorithm(), getPrivateKeyEntry());
 		DSSDocument result = service.signDocument(docs, signatureParameters, value);
 
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(result);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 		Reports reports = validator.validateDocument();
 		// reports.print();
 
@@ -153,7 +153,7 @@ public class XAdESLevelBWith2ReferencesTest extends PKIFactoryAccess {
 
 	@Test
 	public void multiDocsDetached() throws Exception {
-		List<DSSDocument> docs = new ArrayList<DSSDocument>();
+		List<DSSDocument> docs = new ArrayList<>();
 		docs.add(new FileDocument(FILE1));
 		docs.add(new FileDocument(FILE2));
 
@@ -164,13 +164,13 @@ public class XAdESLevelBWith2ReferencesTest extends PKIFactoryAccess {
 		signatureParameters.setSignaturePackaging(SignaturePackaging.DETACHED);
 		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
 
-		XAdESService service = new XAdESService(getCompleteCertificateVerifier());
+		XAdESService service = new XAdESService(getOfflineCertificateVerifier());
 		ToBeSigned toSign1 = service.getDataToSign(docs, signatureParameters);
 		SignatureValue value = getToken().sign(toSign1, signatureParameters.getDigestAlgorithm(), getPrivateKeyEntry());
 		DSSDocument result = service.signDocument(docs, signatureParameters, value);
 
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(result);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 		validator.setDetachedContents(docs);
 		Reports reports = validator.validateDocument();
 		// reports.print();
@@ -199,14 +199,14 @@ public class XAdESLevelBWith2ReferencesTest extends PKIFactoryAccess {
 		signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPING);
 		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
 
-		XAdESService service = new XAdESService(getCompleteCertificateVerifier());
+		XAdESService service = new XAdESService(getOfflineCertificateVerifier());
 
 		ToBeSigned toSign1 = service.getDataToSign(doc1, signatureParameters);
 		SignatureValue value = getToken().sign(toSign1, signatureParameters.getDigestAlgorithm(), getPrivateKeyEntry());
 		DSSDocument result = service.signDocument(doc1, signatureParameters, value);
 
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(result);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 		Reports reports = validator.validateDocument();
 
 		DiagnosticData diagnosticData = reports.getDiagnosticData();

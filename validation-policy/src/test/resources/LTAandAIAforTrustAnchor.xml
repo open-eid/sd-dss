@@ -5,7 +5,7 @@
     <Signatures>
         <Signature Id="id-3319b7ffbd2bb9943f6cda5813bca4ca">
             <SignatureFilename>06022bd482fb8a2a.xml</SignatureFilename>
-            <DateTime>2018-12-06T00:28:33</DateTime>
+            <ClaimedSigningTime>2018-12-06T00:28:33</ClaimedSigningTime>
             <SignatureFormat>XAdES-BASELINE-LTA</SignatureFormat>
             <StructuralValidation>
                 <Valid>true</Valid>
@@ -31,19 +31,14 @@
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>true</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-569D6B69CEF8B70B57B3A36D7702F8D95D50EEA3A2B614C7FA0CA9F39CFB7FD1">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-569D6B69CEF8B70B57B3A36D7702F8D95D50EEA3A2B614C7FA0CA9F39CFB7FD1"/>
             <CertificateChain>
                 <ChainItem Certificate="C-569D6B69CEF8B70B57B3A36D7702F8D95D50EEA3A2B614C7FA0CA9F39CFB7FD1"/>
                 <ChainItem Certificate="C-076ABC2269327EEF500A0C57527262BAC831F9D2DF4EF2D439E74CE17036AA3A"/>
                 <ChainItem Certificate="C-D3D607A9FF24A19523B6DA9D2C649446F8788CB96D9FD130972E120C13677730"/>
             </CertificateChain>
             <ContentType>text/xml</ContentType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             
             <Policy>
                 <Id>IMPLICIT_POLICY</Id>
@@ -53,7 +48,17 @@
                 <ProcessingError></ProcessingError>
                 <DigestAlgorithmsEqual>false</DigestAlgorithmsEqual>
             </Policy>
-            <FoundCertificates/>
+            <FoundCertificates>
+            	<RelatedCertificate Certificate="C-569D6B69CEF8B70B57B3A36D7702F8D95D50EEA3A2B614C7FA0CA9F39CFB7FD1">
+                	<CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue match="true">
+                        	<DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>a0+ctidLCI6ut0XzqTEI8PeHi1E=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
             <FoundRevocations/>
             <FoundTimestamps>
 				<FoundTimestamp Timestamp="T-A802C6241FF872844EA40A322C78F24A0464C454B297D09C34E9AFD441F4818F"/>
@@ -105,6 +110,7 @@
             <NotBefore>2018-03-23T09:48:35</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-5AA48CC28850A892740CA6DEAA50B97E65DC90857BE9E6EDA7A348EAE26C934F</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
                 <KeyUsage>nonRepudiation</KeyUsage>
@@ -140,26 +146,24 @@
                 <qcTypeOid Description="qc-type-eseal">0.4.0.1862.1.6.2</qcTypeOid>
             </QCTypes>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>The Czech Post, s.p.</TSPName>
-                    <TSPRegistrationIdentifier>VATCZ-47114983</TSPRegistrationIdentifier>
-                    <CountryCode>CZ</CountryCode>
+                <TrustedServiceProvider TL="TL-ED880E2F50434D1B27ADCA1B81BECD2D86C6267F148A1933A3554DC10766B8F6" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames><TSPName lang="en">The Czech Post, s.p.</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATCZ-47114983</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-5AA48CC28850A892740CA6DEAA50B97E65DC90857BE9E6EDA7A348EAE26C934F">
-                            <ServiceName>(105) PostSignum TSA - TSU 1</ServiceName>
+                            <ServiceNames><ServiceName lang="en">(105) PostSignum TSA - TSU 1</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/TSA/QTST</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2018-06-19T22:00:00</StartDate>
                         </TrustedService>
                     </TrustedServices>
                 </TrustedServiceProvider>
-                <TrustedServiceProvider>
-                    <TSPName>The Czech Post, s.p.</TSPName>
-                    <TSPRegistrationIdentifier>VATCZ-47114983</TSPRegistrationIdentifier>
-                    <CountryCode>CZ</CountryCode>
+                <TrustedServiceProvider TL="TL-ED880E2F50434D1B27ADCA1B81BECD2D86C6267F148A1933A3554DC10766B8F6" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames><TSPName lang="en">The Czech Post, s.p.</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATCZ-47114983</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-D35E250CB02E27BB3FC52D1F1A0DFD88FA9813BE1B777320AAE912B54E3B1F02">
-                            <ServiceName>(57) PostSignum - issuing qualified certificates</ServiceName>
+                            <ServiceNames><ServiceName lang="en">(57) PostSignum - issuing qualified certificates</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2017-08-30T22:00:00</StartDate>
@@ -167,9 +171,9 @@
                                 <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCQSCDStatusAsInCert</Qualifier>
                             </CapturedQualifiers>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</additionalServiceInfoUri>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                     </TrustedServices>
@@ -204,6 +208,7 @@
             <NotBefore>2010-01-19T08:04:31</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-AD016F958050E0E7E46FAE7DCC50197ED8E3FF0A4B262E5DDCDB3EDDDC7D6578</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -258,6 +263,7 @@
             <NotBefore>2016-02-11T12:17:11</NotBefore>
             <PublicKeySize>4096</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-076ABC2269327EEF500A0C57527262BAC831F9D2DF4EF2D439E74CE17036AA3A</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -283,33 +289,32 @@
             <QCStatementIds/>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>First certification authority, a.s.</TSPName>
-                    <TSPRegistrationIdentifier>VATCZ-26439395</TSPRegistrationIdentifier>
-                    <CountryCode>CZ</CountryCode>
+                <TrustedServiceProvider TL="TL-ED880E2F50434D1B27ADCA1B81BECD2D86C6267F148A1933A3554DC10766B8F6" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames><TSPName lang="en">First certification authority, a.s.</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATCZ-26439395</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-076ABC2269327EEF500A0C57527262BAC831F9D2DF4EF2D439E74CE17036AA3A">
-                            <ServiceName>(78) I.CA - issuing qualified certificates</ServiceName>
+                            <ServiceNames><ServiceName lang="en">(78) I.CA - issuing qualified certificates</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2017-08-16T12:15:00</StartDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-076ABC2269327EEF500A0C57527262BAC831F9D2DF4EF2D439E74CE17036AA3A">
-                            <ServiceName>(78) I.CA - issuing qualified certificates</ServiceName>
+                            <ServiceNames><ServiceName lang="en">(78) I.CA - issuing qualified certificates</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-06-30T22:00:00</StartDate>
                             <EndDate>2017-08-16T12:15:00</EndDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-076ABC2269327EEF500A0C57527262BAC831F9D2DF4EF2D439E74CE17036AA3A">
-                            <ServiceName>(78) I.CA - issuing qualified certificates</ServiceName>
+                            <ServiceNames><ServiceName lang="en">(78) I.CA - issuing qualified certificates</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/accredited</Status>
                             <StartDate>2016-06-15T05:55:00</StartDate>
@@ -351,6 +356,7 @@
             <NotBefore>2014-03-26T08:01:32</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-D35E250CB02E27BB3FC52D1F1A0DFD88FA9813BE1B777320AAE912B54E3B1F02</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -376,34 +382,33 @@
             <QCStatementIds/>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>The Czech Post, s.p.</TSPName>
-                    <TSPRegistrationIdentifier>VATCZ-47114983</TSPRegistrationIdentifier>
-                    <CountryCode>CZ</CountryCode>
+                <TrustedServiceProvider TL="TL-ED880E2F50434D1B27ADCA1B81BECD2D86C6267F148A1933A3554DC10766B8F6" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames><TSPName lang="en">The Czech Post, s.p.</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATCZ-47114983</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-D35E250CB02E27BB3FC52D1F1A0DFD88FA9813BE1B777320AAE912B54E3B1F02">
-                            <ServiceName>(57) PostSignum - issuing qualified certificates</ServiceName>
+                            <ServiceNames><ServiceName lang="en">(57) PostSignum - issuing qualified certificates</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2017-08-30T22:00:00</StartDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</additionalServiceInfoUri>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-D35E250CB02E27BB3FC52D1F1A0DFD88FA9813BE1B777320AAE912B54E3B1F02">
-                            <ServiceName>(57) PostSignum - issuing qualified certificates</ServiceName>
+                            <ServiceNames><ServiceName lang="en">(57) PostSignum - issuing qualified certificates</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-06-30T22:00:00</StartDate>
                             <EndDate>2017-08-30T22:00:00</EndDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-D35E250CB02E27BB3FC52D1F1A0DFD88FA9813BE1B777320AAE912B54E3B1F02">
-                            <ServiceName>(57) PostSignum - issuing qualified certificates</ServiceName>
+                            <ServiceNames><ServiceName lang="en">(57) PostSignum - issuing qualified certificates</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/accredited</Status>
                             <StartDate>2014-03-26T08:01:32</StartDate>
@@ -445,6 +450,7 @@
             <NotBefore>2017-12-08T08:50:41</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-569D6B69CEF8B70B57B3A36D7702F8D95D50EEA3A2B614C7FA0CA9F39CFB7FD1</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
                 <KeyUsage>nonRepudiation</KeyUsage>
@@ -474,20 +480,19 @@
             <QCStatementIds/>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>First certification authority, a.s.</TSPName>
-                    <TSPRegistrationIdentifier>VATCZ-26439395</TSPRegistrationIdentifier>
-                    <CountryCode>CZ</CountryCode>
+                <TrustedServiceProvider TL="TL-ED880E2F50434D1B27ADCA1B81BECD2D86C6267F148A1933A3554DC10766B8F6" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames><TSPName lang="en">First certification authority, a.s.</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATCZ-26439395</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-076ABC2269327EEF500A0C57527262BAC831F9D2DF4EF2D439E74CE17036AA3A">
-                            <ServiceName>(78) I.CA - issuing qualified certificates</ServiceName>
+                            <ServiceNames><ServiceName lang="en">(78) I.CA - issuing qualified certificates</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2017-08-16T12:15:00</StartDate>
                             <CapturedQualifiers/>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                     </TrustedServices>
@@ -495,7 +500,7 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-569d6b69cef8b70b57b3a36d7702f8d95d50eea3a2b614c7fa0ca9f39cfb7fd1789207048a37c0a57b26a1e48b969db26e174520c4f5cf1aa55420a77fd5aedf">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <DigestAlgoAndValue>
@@ -522,6 +527,7 @@
             <NotBefore>2015-05-27T12:20:00</NotBefore>
             <PublicKeySize>4096</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-D3D607A9FF24A19523B6DA9D2C649446F8788CB96D9FD130972E120C13677730</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -598,6 +604,8 @@
                         <ChainItem Certificate="C-D35E250CB02E27BB3FC52D1F1A0DFD88FA9813BE1B777320AAE912B54E3B1F02"/>
                         <ChainItem Certificate="C-AD016F958050E0E7E46FAE7DCC50197ED8E3FF0A4B262E5DDCDB3EDDDC7D6578"/>
                     </CertificateChain>
+		            <FoundCertificates/>
+		            <FoundRevocations/>
                      <TimestampedObjects>
 					   	<TimestampedObject Category="SIGNATURE" Token="id-3319b7ffbd2bb9943f6cda5813bca4ca" />
 					   	<TimestampedObject Category="CERTIFICATE" Token="C-569D6B69CEF8B70B57B3A36D7702F8D95D50EEA3A2B614C7FA0CA9F39CFB7FD1" />
@@ -625,6 +633,8 @@
                         <ChainItem Certificate="C-D35E250CB02E27BB3FC52D1F1A0DFD88FA9813BE1B777320AAE912B54E3B1F02"/>
                         <ChainItem Certificate="C-AD016F958050E0E7E46FAE7DCC50197ED8E3FF0A4B262E5DDCDB3EDDDC7D6578"/>
                     </CertificateChain>
+		            <FoundCertificates/>
+		            <FoundRevocations/>
                     
                      <TimestampedObjects>
 					   	<TimestampedObject Category="SIGNATURE" Token="id-3319b7ffbd2bb9943f6cda5813bca4ca" />
@@ -650,7 +660,7 @@
         </SignerData>
     </OriginalDocuments>
     <TrustedLists>
-        <TrustedList>
+        <TrustedList Id="TL-ED880E2F50434D1B27ADCA1B81BECD2D86C6267F148A1933A3554DC10766B8F6">
             <CountryCode>CZ</CountryCode>
             <Url>https://tsl.gov.cz/publ/TSL_CZ.xtsl</Url>
             <SequenceNumber>66</SequenceNumber>
@@ -660,15 +670,15 @@
             <NextUpdate>2019-07-24T00:00:00</NextUpdate>
             <WellSigned>true</WellSigned>
         </TrustedList>
+    	<TrustedList Id="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E" LOTL="true">
+	        <CountryCode>EU</CountryCode>
+	        <Url>https://ec.europa.eu/information_society/policy/esignature/trusted-list/tl-mp.xml</Url>
+	        <SequenceNumber>236</SequenceNumber>
+	        <Version>5</Version>
+	        <LastLoading>2019-03-21T07:32:31</LastLoading>
+	        <IssueDate>2019-03-20T14:00:00</IssueDate>
+	        <NextUpdate>2019-09-20T00:00:00</NextUpdate>
+	        <WellSigned>true</WellSigned>
+	    </TrustedList>
     </TrustedLists>
-    <ListOfTrustedLists>
-        <CountryCode>EU</CountryCode>
-        <Url>https://ec.europa.eu/information_society/policy/esignature/trusted-list/tl-mp.xml</Url>
-        <SequenceNumber>236</SequenceNumber>
-        <Version>5</Version>
-        <LastLoading>2019-03-21T07:32:31</LastLoading>
-        <IssueDate>2019-03-20T14:00:00</IssueDate>
-        <NextUpdate>2019-09-20T00:00:00</NextUpdate>
-        <WellSigned>true</WellSigned>
-    </ListOfTrustedLists>
 </DiagnosticData>

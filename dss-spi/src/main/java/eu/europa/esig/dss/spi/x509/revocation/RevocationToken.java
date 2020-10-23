@@ -21,32 +21,24 @@
 package eu.europa.esig.dss.spi.x509.revocation;
 
 import java.util.Date;
-import java.util.Set;
+import java.util.Objects;
 
+import eu.europa.esig.dss.enumerations.CertificateStatus;
 import eu.europa.esig.dss.enumerations.RevocationOrigin;
 import eu.europa.esig.dss.enumerations.RevocationReason;
 import eu.europa.esig.dss.enumerations.RevocationType;
+import eu.europa.esig.dss.model.identifier.TokenIdentifier;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.model.x509.Token;
-import eu.europa.esig.dss.utils.Utils;
+import eu.europa.esig.dss.model.x509.revocation.Revocation;
 
 @SuppressWarnings("serial")
-public abstract class RevocationToken extends Token {
+public abstract class RevocationToken<R extends Revocation> extends Token {
 
 	/**
 	 * Related {@link CertificateToken} to this revocation object
 	 */
 	protected CertificateToken relatedCertificate;
-	
-	/**
-	 * An identifier referencing a CRL or OCSP response has been used for determining the revocation status.
-	 */
-	protected RevocationType revocationType;
-
-	/**
-	 * Origins of the revocation data (signature or external)
-	 */
-	private Set<RevocationOrigin> origins;
 
 	/**
 	 * The URL which was used to obtain the revocation data (online).
@@ -54,14 +46,14 @@ public abstract class RevocationToken extends Token {
 	protected String sourceURL;
 
 	/**
-	 * This boolean shows if the online resource is available
+	 * The external origin (ONLINE or CACHED)
 	 */
-	protected boolean available;
+	protected RevocationOrigin externalOrigin;
 
 	/**
-	 * Contains the revocation status of the token. True if is not revoked, false if is revoked or null if unknown.
+	 * Contains the revocation status of the token.
 	 */
-	protected Boolean status;
+	protected CertificateStatus status;
 
 	/**
 	 * Represents the production date of the OCSP response or the thisUpdate in case of CRL.
@@ -108,9 +100,12 @@ public abstract class RevocationToken extends Token {
 	 */
 	protected String revocationTokenKey;
 	
-	public RevocationType getRevocationType() {
-		return revocationType;
-	}
+	/**
+	 * Returns the Revocation Token type (CRL or OCSP)
+	 * 
+	 * @return {@link RevocationType} of the token
+	 */
+	public abstract RevocationType getRevocationType();
 
 	public String getRelatedCertificateID() {
 		if (relatedCertificate != null) {
@@ -122,6 +117,13 @@ public abstract class RevocationToken extends Token {
 	public void setRelatedCertificate(CertificateToken relatedCertificate) {
 		this.relatedCertificate = relatedCertificate;
 	}
+	
+	/**
+	 * Returns issuer {@code CertificateToken}
+	 * 
+	 * @return issuer {@link CertificateToken}
+	 */
+	public abstract CertificateToken getIssuerCertificateToken();
 
 	/**
 	 * Returns the URL of the source (if available)
@@ -144,49 +146,11 @@ public abstract class RevocationToken extends Token {
 	}
 
 	/**
-	 * Returns the revocation origin (the signature itself or else)
+	 * Returns the certificate status
 	 * 
-	 * @return the origin of this revocation data
+	 * @return the certificate status
 	 */
-	public Set<RevocationOrigin> getOrigins() {
-		return origins;
-	}
-	
-	/**
-	 * Returns first found origin from the set of {@code RevocationOrigin}s
-	 * @return {@link RevocationOrigin}
-	 */
-	public RevocationOrigin getFirstOrigin() {
-		Set<RevocationOrigin> origins = getOrigins();
-		if (Utils.isCollectionNotEmpty(origins)) {
-			return origins.iterator().next();
-		}
-		return null;
-	}
-
-	public void setOrigins(Set<RevocationOrigin> origins) {
-		this.origins = origins;
-	}
-
-	/**
-	 * Returns the online resource availability status
-	 * 
-	 * @return true if the online resource was available
-	 */
-	public boolean isAvailable() {
-		return available;
-	}
-
-	public void setAvailable(boolean available) {
-		this.available = available;
-	}
-
-	/**
-	 * Returns the revocation status
-	 * 
-	 * @return true if valid, false if revoked/onhold, null if not available
-	 */
-	public Boolean getStatus() {
+	public CertificateStatus getStatus() {
 		return status;
 	}
 
@@ -285,10 +249,34 @@ public abstract class RevocationToken extends Token {
 		this.revocationTokenKey = key;
 	}
 	
-	/**
-	 * Initialize inner attributes
+	/**	
+	 * Returns a source of embedded into a revocation token certificates
+	 * 
+	 * @return {@link RevocationCertificateSource}
 	 */
-	public abstract void initInfo();
+	public abstract RevocationCertificateSource getCertificateSource();
+	
+	public void setExternalOrigin(RevocationOrigin origin) {
+		Objects.requireNonNull(origin, "The origin is null");
+		if (origin.isInternalOrigin()) {
+			throw new IllegalArgumentException("Only external are allowed");
+		}
+		this.externalOrigin = origin;
+	}
+
+	public RevocationOrigin getExternalOrigin() {
+		return externalOrigin;
+	}
+
+	/**
+	 * This method returns true if the token was not collected from an external
+	 * resource (online or jdbc)
+	 * 
+	 * @return true if the token comes from a signature/timestamp
+	 */
+	public boolean isInternal() {
+		return externalOrigin == null;
+	}
 
 	/**
 	 * Indicates if the token signature is intact and the signing certificate matches with the signature and if the
@@ -299,15 +287,15 @@ public abstract class RevocationToken extends Token {
 	public abstract boolean isValid();
 
 	@Override
-	public String getDSSIdAsString() {
-		return "R-" + super.getDSSIdAsString();
+	protected TokenIdentifier buildTokenIdentifier() {
+		return new RevocationTokenIdentifier(this);
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + ((productionDate == null) ? 0 : productionDate.hashCode());
+		result = prime * result + getDSSId().hashCode();
 		result = prime * result + ((relatedCertificate == null) ? 0 : relatedCertificate.getDSSIdAsString().hashCode());
 		return result;
 	}
@@ -324,11 +312,7 @@ public abstract class RevocationToken extends Token {
 			return false;
 		}
 		RevocationToken other = (RevocationToken) obj;
-		if (productionDate == null) {
-			if (other.productionDate != null) {
-				return false;
-			}
-		} else if (!productionDate.equals(other.productionDate)) {
+		if (!getDSSId().equals(other.getDSSId())) {
 			return false;
 		}
 		if (relatedCertificate == null) {

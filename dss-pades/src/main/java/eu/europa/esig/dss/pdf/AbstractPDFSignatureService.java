@@ -24,191 +24,242 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.cert.ocsp.OCSPResp;
-import org.bouncycastle.tsp.TimeStampToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eu.europa.esig.dss.crl.CRLBinary;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.model.x509.Token;
-import eu.europa.esig.dss.pades.PAdESSignatureParameters;
-import eu.europa.esig.dss.pades.SignatureImageParameters;
+import eu.europa.esig.dss.pades.PAdESUtils;
+import eu.europa.esig.dss.pades.SignatureFieldParameters;
+import eu.europa.esig.dss.pades.exception.InvalidPasswordException;
 import eu.europa.esig.dss.pdf.visible.SignatureDrawerFactory;
-import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.DSSRevocationUtils;
 import eu.europa.esig.dss.spi.DSSUtils;
-import eu.europa.esig.dss.spi.x509.CertificatePool;
-import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
 import eu.europa.esig.dss.utils.Utils;
+import eu.europa.esig.dss.validation.ByteRange;
+import eu.europa.esig.dss.validation.PdfRevision;
+import eu.europa.esig.dss.validation.PdfSignatureDictionary;
 
-public abstract class AbstractPDFSignatureService implements PDFSignatureService, PDFTimestampService {
+public abstract class AbstractPDFSignatureService implements PDFSignatureService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractPDFSignatureService.class);
 
-	protected final boolean timestamp;
+	protected final PDFServiceMode serviceMode;
 	protected final SignatureDrawerFactory signatureDrawerFactory;
 
 	/**
 	 * Constructor for the PDFSignatureService
 	 * 
-	 * @param timestamp
-	 *                               if true, the instance is used to generate
-	 *                               DocumentTypestamp if false, it is used to
-	 *                               generate a signature layer
+	 * @param serviceMode
+	 *                               current instance is used to generate
+	 *                               DocumentTypestamp or Signature signature layer
 	 * @param signatureDrawerFactory
 	 *                               the factory of {@code SignatureDrawer}
 	 */
-	protected AbstractPDFSignatureService(boolean timestamp, SignatureDrawerFactory signatureDrawerFactory) {
-		this.timestamp = timestamp;
+	protected AbstractPDFSignatureService(PDFServiceMode serviceMode, SignatureDrawerFactory signatureDrawerFactory) {
+		this.serviceMode = serviceMode;
 		this.signatureDrawerFactory = signatureDrawerFactory;
 	}
 
+	protected boolean isDocumentTimestampLayer() {
+		// CONTENT_TIMESTAMP is part of the signature
+		return PDFServiceMode.SIGNATURE_TIMESTAMP == serviceMode || PDFServiceMode.ARCHIVE_TIMESTAMP == serviceMode;
+	}
+
 	protected String getType() {
-		if (timestamp) {
+		if (isDocumentTimestampLayer()) {
 			return PAdESConstants.TIMESTAMP_TYPE;
 		} else {
 			return PAdESConstants.SIGNATURE_TYPE;
 		}
 	}
 
-	protected String getFilter(PAdESSignatureParameters parameters) {
-		if (timestamp) {
-			if (Utils.isStringNotEmpty(parameters.getTimestampFilter())) {
-				return parameters.getTimestampFilter();
-			}
-			return PAdESConstants.TIMESTAMP_DEFAULT_FILTER;
-
-		} else {
-			if (Utils.isStringNotEmpty(parameters.getSignatureFilter())) {
-				return parameters.getSignatureFilter();
-			}
-			return PAdESConstants.SIGNATURE_DEFAULT_FILTER;
-		}
-	}
-
-	protected String getSubFilter(PAdESSignatureParameters parameters) {
-		if (timestamp) {
-			if (Utils.isStringNotEmpty(parameters.getTimestampSubFilter())) {
-				return parameters.getTimestampSubFilter();
-			}
-			return PAdESConstants.TIMESTAMP_DEFAULT_SUBFILTER;
-		} else {
-			if (Utils.isStringNotEmpty(parameters.getSignatureSubFilter())) {
-				return parameters.getSignatureSubFilter();
-			}
-			return PAdESConstants.SIGNATURE_DEFAULT_SUBFILTER;
-		}
-	}
-
-	protected SignatureImageParameters getImageParameters(PAdESSignatureParameters parameters) {
-		if (timestamp) {
-			return parameters.getTimestampImageParameters();
-		} else {
-			return parameters.getSignatureImageParameters();
-		}
-	}
-
-	protected String getSignatureName(PAdESSignatureParameters parameters) {
-		if (parameters.getSignatureName() != null) {
-			return parameters.getSignatureName();
-		} else {
-
-			CertificateToken token = parameters.getSigningCertificate();
-			Date date = parameters.bLevel().getSigningDate();
-			String encodedDate = Utils.toHex(DSSUtils.digest(DigestAlgorithm.SHA1, Long.toString(date.getTime()).getBytes()));
-
-			if (token == null) {
-				return "Unknown signer " + encodedDate;
-			} else {
-				return DSSASN1Utils.getHumanReadableName(token) + " " + encodedDate;
-			}
-		}
-	}
-
-	@Override
-	public DSSDocument timestamp(DSSDocument document, PAdESSignatureParameters parameters, TSPSource tspSource) {
-		final DigestAlgorithm timestampDigestAlgorithm = parameters.getSignatureTimestampParameters().getDigestAlgorithm();
-		final byte[] digest = digest(document, parameters, timestampDigestAlgorithm);
-		final TimeStampToken timeStampToken = tspSource.getTimeStampResponse(timestampDigestAlgorithm, digest);
-		final byte[] encoded = DSSASN1Utils.getDEREncoded(timeStampToken);
-		return sign(document, encoded, parameters, timestampDigestAlgorithm);
-	}
-
-	@Override
-	public void validateSignatures(CertificatePool validationCertPool, DSSDocument document,
-			SignatureValidationCallback callback) {
-		List<PdfSignatureOrDocTimestampInfo> signaturesFound = getSignatures(validationCertPool, document);
-		for (PdfSignatureOrDocTimestampInfo pdfSignatureOrDocTimestampInfo : signaturesFound) {
-			callback.validate(pdfSignatureOrDocTimestampInfo);
-		}
-	}
-
-	protected abstract List<PdfSignatureOrDocTimestampInfo> getSignatures(CertificatePool validationCertPool, DSSDocument document);
-
 	/**
-	 * This method links previous signatures to the new one. This is useful to get
-	 * revision number and to know if a TSP is over the DSS dictionary
+	 * This method checks if the document is not encrypted or with limited edition
+	 * rights
+	 * 
+	 * @param toSignDocument the document which will be modified
+	 * @param pwd {@link String} password protection phrase used to encrypt the document
 	 */
-	protected void linkSignatures(List<PdfSignatureOrDocTimestampInfo> signatures) {
+	protected abstract void checkDocumentPermissions(final DSSDocument toSignDocument, final String pwd);
 
-		Collections.sort(signatures, new PdfSignatureOrDocTimestampInfoComparator());
+	@Override
+	public List<PdfRevision> getRevisions(final DSSDocument document, final String pwd) {
+		List<PdfRevision> result = new ArrayList<>();
+		try (PdfDocumentReader reader = loadPdfDocumentReader(document, pwd)) {
 
-		List<PdfSignatureOrDocTimestampInfo> previousList = new ArrayList<PdfSignatureOrDocTimestampInfo>();
-		for (PdfSignatureOrDocTimestampInfo sig : signatures) {
-			if (Utils.isCollectionNotEmpty(previousList)) {
-				for (PdfSignatureOrDocTimestampInfo previous : previousList) {
-					previous.addOuterSignature(sig);
+			final PdfDssDict dssDictionary = reader.getDSSDictionary();
+			boolean mainDssDictionaryAdded = false;
+			
+			Map<PdfSignatureDictionary, List<String>> sigDictionaries = reader.extractSigDictionaries();
+			sigDictionaries = sortSignatureDictionaries(sigDictionaries); // sort from the latest revision to the first
+
+			for (Map.Entry<PdfSignatureDictionary, List<String>> sigDictEntry : sigDictionaries.entrySet()) {
+				PdfSignatureDictionary signatureDictionary = sigDictEntry.getKey();
+				List<String> fieldNames = sigDictEntry.getValue();
+				try {
+					LOG.info("Signature field name: {}", fieldNames);
+					
+					final ByteRange byteRange = signatureDictionary.getByteRange();
+					byteRange.validate();
+	
+					final byte[] cms = signatureDictionary.getContents();
+					byte[] signedContent = DSSUtils.EMPTY_BYTE_ARRAY;
+					if (!isContentValueEqualsByteRangeExtraction(document, byteRange, cms, fieldNames)) {
+						LOG.warn("Signature {} is skipped. SIWA detected !", fieldNames);
+						// TODO : continue ?
+					} else {
+						signedContent = PAdESUtils.getSignedContent(document, byteRange);
+					}
+	
+					boolean signatureCoversWholeDocument = reader.isSignatureCoversWholeDocument(signatureDictionary);
+					
+					PdfDssDict previousRevisionDssDict = null;
+					// LT or LTA
+					if (dssDictionary != null) {
+						// obtain covered DSS dictionary if already exist
+						previousRevisionDssDict = getDSSDictionaryPresentInRevision(extractBeforeSignatureValue(byteRange, signedContent), pwd);
+					}
+					
+					PdfRevision newRevision = null;
+	
+					if (isDocTimestamp(signatureDictionary)) {
+						// if there is a DSS dictionary before -> Archive timestamp
+						boolean isArchiveTimestamp = previousRevisionDssDict != null;
+
+						newRevision = new PdfDocTimestampRevision(signatureDictionary, fieldNames, signedContent, signatureCoversWholeDocument,
+								isArchiveTimestamp);
+
+					} else if (isSignature(signatureDictionary)) {
+						// signature contains all dss dictionaries present after
+						newRevision = new PdfSignatureRevision(signatureDictionary, dssDictionary, fieldNames, 
+								signedContent, signatureCoversWholeDocument);
+	
+					} else {
+						LOG.warn("The entry {} is skipped. A signature dictionary entry with a type '{}' and subFilter '{}' is not acceptable configuration!",
+								fieldNames, signatureDictionary.getType(), signatureDictionary.getSubFilter());
+						
+					}
+					
+					boolean dssDictionaryUpdated = previousRevisionDssDict != null && !previousRevisionDssDict.equals(dssDictionary);
+					
+					// add the main dss dictionary as the first revision
+					if (dssDictionaryUpdated && !mainDssDictionaryAdded) {
+						result.add(new PdfDocDssRevision(dssDictionary));
+					}
+					mainDssDictionaryAdded = true;
+					
+					// add signature/ timestamp revision
+					if (newRevision != null) {
+						result.add(newRevision);
+					}
+					
+					// add a previous DSS revision
+					if (previousRevisionDssDict != null) {
+						result.add(new PdfDocDssRevision(previousRevisionDssDict));
+					}
+					
+				} catch (Exception e) {
+					String errorMessage = "Unable to parse signature {} . Reason : {}";
+					if (LOG.isDebugEnabled()) {
+						LOG.error(errorMessage, fieldNames, e.getMessage(), e);
+					} else {
+						LOG.error(errorMessage, fieldNames, e.getMessage() );
+					}
+					
 				}
 			}
-			previousList.add(sig);
-		}
-	}
 
-	protected byte[] getSignedContent(DSSDocument dssDocument, int[] byteRange) throws IOException {
-		// Adobe Digital Signatures in a PDF (p5): In Figure 4, the hash is calculated
-		// for bytes 0 through 840, and 960 through 1200. [0, 840, 960, 1200]
-		int beginning = byteRange[0];
-		int startSigValueContent = byteRange[1];
-		int endSigValueContent = byteRange[2];
-		int endValue = byteRange[3];
-		
-		byte[] signedContentByteArray = new byte[startSigValueContent + endValue];
-		
-		try (InputStream is = dssDocument.openStream()) {
-			
-			DSSUtils.skipAvailableBytes(is, beginning);
-			DSSUtils.readAvailableBytes(is, signedContentByteArray, 0, startSigValueContent);
-			DSSUtils.skipAvailableBytes(is, (long)endSigValueContent - startSigValueContent - beginning);
-			DSSUtils.readAvailableBytes(is, signedContentByteArray, startSigValueContent, endValue);
-			
-		} catch (IllegalStateException e) {
-			LOG.error("Cannot extract signed content. Reason : {}", e.getMessage());
+		} catch (IOException e) {
+			throw new DSSException(String.format("The document with name [%s] is either not accessible or not PDF compatible. Reason : [%s]", 
+					document.getName(), e.getMessage()), e); 
+		} catch (DSSException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new DSSException("Cannot analyze signatures : " + e.getMessage(), e);
 		}
-		
-		return signedContentByteArray;
+		return result;
 	}
 	
-	protected boolean isContentValueEqualsByteRangeExtraction(DSSDocument document, int[] byteRange, byte[] cms, String signatureName) {
+	@Override
+	public DSSDocument addDssDictionary(DSSDocument document, List<DSSDictionaryCallback> callbacks) {
+		return addDssDictionary(document, callbacks, null);
+	}
+	
+	@Override
+	public List<String> getAvailableSignatureFields(final DSSDocument document) {
+		return getAvailableSignatureFields(document, null);
+	}
+	
+	@Override
+	public DSSDocument addNewSignatureField(DSSDocument document, SignatureFieldParameters parameters) {
+		return addNewSignatureField(document, parameters, null);
+	}
+	
+	/**
+	 * Loads {@code PdfDocumentReader} instance
+	 * 
+	 * @param dssDocument {@link DSSDocument} to read
+	 * @param passwordProtection {@link String} the password used to protect the document
+	 * @throws IOException in case of loading error
+	 * @throws InvalidPasswordException if the password is not provided or invalid for a protected document
+	 */
+	protected abstract PdfDocumentReader loadPdfDocumentReader(DSSDocument dssDocument, String passwordProtection) throws IOException, InvalidPasswordException;
+	
+	/**
+	 * Loads {@code PdfDocumentReader} instance
+	 * 
+	 * @param binaries a byte array
+	 * @param passwordProtection {@link String} the password used to protect the document
+	 * @throws IOException in case of loading error
+	 * @throws InvalidPasswordException if the password is not provided or invalid for a protected document
+	 */
+	protected abstract PdfDocumentReader loadPdfDocumentReader(byte[] binaries, String passwordProtection) throws IOException, InvalidPasswordException;
+	
+	/**
+	 * Sorts the given map starting from the latest revision to the first
+	 * 
+	 * @param pdfSignatureDictionary a map between {@link PdfSignatureDictionary} and list of field names to sort
+	 * @return a sorted map
+	 */
+	private Map<PdfSignatureDictionary, List<String>> sortSignatureDictionaries(Map<PdfSignatureDictionary, List<String>> pdfSignatureDictionary) {
+		return pdfSignatureDictionary.entrySet().stream()
+				.sorted(Map.Entry.<PdfSignatureDictionary, List<String>>comparingByKey(new PdfSignatureDictionaryComparator()).reversed())
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+	}
+	
+	private PdfDssDict getDSSDictionaryPresentInRevision(final byte[] originalBytes, final String pwd) {
+		try (PdfDocumentReader reader = loadPdfDocumentReader(originalBytes, pwd)) {
+			return reader.getDSSDictionary();
+		} catch (Exception e) {
+			LOG.debug("Cannot extract DSS dictionary from the previous revision : {}", e.getMessage(), e);
+			return null;
+		}
+	}
+	
+	protected boolean isContentValueEqualsByteRangeExtraction(DSSDocument document, ByteRange byteRange, byte[] cms, List<String> signatureFieldNames) {
 		boolean match = false;
 		try {
 			byte[] cmsWithByteRange = getSignatureValue(document, byteRange);
 			match = Arrays.equals(cms, cmsWithByteRange);
 			if (!match) {
-				LOG.warn("Conflict between /Content and ByteRange for Signature '{}'.", signatureName);
+				LOG.warn("Conflict between /Content and ByteRange for Signature {}.", signatureFieldNames);
 			}
-		} catch (IOException | IllegalArgumentException e) {
-			String message = String.format("Unable to retrieve data from the ByteRange (%s to %s)", byteRange[0] + byteRange[1], byteRange[2]);
+		} catch (Exception e) {
+			String message = String.format("Unable to retrieve data from the ByteRange : [%s]", byteRange);
 			if (LOG.isDebugEnabled()) {
 				// Exception displays the (long) hex value
 				LOG.debug(message, e);
@@ -219,10 +270,10 @@ public abstract class AbstractPDFSignatureService implements PDFSignatureService
 		return match;
 	}
 	
-	protected byte[] getSignatureValue(DSSDocument dssDocument, int[] byteRange) throws IOException {
+	protected byte[] getSignatureValue(DSSDocument dssDocument, ByteRange byteRange) throws IOException {
 		// Extracts bytes from 841 to 959. [0, 840, 960, 1200]
-		int startSigValueContent = byteRange[0] + byteRange[1] + 1;
-		int endSigValueContent = byteRange[2] - 1;
+		int startSigValueContent = byteRange.getFirstPartStart() + byteRange.getFirstPartEnd() + 1;
+		int endSigValueContent = byteRange.getSecondPartStart() - 1;
 		
 		int signatureValueArraySize = endSigValueContent - startSigValueContent;
 		if (signatureValueArraySize < 1) {
@@ -233,47 +284,47 @@ public abstract class AbstractPDFSignatureService implements PDFSignatureService
 		byte[] signatureValueArray = new byte[signatureValueArraySize];
 		
 		try (InputStream is = dssDocument.openStream()) {
-			
 			DSSUtils.skipAvailableBytes(is, startSigValueContent);
 			DSSUtils.readAvailableBytes(is, signatureValueArray);
-			
-		} catch (IllegalStateException e) {
-			LOG.error("Cannot extract signature value. Reason : {}", e.getMessage());
 		}
 		
 		return Utils.fromHex(new String(signatureValueArray));
 	}
 
-	protected byte[] getOriginalBytes(int[] byteRange, byte[] signedContent) {
-		final int length = byteRange[1];
+	protected byte[] extractBeforeSignatureValue(ByteRange byteRange, byte[] signedContent) {
+		final int length = byteRange.getFirstPartEnd();
+		if (signedContent.length < length) {
+			return new byte[0];
+		}
 		final byte[] result = new byte[length];
 		System.arraycopy(signedContent, 0, result, 0, length);
 		return result;
 	}
+	
+	/**
+	 * Checks if the given signature dictionary represents a DocTimeStamp
+	 * 
+	 * @param pdfSigDict {@link PdfSignatureDictionary} to check
+	 * @return TRUE if the signature dictionary represents a DocTimeStamp, FALSE otherwise
+	 */
+	protected boolean isDocTimestamp(PdfSignatureDictionary pdfSigDict) {
+		String type = pdfSigDict.getType();
+		String subFilter = pdfSigDict.getSubFilter();
+		/* Support historical TS 102 778-4 and new EN 319 142-1 */
+		return (type == null || PAdESConstants.TIMESTAMP_TYPE.equals(type)) && PAdESConstants.TIMESTAMP_DEFAULT_SUBFILTER.equals(subFilter);
+	}
 
-	protected void validateByteRange(int[] byteRange) {
-
-		if (byteRange == null || byteRange.length != 4) {
-			throw new DSSException("Incorrect ByteRange size");
-		}
-
-		final int a = byteRange[0];
-		final int b = byteRange[1];
-		final int c = byteRange[2];
-		final int d = byteRange[3];
-
-		if (a != 0) {
-			throw new DSSException("The ByteRange must cover start of file");
-		}
-		if (b <= 0) {
-			throw new DSSException("The first hash part doesn't cover anything");
-		}
-		if (c <= b) {
-			throw new DSSException("The second hash part must start after the first hash part");
-		}
-		if (d <= 0) {
-			throw new DSSException("The second hash part doesn't cover anything");
-		}
+	/**
+	 * Checks if the given signature dictionary represents a Signature
+	 * 
+	 * @param pdfSigDict {@link PdfSignatureDictionary} to check
+	 * @return TRUE if the signature dictionary represents a Signature, FALSE otherwise
+	 */
+	protected boolean isSignature(PdfSignatureDictionary pdfSigDict) {
+		String type = pdfSigDict.getType();
+		String subFilter = pdfSigDict.getSubFilter();
+		/* Support historical TS 102 778-4 and new EN 319 142-1 */
+		return (type == null || PAdESConstants.SIGNATURE_TYPE.equals(type)) && !PAdESConstants.TIMESTAMP_DEFAULT_SUBFILTER.equals(subFilter);
 	}
 
 	/**
@@ -285,7 +336,7 @@ public abstract class AbstractPDFSignatureService implements PDFSignatureService
 	 * @return
 	 */
 	protected Map<String, Long> buildKnownObjects(List<DSSDictionaryCallback> callbacks) {
-		Map<String, Long> result = new HashMap<String, Long>();
+		Map<String, Long> result = new HashMap<>();
 		for (DSSDictionaryCallback callback : callbacks) {
 
 			Map<Long, CertificateToken> storedCertificates = callback.getStoredCertificates();
@@ -305,9 +356,9 @@ public abstract class AbstractPDFSignatureService implements PDFSignatureService
 				}
 			}
 
-			Map<Long, byte[]> storedCrls = callback.getStoredCrls();
-			for (Entry<Long, byte[]> crlEntry : storedCrls.entrySet()) {
-				String tokenKey = Utils.toBase64(DSSUtils.digest(DigestAlgorithm.SHA256, crlEntry.getValue()));
+			Map<Long, CRLBinary> storedCrls = callback.getStoredCrls();
+			for (Entry<Long, CRLBinary> crlEntry : storedCrls.entrySet()) {
+				String tokenKey = Utils.toBase64(DSSUtils.digest(DigestAlgorithm.SHA256, crlEntry.getValue().getBinaries()));
 				if (!result.containsKey(tokenKey)) { // keeps the really first occurrence
 					result.put(tokenKey, crlEntry.getKey());
 				}

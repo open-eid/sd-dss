@@ -20,15 +20,30 @@
  */
 package eu.europa.esig.dss.asic.common;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import eu.europa.esig.dss.asic.common.ASiCUtils;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
+import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.MimeType;
 
 public class ASiCUtilsTest {
+
+	@Test
+	public void isZip() {
+		assertFalse(ASiCUtils.isZip(null));
+		assertFalse(ASiCUtils.isZip(new InMemoryDocument(new byte[] { 0 })));
+		assertFalse(ASiCUtils.isZip(new InMemoryDocument(new byte[] { 'P', 'P' })));
+		assertFalse(ASiCUtils.isZip(new InMemoryDocument(new byte[] { 'p', 'k' })));
+		InMemoryDocument emptyInMemoryDoc = new InMemoryDocument();
+		assertThrows(NullPointerException.class, () -> ASiCUtils.isZip(emptyInMemoryDoc));
+
+		assertTrue(ASiCUtils.isZip(new InMemoryDocument(new byte[] { 'P', 'K' })));
+	}
 
 	@Test
 	public void getASiCContainerType() {
@@ -39,11 +54,12 @@ public class ASiCUtilsTest {
 		assertEquals(ASiCContainerType.ASiC_E, ASiCUtils.getASiCContainerType(MimeType.ASICE));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void getWrongASiCContainerType() {
 		MimeType mt = new MimeType();
 		mt.setMimeTypeString("application/wrong");
-		ASiCUtils.getASiCContainerType(mt);
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> ASiCUtils.getASiCContainerType(mt));
+		assertEquals("Not allowed mimetype 'application/wrong'", exception.getMessage());
 	}
 
 }

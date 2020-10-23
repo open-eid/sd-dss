@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.5.d4j.1</version>
+		<version>5.7.d4j.1</version>
 	</parent>
 	
 	<artifactId>dss-certificate-validation-soap-client</artifactId>
@@ -20,8 +20,8 @@
 			<artifactId>dss-certificate-validation-dto</artifactId>
 		</dependency>
 		<dependency>
-		  <groupId>javax.xml.ws</groupId>
-		  <artifactId>jaxws-api</artifactId>
+		    <groupId>jakarta.xml.ws</groupId>
+		    <artifactId>jakarta.xml.ws-api</artifactId>
 		</dependency>
 	</dependencies>
 </project>

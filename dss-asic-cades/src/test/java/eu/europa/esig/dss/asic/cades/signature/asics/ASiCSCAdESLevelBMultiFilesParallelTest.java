@@ -20,11 +20,11 @@
  */
 package eu.europa.esig.dss.asic.cades.signature.asics;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESContainerExtractor;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESSignatureParameters;
@@ -53,7 +53,7 @@ import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.spi.DSSUtils;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
@@ -62,7 +62,7 @@ public class ASiCSCAdESLevelBMultiFilesParallelTest extends PKIFactoryAccess {
 
 	@Test
 	public void test() throws Exception {
-		List<DSSDocument> documentToSigns = new ArrayList<DSSDocument>();
+		List<DSSDocument> documentToSigns = new ArrayList<>();
 		DSSDocument firstDocument = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeType.TEXT);
 		documentToSigns.add(firstDocument);
 		DSSDocument secondDocument = new InMemoryDocument("Bye World !".getBytes(), "test2.text", MimeType.TEXT);
@@ -75,14 +75,14 @@ public class ASiCSCAdESLevelBMultiFilesParallelTest extends PKIFactoryAccess {
 		signatureParameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_B);
 		signatureParameters.aSiC().setContainerType(ASiCContainerType.ASiC_S);
 
-		ASiCWithCAdESService service = new ASiCWithCAdESService(getCompleteCertificateVerifier());
+		ASiCWithCAdESService service = new ASiCWithCAdESService(getOfflineCertificateVerifier());
 
 		ToBeSigned dataToSign = service.getDataToSign(documentToSigns, signatureParameters);
 		SignatureValue signatureValue = getToken().sign(dataToSign, signatureParameters.getDigestAlgorithm(), getPrivateKeyEntry());
 		DSSDocument signedDocument = service.signDocument(documentToSigns, signatureParameters, signatureValue);
 		
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(signedDocument);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 
 		Reports reports = validator.validateDocument();
 		DiagnosticData diagnosticData = reports.getDiagnosticData();
@@ -90,19 +90,15 @@ public class ASiCSCAdESLevelBMultiFilesParallelTest extends PKIFactoryAccess {
 		validateSignatureScope(diagnosticData, firstDocument, secondDocument);
 
 		signatureParameters.bLevel().setSigningDate(new Date());
-		signatureParameters.setSigningCertificate(getSigningCert());
-		signatureParameters.setCertificateChain(getCertificateChain());
-		signatureParameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_B);
-		signatureParameters.aSiC().setContainerType(ASiCContainerType.ASiC_S);
 
-		service = new ASiCWithCAdESService(getCompleteCertificateVerifier());
+		service = new ASiCWithCAdESService(getOfflineCertificateVerifier());
 
 		dataToSign = service.getDataToSign(signedDocument, signatureParameters);
 		signatureValue = getToken().sign(dataToSign, signatureParameters.getDigestAlgorithm(), getPrivateKeyEntry());
 		DSSDocument resignedDocument = service.signDocument(signedDocument, signatureParameters, signatureValue);
 
 		validator = SignedDocumentValidator.fromDocument(resignedDocument);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 
 		reports = validator.validateDocument();
 

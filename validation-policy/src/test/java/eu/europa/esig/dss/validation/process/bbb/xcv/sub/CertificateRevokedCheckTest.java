@@ -20,14 +20,14 @@
  */
 package eu.europa.esig.dss.validation.process.bbb.xcv.sub;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Calendar;
 import java.util.List;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.detailedreport.jaxb.XmlConstraint;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlStatus;
@@ -35,13 +35,15 @@ import eu.europa.esig.dss.detailedreport.jaxb.XmlSubXCV;
 import eu.europa.esig.dss.diagnostic.CertificateRevocationWrapper;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificateRevocation;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlRevocation;
+import eu.europa.esig.dss.enumerations.CertificateStatus;
 import eu.europa.esig.dss.enumerations.RevocationReason;
 import eu.europa.esig.dss.policy.SubContext;
 import eu.europa.esig.dss.policy.jaxb.Level;
 import eu.europa.esig.dss.policy.jaxb.LevelConstraint;
+import eu.europa.esig.dss.validation.process.bbb.AbstractTestCheck;
 import eu.europa.esig.dss.validation.process.bbb.xcv.sub.checks.CertificateRevokedCheck;
 
-public class CertificateRevokedCheckTest {
+public class CertificateRevokedCheckTest extends AbstractTestCheck {
 
 	private static final Calendar CAL1 = DatatypeConverter.parseDate("2017-01-01");
 	private static final Calendar CAL2 = DatatypeConverter.parseDate("2018-01-01");
@@ -52,13 +54,13 @@ public class CertificateRevokedCheckTest {
 		constraint.setLevel(Level.FAIL);
 
 		XmlCertificateRevocation xcr = new XmlCertificateRevocation();
-		xcr.setStatus(false);
+		xcr.setStatus(CertificateStatus.REVOKED);
 		xcr.setReason(RevocationReason.CERTIFICATE_HOLD);
 		XmlRevocation xr = new XmlRevocation();
 		xcr.setRevocation(xr);
 
 		XmlSubXCV result = new XmlSubXCV();
-		CertificateRevokedCheck cec = new CertificateRevokedCheck(result, new CertificateRevocationWrapper(xcr), CAL2.getTime(), 
+		CertificateRevokedCheck cec = new CertificateRevokedCheck(i18nProvider, result, new CertificateRevocationWrapper(xcr), CAL2.getTime(), 
 				constraint, SubContext.CA_CERTIFICATE);
 		cec.execute();
 
@@ -73,14 +75,14 @@ public class CertificateRevokedCheckTest {
 		constraint.setLevel(Level.FAIL);
 
 		XmlCertificateRevocation xcr = new XmlCertificateRevocation();
-		xcr.setStatus(false);
+		xcr.setStatus(CertificateStatus.REVOKED);
 		xcr.setRevocationDate(CAL1.getTime());
 		xcr.setReason(RevocationReason.CA_COMPROMISE);
 		XmlRevocation xr = new XmlRevocation();
 		xcr.setRevocation(xr);
 
 		XmlSubXCV result = new XmlSubXCV();
-		CertificateRevokedCheck cec = new CertificateRevokedCheck(result, new CertificateRevocationWrapper(xcr), CAL2.getTime(), 
+		CertificateRevokedCheck cec = new CertificateRevokedCheck(i18nProvider, result, new CertificateRevocationWrapper(xcr), CAL2.getTime(), 
 				constraint, SubContext.CA_CERTIFICATE);
 		cec.execute();
 

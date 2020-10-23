@@ -23,6 +23,9 @@ package eu.europa.esig.dss.model;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
+
+import eu.europa.esig.dss.enumerations.CommitmentType;
 
 @SuppressWarnings("serial")
 public class BLevelParameters implements Serializable {
@@ -46,14 +49,13 @@ public class BLevelParameters implements Serializable {
 
 	private List<String> claimedSignerRoles;
 
+	private List<String> signedAssertions;
+
 	private Policy signaturePolicy;
 
-	private List<String> commitmentTypeIndications;
+	private List<CommitmentType> commitmentTypeIndications;
 	
 	private SignerLocation signerLocation;
-
-	public BLevelParameters() {
-	}
 
 	/**
 	 * @return indicates the trust anchor policy shall be used when creating -B and -LT levels
@@ -109,6 +111,7 @@ public class BLevelParameters implements Serializable {
 	 *            the signing date
 	 */
 	public void setSigningDate(final Date signingDate) {
+		Objects.requireNonNull(signingDate, "SigningDate cannot be null!");
 		this.signingDate = signingDate;
 	}
 
@@ -131,12 +134,20 @@ public class BLevelParameters implements Serializable {
 		return claimedSignerRoles;
 	}
 
+	public List<String> getSignedAssertions() {
+                return signedAssertions;
+        }
+
+        public void setSignedAssertions(List<String> signedAssertions) {
+                this.signedAssertions = signedAssertions;
+        }
+
 	/**
 	 * Get the commitment type indications
 	 * 
 	 * @return the list of commitment type indications
 	 */
-	public List<String> getCommitmentTypeIndications() {
+	public List<CommitmentType> getCommitmentTypeIndications() {
 		return commitmentTypeIndications;
 	}
 
@@ -146,7 +157,7 @@ public class BLevelParameters implements Serializable {
 	 * @param commitmentTypeIndications
 	 *            a list of commitment type indications
 	 */
-	public void setCommitmentTypeIndications(List<String> commitmentTypeIndications) {
+	public void setCommitmentTypeIndications(List<CommitmentType> commitmentTypeIndications) {
 		this.commitmentTypeIndications = commitmentTypeIndications;
 	}
 
@@ -174,6 +185,7 @@ public class BLevelParameters implements Serializable {
 		final int prime = 31;
 		int result = 1;
 		result = (prime * result) + ((claimedSignerRoles == null) ? 0 : claimedSignerRoles.hashCode());
+		result = (prime * result) + ((signedAssertions == null) ? 0 : signedAssertions.hashCode());
 		result = (prime * result) + ((commitmentTypeIndications == null) ? 0 : commitmentTypeIndications.hashCode());
 		result = (prime * result) + ((signaturePolicy == null) ? 0 : signaturePolicy.hashCode());
 		result = (prime * result) + ((signerLocation == null) ? 0 : signerLocation.hashCode());
@@ -199,6 +211,13 @@ public class BLevelParameters implements Serializable {
 				return false;
 			}
 		} else if (!claimedSignerRoles.equals(other.claimedSignerRoles)) {
+			return false;
+		}
+		if (signedAssertions == null) {
+			if (other.signedAssertions != null) {
+				return false;
+			}
+		} else if (!signedAssertions.equals(other.signedAssertions)) {
 			return false;
 		}
 		if (commitmentTypeIndications == null) {
@@ -238,7 +257,7 @@ public class BLevelParameters implements Serializable {
 	@Override
 	public String toString() {
 		return "BLevelParameters [trustAnchorBPPolicy=" + trustAnchorBPPolicy + ", signingDate=" + signingDate + ", claimedSignerRoles=" + claimedSignerRoles
-				+ ", signaturePolicy=" + signaturePolicy + ", commitmentTypeIndication=" + commitmentTypeIndications + ", signerLocation=" + signerLocation
+				+ ", signedAssertions=" + signedAssertions + ", signaturePolicy=" + signaturePolicy + ", commitmentTypeIndication=" + commitmentTypeIndications + ", signerLocation=" + signerLocation
 				+ "]";
 	}
 

@@ -5,7 +5,7 @@
     <Signatures>
         <Signature Id="id-0a0becbe9213c626a1be4d98a9981596e2f922b90a2bb3c1ee938d9fc493a1bd">
             <SignatureFilename>Signature-P-TU_NG-1.pdf</SignatureFilename>
-            <DateTime>2016-05-20T17:03:09</DateTime>
+            <ClaimedSigningTime>2016-05-20T17:03:09</ClaimedSigningTime>
             <SignatureFormat>PAdES-BASELINE-B</SignatureFormat>
             <StructuralValidation>
                 <Valid>true</Valid>
@@ -25,16 +25,21 @@
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>true</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-1BCF2B72C91C013C824AE6BD2C01358475118ED7E50D920EF78D7870F51513EE">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-1BCF2B72C91C013C824AE6BD2C01358475118ED7E50D920EF78D7870F51513EE"/>
             <ContentType>application/pdf</ContentType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             
-            <FoundCertificates/>
+            <FoundCertificates>
+            	<RelatedCertificate Certificate="C-1BCF2B72C91C013C824AE6BD2C01358475118ED7E50D920EF78D7870F51513EE">
+                	<CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue match="true">
+                        	<DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>2B8ND9cy+ngXEckQv67BkaV+zhE=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
             <FoundRevocations/>
             <FoundTimestamps/>
             <SignatureScopes>
@@ -70,6 +75,7 @@
             <NotBefore>2016-02-11T15:38:09</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-903DC70F9CA41204737B141011FA21D16FE66288BEE6926A485870F85E6DB168</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>
@@ -113,6 +119,7 @@
             <NotBefore>2011-04-29T11:11:42</NotBefore>
             <PublicKeySize>4096</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-D6A17B67077639415439BD3BF9339E599954D33C5D4836170E15BA7354FD970C</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -163,6 +170,7 @@
             <NotBefore>2016-04-06T02:00:00</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-1BCF2B72C91C013C824AE6BD2C01358475118ED7E50D920EF78D7870F51513EE</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>
@@ -189,11 +197,10 @@
             <TrustedServiceProviders/>
             <Revocations>
                 <CertificateRevocation Revocation="R-1bcf2b72c91c013c824ae6bd2c01358475118ed7e50d920ef78d7870f51513eeca921613208aaacbbbc6798e54b76546fca9d3437749f414ff57473b6d2f44ba">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
                 <CertificateRevocation Revocation="R-1bcf2b72c91c013c824ae6bd2c01358475118ed7e50d920ef78d7870f51513eee4d28fb520311e9a6a81279b408300874eecd3ca35f4f7462d78f4bf0514aae8">
-                    <Status>false</Status>
-                    <Reason>unspecified</Reason>
+                    <Status>UNKNOWN</Status>
                 </CertificateRevocation>
             </Revocations>
             <DigestAlgoAndValue>
@@ -226,6 +233,7 @@
             <NotBefore>2011-05-30T02:00:00</NotBefore>
             <PublicKeySize>4096</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-355E634464029B58FC89189DA20CB1F3499373AF91D8FA34B57B66775AA73686</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -252,7 +260,7 @@
             <TrustedServiceProviders/>
             <Revocations>
                 <CertificateRevocation Revocation="R-355e634464029b58fc89189da20cb1f3499373af91d8fa34b57b66775aa73686b671e62088b3f75a75ecee64dd3c5331cbf7045be28221c7fad8cbf2c4894f6d">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
         
                 </CertificateRevocation>
             </Revocations>
@@ -345,5 +353,4 @@
             </DigestAlgoAndValue>
         </SignerData>
     </OriginalDocuments>
-    <TrustedLists/>
 </DiagnosticData>

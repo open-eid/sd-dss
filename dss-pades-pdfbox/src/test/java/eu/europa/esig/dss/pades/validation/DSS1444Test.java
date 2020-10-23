@@ -20,17 +20,18 @@
  */
 package eu.europa.esig.dss.pades.validation;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.detailedreport.DetailedReport;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlBasicBuildingBlocks;
@@ -48,48 +49,54 @@ import eu.europa.esig.dss.validation.reports.Reports;
 
 public class DSS1444Test {
 
-	@Test(expected = IOException.class)
+	@Test
 	public void test() throws IOException {
 		try (InputStream is = getClass().getResourceAsStream("/EmptyPage-corrupted.pdf")) {
-			PDDocument.load(is);
+			Exception exception = assertThrows(IOException.class, () -> PDDocument.load(is));
+			assertEquals("Page tree root must be a dictionary", exception.getMessage());
 		}
 	}
 
-	@Test(expected = DSSException.class)
+	@Test
 	public void testValidation() throws IOException {
 		try (InputStream is = getClass().getResourceAsStream("/EmptyPage-corrupted.pdf")) {
 			PDFDocumentValidator val = new PDFDocumentValidator(new InMemoryDocument(is));
-			val.getSignatures();
+			Exception exception = assertThrows(DSSException.class, () -> val.getSignatures());
+			assertTrue(exception.getMessage().contains("Page tree root must be a dictionary"));
 		}
 	}
 
-	@Test(expected = IOException.class)
+	@Test
 	public void test2() throws IOException {
 		try (InputStream is = getClass().getResourceAsStream("/EmptyPage-corrupted2.pdf")) {
-			PDDocument.load(is);
+			Exception exception = assertThrows(IOException.class, () -> PDDocument.load(is));
+			assertEquals("Page tree root must be a dictionary", exception.getMessage());
 		}
 	}
 
-	@Test(expected = DSSException.class)
+	@Test
 	public void test2Validation() throws IOException {
 		try (InputStream is = getClass().getResourceAsStream("/EmptyPage-corrupted2.pdf")) {
 			PDFDocumentValidator val = new PDFDocumentValidator(new InMemoryDocument(is));
-			val.getSignatures();
+			Exception exception = assertThrows(DSSException.class, () -> val.getSignatures());
+			assertTrue(exception.getMessage().contains("Page tree root must be a dictionary"));
 		}
 	}
 
-	@Test(expected = IOException.class)
+	@Test
 	public void test3() throws IOException {
 		try (InputStream is = getClass().getResourceAsStream("/small-red.jpg")) {
-			PDDocument.load(is);
+			Exception exception = assertThrows(IOException.class, () -> PDDocument.load(is));
+			assertEquals("Error: End-of-File, expected line", exception.getMessage());
 		}
 	}
 
-	@Test(expected = DSSException.class)
+	@Test
 	public void test3bis() throws IOException {
 		try (InputStream is = getClass().getResourceAsStream("/small-red.jpg")) {
 			PDFDocumentValidator val = new PDFDocumentValidator(new InMemoryDocument(is));
-			val.getSignatures();
+			Exception exception = assertThrows(DSSException.class, () -> val.getSignatures());
+			assertTrue(exception.getMessage().contains("Error: End-of-File, expected line"));
 		}
 	}
 
@@ -102,12 +109,14 @@ public class DSS1444Test {
 	}
 
 	/**
-	 * Positive test with default policy with PLAIN-ECDSA constrains. 
+	 * Positive test with default policy with PLAIN-ECDSA constrains.
+	 * 
 	 * @throws IOException
 	 */
 	@Test
 	public void test5() throws IOException {
-	  	DSSDocument dssDocument = new InMemoryDocument(getClass().getResourceAsStream("/validation/dss-PLAIN-ECDSA/TeleSec_PKS_eIDAS_QES_CA_1-baseline-b.pdf"));
+		DSSDocument dssDocument = new InMemoryDocument(getClass()
+				.getResourceAsStream("/validation/dss-PLAIN-ECDSA/TeleSec_PKS_eIDAS_QES_CA_1-baseline-b.pdf"));
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(dssDocument);
 		validator.setCertificateVerifier(new CommonCertificateVerifier());
 		Reports reports = validator.validateDocument();
@@ -120,38 +129,40 @@ public class DSS1444Test {
 		assertTrue(signature.isSignatureIntact());
 		assertTrue(signature.isSignatureValid());
 	}
-	
+
 	/**
 	 * 
 	 * Negative test with policy without PLAIN-ECDSA constrains.
+	 * 
 	 * @throws IOException
 	 */
 	@Test
 	public void test6() throws IOException {
-	  	DSSDocument dssDocument = new InMemoryDocument(getClass().getResourceAsStream("/validation/dss-PLAIN-ECDSA/TeleSec_PKS_eIDAS_QES_CA_1-baseline-b.pdf"));
+		DSSDocument dssDocument = new InMemoryDocument(getClass()
+				.getResourceAsStream("/validation/dss-PLAIN-ECDSA/TeleSec_PKS_eIDAS_QES_CA_1-baseline-b.pdf"));
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(dssDocument);
 		validator.setCertificateVerifier(new CommonCertificateVerifier());
-		Reports reports = validator.validateDocument(getClass().getResourceAsStream("/validation/dss-PLAIN-ECDSA/policy_without_PLAIN-ECDSA.xml"));
+		Reports reports = validator.validateDocument(
+				getClass().getResourceAsStream("/validation/dss-PLAIN-ECDSA/policy_without_PLAIN-ECDSA.xml"));
 		assertNotNull(reports);
 		DiagnosticData diagnosticData = reports.getDiagnosticData();
 		assertNotNull(diagnosticData);
 		DetailedReport detailedReport = reports.getDetailedReport();
 		assertNotNull(detailedReport);
-		XmlBasicBuildingBlocks xmlBasicBuildingBlocks = detailedReport.getBasicBuildingBlockById(diagnosticData.getFirstSignatureId());
-		assertNotNull( xmlBasicBuildingBlocks );
+		XmlBasicBuildingBlocks xmlBasicBuildingBlocks = detailedReport
+				.getBasicBuildingBlockById(diagnosticData.getFirstSignatureId());
+		assertNotNull(xmlBasicBuildingBlocks);
 		XmlConclusion xmlConclusion = xmlBasicBuildingBlocks.getConclusion();
-		assertNotNull( xmlConclusion );
+		assertNotNull(xmlConclusion);
 		List<XmlName> xmlNames = xmlConclusion.getErrors();
-		assertNotNull( xmlNames );
-		for(int i = 0; i < xmlNames.size(); i++)
-		{
-		  if( "ASCCM_ANS_1".equals( xmlNames.get( i ).getNameId() ) )
-		  {
-		    assertTrue("The encryption algorithm not authorised!".equals( xmlNames.get(i).getValue() ) );
-		    return;
-		  }
+		assertNotNull(xmlNames);
+		for (int i = 0; i < xmlNames.size(); i++) {
+			if ("ASCCM_ANS_1".equals(xmlNames.get(i).getNameId())) {
+				assertEquals("The encryption algorithm is not authorised!", xmlNames.get(i).getValue());
+				return;
+			}
 		}
-		fail( "NOT FOUND!" );
+		fail("NOT FOUND!");
 	}
-	
+
 }

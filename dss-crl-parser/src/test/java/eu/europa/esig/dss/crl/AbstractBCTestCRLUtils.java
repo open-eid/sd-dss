@@ -20,10 +20,10 @@
  */
 package eu.europa.esig.dss.crl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -35,19 +35,19 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.enumerations.SignatureAlgorithm;
+import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 
 public abstract class AbstractBCTestCRLUtils extends AbstractCRLParserTestUtils {
 
 	private static CertificateFactory certificateFactory;
 
-	@BeforeClass
+	@BeforeAll
 	public static void init() {
 		Security.addProvider(new BouncyCastleProvider());
 		try {
@@ -57,7 +57,7 @@ public abstract class AbstractBCTestCRLUtils extends AbstractCRLParserTestUtils 
 		}
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void reset() {
 		Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME);
 	}
@@ -69,7 +69,7 @@ public abstract class AbstractBCTestCRLUtils extends AbstractCRLParserTestUtils 
 
 			CertificateToken certificateToken = loadCert(isCer);
 
-			CRLBinary crlBinary = new CRLBinary(toByteArray(is));
+			CRLBinary crlBinary = CRLUtils.buildCRLBinary(toByteArray(is));
 			CRLValidity validity = CRLUtils.buildCRLValidity(crlBinary, certificateToken);
 
 			assertEquals(SignatureAlgorithm.RSA_SSA_PSS_SHA512_MGF1, validity.getSignatureAlgorithm());
@@ -89,7 +89,7 @@ public abstract class AbstractBCTestCRLUtils extends AbstractCRLParserTestUtils 
 		try (InputStream crlIS = new ByteArrayInputStream(Base64.getDecoder().decode(crlB64));
 				InputStream certIS = new ByteArrayInputStream(Base64.getDecoder().decode(certB64))) {
 			CertificateToken certificateToken = loadCert(certIS);
-			CRLBinary crlBinary = new CRLBinary(toByteArray(crlIS));
+			CRLBinary crlBinary = CRLUtils.buildCRLBinary(toByteArray(crlIS));
 			CRLValidity validCRL = CRLUtils.buildCRLValidity(crlBinary, certificateToken);
 			assertNotNull(validCRL);
 			assertTrue(validCRL.isSignatureIntact());
@@ -106,7 +106,7 @@ public abstract class AbstractBCTestCRLUtils extends AbstractCRLParserTestUtils 
 		try (InputStream crlIS = new ByteArrayInputStream(Base64.getDecoder().decode(crlB64));
 				InputStream certIS = new ByteArrayInputStream(Base64.getDecoder().decode(certB64))) {
 			CertificateToken certificateToken = loadCert(certIS);
-			CRLBinary crlBinary = new CRLBinary(toByteArray(crlIS));
+			CRLBinary crlBinary = CRLUtils.buildCRLBinary(toByteArray(crlIS));
 			CRLValidity validCRL = CRLUtils.buildCRLValidity(crlBinary, certificateToken);
 			assertNotNull(validCRL);
 			assertTrue(validCRL.isSignatureIntact());
@@ -123,7 +123,7 @@ public abstract class AbstractBCTestCRLUtils extends AbstractCRLParserTestUtils 
 		try (InputStream crlIS = new ByteArrayInputStream(Base64.getDecoder().decode(crlB64));
 				InputStream certIS = new ByteArrayInputStream(Base64.getDecoder().decode(certB64))) {
 			CertificateToken certificateToken = loadCert(certIS);
-			CRLBinary crlBinary = new CRLBinary(toByteArray(crlIS));
+			CRLBinary crlBinary = CRLUtils.buildCRLBinary(toByteArray(crlIS));
 			CRLValidity validCRL = CRLUtils.buildCRLValidity(crlBinary, certificateToken);
 			assertNotNull(validCRL);
 			assertTrue(validCRL.isSignatureIntact());

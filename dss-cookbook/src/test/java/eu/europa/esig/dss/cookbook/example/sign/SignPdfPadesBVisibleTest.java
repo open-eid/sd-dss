@@ -22,23 +22,24 @@ package eu.europa.esig.dss.cookbook.example.sign;
 
 import java.awt.Color;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.cookbook.example.CookbookTools;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
+import eu.europa.esig.dss.enumerations.SignerTextHorizontalAlignment;
+import eu.europa.esig.dss.enumerations.SignerTextPosition;
+import eu.europa.esig.dss.enumerations.SignerTextVerticalAlignment;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.pades.DSSFileFont;
+import eu.europa.esig.dss.pades.DSSFont;
 import eu.europa.esig.dss.pades.PAdESSignatureParameters;
 import eu.europa.esig.dss.pades.SignatureImageParameters;
 import eu.europa.esig.dss.pades.SignatureImageTextParameters;
-import eu.europa.esig.dss.pades.SignatureImageTextParameters.SignerTextHorizontalAlignment;
-import eu.europa.esig.dss.pades.SignatureImageTextParameters.SignerTextPosition;
 import eu.europa.esig.dss.pades.signature.PAdESService;
-import eu.europa.esig.dss.pdf.PdfObjFactory;
 import eu.europa.esig.dss.pdf.pdfbox.PdfBoxNativeObjectFactory;
 import eu.europa.esig.dss.token.DSSPrivateKeyEntry;
 import eu.europa.esig.dss.token.SignatureTokenConnection;
@@ -51,10 +52,6 @@ public class SignPdfPadesBVisibleTest extends CookbookTools {
 
 	@Test
 	public void signPAdESBaselineBWithVisibleSignature() throws Exception {
-		
-		// tag::custom-factory[]
-		PdfObjFactory.setInstance(new PdfBoxNativeObjectFactory());
-		// end::custom-factory[]
 
 		// GET document to be signed -
 		// Return DSSDocument toSignDocument
@@ -73,6 +70,7 @@ public class SignPdfPadesBVisibleTest extends CookbookTools {
 
 			// tag::demo[]
 
+			// tag::parameters-configuration[]
 			// Preparing parameters for the PAdES signature
 			PAdESSignatureParameters parameters = new PAdESSignatureParameters();
 			// We choose the level of the signature (-B, -T, -LT, -LTA).
@@ -83,7 +81,7 @@ public class SignPdfPadesBVisibleTest extends CookbookTools {
 			// We set the certificate chain
 			parameters.setCertificateChain(privateKey.getCertificateChain());
 
-			// Initialize visual signature
+			// Initialize visual signature and configure
 			SignatureImageParameters imageParameters = new SignatureImageParameters();
 			// set an image
 			imageParameters.setImage(new InMemoryDocument(getClass().getResourceAsStream("/signature-pen.png")));
@@ -92,31 +90,48 @@ public class SignPdfPadesBVisibleTest extends CookbookTools {
 			imageParameters.setyAxis(400);
 			imageParameters.setWidth(300);
 			imageParameters.setHeight(200);
-
+			// end::parameters-configuration[]
+			
 			// tag::font[]
 			// Initialize text to generate for visual signature
-			DSSFileFont font = new DSSFileFont(getClass().getResourceAsStream("/fonts/OpenSansRegular.ttf"));
-			// tag::text[]
-			SignatureImageTextParameters textParameters = new SignatureImageTextParameters();
-			textParameters.setFont(font);
-			textParameters.setSize(14);
-			textParameters.setTextColor(Color.BLUE);
-			textParameters.setText("My visual signature \n #1");
-			textParameters.setBackgroundColor(Color.YELLOW);
-			textParameters.setPadding(20);
-			textParameters.setSignerTextPosition(SignerTextPosition.LEFT);
-			textParameters.setSignerTextHorizontalAlignment(SignerTextHorizontalAlignment.RIGHT);
-			// end::text[]
+			DSSFont font = new DSSFileFont(getClass().getResourceAsStream("/fonts/OpenSansRegular.ttf"));
 			// end::font[]
+			// tag::text[]
+			// Instantiates a SignatureImageTextParameters object
+			SignatureImageTextParameters textParameters = new SignatureImageTextParameters();
+			// Allows you to set a DSSFont object that defines the text style (see more information in the section "Fonts usage")
+			textParameters.setFont(font);
+			// Defines the text content
+			textParameters.setText("My visual signature \n #1");
+			// Defines the color of the characters
+			textParameters.setTextColor(Color.BLUE);
+			// Defines the background color for the area filled out by the text
+			textParameters.setBackgroundColor(Color.YELLOW);
+			// Defines a padding between the text and a border of its bounding area
+			textParameters.setPadding(20);
+			// Set textParameters to a SignatureImageParameters object
 			imageParameters.setTextParameters(textParameters);
-
-			parameters.setSignatureImageParameters(imageParameters);
+			// end::text[]
+			// tag::textImageCombination[]
+			// Specifies a text position relatively to an image (Note: applicable only for joint image+text visible signatures). 
+			// Thus with _SignerPosition.LEFT_ value, the text will be placed on the left side, 
+			// and image will be aligned to the right side inside the signature field
+			textParameters.setSignerTextPosition(SignerTextPosition.LEFT);
+			// Specifies a horizontal alignment of a text with respect to its area
+			textParameters.setSignerTextHorizontalAlignment(SignerTextHorizontalAlignment.RIGHT);
+			// Specifies a vertical alignment of a text block with respect to a signature field area
+			textParameters.setSignerTextVerticalAlignment(SignerTextVerticalAlignment.TOP);
+			// end::textImageCombination[]
+			// tag::sign[]
+			parameters.setImageParameters(imageParameters);
 
 			// Create common certificate verifier
 			CommonCertificateVerifier commonCertificateVerifier = new CommonCertificateVerifier();
 			// Create PAdESService for signature
 			PAdESService service = new PAdESService(commonCertificateVerifier);
-
+			// tag::custom-factory[]
+			service.setPdfObjFactory(new PdfBoxNativeObjectFactory());
+			// end::custom-factory[]
 			// Get the SignedInfo segment that need to be signed.
 			ToBeSigned dataToSign = service.getDataToSign(toSignDocument, parameters);
 
@@ -128,6 +143,7 @@ public class SignPdfPadesBVisibleTest extends CookbookTools {
 			// We invoke the xadesService to sign the document with the signature value obtained in
 			// the previous step.
 			DSSDocument signedDocument = service.signDocument(toSignDocument, parameters, signatureValue);
+			// end::sign[]
 
 			// end::demo[]
 

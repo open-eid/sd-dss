@@ -20,30 +20,34 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
+import eu.europa.esig.dss.diagnostic.TimestampWrapper;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlSignatureScope;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.enumerations.SignatureScopeType;
+import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.model.DSSDocument;
+import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.DigestDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
@@ -63,12 +67,10 @@ public class XAdESLevelBDetachedDigestDocumentTest extends PKIFactoryAccess {
 		SignatureValue signatureValue = getToken().sign(toBeSigned, params.getDigestAlgorithm(), getPrivateKeyEntry());
 		DSSDocument signedDoc = service.signDocument(completeDocument, params, signatureValue);
 
-		validate(signedDoc, completeDocument);
+		DiagnosticData diagnosticData = validate(signedDoc, completeDocument);
 		validate(signedDoc, getDigestDocument());
 		validateWrong(signedDoc);
 
-		DSSDocument extendDocument = service.extendDocument(signedDoc, getExtendParams());
-		DiagnosticData diagnosticData = validate(extendDocument, completeDocument);
 		List<SignatureWrapper> signatures = diagnosticData.getSignatures();
 		assertEquals(1, signatures.size());
 		SignatureWrapper signatureWrapper = signatures.get(0);
@@ -77,6 +79,21 @@ public class XAdESLevelBDetachedDigestDocumentTest extends PKIFactoryAccess {
 		XmlSignatureScope xmlSignatureScope = signatureScopes.get(0);
 		assertEquals(SignatureScopeType.FULL, xmlSignatureScope.getScope());
 		assertEquals(DOCUMENT_NAME, xmlSignatureScope.getName());
+
+		DSSDocument extendedDocument = service.extendDocument(signedDoc, getExtendParams(completeDocument));
+		diagnosticData = validate(extendedDocument, completeDocument);
+		
+		List<TimestampWrapper> timestampList = diagnosticData.getTimestampList();
+		assertEquals(2, timestampList.size());
+		int archiveTsts = 0;
+		for (TimestampWrapper timestamp : timestampList) {
+			if (TimestampType.ARCHIVE_TIMESTAMP.equals(timestamp.getType())) {
+				assertTrue(timestamp.isMessageImprintDataFound());
+				assertTrue(timestamp.isMessageImprintDataIntact());
+				++archiveTsts;
+			}
+		}
+		assertEquals(1, archiveTsts);
 	}
 
 	@Test
@@ -89,12 +106,10 @@ public class XAdESLevelBDetachedDigestDocumentTest extends PKIFactoryAccess {
 		SignatureValue signatureValue = getToken().sign(toBeSigned, params.getDigestAlgorithm(), getPrivateKeyEntry());
 		DSSDocument signedDoc = service.signDocument(completeDocumentNoName, params, signatureValue);
 
-		validate(signedDoc, completeDocumentNoName);
+		DiagnosticData diagnosticData = validate(signedDoc, completeDocumentNoName);
 		validate(signedDoc, getDigestDocument());
 		validateWrong(signedDoc);
 
-		DSSDocument extendDocument = service.extendDocument(signedDoc, getExtendParams());
-		DiagnosticData diagnosticData = validate(extendDocument, completeDocumentNoName);
 		List<SignatureWrapper> signatures = diagnosticData.getSignatures();
 		assertEquals(1, signatures.size());
 		SignatureWrapper signatureWrapper = signatures.get(0);
@@ -103,6 +118,21 @@ public class XAdESLevelBDetachedDigestDocumentTest extends PKIFactoryAccess {
 		XmlSignatureScope xmlSignatureScope = signatureScopes.get(0);
 		assertEquals(SignatureScopeType.FULL, xmlSignatureScope.getScope());
 		assertNull(xmlSignatureScope.getName());
+
+		DSSDocument extendedDocument = service.extendDocument(signedDoc, getExtendParams(completeDocumentNoName));
+		diagnosticData = validate(extendedDocument, completeDocumentNoName);
+		
+		List<TimestampWrapper> timestampList = diagnosticData.getTimestampList();
+		assertEquals(2, timestampList.size());
+		int archiveTsts = 0;
+		for (TimestampWrapper timestamp : timestampList) {
+			if (TimestampType.ARCHIVE_TIMESTAMP.equals(timestamp.getType())) {
+				assertTrue(timestamp.isMessageImprintDataFound());
+				assertTrue(timestamp.isMessageImprintDataIntact());
+				++archiveTsts;
+			}
+		}
+		assertEquals(1, archiveTsts);
 	}
 
 	@Test
@@ -115,12 +145,10 @@ public class XAdESLevelBDetachedDigestDocumentTest extends PKIFactoryAccess {
 		SignatureValue signatureValue = getToken().sign(toBeSigned, params.getDigestAlgorithm(), getPrivateKeyEntry());
 		DSSDocument signedDoc = service.signDocument(digestDocument, params, signatureValue);
 
-		validate(signedDoc, digestDocument);
+		DiagnosticData diagnosticData = validate(signedDoc, digestDocument);
 		validate(signedDoc, getCompleteDocument());
 		validateWrong(signedDoc);
 
-		DSSDocument extendDocument = service.extendDocument(signedDoc, getExtendParams());
-		DiagnosticData diagnosticData = validate(extendDocument, digestDocument);
 		List<SignatureWrapper> signatures = diagnosticData.getSignatures();
 		assertEquals(1, signatures.size());
 		SignatureWrapper signatureWrapper = signatures.get(0);
@@ -129,6 +157,10 @@ public class XAdESLevelBDetachedDigestDocumentTest extends PKIFactoryAccess {
 		XmlSignatureScope xmlSignatureScope = signatureScopes.get(0);
 		assertEquals(SignatureScopeType.DIGEST, xmlSignatureScope.getScope());
 		assertNull(xmlSignatureScope.getName());
+		
+		XAdESSignatureParameters extendParams = getExtendParams(digestDocument);
+		Exception exception = assertThrows(DSSException.class, () -> service.extendDocument(signedDoc, extendParams));
+		assertEquals("An error occurred while building a message imprint data. Reason : No binaries found for URI ''", exception.getMessage());
 	}
 
 	private DiagnosticData validate(DSSDocument signedDocument, DSSDocument original) {
@@ -168,10 +200,10 @@ public class XAdESLevelBDetachedDigestDocumentTest extends PKIFactoryAccess {
 		return signatureParameters;
 	}
 
-	private XAdESSignatureParameters getExtendParams() {
+	private XAdESSignatureParameters getExtendParams(DSSDocument detachedDocument) {
 		XAdESSignatureParameters signatureParameters = new XAdESSignatureParameters();
 		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_LTA);
-		signatureParameters.setDetachedContents(Arrays.asList(getDigestDocument()));
+		signatureParameters.setDetachedContents(Arrays.asList(detachedDocument));
 		return signatureParameters;
 	}
 

@@ -5,7 +5,7 @@
     <Signatures>
         <Signature Id="XSIG1">
             <SignatureFilename>TEST_S1a_C1a_InTL_VALID.xml</SignatureFilename>
-            <DateTime>2017-09-21T16:04:25</DateTime>
+            <ClaimedSigningTime>2017-09-21T16:04:25</ClaimedSigningTime>
             <SignatureFormat>XAdES-BASELINE-B</SignatureFormat>
             <StructuralValidation>
                 <Valid>true</Valid>
@@ -31,19 +31,24 @@
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>true</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-A390D4D4774879EF567EB55875997A036EF3819E1AB515D3BAAEA29D62425D67">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-A390D4D4774879EF567EB55875997A036EF3819E1AB515D3BAAEA29D62425D67"/>
             <CertificateChain>
                 <ChainItem Certificate="C-A390D4D4774879EF567EB55875997A036EF3819E1AB515D3BAAEA29D62425D67"/>
             </CertificateChain>
             <ContentType>text/xml</ContentType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             
-            <FoundCertificates/>
+            <FoundCertificates>
+            	<RelatedCertificate Certificate="C-A390D4D4774879EF567EB55875997A036EF3819E1AB515D3BAAEA29D62425D67">
+                	<CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue match="true">
+                        	<DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>9A7EBQxIc7Y3E3pDuYPDqbrSHNw=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
             <FoundRevocations/>
             <FoundTimestamps/>
             <SignatureScopes>
@@ -64,7 +69,7 @@
         </Signature>
         <Signature Id="XSIG2" CounterSignature="true" Parent="XSIG1">
             <SignatureFilename>TEST_S1a_C1a_InTL_VALID.xml</SignatureFilename>
-            <DateTime>2017-09-21T16:04:55</DateTime>
+            <ClaimedSigningTime>2017-09-21T16:04:55</ClaimedSigningTime>
             <SignatureFormat>XAdES-BASELINE-B</SignatureFormat>
             <StructuralValidation>
                 <Valid>true</Valid>
@@ -90,19 +95,24 @@
                 <SignatureIntact>false</SignatureIntact>
                 <SignatureValid>false</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-A390D4D4774879EF567EB55875997A036EF3819E1AB515D3BAAEA29D62425D67">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-A390D4D4774879EF567EB55875997A036EF3819E1AB515D3BAAEA29D62425D67"/>
             <CertificateChain>
                 <ChainItem Certificate="C-A390D4D4774879EF567EB55875997A036EF3819E1AB515D3BAAEA29D62425D67"/>
             </CertificateChain>
             <ContentType>text/xml</ContentType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             
-            <FoundCertificates/>
+            <FoundCertificates>
+            	<RelatedCertificate Certificate="C-A390D4D4774879EF567EB55875997A036EF3819E1AB515D3BAAEA29D62425D67">
+                	<CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue match="true">
+                        	<DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>9A7EBQxIc7Y3E3pDuYPDqbrSHNw=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
             <FoundRevocations/>
             <FoundTimestamps/>
             <SignatureScopes/>
@@ -140,6 +150,7 @@
             <NotBefore>2014-10-02T10:40:21</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-A390D4D4774879EF567EB55875997A036EF3819E1AB515D3BAAEA29D62425D67</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>nonRepudiation</KeyUsage>
             </KeyUsageBits>
@@ -181,5 +192,4 @@
             </DigestAlgoAndValue>
         </SignerData>
     </OriginalDocuments>
-    <TrustedLists/>
 </DiagnosticData>

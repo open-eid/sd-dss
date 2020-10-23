@@ -21,6 +21,7 @@
 package eu.europa.esig.dss.validation.executor;
 
 import java.util.Date;
+import java.util.Locale;
 
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDiagnosticData;
 import eu.europa.esig.dss.policy.ValidationPolicy;
@@ -41,6 +42,13 @@ public interface ProcessExecutor<R extends AbstractReports> {
 	void setCurrentTime(Date currentDate);
 
 	/**
+	 * Returns the validation time {@code Date}
+	 * 
+	 * @return {@link Date}
+	 */
+	Date getCurrentTime();
+
+	/**
 	 * This method allows to set the {@code XmlDiagnosticData} that is used during
 	 * the validation process execution.
 	 *
@@ -58,7 +66,19 @@ public interface ProcessExecutor<R extends AbstractReports> {
 	 */
 	void setValidationPolicy(ValidationPolicy validationPolicy);
 
+	/**
+	 * This method returns the used {@link ValidationPolicy}
+	 * 
+	 * @return the used validation policy
+	 */
 	ValidationPolicy getValidationPolicy();
+
+	/**
+	 * Allows to set a language setting for generated Reports
+	 * 
+	 * @param locale {@link Locale}
+	 */
+	void setLocale(Locale locale);
 
 	/**
 	 * This method allows to run the validation process.
@@ -66,7 +86,5 @@ public interface ProcessExecutor<R extends AbstractReports> {
 	 * @return the {@code Reports}
 	 */
 	R execute();
-
-	Date getCurrentTime();
 
 }

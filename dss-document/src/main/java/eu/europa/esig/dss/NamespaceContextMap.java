@@ -42,8 +42,8 @@ public final class NamespaceContextMap implements NamespaceContext {
 	 */
 	public NamespaceContextMap() {
 
-		prefixMap = new HashMap<String, String>();
-		namespaceMap = new HashMap<String, Set<String>>();
+		prefixMap = new HashMap<>();
+		namespaceMap = new HashMap<>();
 	}
 
 	/**
@@ -61,13 +61,7 @@ public final class NamespaceContextMap implements NamespaceContext {
 	}
 
 	private void createNamespace(final String prefix, final String namespace) {
-
-		Set<String> prefixes = namespaceMap.get(namespace);
-		if (prefixes == null) {
-
-			prefixes = new HashSet<String>();
-			namespaceMap.put(namespace, prefixes);
-		}
+		Set<String> prefixes = namespaceMap.computeIfAbsent(namespace, k -> new HashSet<>());
 		prefixes.add(prefix);
 	}
 

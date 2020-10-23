@@ -1,8 +1,26 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.pdf.pdfbox.visible.nativedrawer;
 
 import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -34,13 +52,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.model.DSSDocument;
+import eu.europa.esig.dss.pades.DSSFileFont;
 import eu.europa.esig.dss.pades.DSSFont;
 import eu.europa.esig.dss.pades.SignatureImageParameters;
 import eu.europa.esig.dss.pades.SignatureImageTextParameters;
 import eu.europa.esig.dss.pdf.pdfbox.visible.AbstractPdfBoxSignatureDrawer;
 import eu.europa.esig.dss.pdf.pdfbox.visible.ImageRotationUtils;
+import eu.europa.esig.dss.pdf.pdfbox.visible.PdfBoxNativeFont;
 import eu.europa.esig.dss.pdf.visible.CommonDrawerUtils;
-import eu.europa.esig.dss.pdf.visible.FontUtils;
+import eu.europa.esig.dss.pdf.visible.ImageUtils;
 import eu.europa.esig.dss.utils.Utils;
 
 public class NativePdfBoxVisibleSignatureDrawer extends AbstractPdfBoxSignatureDrawer {
@@ -64,22 +84,26 @@ public class NativePdfBoxVisibleSignatureDrawer extends AbstractPdfBoxSignatureD
 	 */
 	private PDFont initFont() throws IOException {
 		DSSFont dssFont = parameters.getTextParameters().getFont();
-		if (dssFont.isLogicalFont()) {
-			return PdfBoxFontMapper.getPDFont(dssFont.getJavaFont());
-		} else {
-			try (InputStream is = dssFont.getInputStream()) {
+		if (dssFont instanceof PdfBoxNativeFont) {
+			PdfBoxNativeFont nativeFont = (PdfBoxNativeFont) dssFont;
+			return nativeFont.getFont();
+		} else if (dssFont instanceof DSSFileFont) {
+			DSSFileFont fileFont = (DSSFileFont) dssFont;
+			try (InputStream is = fileFont.getInputStream()) {
 				return PDType0Font.load(document, is);
 			}
+		} else {
+			return PdfBoxFontMapper.getPDFont(dssFont.getJavaFont());
 		}
 	}
 	
 	@Override
 	public void draw() throws IOException {
-		ByteArrayInputStream bais = null;
-		try (PDDocument doc = new PDDocument())
-        {
+		try (PDDocument doc = new PDDocument(); ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+			
 			PDPage originalPage = document.getPage(parameters.getPage() - 1);
-			SignatureFieldDimensionAndPositionBuilder dimensionAndPositionBuilder = new SignatureFieldDimensionAndPositionBuilder(parameters, originalPage);
+			SignatureFieldDimensionAndPositionBuilder dimensionAndPositionBuilder = 
+					new SignatureFieldDimensionAndPositionBuilder(parameters, originalPage, pdFont);
 			SignatureFieldDimensionAndPosition dimensionAndPosition = dimensionAndPositionBuilder.build();
 			// create a new page
 			PDPage page = new PDPage(originalPage.getMediaBox());
@@ -113,24 +137,25 @@ public class NativePdfBoxVisibleSignatureDrawer extends AbstractPdfBoxSignatureD
             
             try (PDPageContentStream cs = new PDPageContentStream(doc, appearanceStream))
             {
-            	rotateSignature(cs, originalPage, rectangle);
+            	rotateSignature(cs, rectangle, dimensionAndPosition);
             	setFieldBackground(cs, parameters.getBackgroundColor());
             	setText(cs, dimensionAndPosition, parameters);
             	setImage(cs, doc, dimensionAndPosition, parameters.getImage());
             }
             
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
             doc.save(baos);
-            bais = new ByteArrayInputStream(baos.toByteArray());
+            
+            try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray()))
+            {
+        		signatureOptions.setVisualSignature(bais);
+        		signatureOptions.setPage(parameters.getPage() - 1);
+            }
             
         }
-		signatureOptions.setVisualSignature(bais);
-		bais.close();
-		signatureOptions.setPage(parameters.getPage() - 1);
 	}
 	
-	private void rotateSignature(PDPageContentStream cs, PDPage page, PDRectangle rectangle) throws IOException {
-    	switch (ImageRotationUtils.getRotation(parameters.getRotation(), page)) {
+	private void rotateSignature(PDPageContentStream cs, PDRectangle rectangle, SignatureFieldDimensionAndPosition dimensionAndPosition) throws IOException {
+    	switch (dimensionAndPosition.getGlobalRotation()) {
 			case ImageRotationUtils.ANGLE_90:
 				// pdfbox rotates in the opposite way
 		    	cs.transform(Matrix.getRotateInstance(Math.toRadians(ImageRotationUtils.ANGLE_270), 0, 0));
@@ -194,18 +219,14 @@ public class NativePdfBoxVisibleSignatureDrawer extends AbstractPdfBoxSignatureD
 		if (image != null) {
 			try (InputStream is = image.openStream()) {
 	            cs.saveGraphicsState();
-	            float scaleFactor = parameters.getScaleFactor();
-	            if (parameters.getImage() != null && parameters.getTextParameters() != null && scaleFactor != 1) {
-	            	cs.transform(Matrix.getScaleInstance(scaleFactor, scaleFactor));
-	            }
 	    		byte[] bytes = IOUtils.toByteArray(is);
 	    		PDImageXObject imageXObject = PDImageXObject.createFromByteArray(doc, bytes, image.getName());
-	    		
+
 	    		// divide to scale factor, because PdfBox due to the matrix transformation also changes position parameters of the image
-	    		float xAxis = dimensionAndPosition.getImageX() / scaleFactor;
+	    		float xAxis = dimensionAndPosition.getImageX();
 	    		if (parameters.getTextParameters() != null)
 	    			xAxis *= dimensionAndPosition.getxDpiRatio();
-	    		float yAxis = dimensionAndPosition.getImageY() / scaleFactor;
+	    		float yAxis = dimensionAndPosition.getImageY();
 	    		if (parameters.getTextParameters() != null)
 	    			yAxis *= dimensionAndPosition.getyDpiRatio();
 	    		
@@ -254,16 +275,20 @@ public class NativePdfBoxVisibleSignatureDrawer extends AbstractPdfBoxSignatureD
     		setTextBackground(cs, textParameters, dimensionAndPosition);
     		DSSFont dssFont = textParameters.getFont();
             float fontSize = dssFont.getSize();
+            fontSize *= ImageUtils.getScaleFactor(parameters.getZoom());
             cs.beginText();
             cs.setFont(pdFont, fontSize);
             cs.setNonStrokingColor(textParameters.getTextColor());
             setAlphaChannel(cs, textParameters.getTextColor());
             
-            String[] strings = textParameters.getText().split("\\r?\\n");
+            PdfBoxFontMetrics pdfBoxFontMetrics = new PdfBoxFontMetrics(pdFont);
             
-			Font properFont = FontUtils.computeProperFont(dssFont.getJavaFont(), dssFont.getSize(), parameters.getDpi());
-            FontMetrics fontMetrics = FontUtils.getFontMetrics(properFont);
-            cs.setLeading(textSizeWithDpi(fontMetrics.getHeight(), dimensionAndPosition.getyDpi()));
+            String[] strings = pdfBoxFontMetrics.getLines(textParameters.getText());
+            
+            float properSize = CommonDrawerUtils.computeProperSize(textParameters.getFont().getSize(), parameters.getDpi());
+            
+            float fontHeight = pdfBoxFontMetrics.getHeight(textParameters.getText(), properSize);
+            cs.setLeading(textSizeWithDpi(fontHeight, dimensionAndPosition.getyDpi()));
             
             cs.newLineAtOffset(dimensionAndPosition.getTextX(),
             		// align vertical position
@@ -271,12 +296,12 @@ public class NativePdfBoxVisibleSignatureDrawer extends AbstractPdfBoxSignatureD
 
             float previousOffset = 0;
             for (String str : strings) {
-                float stringWidth = textSizeWithDpi(fontMetrics.stringWidth(str), dimensionAndPosition.getxDpi());
+                float stringWidth = pdfBoxFontMetrics.getWidth(str, fontSize);
                 float offsetX = 0;
                 switch (textParameters.getSignerTextHorizontalAlignment()) {
 					case RIGHT:
-						offsetX = (dimensionAndPosition.getTextWidth() - stringWidth - 
-								textSizeWithDpi(textParameters.getPadding()*2, dimensionAndPosition.getxDpi())) - previousOffset;
+						offsetX = dimensionAndPosition.getTextWidth() - stringWidth - 
+								textSizeWithDpi(textParameters.getPadding()*2, dimensionAndPosition.getxDpi()) - previousOffset;
 						break;
 					case CENTER:
 						offsetX = (dimensionAndPosition.getTextWidth() - stringWidth) / 2 - 
@@ -309,7 +334,8 @@ public class NativePdfBoxVisibleSignatureDrawer extends AbstractPdfBoxSignatureD
 	}
 	
 	private float textSizeWithDpi(float size, int dpi) {
-		return CommonDrawerUtils.toDpiAxisPoint(size / CommonDrawerUtils.getTextScaleFactor(dpi), dpi);
+		return CommonDrawerUtils.toDpiAxisPoint(size / CommonDrawerUtils.getTextScaleFactor(dpi), dpi) 
+				* CommonDrawerUtils.getTextScaleFactor(parameters.getDpi());
 	}
 	
 	/**
@@ -353,7 +379,8 @@ public class NativePdfBoxVisibleSignatureDrawer extends AbstractPdfBoxSignatureD
 		PDRectangle pageRect = page.getMediaBox();
 		PDRectangle pdRectangle = new PDRectangle();
 		pdRectangle.setLowerLeftX(dimensionAndPosition.getBoxX());
-		pdRectangle.setLowerLeftY(pageRect.getHeight() - dimensionAndPosition.getBoxY() - dimensionAndPosition.getBoxHeight()); // because PDF starts to count from bottom
+		// because PDF starts to count from bottom
+		pdRectangle.setLowerLeftY(pageRect.getHeight() - dimensionAndPosition.getBoxY() - dimensionAndPosition.getBoxHeight());
 		pdRectangle.setUpperRightX(dimensionAndPosition.getBoxX() + dimensionAndPosition.getBoxWidth());
 		pdRectangle.setUpperRightY(pageRect.getHeight() - dimensionAndPosition.getBoxY());
 		return pdRectangle;

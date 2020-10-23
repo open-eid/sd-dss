@@ -20,16 +20,17 @@
  */
 package eu.europa.esig.dss.validation.executor;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
+import eu.europa.esig.dss.detailedreport.DetailedReport;
 import eu.europa.esig.dss.detailedreport.DetailedReportFacade;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlCertificate;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlDetailedReport;
@@ -48,13 +50,18 @@ import eu.europa.esig.dss.enumerations.CertificateQualification;
 import eu.europa.esig.dss.enumerations.Indication;
 import eu.europa.esig.dss.enumerations.RevocationReason;
 import eu.europa.esig.dss.enumerations.SubIndication;
+import eu.europa.esig.dss.policy.ValidationPolicy;
+import eu.europa.esig.dss.policy.jaxb.EIDAS;
+import eu.europa.esig.dss.policy.jaxb.Level;
+import eu.europa.esig.dss.policy.jaxb.LevelConstraint;
 import eu.europa.esig.dss.simplecertificatereport.SimpleCertificateReportFacade;
 import eu.europa.esig.dss.simplecertificatereport.jaxb.XmlChainItem;
 import eu.europa.esig.dss.simplecertificatereport.jaxb.XmlSimpleCertificateReport;
 import eu.europa.esig.dss.utils.Utils;
+import eu.europa.esig.dss.validation.executor.certificate.DefaultCertificateProcessExecutor;
 import eu.europa.esig.dss.validation.reports.CertificateReports;
 
-public class CertificateProcessExecutorTest extends AbstractValidationExecutorTest {
+public class CertificateProcessExecutorTest extends AbstractTestValidationExecutor {
 
 	private static final Logger LOG = LoggerFactory.getLogger(CertificateProcessExecutorTest.class);
 
@@ -74,12 +81,13 @@ public class CertificateProcessExecutorTest extends AbstractValidationExecutorTe
 		CertificateReports reports = executor.execute();
 		checkReports(reports);
 
-		XmlDetailedReport detailedReportJaxb = reports.getDetailedReportJaxb();
-		assertNotNull(detailedReportJaxb);
-		assertNotNull(detailedReportJaxb.getCertificate());
-		assertEquals(2, detailedReportJaxb.getTLAnalysis().size());
-		assertEquals(1, detailedReportJaxb.getBasicBuildingBlocks().size());
-		assertEquals(0, detailedReportJaxb.getSignatures().size());
+		DetailedReport detailedReport = reports.getDetailedReport();
+		assertNotNull(detailedReport);
+		assertEquals(1, detailedReport.getCertificates().size());
+		assertNotNull(detailedReport.getXmlCertificateById(certificateId));
+		assertEquals(2, detailedReport.getJAXBModel().getTLAnalysis().size());
+		assertEquals(1, detailedReport.getJAXBModel().getBasicBuildingBlocks().size());
+		assertEquals(0, detailedReport.getSignatures().size());
 
 		eu.europa.esig.dss.simplecertificatereport.SimpleCertificateReport simpleReport = reports.getSimpleReport();
 		assertNotNull(simpleReport);
@@ -94,7 +102,7 @@ public class CertificateProcessExecutorTest extends AbstractValidationExecutorTe
 		assertNotNull(simpleReport.getValidationTime());
 		assertNotNull(simpleReport.getJaxbModel());
 		assertEquals(Indication.INDETERMINATE, simpleReport.getCertificateIndication(certificateId));
-		assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, simpleReport.getCertificateSubIndication(certificateId));
+		assertEquals(SubIndication.REVOKED_NO_POE, simpleReport.getCertificateSubIndication(certificateId));
 		assertTrue(Utils.isCollectionNotEmpty(simpleReport.getCertificateCrlUrls(certificateId)));
 		assertNotNull(simpleReport.getCertificateRevocationDate(certificateId));
 		assertEquals(RevocationReason.UNSPECIFIED, simpleReport.getCertificateRevocationReason(certificateId));
@@ -135,12 +143,12 @@ public class CertificateProcessExecutorTest extends AbstractValidationExecutorTe
 		CertificateReports reports = executor.execute();
 		checkReports(reports);
 
-		XmlDetailedReport detailedReportJaxb = reports.getDetailedReportJaxb();
-		assertNotNull(detailedReportJaxb);
-		assertNotNull(detailedReportJaxb.getCertificate());
-		assertEquals(2, detailedReportJaxb.getTLAnalysis().size());
-		assertEquals(1, detailedReportJaxb.getBasicBuildingBlocks().size());
-		assertEquals(0, detailedReportJaxb.getSignatures().size());
+		DetailedReport detailedReport = reports.getDetailedReport();
+		assertNotNull(detailedReport);
+		assertEquals(1, detailedReport.getCertificates().size());
+		assertEquals(2, detailedReport.getJAXBModel().getTLAnalysis().size());
+		assertEquals(1, detailedReport.getJAXBModel().getBasicBuildingBlocks().size());
+		assertEquals(0, detailedReport.getSignatures().size());
 
 		XmlSimpleCertificateReport simpleReportJaxb = reports.getSimpleReportJaxb();
 		assertNotNull(simpleReportJaxb);
@@ -176,12 +184,12 @@ public class CertificateProcessExecutorTest extends AbstractValidationExecutorTe
 		CertificateReports reports = executor.execute();
 		checkReports(reports);
 
-		XmlDetailedReport detailedReportJaxb = reports.getDetailedReportJaxb();
-		assertNotNull(detailedReportJaxb);
-		assertNotNull(detailedReportJaxb.getCertificate());
-		assertEquals(0, detailedReportJaxb.getTLAnalysis().size());
-		assertEquals(1, detailedReportJaxb.getBasicBuildingBlocks().size());
-		assertEquals(0, detailedReportJaxb.getSignatures().size());
+		DetailedReport detailedReport = reports.getDetailedReport();
+		assertNotNull(detailedReport);
+		assertEquals(1, detailedReport.getCertificates().size());
+		assertEquals(0, detailedReport.getJAXBModel().getTLAnalysis().size());
+		assertEquals(1, detailedReport.getJAXBModel().getBasicBuildingBlocks().size());
+		assertEquals(0, detailedReport.getSignatures().size());
 
 		XmlSimpleCertificateReport simpleReportJaxb = reports.getSimpleReportJaxb();
 		assertNotNull(simpleReportJaxb);
@@ -218,7 +226,7 @@ public class CertificateProcessExecutorTest extends AbstractValidationExecutorTe
 	}
 
 	@Test
-	public void invalidTL() throws Exception {
+	public void invalidTLWithWarnLevel() throws Exception {
 		XmlDiagnosticData diagnosticData = DiagnosticDataFacade.newFacade().unmarshall(new File("src/test/resources/cert-validation/invalid-tl.xml"));
 		assertNotNull(diagnosticData);
 
@@ -234,8 +242,36 @@ public class CertificateProcessExecutorTest extends AbstractValidationExecutorTe
 		checkReports(reports);
 
 		eu.europa.esig.dss.simplecertificatereport.SimpleCertificateReport simpleReport = reports.getSimpleReport();
-		assertEquals(CertificateQualification.CERT_FOR_ESIG, simpleReport.getQualificationAtCertificateIssuance());
-		assertEquals(CertificateQualification.CERT_FOR_ESIG, simpleReport.getQualificationAtValidationTime());
+		assertEquals(CertificateQualification.QCERT_FOR_ESIG_QSCD, simpleReport.getQualificationAtCertificateIssuance());
+		assertEquals(CertificateQualification.QCERT_FOR_ESIG_QSCD, simpleReport.getQualificationAtValidationTime());
+	}
+
+	@Test
+	public void invalidTLWithFailLevel() throws Exception {
+		XmlDiagnosticData diagnosticData = DiagnosticDataFacade.newFacade().unmarshall(new File("src/test/resources/cert-validation/invalid-tl.xml"));
+		assertNotNull(diagnosticData);
+
+		String certificateId = "C-86CA5DDDDCB6CA73C77511DFF3C94961BD675CA15111810103942CA7D96DCE1B";
+
+		DefaultCertificateProcessExecutor executor = new DefaultCertificateProcessExecutor();
+		executor.setCertificateId(certificateId);
+		executor.setDiagnosticData(diagnosticData);
+		
+		ValidationPolicy defaultPolicy = loadDefaultPolicy();
+		EIDAS eidasConstraints = defaultPolicy.getEIDASConstraints();
+		LevelConstraint levelConstraint = new LevelConstraint();
+		levelConstraint.setLevel(Level.FAIL);
+		eidasConstraints.setTLWellSigned(levelConstraint);
+		executor.setValidationPolicy(defaultPolicy);
+		
+		executor.setCurrentTime(diagnosticData.getValidationDate());
+
+		CertificateReports reports = executor.execute();
+		checkReports(reports);
+
+		eu.europa.esig.dss.simplecertificatereport.SimpleCertificateReport simpleReport = reports.getSimpleReport();
+		assertEquals(CertificateQualification.NA, simpleReport.getQualificationAtCertificateIssuance());
+		assertEquals(CertificateQualification.NA, simpleReport.getQualificationAtValidationTime());
 	}
 
 	@Test
@@ -384,9 +420,10 @@ public class CertificateProcessExecutorTest extends AbstractValidationExecutorTe
 		checkReports(reports);
 		
 		eu.europa.esig.dss.simplecertificatereport.SimpleCertificateReport simpleReport = reports.getSimpleReport();
-		assertEquals(CertificateQualification.QCERT_FOR_ESIG,
+		assertEquals(
+				CertificateQualification.NA,
 				simpleReport.getQualificationAtCertificateIssuance());
-		assertEquals(CertificateQualification.QCERT_FOR_ESIG, simpleReport.getQualificationAtValidationTime());
+		assertEquals(CertificateQualification.NA, simpleReport.getQualificationAtValidationTime());
 	}
 
 	@Test
@@ -426,8 +463,8 @@ public class CertificateProcessExecutorTest extends AbstractValidationExecutorTe
 		CertificateReports reports = executor.execute();
 		checkReports(reports);
 
-		XmlDetailedReport detailedReportJaxb = reports.getDetailedReportJaxb();
-		XmlCertificate certificate = detailedReportJaxb.getCertificate();
+		DetailedReport detailedReport = reports.getDetailedReport();
+		XmlCertificate certificate = detailedReport.getCertificates().get(0);
 		List<XmlValidationCertificateQualification> validationCertificateQualification = certificate.getValidationCertificateQualification();
 		for (XmlValidationCertificateQualification xmlValidationCertificateQualification : validationCertificateQualification) {
 			assertEquals(Indication.FAILED, xmlValidationCertificateQualification.getConclusion().getIndication());
@@ -455,15 +492,23 @@ public class CertificateProcessExecutorTest extends AbstractValidationExecutorTe
 		assertEquals(CertificateQualification.NA, simpleReport.getQualificationAtValidationTime());
 	}
 	
-	@Test(expected = NullPointerException.class)
+	@Test
 	public void certificateIdIsMissingTest() throws Exception {
-		XmlDiagnosticData diagnosticData = DiagnosticDataFacade.newFacade().unmarshall(new File("src/test/resources/cert-validation/trust-anchor.xml"));
+		XmlDiagnosticData diagnosticData = DiagnosticDataFacade.newFacade()
+				.unmarshall(new File("src/test/resources/cert-validation/trust-anchor.xml"));
 		assertNotNull(diagnosticData);
 		DefaultCertificateProcessExecutor executor = new DefaultCertificateProcessExecutor();
 		executor.setDiagnosticData(diagnosticData);
 		executor.setValidationPolicy(loadDefaultPolicy());
 		executor.setCurrentTime(diagnosticData.getValidationDate());
-		executor.execute();
+		
+		Exception exception = assertThrows(NullPointerException.class, () -> executor.execute());
+		assertEquals("The certificate id is missing", exception.getMessage());
+		
+		executor.setCertificateId("certId");
+		
+		exception = assertThrows(IllegalArgumentException.class, () -> executor.execute());
+		assertEquals("The certificate with the given Id 'certId' has not been found in DiagnosticData", exception.getMessage());
 	}
 	
 	private void checkReports(CertificateReports reports) {

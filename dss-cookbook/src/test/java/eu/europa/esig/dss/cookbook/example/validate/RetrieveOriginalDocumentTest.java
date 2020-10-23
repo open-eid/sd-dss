@@ -20,10 +20,12 @@
  */
 package eu.europa.esig.dss.cookbook.example.validate;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.io.IOException;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
@@ -39,7 +41,7 @@ public class RetrieveOriginalDocumentTest {
 		// tag::demo[]
 
 		// We have our signed document, we want to retrieve the original/signed data
-		DSSDocument signedDocument = new FileDocument("src/test/resources/signedXmlXadesB.xml");
+		DSSDocument signedDocument = new FileDocument("src/test/resources/signature-pool/signedXmlXadesB.xml");
 
 		// We create an instance of DocumentValidator. DSS automatically selects the validator depending of the
 		// signature file
@@ -62,6 +64,8 @@ public class RetrieveOriginalDocumentTest {
 
 		original.save("target/original.xml");
 		// end::demo[]
+		
+		assertNotNull(original);
 
 	}
 

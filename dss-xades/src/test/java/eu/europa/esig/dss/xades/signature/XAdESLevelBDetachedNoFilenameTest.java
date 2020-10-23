@@ -20,15 +20,14 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
@@ -38,30 +37,33 @@ import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.enumerations.SignatureScopeType;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
+import eu.europa.esig.dss.model.SignerLocation;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
+import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 
 public class XAdESLevelBDetachedNoFilenameTest extends AbstractXAdESTestSignature {
 
-	private DocumentSignatureService<XAdESSignatureParameters> service;
+	private DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> service;
 	private XAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		documentToSign = new FileDocument(new File("src/test/resources/sample.xml"));
 		// DSS-1334
 		documentToSign.setName(null);
 
 		signatureParameters = new XAdESSignatureParameters();
-		signatureParameters.bLevel().setSigningDate(new Date());
 		signatureParameters.setSigningCertificate(getSigningCert());
 		signatureParameters.setCertificateChain(getCertificateChain());
 		signatureParameters.setSignaturePackaging(SignaturePackaging.DETACHED);
 		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
+		// DSS-1986
+		signatureParameters.bLevel().setSignerLocation(new SignerLocation());
 
-		service = new XAdESService(getCompleteCertificateVerifier());
+		service = new XAdESService(getOfflineCertificateVerifier());
 	}
 
 	@Override
@@ -72,8 +74,8 @@ public class XAdESLevelBDetachedNoFilenameTest extends AbstractXAdESTestSignatur
 	@Override
 	protected SignedDocumentValidator getValidator(final DSSDocument signedDocument) {
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(signedDocument);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
-		List<DSSDocument> detachedContents = new ArrayList<DSSDocument>();
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
+		List<DSSDocument> detachedContents = new ArrayList<>();
 		// DSS-1290
 		documentToSign.setName(null);
 		detachedContents.add(documentToSign);
@@ -96,7 +98,7 @@ public class XAdESLevelBDetachedNoFilenameTest extends AbstractXAdESTestSignatur
 	}
 
 	@Override
-	protected DocumentSignatureService<XAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> getService() {
 		return service;
 	}
 

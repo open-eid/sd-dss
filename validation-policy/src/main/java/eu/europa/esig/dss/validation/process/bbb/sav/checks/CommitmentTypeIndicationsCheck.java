@@ -21,38 +21,43 @@
 package eu.europa.esig.dss.validation.process.bbb.sav.checks;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import eu.europa.esig.dss.detailedreport.jaxb.XmlSAV;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlCommitmentTypeIndication;
 import eu.europa.esig.dss.enumerations.Indication;
 import eu.europa.esig.dss.enumerations.SubIndication;
+import eu.europa.esig.dss.i18n.I18nProvider;
+import eu.europa.esig.dss.i18n.MessageTag;
 import eu.europa.esig.dss.policy.jaxb.MultiValuesConstraint;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.process.ChainItem;
-import eu.europa.esig.dss.validation.process.MessageTag;
 
 public class CommitmentTypeIndicationsCheck extends ChainItem<XmlSAV> {
 
 	private final SignatureWrapper signature;
 	private final MultiValuesConstraint constraint;
 
-	public CommitmentTypeIndicationsCheck(XmlSAV result, SignatureWrapper signature, MultiValuesConstraint constraint) {
-		super(result, constraint);
+	public CommitmentTypeIndicationsCheck(I18nProvider i18nProvider, XmlSAV result, SignatureWrapper signature, MultiValuesConstraint constraint) {
+		super(i18nProvider, result, constraint);
 		this.signature = signature;
 		this.constraint = constraint;
 	}
 
 	@Override
 	protected boolean process() {
-		List<String> commitmentTypeIdentifiers = signature.getCommitmentTypeIdentifiers();
+		List<XmlCommitmentTypeIndication> commitmentTypeIndications = signature.getCommitmentTypeIndications();
 		List<String> expectedValues = constraint.getId();
 
-		if (Utils.isCollectionEmpty(commitmentTypeIdentifiers)) {
+		if (Utils.isCollectionEmpty(commitmentTypeIndications)) {
 			return false;
 		}
 
 		if (Utils.isCollectionNotEmpty(expectedValues)) {
-			return expectedValues.containsAll(commitmentTypeIdentifiers);
+			List<String> presentIdentifiers = commitmentTypeIndications.stream().map(XmlCommitmentTypeIndication::getIdentifier)
+					.collect(Collectors.toList());
+			return expectedValues.containsAll(presentIdentifiers);
 		}
 
 		return true;

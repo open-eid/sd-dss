@@ -1,29 +1,50 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.cades.signature;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.cades.CAdESSignatureParameters;
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
+import eu.europa.esig.dss.diagnostic.RelatedRevocationWrapper;
+import eu.europa.esig.dss.diagnostic.RevocationWrapper;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
 import eu.europa.esig.dss.diagnostic.TimestampWrapper;
-import eu.europa.esig.dss.enumerations.RevocationOrigin;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
@@ -61,21 +82,21 @@ public class CAdESDoubleLTAValidationDataTest extends PKIFactoryAccess {
 		List<AdvancedSignature> signatures = validator.getSignatures();
 		AdvancedSignature advancedSignature = signatures.get(0);
 		
-		assertEquals(1, advancedSignature.getCRLSource().getCRLBinaryList().size());
-		assertEquals(1, advancedSignature.getOCSPSource().getOCSPResponsesList().size());
+		assertEquals(1, advancedSignature.getCRLSource().getAllRevocationBinaries().size());
+		assertEquals(1, advancedSignature.getOCSPSource().getAllRevocationBinaries().size());
 		
 		TimestampToken timestampToken = advancedSignature.getSignatureTimestamps().get(0);
-		assertEquals(0, timestampToken.getCRLSource().getCRLBinaryList().size());
-		assertEquals(0, timestampToken.getOCSPSource().getOCSPResponsesList().size());
+		assertEquals(0, timestampToken.getCRLSource().getAllRevocationBinaries().size());
+		assertEquals(0, timestampToken.getOCSPSource().getAllRevocationBinaries().size());
 		
 		Reports reports = validator.validateDocument();
 		DiagnosticData diagnosticData = reports.getDiagnosticData();
-		List<String> revocationIds = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId()).getRevocationIds();
-		assertEquals(2, revocationIds.size());
+		List<RelatedRevocationWrapper> relatedRevocationData = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId())
+				.foundRevocations().getRelatedRevocationData();
+		assertEquals(2, relatedRevocationData.size());
 		
 		// ltLevelDoc.save("target/ltLevelDoc.pkcs7");
 		
-
 		// Extend to LTA level with GoodTSACrossCertification
 		service.setTspSource(getGoodTsaCrossCertification());
 
@@ -93,25 +114,26 @@ public class CAdESDoubleLTAValidationDataTest extends PKIFactoryAccess {
 		signatures = validator.getSignatures();
 		advancedSignature = signatures.get(0);
 		
-		assertEquals(1, advancedSignature.getCRLSource().getCRLBinaryList().size());
-		assertEquals(1, advancedSignature.getOCSPSource().getOCSPResponsesList().size());
+		assertEquals(1, advancedSignature.getCRLSource().getAllRevocationBinaries().size());
+		assertEquals(1, advancedSignature.getOCSPSource().getAllRevocationBinaries().size());
 		
 		TimestampToken archiveTimestamp = advancedSignature.getArchiveTimestamps().get(0);
-		assertEquals(0, archiveTimestamp.getCRLSource().getCRLBinaryList().size());
-		assertEquals(0, archiveTimestamp.getOCSPSource().getOCSPResponsesList().size());
+		assertEquals(0, archiveTimestamp.getCRLSource().getAllRevocationBinaries().size());
+		assertEquals(0, archiveTimestamp.getOCSPSource().getAllRevocationBinaries().size());
 		
 		extendParams.setCertificateChain(getCertificateChain());
 		
 		diagnosticData = reports.getDiagnosticData();
-		List<String> revocationIdsLtaLevel = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId()).getRevocationIds();
-		assertEquals(2, revocationIdsLtaLevel.size());
-		for (String id : revocationIds) {
-			assertTrue(revocationIdsLtaLevel.contains(id));
+		List<RelatedRevocationWrapper> relatedRevocationDataLTALevel = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId())
+				.foundRevocations().getRelatedRevocationData();
+		assertEquals(2, relatedRevocationDataLTALevel.size());
+		for (RevocationWrapper revocationWrapper : relatedRevocationData) {
+			assertTrue(relatedRevocationDataLTALevel.contains(revocationWrapper));
 		}
 		
 		
 		// Extend to second LTA level with GoodTSACrossCertification
-		// This must force addition of missing revocation data to the previously created timestamp
+		// A new revocation data shall be added into the root CMS SignedData
 		DSSDocument doubleLtaDoc = service.extendDocument(ltaDoc, extendParams);
 		
 		// doubleLtaDoc.save("target/doubleLtaDoc.pkcs7");
@@ -125,15 +147,15 @@ public class CAdESDoubleLTAValidationDataTest extends PKIFactoryAccess {
 		signatures = validator.getSignatures();
 		advancedSignature = signatures.get(0);
 		
-		assertEquals(1, advancedSignature.getCRLSource().getCRLBinaryList().size());
-		assertEquals(1, advancedSignature.getOCSPSource().getOCSPResponsesList().size());
+		assertEquals(2, advancedSignature.getCRLSource().getAllRevocationBinaries().size());
+		assertEquals(1, advancedSignature.getOCSPSource().getAllRevocationBinaries().size());
 		
-		assertEquals(2, advancedSignature.getCompleteCRLSource().getCRLBinaryList().size());
-		assertEquals(1, advancedSignature.getCompleteOCSPSource().getOCSPResponsesList().size());
+		assertEquals(2, advancedSignature.getCompleteCRLSource().getAllRevocationBinaries().size());
+		assertEquals(1, advancedSignature.getCompleteOCSPSource().getAllRevocationBinaries().size());
 		
 		archiveTimestamp = advancedSignature.getArchiveTimestamps().get(0);
-		assertEquals(1, archiveTimestamp.getCRLSource().getCRLBinaryList().size());
-		assertEquals(0, archiveTimestamp.getOCSPSource().getOCSPResponsesList().size());
+		assertEquals(0, archiveTimestamp.getCRLSource().getAllRevocationBinaries().size());
+		assertEquals(0, archiveTimestamp.getOCSPSource().getAllRevocationBinaries().size());
 		
 		diagnosticData = reports.getDiagnosticData();
 		
@@ -145,23 +167,50 @@ public class CAdESDoubleLTAValidationDataTest extends PKIFactoryAccess {
 			CertificateWrapper signingCertificate = timestamp.getSigningCertificate();
 			assertNotNull(signingCertificate);
 			assertTrue(signingCertificate.isRevocationDataAvailable());
-			assertTrue(timestamp.getDigestMatchers().get(0).isDataFound());
-			assertTrue(timestamp.getDigestMatchers().get(0).isDataIntact());
-		}
-		
-		assertEquals(0, allTimestamps.get(0).getTimestampedRevocationIds().size());
-		assertEquals(2, allTimestamps.get(1).getTimestampedRevocationIds().size());
-		assertEquals(3, allTimestamps.get(2).getTimestampedRevocationIds().size());
-		
-		List<String> revocationIdsDoubleLtaLevel = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId()).getRevocationIds();
-		assertEquals(3, revocationIdsDoubleLtaLevel.size());
-		for (String id : revocationIdsLtaLevel) {
-			assertTrue(revocationIdsDoubleLtaLevel.contains(id));
+			assertTrue(timestamp.isMessageImprintDataFound());
+			assertTrue(timestamp.isMessageImprintDataIntact());
 		}
 		
 		SignatureWrapper signature = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId());
 		assertNotNull(signature);
-		assertEquals(1, signature.getRevocationIdsByOrigin(RevocationOrigin.TIMESTAMP_REVOCATION_VALUES).size());
+
+		List<TimestampWrapper> timestampList = signature.getTimestampList();
+		
+		TimestampWrapper signatureTimestampWrapper = timestampList.get(0);
+		assertEquals(2, signatureTimestampWrapper.foundCertificates().getRelatedCertificates().size());
+		assertEquals(1, signatureTimestampWrapper.foundCertificates().getRelatedCertificateRefs().size());
+		assertEquals(0, signatureTimestampWrapper.foundCertificates().getOrphanCertificateRefs().size());
+		assertEquals(0, signatureTimestampWrapper.foundRevocations().getRelatedRevocationData().size());
+		assertEquals(0, signatureTimestampWrapper.foundRevocations().getRelatedRevocationRefs().size());
+		assertEquals(0, signatureTimestampWrapper.foundRevocations().getOrphanRevocationRefs().size());
+		assertEquals(0, signatureTimestampWrapper.getTimestampedRevocations().size());
+		
+		TimestampWrapper archiveTimestampWrapper = timestampList.get(1);
+		assertEquals(4, archiveTimestampWrapper.foundCertificates().getRelatedCertificates().size());
+		assertEquals(1, archiveTimestampWrapper.foundCertificates().getRelatedCertificateRefs().size());
+		assertEquals(0, archiveTimestampWrapper.foundCertificates().getOrphanCertificateRefs().size());
+		assertEquals(0, archiveTimestampWrapper.foundRevocations().getRelatedRevocationData().size());
+		assertEquals(0, archiveTimestampWrapper.foundRevocations().getRelatedRevocationRefs().size());
+		assertEquals(0, archiveTimestampWrapper.foundRevocations().getOrphanRevocationRefs().size());
+		assertEquals(2, archiveTimestampWrapper.getTimestampedRevocations().size());
+
+		TimestampWrapper secondArchiveTimestampWrapper = timestampList.get(2);
+		assertEquals(4, secondArchiveTimestampWrapper.foundCertificates().getRelatedCertificates().size());
+		assertEquals(1, secondArchiveTimestampWrapper.foundCertificates().getRelatedCertificateRefs().size());
+		assertEquals(0, secondArchiveTimestampWrapper.foundCertificates().getOrphanCertificateRefs().size());
+		assertEquals(0, secondArchiveTimestampWrapper.foundRevocations().getRelatedRevocationData().size());
+		assertEquals(0, archiveTimestampWrapper.foundRevocations().getRelatedRevocationRefs().size());
+		assertEquals(0, archiveTimestampWrapper.foundRevocations().getOrphanRevocationRefs().size());
+		assertEquals(3, secondArchiveTimestampWrapper.getTimestampedRevocations().size());
+		
+		List<RelatedRevocationWrapper> revocationDataDoubleLtaLevel = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId())
+				.foundRevocations().getRelatedRevocationData();
+		assertEquals(3, revocationDataDoubleLtaLevel.size());
+		for (RevocationWrapper revocation : relatedRevocationDataLTALevel) {
+			assertTrue(revocationDataDoubleLtaLevel.contains(revocation));
+		}
+		
+		assertEquals(3, diagnosticData.getAllRevocationData().size());
 		
 		ValidationReportType etsiValidationReportJaxb = reports.getEtsiValidationReportJaxb();
 		List<ValidationObjectType> validationObjects = etsiValidationReportJaxb.getSignatureValidationObjects().getValidationObject();
@@ -171,7 +220,7 @@ public class CAdESDoubleLTAValidationDataTest extends PKIFactoryAccess {
 			POEProvisioningType poeProvisioning = validationObject.getPOEProvisioning();
 			if (poeProvisioning != null) {
 				
-				List<String> timestampedObjectIds = new ArrayList<String>();
+				List<String> timestampedObjectIds = new ArrayList<>();
 				
 				assertNotNull(poeProvisioning.getPOETime());
 				assertNotNull(poeProvisioning.getSignatureReference());

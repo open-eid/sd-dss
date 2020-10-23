@@ -20,12 +20,16 @@
  */
 package eu.europa.esig.dss.validation;
 
+import eu.europa.esig.dss.alert.ExceptionOnStatusAlert;
+import eu.europa.esig.dss.alert.LogOnStatusAlert;
+import eu.europa.esig.dss.alert.StatusAlert;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.model.x509.revocation.crl.CRL;
+import eu.europa.esig.dss.model.x509.revocation.ocsp.OCSP;
 import eu.europa.esig.dss.spi.client.http.DataLoader;
-import eu.europa.esig.dss.spi.x509.CertificatePool;
 import eu.europa.esig.dss.spi.x509.CertificateSource;
-import eu.europa.esig.dss.spi.x509.revocation.crl.CRLSource;
-import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPSource;
+import eu.europa.esig.dss.spi.x509.ListCertificateSource;
+import eu.europa.esig.dss.spi.x509.revocation.RevocationSource;
 
 /**
  * Provides information on the sources to be used in the validation process in
@@ -39,14 +43,14 @@ public interface CertificateVerifier {
 	 * @return the used OCSP source for external access (web, filesystem,
 	 *         cached,...)
 	 */
-	OCSPSource getOcspSource();
+	RevocationSource<OCSP> getOcspSource();
 
 	/**
 	 * Returns the CRL source associated with this verifier.
 	 *
 	 * @return the used CRL source for external access (web, filesystem, cached,...)
 	 */
-	CRLSource getCrlSource();
+	RevocationSource<CRL> getCrlSource();
 
 	/**
 	 * Defines the source of CRL used by this class
@@ -55,7 +59,7 @@ public interface CertificateVerifier {
 	 *                  the CRL source to set for external access (web, filesystem,
 	 *                  cached,...)
 	 */
-	void setCrlSource(final CRLSource crlSource);
+	void setCrlSource(final RevocationSource<CRL> crlSource);
 
 	/**
 	 * Defines the source of OCSP used by this class
@@ -64,40 +68,97 @@ public interface CertificateVerifier {
 	 *                   the OCSP source to set for external access (web,
 	 *                   filesystem, cached,...)
 	 */
-	void setOcspSource(final OCSPSource ocspSource);
+	void setOcspSource(final RevocationSource<OCSP> ocspSource);
 
 	/**
-	 * Returns the trusted certificates source associated with this verifier. This
-	 * source is used to identify the trusted anchors.
+	 * Returns the trusted certificate sources associated with this verifier. These
+	 * sources are used to identify the trusted anchors.
 	 *
-	 * @return the certificate source which contains trusted certificates
+	 * @return the certificate sources which contain trusted certificates
 	 */
-	CertificateSource getTrustedCertSource();
+	ListCertificateSource getTrustedCertSources();
 
 	/**
-	 * Sets the trusted certificates source.
+	 * Sets the trusted certificate source.
+	 * 
+	 * @deprecated since 5.7. Will be removed in 5.8.
+	 * Use {@code setTrustedCertSources(CertificateSource... certSources)} instead
 	 *
 	 * @param certSource
 	 *                   The certificates source with known trusted certificates
 	 */
+	@Deprecated
 	void setTrustedCertSource(final CertificateSource certSource);
+	
+	/**
+	 * Sets multiple trusted certificate sources.
+	 *
+	 * @param certSources
+	 *                   The certificate sources with known trusted certificates
+	 */
+	void setTrustedCertSources(final CertificateSource... certSources);
 
 	/**
-	 * Returns the adjunct certificates source associated with this verifier.
+	 * Adds trusted certificate sources to an existing list of trusted certificate sources
+	 *
+	 * @param certSources
+	 *                   The certificate sources with known trusted certificates
+	 */
+	void addTrustedCertSources(final CertificateSource... certSources);
+
+	/**
+	 * Sets a list of trusted certificate sources
+	 *
+	 * @param trustedListCertificateSource
+	 *                   {@link ListCertificateSource} of trusted cert sources
+	 */
+	void setTrustedCertSources(final ListCertificateSource trustedListCertificateSource);
+
+	/**
+	 * Returns the list of adjunct certificate sources assigned to this verifier.
 	 *
 	 * @return the certificate source which contains additional certificate (missing
 	 *         CA,...)
 	 */
-	CertificateSource getAdjunctCertSource();
+	ListCertificateSource getAdjunctCertSources();
 
 	/**
-	 * Associates an adjunct certificates source to this verifier.
+	 * Sets an adjunct certificate source to this verifier.
+	 * 
+	 * @deprecated since 5.7. Will be removed in 5.8.
+	 * Use {@code setAdjunctCertSource(CertificateSource... certSources)} instead
 	 *
 	 * @param adjunctCertSource
 	 *                          the certificate source with additional and missing
 	 *                          certificates
 	 */
+	@Deprecated
 	void setAdjunctCertSource(final CertificateSource adjunctCertSource);
+	
+	/**
+	 * Sets multiple adjunct certificate sources.
+	 *
+	 * @param certSources
+	 *                          the certificate sources with additional and/or missing
+	 *                          certificates
+	 */
+	void setAdjunctCertSources(final CertificateSource... certSources);
+
+	/**
+	 * Adds adjunct certificate sources to an existing list of adjunct certificate sources
+	 *
+	 * @param certSources
+	 *                   The certificate sources with additional certificates
+	 */
+	void addAdjunctCertSources(final CertificateSource... certSources);
+
+	/**
+	 * Sets a list of adjunct certificate sources
+	 *
+	 * @param adjunctListCertificateSource
+	 *                   {@link ListCertificateSource} of adjunct cert sources
+	 */
+	void setAdjunctCertSources(final ListCertificateSource adjunctListCertificateSource);
 
 	/**
 	 * The data loader used to access AIA certificate source.
@@ -120,7 +181,7 @@ public interface CertificateVerifier {
 	 * 
 	 * @return the CRL sources from the signature
 	 */
-	ListCRLSource getSignatureCRLSource();
+	ListRevocationSource<CRL> getSignatureCRLSource();
 
 	/**
 	 * This method allows to set the CRL source (information extracted from
@@ -129,14 +190,14 @@ public interface CertificateVerifier {
 	 * @param signatureCRLSource
 	 *                           the CRL sources from the signature
 	 */
-	void setSignatureCRLSource(final ListCRLSource signatureCRLSource);
+	void setSignatureCRLSource(final ListRevocationSource<CRL> signatureCRLSource);
 
 	/**
 	 * This method returns the OCSP source (information extracted from signatures).
 	 * 
-	 * @return the OCSP sources from the signature
+	 * @return the OCSP sources from the signatures
 	 */
-	ListOCSPSource getSignatureOCSPSource();
+	ListRevocationSource<OCSP> getSignatureOCSPSource();
 
 	/**
 	 * This method allows to set the OCSP source (information extracted from
@@ -145,28 +206,24 @@ public interface CertificateVerifier {
 	 * @param signatureOCSPSource
 	 *                            the OCSP sources from the signature
 	 */
-	void setSignatureOCSPSource(final ListOCSPSource signatureOCSPSource);
+	void setSignatureOCSPSource(final ListRevocationSource<OCSP> signatureOCSPSource);
 
 	/**
-	 * This method allows to change the behavior on missing revocation data (LT/LTA
-	 * augmentation). (default : true)
+	 * This method returns the Certificate Source (information extracted from
+	 * signatures)
 	 * 
-	 * @param throwExceptionOnMissingRevocationData
-	 *                                              true if an exception is raised
-	 *                                              on missing revocation data,
-	 *                                              false will only display a
-	 *                                              warning message
+	 * @return the certificate sources from the signatures
 	 */
-	void setExceptionOnMissingRevocationData(boolean throwExceptionOnMissingRevocationData);
+	ListCertificateSource getSignatureCertificateSource();
 
 	/**
-	 * This method returns true if an exception needs to be thrown on missing
-	 * revocation data.
-	 * 
-	 * @return true if an exception is thrown, false if a warning message is added
+	 * This method allows to set the Certificate source (information extracted from
+	 * signatures).
+	 *
+	 * @param signatureCertificateSource the Certificate sources from the signatures
 	 */
-	boolean isExceptionOnMissingRevocationData();
-	
+	void setSignatureCertificateSource(ListCertificateSource signatureCertificateSource);
+
 	/**
 	 * This method allows to change the Digest Algorithm that will be used for tokens' digest calculation
 	 * @param digestAlgorithm {@link DigestAlgorithm} to use
@@ -180,138 +237,100 @@ public interface CertificateVerifier {
 	DigestAlgorithm getDefaultDigestAlgorithm();
 	
 	/**
-	 * This method allows to change the behavior by including raw certificate tokens
-	 * in the diagnostic data report.
-	 * 
-	 * @param include
-	 *                true if raw certificate tokens should be included (default:
-	 *                false)
-	 */
-	void setIncludeCertificateTokenValues(boolean include);
-
-	/**
-	 * This method returns true if the certificate tokens need to be exported in the
-	 * diagnostic data report.
-	 * 
-	 * @return true if raw certificate tokens should be included in the diagnotic
-	 *         data report (default: false)
-	 */
-	boolean isIncludeCertificateTokenValues();
-
-	/**
-	 * This method allows to change the behavior by including raw revocation data in
-	 * the diagnostic data report.
-	 * 
-	 * @param include
-	 *                true if raw revocation data should be included (default:
-	 *                false)
-	 */
-	void setIncludeCertificateRevocationValues(boolean include);
-
-	/**
-	 * This method returns true if the revocation data need to be exported in the
-	 * diagnostic data report.
-	 * 
-	 * @return true if raw revocation data should be included in the diagnotic data
-	 *         report (default: false)
-	 */
-	boolean isIncludeCertificateRevocationValues();
-
-	/**
-	 * This method allows to change the behavior by including raw timestamp tokens
-	 * in the diagnostic data report.
-	 * 
-	 * @param include
-	 *                true if raw timestamp tokens should be included (default:
-	 *                false)
-	 */
-	void setIncludeTimestampTokenValues(boolean include);
-
-	/**
-	 * This method returns true if the timestamp tokens need to be exported in the
-	 * diagnostic data report.
-	 * 
-	 * @return true if raw timestamp tokens should be included in the diagnotic data
-	 *         report (default: false)
-	 */
-	boolean isIncludeTimestampTokenValues();
-
-	/**
 	 * This method allows to change the behavior on invalid timestamp (LT/LTA
-	 * augmentation). (default : true)
+	 * augmentation).
 	 * 
-	 * @param throwExceptionOnInvalidTimestamp
-	 *                                         true if an exception is raised on
-	 *                                         invalid timestamp, false will only
-	 *                                         display a warning message
+	 * Default : {@link ExceptionOnStatusAlert} - throw an exception.
+	 * 
+	 * @param alertOnInvalidTimestamp defines a behaviour in case of invalid
+	 *                                timestamp
 	 */
-	void setExceptionOnInvalidTimestamp(boolean throwExceptionOnInvalidTimestamp);
+	void setAlertOnInvalidTimestamp(StatusAlert alertOnInvalidTimestamp);
 
 	/**
 	 * This method returns true if an exception needs to be thrown on invalid
 	 * timestamp.
 	 * 
-	 * @return true if an exception is thrown, false if a warning message is added
+	 * @return {@link StatusAlert} to be processed in case of an invalid timestamp
 	 */
-	boolean isExceptionOnInvalidTimestamp();
+	StatusAlert getAlertOnInvalidTimestamp();
+
+	/**
+	 * This method allows to change the behavior on missing revocation data (LT/LTA
+	 * augmentation).
+	 * 
+	 * Default : {@link ExceptionOnStatusAlert} - throw an exception.
+	 * 
+	 * @param alertOnMissingRevocationData defines a behaviour in case of missing
+	 *                                     revocation data
+	 */
+	void setAlertOnMissingRevocationData(StatusAlert alertOnMissingRevocationData);
+
+	/**
+	 * This method returns true if an exception needs to be thrown on missing
+	 * revocation data.
+	 * 
+	 * @return {@link StatusAlert} to be processed in case of missing revocation
+	 *         data
+	 */
+	StatusAlert getAlertOnMissingRevocationData();
 
 	/**
 	 * This method allows to change the behavior on revoked certificates (LT/LTA
-	 * augmentation). (default : true)
+	 * augmentation).
 	 * 
-	 * @param throwExceptionOnRevokedCertificate
-	 *                                           true if an exception is raised on
-	 *                                           revoked certificate, false will
-	 *                                           only display a warning message
+	 * Default : {@link ExceptionOnStatusAlert} - throw an exception.
+	 * 
+	 * @param alertOnRevokedCertificate defines a behaviour in case of revoked
+	 *                                  certificate
 	 */
-	void setExceptionOnRevokedCertificate(boolean throwExceptionOnRevokedCertificate);
+	void setAlertOnRevokedCertificate(StatusAlert alertOnRevokedCertificate);
 
 	/**
 	 * This method returns true if an exception needs to be thrown on revoked
 	 * certificate.
 	 * 
-	 * @return true if an exception is thrown, false if a warning message is added
+	 * @return {@link StatusAlert} to be processed in case of revoked certificate
 	 */
-	boolean isExceptionOnRevokedCertificate();
+	StatusAlert getAlertOnRevokedCertificate();
 
 	/**
-	 * This method allows to change the behavior on revocation data issued after
-	 * a control time. (default : false)
+	 * This method allows to change the behavior on revocation data issued after a
+	 * control time.
 	 * 
-	 * @param exceptionOnNoRevocationAfterBestSignatureTime
-	 *                                           true if an exception is raised on
-	 *                                           no revocation data issued after the bestSignatureTime,
-	 *                                           false will only display a warning message
+	 * Default : {@link LogOnStatusAlert} - log a warning.
+	 * 
+	 * @param alertOnNoRevocationAfterBestSignatureTime defines a behaviour in case
+	 *                                                  of no revocation data issued
+	 *                                                  after the bestSignatureTime
 	 */
-	void setExceptionOnNoRevocationAfterBestSignatureTime(boolean exceptionOnNoRevocationAfterBestSignatureTime);
+	void setAlertOnNoRevocationAfterBestSignatureTime(StatusAlert alertOnNoRevocationAfterBestSignatureTime);
 	
 	/**
-	 * This method returns true if an exception needs to be thrown in case if
-	 * no revocation data obtained with an issuance time after the bestSignatureTime
+	 * This method returns true if an exception needs to be thrown in case if no
+	 * revocation data obtained with an issuance time after the bestSignatureTime
 	 * 
-	 * @return true if an exception is thrown, false if a warning message is added
+	 * @return {@link StatusAlert} to be processed in case of no revocation data
+	 *         after best signature time
 	 */
-	boolean isExceptionOnNoRevocationAfterBestSignatureTime();
-
+	StatusAlert getAlertOnNoRevocationAfterBestSignatureTime();
 	
 	/**
 	 * This method allows to change the behavior on uncovered POE (timestamp).
-	 * (default : false)
 	 * 
-	 * @param throwExceptionOnUncoveredPOE
-	 *                                     true if an exception is raised on
-	 *                                     uncovered timestamp, false will only
-	 *                                     display a warning message
+	 * Default : {@link LogOnStatusAlert} - log a warning.
+	 * 
+	 * @param alertOnUncoveredPOE defines a behaviour in case of uncovered POE
 	 */
-	void setExceptionOnUncoveredPOE(boolean throwExceptionOnUncoveredPOE);
+	void setAlertOnUncoveredPOE(StatusAlert alertOnUncoveredPOE);
 	
 	/**
 	 * This method returns true if an exception needs to be thrown on uncovered
 	 * POE(timestamp).
 	 * 
-	 * @return true if an exception is thrown, false if a warning message is added
+	 * @return {@link StatusAlert} to be processed in case of uncovered POE
 	 */
-	boolean isExceptionOnUncoveredPOE();
+	StatusAlert getAlertOnUncoveredPOE();
 
 	/**
 	 * This method allows to enable revocation checking for untrusted certificate
@@ -331,11 +350,5 @@ public interface CertificateVerifier {
 	 *         chains
 	 */
 	boolean isCheckRevocationForUntrustedChains();
-
-	/**
-	 * This method creates the validation pool of certificates which is used
-	 * during the validation process.
-	 */
-	CertificatePool createValidationPool();
 
 }

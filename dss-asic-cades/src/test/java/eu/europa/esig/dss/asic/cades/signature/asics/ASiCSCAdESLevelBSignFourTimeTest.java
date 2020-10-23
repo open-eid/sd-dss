@@ -20,14 +20,14 @@
  */
 package eu.europa.esig.dss.asic.cades.signature.asics;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Date;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESSignatureParameters;
 import eu.europa.esig.dss.asic.cades.signature.ASiCWithCAdESService;
@@ -39,7 +39,7 @@ import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
 
@@ -56,50 +56,38 @@ public class ASiCSCAdESLevelBSignFourTimeTest extends PKIFactoryAccess {
 		signatureParameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_B);
 		signatureParameters.aSiC().setContainerType(ASiCContainerType.ASiC_S);
 
-		ASiCWithCAdESService service = new ASiCWithCAdESService(getCompleteCertificateVerifier());
+		ASiCWithCAdESService service = new ASiCWithCAdESService(getOfflineCertificateVerifier());
 
 		ToBeSigned dataToSign = service.getDataToSign(documentToSign, signatureParameters);
 		SignatureValue signatureValue = getToken().sign(dataToSign, signatureParameters.getDigestAlgorithm(), getPrivateKeyEntry());
 		DSSDocument signedDocument = service.signDocument(documentToSign, signatureParameters, signatureValue);
 
 		signatureParameters.bLevel().setSigningDate(new Date());
-		signatureParameters.setSigningCertificate(getSigningCert());
-		signatureParameters.setCertificateChain(getCertificateChain());
-		signatureParameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_B);
-		signatureParameters.aSiC().setContainerType(ASiCContainerType.ASiC_S);
 
-		service = new ASiCWithCAdESService(getCompleteCertificateVerifier());
+		service = new ASiCWithCAdESService(getOfflineCertificateVerifier());
 
 		dataToSign = service.getDataToSign(signedDocument, signatureParameters);
 		signatureValue = getToken().sign(dataToSign, signatureParameters.getDigestAlgorithm(), getPrivateKeyEntry());
 		DSSDocument resignedDocument = service.signDocument(signedDocument, signatureParameters, signatureValue);
 
 		signatureParameters.bLevel().setSigningDate(new Date());
-		signatureParameters.setSigningCertificate(getSigningCert());
-		signatureParameters.setCertificateChain(getCertificateChain());
-		signatureParameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_B);
-		signatureParameters.aSiC().setContainerType(ASiCContainerType.ASiC_S);
 
-		service = new ASiCWithCAdESService(getCompleteCertificateVerifier());
+		service = new ASiCWithCAdESService(getOfflineCertificateVerifier());
 
 		dataToSign = service.getDataToSign(resignedDocument, signatureParameters);
 		signatureValue = getToken().sign(dataToSign, signatureParameters.getDigestAlgorithm(), getPrivateKeyEntry());
 		resignedDocument = service.signDocument(resignedDocument, signatureParameters, signatureValue);
 
 		signatureParameters.bLevel().setSigningDate(new Date());
-		signatureParameters.setSigningCertificate(getSigningCert());
-		signatureParameters.setCertificateChain(getCertificateChain());
-		signatureParameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_B);
-		signatureParameters.aSiC().setContainerType(ASiCContainerType.ASiC_S);
 
-		service = new ASiCWithCAdESService(getCompleteCertificateVerifier());
+		service = new ASiCWithCAdESService(getOfflineCertificateVerifier());
 
 		dataToSign = service.getDataToSign(resignedDocument, signatureParameters);
 		signatureValue = getToken().sign(dataToSign, signatureParameters.getDigestAlgorithm(), getPrivateKeyEntry());
 		resignedDocument = service.signDocument(resignedDocument, signatureParameters, signatureValue);
 
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(resignedDocument);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 
 		Reports reports = validator.validateDocument();
 

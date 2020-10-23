@@ -29,7 +29,7 @@ import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DERSet;
 import org.bouncycastle.asn1.DLSet;
 import org.bouncycastle.asn1.cms.AttributeTable;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,18 +45,20 @@ import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
-import eu.europa.esig.dss.test.signature.AbstractPkiFactoryTestDocumentSignatureService;
 import eu.europa.esig.dss.test.signature.ExternalSignatureResult;
 
-public class CAdESLevelBExternalSignatureTest extends AbstractPkiFactoryTestDocumentSignatureService<CAdESSignatureParameters> {
-	private static final String HELLO_WORLD = "Hello World";
+public class CAdESLevelBExternalSignatureTest extends AbstractCAdESTestSignature {
+	
 	private static final Logger LOG = LoggerFactory.getLogger(CAdESLevelBExternalSignatureTest.class);
-	private DocumentSignatureService<CAdESSignatureParameters> service;
+	
+	private static final String HELLO_WORLD = "Hello World";
+	
+	private DocumentSignatureService<CAdESSignatureParameters, CAdESTimestampParameters> service;
 	private CAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 	private Date signingDate;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		documentToSign = new InMemoryDocument(HELLO_WORLD.getBytes());
 
@@ -68,14 +70,14 @@ public class CAdESLevelBExternalSignatureTest extends AbstractPkiFactoryTestDocu
 		signingDate = new Date();
 		signatureParameters.bLevel().setSigningDate(signingDate);
 
-		service = new CAdESService(getCompleteCertificateVerifier());
+		service = new CAdESService(getOfflineCertificateVerifier());
 	}
 
 	@Override
 	protected DSSDocument sign() {
 		DSSDocument toBeSigned = getDocumentToSign();
 		CAdESSignatureParameters params = getSignatureParameters();
-		DocumentSignatureService<CAdESSignatureParameters> service = getService();
+		DocumentSignatureService<CAdESSignatureParameters, CAdESTimestampParameters> service = getService();
 
 		// Generate toBeSigned without signing certificate
 		assert params.getSigningCertificate() == null;
@@ -142,7 +144,7 @@ public class CAdESLevelBExternalSignatureTest extends AbstractPkiFactoryTestDocu
 	}
 
 	@Override
-	protected DocumentSignatureService<CAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<CAdESSignatureParameters, CAdESTimestampParameters> getService() {
 		return service;
 	}
 

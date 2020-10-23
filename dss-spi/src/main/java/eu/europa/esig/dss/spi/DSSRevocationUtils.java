@@ -24,21 +24,21 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.ASN1OctetString;
-import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.DERNull;
 import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DERSequence;
-import org.bouncycastle.asn1.DERTaggedObject;
+import org.bouncycastle.asn1.esf.OtherHash;
 import org.bouncycastle.asn1.ocsp.BasicOCSPResponse;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.ocsp.OCSPResponse;
 import org.bouncycastle.asn1.ocsp.OCSPResponseStatus;
 import org.bouncycastle.asn1.ocsp.ResponderID;
 import org.bouncycastle.asn1.ocsp.ResponseBytes;
-import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.cert.ocsp.CertificateID;
@@ -53,11 +53,13 @@ import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.model.Digest;
 import eu.europa.esig.dss.model.x509.CertificateToken;
+import eu.europa.esig.dss.spi.x509.ResponderId;
 import eu.europa.esig.dss.spi.x509.revocation.crl.CRLToken;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPToken;
-import eu.europa.esig.dss.spi.x509.revocation.ocsp.ResponderId;
 import eu.europa.esig.dss.utils.Utils;
 
 /**
@@ -78,38 +80,39 @@ public final class DSSRevocationUtils {
 	}
 
 	/**
-	 * This method allows to create a {@code BasicOCSPResp} from a {@code DERSequence}.
-	 * The value for response SHALL be the DER encoding of BasicOCSPResponse (RFC 2560).
+	 * This method allows to create a {@code BasicOCSPResp} from a
+	 * {@code ASN1Sequence}. The value for response SHALL be the DER encoding of
+	 * BasicOCSPResponse (RFC 2560).
 	 *
-	 * @param derSequence
-	 *            {@code DERSequence} to convert to {@code BasicOCSPResp}
+	 * @param asn1Sequence
+	 *                     {@code ASN1Sequence} to convert to {@code BasicOCSPResp}
 	 * @return {@code BasicOCSPResp}
 	 */
-	public static BasicOCSPResp getBasicOcspResp(final DERSequence derSequence) {
+	public static BasicOCSPResp getBasicOcspResp(final ASN1Sequence asn1Sequence) {
 		BasicOCSPResp basicOCSPResp = null;
 		try {
-			final BasicOCSPResponse basicOcspResponse = BasicOCSPResponse.getInstance(derSequence);
+			final BasicOCSPResponse basicOcspResponse = BasicOCSPResponse.getInstance(asn1Sequence);
 			basicOCSPResp = new BasicOCSPResp(basicOcspResponse);
 		} catch (Exception e) {
-			LOG.error("Impossible to create BasicOCSPResp from DERSequence!", e);
+			LOG.error("Impossible to create BasicOCSPResp from ASN1Sequence!", e);
 		}
 		return basicOCSPResp;
 	}
 
 	/**
-	 * This method allows to create a {@code OCSPResp} from a {@code DERSequence}.
+	 * This method allows to create a {@code OCSPResp} from a {@code ASN1Sequence}.
 	 *
-	 * @param derSequence
-	 *            {@code DERSequence} to convert to {@code OCSPResp}
+	 * @param asn1Sequence
+	 *                    {@code ASN1Sequence} to convert to {@code OCSPResp}
 	 * @return {@code OCSPResp}
 	 */
-	public static OCSPResp getOcspResp(final DERSequence derSequence) {
+	public static OCSPResp getOcspResp(final ASN1Sequence asn1Sequence) {
 		OCSPResp ocspResp = null;
 		try {
-			final OCSPResponse ocspResponse = OCSPResponse.getInstance(derSequence);
+			final OCSPResponse ocspResponse = OCSPResponse.getInstance(asn1Sequence);
 			ocspResp = new OCSPResp(ocspResponse);
 		} catch (Exception e) {
-			LOG.error("Impossible to create OCSPResp from DERSequence!", e);
+			LOG.error("Impossible to create OCSPResp from ASN1Sequence!", e);
 		}
 		return ocspResp;
 	}
@@ -183,6 +186,16 @@ public final class DSSRevocationUtils {
 		// ocspResp.hashCode());
 		return new OCSPResp(ocspResponse);
 	}
+	
+	/**
+	 * Returns a DigestAlgorithm used in the given {@code singleResp}
+	 * 
+	 * @param singleResp {@link SingleResp} to extract the used SingleResp from
+	 * @return {@link SingleResp}
+	 */
+	public static DigestAlgorithm getUsedDigestAlgorithm(final SingleResp singleResp) {
+		return DigestAlgorithm.forOID(singleResp.getCertID().getHashAlgOID().getId());
+	}
 
 	/**
 	 * fix for certId.equals methods that doesn't work very well.
@@ -221,12 +234,15 @@ public final class DSSRevocationUtils {
 	 *            {@code CertificateToken} for which the id is created
 	 * @param issuerCert
 	 *            {@code CertificateToken} issuer certificate of the {@code cert}
+	 * @param digestAlgorithm
+	 *            {@code DigestAlgorithm} to be used for CertificateID hash calculation
 	 * @return {@code CertificateID}
 	 */
-	public static CertificateID getOCSPCertificateID(final CertificateToken cert, final CertificateToken issuerCert) {
+	public static CertificateID getOCSPCertificateID(final CertificateToken cert, final CertificateToken issuerCert, 
+			final DigestAlgorithm digestAlgorithm) {
 		try {
 			final BigInteger serialNumber = cert.getSerialNumber();
-			final DigestCalculator digestCalculator = getSHA1DigestCalculator();
+			final DigestCalculator digestCalculator = getDigestCalculator(digestAlgorithm);
 			final X509CertificateHolder x509CertificateHolder = DSSASN1Utils.getX509CertificateHolder(issuerCert);
 			return new CertificateID(digestCalculator, x509CertificateHolder, serialNumber);
 		} catch (OCSPException e) {
@@ -234,12 +250,13 @@ public final class DSSRevocationUtils {
 		}
 	}
 
-	public static DigestCalculator getSHA1DigestCalculator() {
+	public static DigestCalculator getDigestCalculator(DigestAlgorithm digestAlgorithm) {
 		try {
 			final DigestCalculatorProvider digestCalculatorProvider = jcaDigestCalculatorProviderBuilder.build();
-			return digestCalculatorProvider.get(CertificateID.HASH_SHA1);
+			return digestCalculatorProvider.get(new AlgorithmIdentifier(new ASN1ObjectIdentifier(digestAlgorithm.getOid()), DERNull.INSTANCE));
 		} catch (OperatorCreationException e) {
-			throw new DSSException("Unable to create a DigestCalculator instance", e);
+			throw new DSSException(
+					String.format("Unable to create a DigestCalculator instance. DigestAlgorithm %s is not supported", digestAlgorithm.name()), e);
 		}
 	}
 
@@ -281,39 +298,23 @@ public final class DSSRevocationUtils {
 	
 	/**
 	 * Transforms {@link RespID} to {@link ResponderId}
+	 * 
 	 * @param respID {@link RespID} to get values from
 	 * @return {@link ResponderId}
 	 */
 	public static ResponderId getDSSResponderId(RespID respID) {
-		ResponderId dssResponderId = new ResponderId();
-		final ResponderID responderIdAsASN1Object = respID.toASN1Primitive();
-		final DERTaggedObject derTaggedObject = (DERTaggedObject) responderIdAsASN1Object.toASN1Primitive();
-		if (2 == derTaggedObject.getTagNo()) {
-			final ASN1OctetString keyHashOctetString = (ASN1OctetString) derTaggedObject.getObject();
-			final byte[] keyHashOctetStringBytes = keyHashOctetString.getOctets();
-			dssResponderId.setKey(keyHashOctetStringBytes);
-			return dssResponderId;
-		} else {
-			final ASN1Primitive derObject = derTaggedObject.getObject();
-			final X500Name name = X500Name.getInstance(derObject);
-			dssResponderId.setName(name.toString());
-			return dssResponderId;
-		}
+		final ResponderID responderID = respID.toASN1Primitive();
+		return getDSSResponderId(responderID);
 	}
-	
+
 	/**
-	 * Creates the identifier for a certain entry within jdbc.
-	 *
-	 * @param certificateToken
-	 *            {@link CertificateToken}
-	 * @param issuerCertificateToken
-	 *            {@link CertificateToken} of the issuer of the certificateToken
-	 * @return the identifier for jdbc
+	 * Transforms {@link ResponderID} to {@link ResponderId}
+	 * 
+	 * @param responderID {@link ResponderID} to get values from
+	 * @return {@link ResponderId}
 	 */
-	public static String getJdbcKey(final CertificateToken certificateToken, final CertificateToken issuerCertificateToken) {
-		final StringBuilder buf = new StringBuilder(certificateToken.getEntityKey());
-		buf.append(":").append(issuerCertificateToken.getEntityKey());
-		return buf.toString();
+	public static ResponderId getDSSResponderId(ResponderID responderID) {
+		return new ResponderId(DSSASN1Utils.toX500Principal(responderID.getName()), responderID.getKeyHash());
 	}
 	
 	/**
@@ -323,7 +324,7 @@ public final class DSSRevocationUtils {
 	 */
 	public static List<String> getCRLRevocationTokenKeys(final CertificateToken certificateToken) {
 		final List<String> crlUrls = DSSASN1Utils.getCrlUrls(certificateToken);
-		List<String> revocationKeys = new ArrayList<String>();
+		List<String> revocationKeys = new ArrayList<>();
 		for (String crlUrl : crlUrls) {
 			revocationKeys.add(getCRLRevocationTokenKey(crlUrl));
 		}
@@ -341,7 +342,7 @@ public final class DSSRevocationUtils {
 	 */
 	public static List<String> getOcspRevocationTokenKeys(final CertificateToken certificateToken) {
 		final List<String> ocspUrls = DSSASN1Utils.getOCSPAccessLocations(certificateToken);
-		List<String> revocationKeys = new ArrayList<String>();
+		List<String> revocationKeys = new ArrayList<>();
 		for (String ocspUrl : ocspUrls) {
 			revocationKeys.add(getOcspRevocationKey(certificateToken, ocspUrl));
 		}
@@ -350,6 +351,61 @@ public final class DSSRevocationUtils {
 	
 	public static String getOcspRevocationKey(final CertificateToken certificateToken, final String ocspUrl) {
 		return DSSUtils.getSHA1Digest(certificateToken.getEntityKey() + ":" + ocspUrl);
+	}
+
+	public static SingleResp getLatestSingleResponse(BasicOCSPResp basicResponse, CertificateToken certificate, CertificateToken issuer) {
+		List<SingleResp> singleResponses = getSingleResponses(basicResponse, certificate, issuer);
+		if (Utils.isCollectionEmpty(singleResponses)) {
+			return null;
+		} else if (singleResponses.size() == 1) {
+			return singleResponses.get(0);
+		} else {
+			return getLatestSingleRespInList(singleResponses);
+		}
+	}
+
+	private static SingleResp getLatestSingleRespInList(List<SingleResp> singleResponses) {
+		Date latest = null;
+		SingleResp latestResp = null;
+		for (SingleResp singleResp : singleResponses) {
+			final Date thisUpdate = singleResp.getThisUpdate();
+			if ((latest == null) || thisUpdate.after(latest)) {
+				latestResp = singleResp;
+				latest = thisUpdate;
+			}
+		}
+		return latestResp;
+	}
+
+	public static List<SingleResp> getSingleResponses(BasicOCSPResp basicResponse, CertificateToken certificate, CertificateToken issuer) {
+		List<SingleResp> result = new ArrayList<>();
+		SingleResp[] responses = getSingleResps(basicResponse);
+		for (final SingleResp singleResp : responses) {
+			DigestAlgorithm usedDigestAlgorithm = getUsedDigestAlgorithm(singleResp);
+			final CertificateID certId = getOCSPCertificateID(certificate, issuer, usedDigestAlgorithm);
+			if (DSSRevocationUtils.matches(certId, singleResp)) {
+				result.add(singleResp);
+			}
+		}
+		return result;
+	}
+
+	private static SingleResp[] getSingleResps(BasicOCSPResp basicResponse) {
+		try {
+			return basicResponse.getResponses();
+		} catch (Exception e) {
+			LOG.warn("Unable to extract SingleResp(s) : {}", e.getMessage());
+			return new SingleResp[] {};
+		}
+	}
+
+	public static Digest getDigest(OtherHash otherHash) {
+		if (otherHash != null) {
+			DigestAlgorithm digestAlgorithm = DigestAlgorithm.forOID(otherHash.getHashAlgorithm().getAlgorithm().getId());
+			byte[] digestValue = otherHash.getHashValue();
+			return new Digest(digestAlgorithm, digestValue);
+		}
+		return null;
 	}
 
 }

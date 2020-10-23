@@ -20,39 +20,29 @@
  */
 package eu.europa.esig.dss.pades.signature;
 
-import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.DSSDocument;
+import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.pades.PAdESSignatureParameters;
-import eu.europa.esig.dss.pades.validation.PDFDocumentValidator;
-import eu.europa.esig.dss.signature.SignatureExtension;
+import eu.europa.esig.dss.pdf.IPdfObjFactory;
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 
 /**
  * PAdES Baseline LTA signature
  */
-class PAdESLevelBaselineLTA implements SignatureExtension<PAdESSignatureParameters> {
+class PAdESLevelBaselineLTA extends PAdESLevelBaselineLT {
 
-	private final PAdESLevelBaselineLT padesLevelBaselineLT;
-	private final PAdESLevelBaselineT padesLevelBaselineT;
-	private final CertificateVerifier certificateVerifier;
-
-	public PAdESLevelBaselineLTA(TSPSource tspSource, CertificateVerifier certificateVerifier) {
-		this.padesLevelBaselineLT = new PAdESLevelBaselineLT(tspSource, certificateVerifier);
-		this.padesLevelBaselineT = new PAdESLevelBaselineT(tspSource);
-		this.certificateVerifier = certificateVerifier;
+	public PAdESLevelBaselineLTA(TSPSource tspSource, CertificateVerifier certificateVerifier, final IPdfObjFactory pdfObjectFactory) {
+		super(tspSource, certificateVerifier, pdfObjectFactory);
 	}
 
 	@Override
 	public DSSDocument extendSignatures(DSSDocument document, PAdESSignatureParameters parameters) throws DSSException {
-
 		// check if needed to extends with PAdESLevelBaselineLT
-		final PDFDocumentValidator pdfDocumentValidator = new PDFDocumentValidator(document);
-		pdfDocumentValidator.setCertificateVerifier(certificateVerifier);
-
-		document = padesLevelBaselineLT.extendSignatures(document, parameters);
-
+		document = super.extendSignatures(document, parameters);
+		
 		// Will add a Document TimeStamp (not CMS)
-		return padesLevelBaselineT.extendSignatures(document, parameters);
+		return timestampDocument(document, parameters.getArchiveTimestampParameters(), parameters.getPasswordProtection());
 	}
+
 }

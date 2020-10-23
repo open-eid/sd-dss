@@ -20,12 +20,12 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.util.Date;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,16 +36,17 @@ import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.Policy;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
+import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 
 public class XAdESLevelBWithSignaturePolicyImpliedTest extends AbstractXAdESTestSignature {
 
 	private static final Logger logger = LoggerFactory.getLogger(XAdESLevelBWithSignaturePolicyImpliedTest.class);
 
-	private DocumentSignatureService<XAdESSignatureParameters> service;
+	private DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> service;
 	private XAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		documentToSign = new FileDocument(new File("src/test/resources/sample.xml"));
 
@@ -59,7 +60,7 @@ public class XAdESLevelBWithSignaturePolicyImpliedTest extends AbstractXAdESTest
 		signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPING);
 		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
 
-		service = new XAdESService(getCompleteCertificateVerifier());
+		service = new XAdESService(getOfflineCertificateVerifier());
 	}
 
 	@Override
@@ -77,7 +78,7 @@ public class XAdESLevelBWithSignaturePolicyImpliedTest extends AbstractXAdESTest
 	}
 
 	@Override
-	protected DocumentSignatureService<XAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> getService() {
 		return service;
 	}
 

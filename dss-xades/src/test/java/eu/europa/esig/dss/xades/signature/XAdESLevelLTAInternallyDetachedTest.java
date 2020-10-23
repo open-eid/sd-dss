@@ -20,7 +20,7 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.util.Arrays;
@@ -28,30 +28,30 @@ import java.util.List;
 
 import javax.xml.crypto.dsig.CanonicalizationMethod;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlSignatureScope;
-import eu.europa.esig.dss.enumerations.CommitmentType;
+import eu.europa.esig.dss.enumerations.CommitmentTypeEnum;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.SignerLocation;
-import eu.europa.esig.dss.model.TimestampParameters;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
+import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 
 public class XAdESLevelLTAInternallyDetachedTest extends AbstractXAdESTestSignature {
 
-	private DocumentSignatureService<XAdESSignatureParameters> service;
+	private DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> service;
 	private XAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		service = new XAdESService(getCompleteCertificateVerifier());
 		service.setTspSource(getGoodTsa());
@@ -71,18 +71,18 @@ public class XAdESLevelLTAInternallyDetachedTest extends AbstractXAdESTestSignat
 		signatureParameters.bLevel().setSignerLocation(signerLocation);
 
 		signatureParameters.bLevel()
-				.setCommitmentTypeIndications(Arrays.asList(CommitmentType.ProofOfSender.getUri(), CommitmentType.ProofOfCreation.getUri()));
+				.setCommitmentTypeIndications(Arrays.asList(CommitmentTypeEnum.ProofOfSender, CommitmentTypeEnum.ProofOfCreation));
 
 		signatureParameters.bLevel().setClaimedSignerRoles(Arrays.asList("Manager", "Administrator"));
 
 		signatureParameters.setAddX509SubjectName(true);
 
-		TimestampParameters contentTimestampParameters = new TimestampParameters();
+		XAdESTimestampParameters contentTimestampParameters = new XAdESTimestampParameters();
 		contentTimestampParameters.setCanonicalizationMethod(CanonicalizationMethod.EXCLUSIVE);
 		signatureParameters.setContentTimestampParameters(contentTimestampParameters);
 		TimestampToken contentTimestamp = service.getContentTimestamp(documentToSign, signatureParameters);
 
-		contentTimestampParameters = new TimestampParameters();
+		contentTimestampParameters = new XAdESTimestampParameters();
 		contentTimestampParameters.setDigestAlgorithm(DigestAlgorithm.SHA512);
 		contentTimestampParameters.setCanonicalizationMethod(CanonicalizationMethod.EXCLUSIVE);
 		signatureParameters.setContentTimestampParameters(contentTimestampParameters);
@@ -105,7 +105,7 @@ public class XAdESLevelLTAInternallyDetachedTest extends AbstractXAdESTestSignat
 	}
 
 	@Override
-	protected DocumentSignatureService<XAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> getService() {
 		return service;
 	}
 

@@ -20,14 +20,14 @@
  */
 package eu.europa.esig.dss.pades;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.spi.DSSUtils;
@@ -37,7 +37,7 @@ public class VRITest {
 
 	@Test
 	public void vri() throws Exception {
-		String path = "/plugtest/esig2014/ESIG-PAdES/HU_MIC/Signature-P-HU_MIC-3.pdf";
+		String path = "/validation/Signature-P-HU_MIC-3.pdf";
 		String vriValue = "C41B1DBFE0E816D8A6F99A9DB98FD43960A5CF45";
 
 		PDDocument pdDoc = PDDocument.load(getClass().getResourceAsStream(path));

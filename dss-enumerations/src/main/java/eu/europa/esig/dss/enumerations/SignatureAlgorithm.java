@@ -28,12 +28,13 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 /**
  * Supported signature algorithms.
  *
  */
-public enum SignatureAlgorithm implements UriBasedEnum, OidBasedEnum {
+public enum SignatureAlgorithm implements OidAndUriBasedEnum {
 
 	RSA_RAW(EncryptionAlgorithm.RSA, null),
 	
@@ -153,7 +154,12 @@ public enum SignatureAlgorithm implements UriBasedEnum, OidBasedEnum {
 
 	HMAC_SHA3_512(EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA3_512),
 
-	HMAC_RIPEMD160(EncryptionAlgorithm.HMAC, DigestAlgorithm.RIPEMD160);
+	HMAC_RIPEMD160(EncryptionAlgorithm.HMAC, DigestAlgorithm.RIPEMD160),
+
+	// https://tools.ietf.org/html/rfc8419#section-3.1
+	ED25519(EncryptionAlgorithm.ED25519, DigestAlgorithm.SHA512),
+
+	ED448(EncryptionAlgorithm.ED448, DigestAlgorithm.SHAKE256_512);
 
 	private final EncryptionAlgorithm encryptionAlgo;
 
@@ -173,7 +179,7 @@ public enum SignatureAlgorithm implements UriBasedEnum, OidBasedEnum {
 
 	private static Map<String, SignatureAlgorithm> registerXmlAlgorithms() {
 
-		Map<String, SignatureAlgorithm> xmlAlgorithms = new HashMap<String, SignatureAlgorithm>();
+		Map<String, SignatureAlgorithm> xmlAlgorithms = new HashMap<>();
 		xmlAlgorithms.put("http://www.w3.org/2000/09/xmldsig#rsa-sha1", RSA_SHA1);
 		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#rsa-sha224", RSA_SHA224);
 		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256", RSA_SHA256);
@@ -222,7 +228,7 @@ public enum SignatureAlgorithm implements UriBasedEnum, OidBasedEnum {
 	}
 
 	private static Map<SignatureAlgorithm, String> registerXmlAlgorithmsForKey() {
-		Map<SignatureAlgorithm, String> xmlAlgorithms = new EnumMap<SignatureAlgorithm, String>(SignatureAlgorithm.class);
+		Map<SignatureAlgorithm, String> xmlAlgorithms = new EnumMap<>(SignatureAlgorithm.class);
 		for (Entry<String, SignatureAlgorithm> entry : XML_ALGORITHMS.entrySet()) {
 			xmlAlgorithms.put(entry.getValue(), entry.getKey());
 		}
@@ -235,7 +241,7 @@ public enum SignatureAlgorithm implements UriBasedEnum, OidBasedEnum {
 
 	private static Map<String, SignatureAlgorithm> registerOIDAlgorithms() {
 
-		Map<String, SignatureAlgorithm> oidAlgorithms = new HashMap<String, SignatureAlgorithm>();
+		Map<String, SignatureAlgorithm> oidAlgorithms = new HashMap<>();
 
 		oidAlgorithms.put("1.2.840.113549.1.1.5", RSA_SHA1);
 		oidAlgorithms.put("1.3.14.3.2.29", RSA_SHA1);
@@ -288,6 +294,9 @@ public enum SignatureAlgorithm implements UriBasedEnum, OidBasedEnum {
 		oidAlgorithms.put("0.4.0.127.0.7.1.1.4.1.5", PLAIN_ECDSA_SHA512);
 		oidAlgorithms.put("0.4.0.127.0.7.1.1.4.1.6", PLAIN_ECDSA_RIPEMD160);
 
+		oidAlgorithms.put("1.3.101.112", ED25519);
+		oidAlgorithms.put("1.3.101.113", ED448);
+
 		oidAlgorithms.put("1.2.840.10040.4.3", DSA_SHA1);
 		oidAlgorithms.put("1.2.14888.3.0.1", DSA_SHA1);
 		oidAlgorithms.put("2.16.840.1.101.3.4.3.1", DSA_SHA224);
@@ -318,7 +327,7 @@ public enum SignatureAlgorithm implements UriBasedEnum, OidBasedEnum {
 	}
 
 	private static Map<SignatureAlgorithm, String> registerOidAlgorithmsForKey() {
-		Map<SignatureAlgorithm, String> oidAlgorithms = new EnumMap<SignatureAlgorithm, String>(SignatureAlgorithm.class);
+		Map<SignatureAlgorithm, String> oidAlgorithms = new EnumMap<>(SignatureAlgorithm.class);
 		for (Entry<String, SignatureAlgorithm> entry : OID_ALGORITHMS.entrySet()) {
 			oidAlgorithms.put(entry.getValue(), entry.getKey());
 		}
@@ -331,7 +340,7 @@ public enum SignatureAlgorithm implements UriBasedEnum, OidBasedEnum {
 
 	private static Map<String, SignatureAlgorithm> registerJavaAlgorithms() {
 
-		Map<String, SignatureAlgorithm> javaAlgorithms = new HashMap<String, SignatureAlgorithm>();
+		Map<String, SignatureAlgorithm> javaAlgorithms = new HashMap<>();
 
 		javaAlgorithms.put("NONEwithRSA", RSA_RAW);
 		
@@ -385,6 +394,9 @@ public enum SignatureAlgorithm implements UriBasedEnum, OidBasedEnum {
 		javaAlgorithms.put("SHA3-384withECDSA", ECDSA_SHA3_384);
 		javaAlgorithms.put("SHA3-512withECDSA", ECDSA_SHA3_512);
 
+		javaAlgorithms.put("Ed25519", ED25519);
+		javaAlgorithms.put("Ed448", ED448);
+
 		javaAlgorithms.put("NONEwithDSA", DSA_RAW);
 		
 		javaAlgorithms.put("SHA1withDSA", DSA_SHA1);
@@ -414,7 +426,7 @@ public enum SignatureAlgorithm implements UriBasedEnum, OidBasedEnum {
 	}
 
 	private static Map<SignatureAlgorithm, String> registerJavaAlgorithmsForKey() {
-		final Map<SignatureAlgorithm, String> javaAlgorithms = new EnumMap<SignatureAlgorithm, String>(SignatureAlgorithm.class);
+		final Map<SignatureAlgorithm, String> javaAlgorithms = new EnumMap<>(SignatureAlgorithm.class);
 		for (Entry<String, SignatureAlgorithm> entry : JAVA_ALGORITHMS.entrySet()) {
 			javaAlgorithms.put(entry.getValue(), entry.getKey());
 		}
@@ -550,18 +562,14 @@ public enum SignatureAlgorithm implements UriBasedEnum, OidBasedEnum {
 	public static SignatureAlgorithm getAlgorithm(final EncryptionAlgorithm encryptionAlgorithm, final DigestAlgorithm digestAlgorithm,
 			final MaskGenerationFunction mgf) {
 
-		StringBuilder sb = new StringBuilder();
-		if (digestAlgorithm != null) {
-			sb.append(digestAlgorithm.getName());
-		} else {
-			sb.append("NONE");
+		for (SignatureAlgorithm currentAlgo : values()) {
+			if (Objects.equals(currentAlgo.getEncryptionAlgorithm(), encryptionAlgorithm) && Objects.equals(currentAlgo.getDigestAlgorithm(), digestAlgorithm)
+					&& Objects.equals(currentAlgo.getMaskGenerationFunction(), mgf)) {
+				return currentAlgo;
+			}
 		}
-		sb.append("with");
-		sb.append(encryptionAlgorithm.getName());
-		if (mgf != null) {
-			sb.append("andMGF1");
-		}
-		return JAVA_ALGORITHMS.get(sb.toString());
+
+		return null;
 	}
 
 	/**

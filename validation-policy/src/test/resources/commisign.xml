@@ -5,7 +5,7 @@
    <Signatures>
       <Signature Id="id-905d81dad601ccc48fd00277cfa4a9bc31c8f989b895969d1731eb7d46f0c5cb">
          <SignatureFilename></SignatureFilename>
-         <DateTime>2017-07-21T17:52:11</DateTime>
+         <ClaimedSigningTime>2017-07-21T17:52:11</ClaimedSigningTime>
          <SignatureFormat>PAdES-BASELINE-B</SignatureFormat>
          <StructuralValidation>
             <Valid>true</Valid>
@@ -25,20 +25,25 @@
             <SignatureIntact>true</SignatureIntact>
             <SignatureValid>true</SignatureValid>
          </BasicSignature>
-         <SigningCertificate Certificate="C-96DE975C5D625EB6B23007402A12F7EDC7240E6FC22888B9E6A47A23587183CC">
-            <AttributePresent>true</AttributePresent>
-            <DigestValuePresent>true</DigestValuePresent>
-            <DigestValueMatch>true</DigestValueMatch>
-            <IssuerSerialMatch>true</IssuerSerialMatch>
-         </SigningCertificate>
+         <SigningCertificate Certificate="C-96DE975C5D625EB6B23007402A12F7EDC7240E6FC22888B9E6A47A23587183CC"/>
          <CertificateChain>
             <ChainItem Certificate="C-96DE975C5D625EB6B23007402A12F7EDC7240E6FC22888B9E6A47A23587183CC"/>
             <ChainItem Certificate="C-E55719354DDA1E18377474442D7C537BC371A42B199226CAC07F71E0A38EC672"/>
          </CertificateChain>
          <ContentType>application/pdf</ContentType>
-         <CommitmentTypeIndication/>
+         <CommitmentTypeIndications/>
          
-         <FoundCertificates/>
+            <FoundCertificates>
+            	<RelatedCertificate Certificate="C-96DE975C5D625EB6B23007402A12F7EDC7240E6FC22888B9E6A47A23587183CC">
+                	<CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue match="true">
+                        	<DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>spo0d1SBHli0X0D3cUwAjF/YSpU=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
          <FoundRevocations/>
          <FoundTimestamps/>
          <SignatureScopes>
@@ -77,6 +82,7 @@
          <NotBefore>2016-10-04T12:58:02</NotBefore>
          <PublicKeySize>4096</PublicKeySize>
          <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+         <EntityKey>PK-E55719354DDA1E18377474442D7C537BC371A42B199226CAC07F71E0A38EC672</EntityKey>
          <KeyUsageBits>
             <KeyUsage>keyCertSign</KeyUsage>
             <KeyUsage>crlSign</KeyUsage>
@@ -103,13 +109,12 @@
          <QCStatementIds/>
          <QCTypes/>
          <TrustedServiceProviders>
-            <TrustedServiceProvider>
-               <TSPName>C - European Commission Certification Authority</TSPName>
-               <TSPRegistrationIdentifier>NTRBE-0949.383.342 </TSPRegistrationIdentifier>
-               <CountryCode>EC</CountryCode>
+                <TrustedServiceProvider TL="TL-3D8F60692C4C3DD9280DFED6F6415BACD4250DBA6BB35EC4AFAAA4C9209E68A7">
+				<TSPNames><TSPName lang="en">C - European Commission Certification Authority</TSPName></TSPNames>
+               <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>NTRBE-0949.383.342 </TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                <TrustedServices>
                   <TrustedService ServiceDigitalIdentifier="C-E55719354DDA1E18377474442D7C537BC371A42B199226CAC07F71E0A38EC672">
-                     <ServiceName>C - 2</ServiceName>
+                     <ServiceNames><ServiceName lang="en">C - 2</ServiceName></ServiceNames>
                      <ServiceType>https://webgate.ec.europa.eu/esig/TrustedList/TrstSvc/ScvType/CA/EC/Internal</ServiceType>
                      <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                      <StartDate>2016-10-03T22:00:00</StartDate>
@@ -140,6 +145,7 @@
          <NotBefore>2017-09-07T09:14:13</NotBefore>
          <PublicKeySize>2048</PublicKeySize>
          <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+         <EntityKey>PK-E3A0ED9707DDA706A7A03BA78487025019B2BCBE8226CA3BFD822D5617A9E9A8</EntityKey>
          <KeyUsageBits>
             <KeyUsage>digitalSignature</KeyUsage>
          </KeyUsageBits>
@@ -164,13 +170,12 @@
          <QCStatementIds/>
          <QCTypes/>
          <TrustedServiceProviders>
-            <TrustedServiceProvider>
-               <TSPName>C - European Commission Certification Authority</TSPName>
-               <TSPRegistrationIdentifier>NTRBE-0949.383.342 </TSPRegistrationIdentifier>
-               <CountryCode>EC</CountryCode>
+                <TrustedServiceProvider TL="TL-3D8F60692C4C3DD9280DFED6F6415BACD4250DBA6BB35EC4AFAAA4C9209E68A7">
+				<TSPNames><TSPName lang="en">C - European Commission Certification Authority</TSPName></TSPNames>
+               <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>NTRBE-0949.383.342 </TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                <TrustedServices>
                   <TrustedService ServiceDigitalIdentifier="C-E55719354DDA1E18377474442D7C537BC371A42B199226CAC07F71E0A38EC672">
-                     <ServiceName>C - 2</ServiceName>
+                     <ServiceNames><ServiceName lang="en">C - 2</ServiceName></ServiceNames>
                      <ServiceType>https://webgate.ec.europa.eu/esig/TrustedList/TrstSvc/ScvType/CA/EC/Internal</ServiceType>
                      <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                      <StartDate>2016-10-03T22:00:00</StartDate>
@@ -203,6 +208,7 @@
          <NotBefore>2016-10-04T11:21:17</NotBefore>
          <PublicKeySize>4096</PublicKeySize>
          <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+         <EntityKey>PK-C968B9F102F0DF46A1D67EB4F7ECFAAA5568CFF6C98D8D821BF51B602EF887CA</EntityKey>
          <KeyUsageBits>
             <KeyUsage>keyCertSign</KeyUsage>
             <KeyUsage>crlSign</KeyUsage>
@@ -255,6 +261,7 @@
          <NotBefore>2017-04-18T13:11:25</NotBefore>
          <PublicKeySize>2048</PublicKeySize>
          <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+         <EntityKey>PK-96DE975C5D625EB6B23007402A12F7EDC7240E6FC22888B9E6A47A23587183CA</EntityKey>
          <KeyUsageBits>
             <KeyUsage>nonRepudiation</KeyUsage>
             <KeyUsage>digitalSignature</KeyUsage>
@@ -280,13 +287,12 @@
          <QCStatementIds/>
          <QCTypes/>
          <TrustedServiceProviders>
-            <TrustedServiceProvider>
-               <TSPName>C - European Commission Certification Authority</TSPName>
-               <TSPRegistrationIdentifier>NTRBE-0949.383.342 </TSPRegistrationIdentifier>
-               <CountryCode>EC</CountryCode>
+                <TrustedServiceProvider TL="TL-3D8F60692C4C3DD9280DFED6F6415BACD4250DBA6BB35EC4AFAAA4C9209E68A7">
+				<TSPNames><TSPName lang="en">C - European Commission Certification Authority</TSPName></TSPNames>
+               <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>NTRBE-0949.383.342 </TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                <TrustedServices>
                   <TrustedService ServiceDigitalIdentifier="C-E55719354DDA1E18377474442D7C537BC371A42B199226CAC07F71E0A38EC672">
-                     <ServiceName>C - 2</ServiceName>
+                     <ServiceNames><ServiceName lang="en">C - 2</ServiceName></ServiceNames>
                      <ServiceType>https://webgate.ec.europa.eu/esig/TrustedList/TrstSvc/ScvType/CA/EC/Internal</ServiceType>
                      <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                      <StartDate>2016-10-03T22:00:00</StartDate>
@@ -298,7 +304,7 @@
          </TrustedServiceProviders>
          <Revocations>
             <CertificateRevocation Revocation="R-96de975c5d625eb6b23007402a12f7edc7240e6fc22888b9e6a47a23587183ccd44b3bc2cbfca258343153ddc0197a58e747bc1153f83d0fbcd1617bb9724a95">
-               <Status>true</Status>
+               <Status>GOOD</Status>
             </CertificateRevocation>
          </Revocations>
          <DigestAlgoAndValue>
@@ -343,7 +349,7 @@
         </SignerData>
     </OriginalDocuments>
    <TrustedLists>
-      <TrustedList>
+      <TrustedList Id="TL-3D8F60692C4C3DD9280DFED6F6415BACD4250DBA6BB35EC4AFAAA4C9209E68A7">
          <CountryCode>EC</CountryCode>
          <Url>https://hide.eu/esig/TrustedList/EC_R/TSL.xml</Url>
          <SequenceNumber>3</SequenceNumber>
@@ -354,14 +360,4 @@
          <WellSigned>true</WellSigned>
       </TrustedList>
    </TrustedLists>
-   <ListOfTrustedLists>
-      <CountryCode>EC</CountryCode>
-      <Url>https://hide.eu/esig/TrustedList/EC_R/TSL.xml</Url>
-      <SequenceNumber>3</SequenceNumber>
-      <Version>5</Version>
-      <LastLoading>2018-07-10T15:22:32</LastLoading>
-      <IssueDate>2017-06-27T09:00:00</IssueDate>
-      <NextUpdate>2017-12-26T09:00:00</NextUpdate>
-      <WellSigned>true</WellSigned>
-   </ListOfTrustedLists>
 </DiagnosticData>

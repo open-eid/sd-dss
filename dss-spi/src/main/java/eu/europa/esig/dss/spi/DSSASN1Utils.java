@@ -21,6 +21,8 @@
 package eu.europa.esig.dss.spi;
 
 import static eu.europa.esig.dss.spi.OID.id_aa_ATSHashIndex;
+import static eu.europa.esig.dss.spi.OID.id_aa_ATSHashIndexV2;
+import static eu.europa.esig.dss.spi.OID.id_aa_ATSHashIndexV3;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,6 +34,7 @@ import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -39,11 +42,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
 
-import javax.naming.InvalidNameException;
-import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 import javax.security.auth.x500.X500Principal;
 
@@ -52,8 +51,10 @@ import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.ASN1GeneralizedTime;
 import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1OutputStream;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
@@ -62,16 +63,14 @@ import org.bouncycastle.asn1.BERTags;
 import org.bouncycastle.asn1.DERBitString;
 import org.bouncycastle.asn1.DERNull;
 import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DEROutputStream;
-import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.asn1.DLSequence;
 import org.bouncycastle.asn1.DLSet;
 import org.bouncycastle.asn1.cms.Attribute;
 import org.bouncycastle.asn1.cms.AttributeTable;
 import org.bouncycastle.asn1.cms.Attributes;
-import org.bouncycastle.asn1.cms.Time;
 import org.bouncycastle.asn1.esf.RevocationValues;
+import org.bouncycastle.asn1.ess.OtherCertID;
 import org.bouncycastle.asn1.ocsp.BasicOCSPResponse;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
@@ -94,14 +93,18 @@ import org.bouncycastle.asn1.x509.PolicyInformation;
 import org.bouncycastle.asn1.x509.PolicyQualifierId;
 import org.bouncycastle.asn1.x509.PolicyQualifierInfo;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
+import org.bouncycastle.asn1.x509.Time;
 import org.bouncycastle.asn1.x509.X509ObjectIdentifiers;
 import org.bouncycastle.asn1.x509.qualified.QCStatement;
+import org.bouncycastle.asn1.x509.qualified.RFC3739QCObjectIdentifiers;
+import org.bouncycastle.asn1.x509.qualified.SemanticsInformation;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.SignerId;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.tsp.TSPException;
 import org.bouncycastle.tsp.TimeStampToken;
@@ -109,9 +112,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.enumerations.RoleOfPspOid;
+import eu.europa.esig.dss.enumerations.SemanticsIdentifier;
 import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.model.Digest;
+import eu.europa.esig.dss.model.TimestampBinary;
 import eu.europa.esig.dss.model.x509.CertificateToken;
+import eu.europa.esig.dss.model.x509.X500PrincipalHelper;
+import eu.europa.esig.dss.spi.x509.CertificateIdentifier;
 import eu.europa.esig.dss.spi.x509.CertificatePolicy;
+import eu.europa.esig.dss.spi.x509.CertificateRef;
+import eu.europa.esig.dss.spi.x509.PSD2QcType;
+import eu.europa.esig.dss.spi.x509.RoleOfPSP;
 import eu.europa.esig.dss.utils.Utils;
 
 /**
@@ -127,6 +139,8 @@ public final class DSSASN1Utils {
 	}
 
 	private static final String QC_TYPE_STATEMENT_OID = "0.4.0.1862.1.6";
+
+	private static final String QC_LEGISLATION_OID = "0.4.0.1862.1.7";
 
 	/**
 	 * This class is an utility class and cannot be instantiated.
@@ -269,10 +283,36 @@ public final class DSSASN1Utils {
 	 */
 	public static byte[] getDEREncoded(final CMSSignedData data) {
 		try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-			DEROutputStream deros = new DEROutputStream(baos);
-			deros.writeObject(data.toASN1Structure());
-			deros.close();
+			final ASN1OutputStream asn1OutputStream = ASN1OutputStream.create(baos, ASN1Encoding.DER);
+			asn1OutputStream.writeObject(data.toASN1Structure());
+			asn1OutputStream.close();
 			return baos.toByteArray();
+		} catch (IOException e) {
+			throw new DSSException("Unable to encode to DER", e);
+		}
+	}
+
+	/**
+	 * Returns the ASN.1 encoded representation of {@code TimestampBinary}.
+	 *
+	 * @param timestampBinary
+	 *             the {@link TimestampBinary} to be encoded
+	 * @return the DER encoded timestampBinary
+	 */
+	public static byte[] getDEREncoded(final TimestampBinary timestampBinary) {
+		return getDEREncoded(timestampBinary.getBytes());
+	}
+
+	/**
+	 * Returns the ASN.1 encoded representation of {@code byte} array.
+	 *
+	 * @param bytes
+	 *             the binary array to encode
+	 * @return the DER encoded bytes
+	 */
+	public static byte[] getDEREncoded(final byte[] bytes) {
+		try {
+			return getDEREncoded(ASN1Primitive.fromByteArray(bytes));
 		} catch (IOException e) {
 			throw new DSSException("Unable to encode to DER", e);
 		}
@@ -331,39 +371,6 @@ public final class DSSASN1Utils {
 		byte[] hashAlgorithmDEREncoded = getDEREncoded(signPolicyHashAlgIdentifier);
 		byte[] signPolicyInfoDEREncoded = getDEREncoded(signPolicyInfo);
 		return DSSUtils.digest(digestAlgorithm, hashAlgorithmDEREncoded, signPolicyInfoDEREncoded);
-	}
-
-	/**
-	 * This method can be removed the simple IssuerSerial verification can be
-	 * performed. In fact the hash verification is sufficient.
-	 *
-	 * @param generalNames
-	 *            the generalNames
-	 * @return the canonicalized name
-	 */
-	public static String getCanonicalizedName(final GeneralNames generalNames) {
-		GeneralName[] names = generalNames.getNames();
-		TreeMap<String, String> treeMap = new TreeMap<String, String>();
-		for (GeneralName name : names) {
-			String ldapString = String.valueOf(name.getName());
-			LOG.debug("ldapString to canonicalize: {} ", ldapString);
-			try {
-				LdapName ldapName = new LdapName(ldapString);
-				List<Rdn> rdns = ldapName.getRdns();
-				for (final Rdn rdn : rdns) {
-					treeMap.put(rdn.getType().toLowerCase(), String.valueOf(rdn.getValue()).toLowerCase());
-				}
-			} catch (InvalidNameException e) {
-				throw new DSSException(e);
-			}
-		}
-		StringBuilder stringBuilder = new StringBuilder();
-		for (Entry<String, String> entry : treeMap.entrySet()) {
-			stringBuilder.append(entry.getKey()).append('=').append(entry.getValue()).append('|');
-		}
-		final String canonicalizedName = stringBuilder.toString();
-		LOG.debug("canonicalizedName: {} ", canonicalizedName);
-		return canonicalizedName;
 	}
 
 	/**
@@ -472,7 +479,7 @@ public final class DSSASN1Utils {
 	 */
 	@SuppressWarnings("unchecked")
 	public static List<DEROctetString> getDEROctetStrings(final ASN1Sequence asn1Sequence) {
-		final List<DEROctetString> derOctetStrings = new ArrayList<DEROctetString>();
+		final List<DEROctetString> derOctetStrings = new ArrayList<>();
 		if (asn1Sequence != null) {
 			derOctetStrings.addAll(Collections.list(asn1Sequence.getObjects()));
 		}
@@ -506,7 +513,7 @@ public final class DSSASN1Utils {
 	}
 
 	public static List<CertificatePolicy> getCertificatePolicies(final CertificateToken certToken) {
-		List<CertificatePolicy> certificatePolicies = new ArrayList<CertificatePolicy>();
+		List<CertificatePolicy> certificatePolicies = new ArrayList<>();
 		final byte[] certificatePoliciesBinaries = certToken.getCertificate().getExtensionValue(Extension.certificatePolicies.getId());
 		if (Utils.isArrayNotEmpty(certificatePoliciesBinaries)) {
 			try {
@@ -527,7 +534,7 @@ public final class DSSASN1Utils {
 					certificatePolicies.add(cp);
 				}
 			} catch (Exception e) {
-				LOG.warn("Unable to parse the certificatePolicies extension '" + Utils.toBase64(certificatePoliciesBinaries) + "' : " + e.getMessage(), e);
+				LOG.warn("Unable to parse the certificatePolicies extension '{}' : {}", Utils.toBase64(certificatePoliciesBinaries), e.getMessage(), e);
 			}
 		}
 		return certificatePolicies;
@@ -542,7 +549,7 @@ public final class DSSASN1Utils {
 	 * @return the list of QC Statements oids
 	 */
 	public static List<String> getQCStatementsIdList(final CertificateToken certToken) {
-		final List<String> extensionIdList = new ArrayList<String>();
+		final List<String> extensionIdList = new ArrayList<>();
 		final byte[] qcStatement = certToken.getCertificate().getExtensionValue(Extension.qCStatements.getId());
 		if (Utils.isArrayNotEmpty(qcStatement)) {
 			try {
@@ -553,7 +560,7 @@ public final class DSSASN1Utils {
 					extensionIdList.add(statement.getStatementId().getId());
 				}
 			} catch (Exception e) {
-				LOG.warn("Unable to parse the qCStatements extension '" + Utils.toBase64(qcStatement) + "' : " + e.getMessage(), e);
+				LOG.warn("Unable to parse the qCStatements extension '{}' : {}", Utils.toBase64(qcStatement), e.getMessage(), e);
 			}
 		}
 		return extensionIdList;
@@ -568,7 +575,7 @@ public final class DSSASN1Utils {
 	 * @return the list of QCTypes oids
 	 */
 	public static List<String> getQCTypesIdList(final CertificateToken certToken) {
-		final List<String> qcTypesIdList = new ArrayList<String>();
+		final List<String> qcTypesIdList = new ArrayList<>();
 		final byte[] qcStatement = certToken.getCertificate().getExtensionValue(Extension.qCStatements.getId());
 		if (Utils.isArrayNotEmpty(qcStatement)) {
 			try {
@@ -596,11 +603,35 @@ public final class DSSASN1Utils {
 					}
 				}
 			} catch (Exception e) {
-				LOG.warn("Unable to parse the qCStatements extension '" + Utils.toBase64(qcStatement) + "' : " + e.getMessage(), e);
+				LOG.warn("Unable to parse the qCStatements extension '{}' : {}", Utils.toBase64(qcStatement), e.getMessage(), e);
 			}
 		}
 
 		return qcTypesIdList;
+	}
+
+	public static List<String> getQCLegislations(CertificateToken certToken) {
+		final List<String> result = new ArrayList<>();
+		final byte[] qcStatement = certToken.getCertificate().getExtensionValue(Extension.qCStatements.getId());
+		if (Utils.isArrayNotEmpty(qcStatement)) {
+			try {
+				final ASN1Sequence seq = getAsn1SequenceFromDerOctetString(qcStatement);
+				// Sequence of QCStatement
+				for (int ii = 0; ii < seq.size(); ii++) {
+					final QCStatement statement = QCStatement.getInstance(seq.getObjectAt(ii));
+					if (QC_LEGISLATION_OID.equals(statement.getStatementId().getId())) {
+						ASN1Sequence sequenceLegislation = ASN1Sequence.getInstance(statement.getStatementInfo());
+						for (int jj = 0; jj < sequenceLegislation.size(); jj++) {
+							result.add(getString(sequenceLegislation.getObjectAt(jj)));
+						}
+						
+					}
+				}
+			} catch (Exception e) {
+				LOG.warn("Unable to parse the qCStatements extension '{}' : {}", Utils.toBase64(qcStatement), e.getMessage(), e);
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -676,7 +707,6 @@ public final class DSSASN1Utils {
 		return computeSkiFromCertPublicKey(certificateToken.getPublicKey());
 	}
 
-
 	/**
 	 * Computes SHA-1 hash of the given {@code publicKey}'s
 	 * @param publicKey {@link PublicKey} to compute digest for
@@ -684,12 +714,24 @@ public final class DSSASN1Utils {
 	 */
 	public static byte[] computeSkiFromCertPublicKey(final PublicKey publicKey) {
 		try {
-			DLSequence seq = (DLSequence) DERSequence.fromByteArray(publicKey.getEncoded());
+			DLSequence seq = (DLSequence) ASN1Primitive.fromByteArray(publicKey.getEncoded());
 			DERBitString item = (DERBitString) seq.getObjectAt(1);
 			return DSSUtils.digest(DigestAlgorithm.SHA1, item.getOctets());
 		} catch (IOException e) {
 			throw new DSSException(e);
 		}
+	}
+	
+	/**
+	 * Checks if the provided ski matches to a ski computed from a certificateToken's public key
+	 * 
+	 * @param ski a byte array representing ski value (SHA-1 of the public key)
+	 * @param certificateToken {@link CertificateToken} to check
+	 * @return
+	 */
+	public static boolean isSkiEqual(final byte[] ski, final CertificateToken certificateToken) {
+		byte[] certSki = computeSkiFromCert(certificateToken);
+        return Arrays.equals(certSki, ski);
 	}
 
 	/**
@@ -715,7 +757,7 @@ public final class DSSASN1Utils {
 	}
 
 	private static List<String> getAccessLocations(final CertificateToken certificate, ASN1ObjectIdentifier aiaType) {
-		List<String> locationsUrls = new ArrayList<String>();
+		List<String> locationsUrls = new ArrayList<>();
 		final byte[] authInfoAccessExtensionValue = certificate.getCertificate().getExtensionValue(Extension.authorityInfoAccess.getId());
 		if (null == authInfoAccessExtensionValue) {
 			return locationsUrls;
@@ -723,6 +765,10 @@ public final class DSSASN1Utils {
 
 		try {
 			ASN1Sequence asn1Sequence = DSSASN1Utils.getAsn1SequenceFromDerOctetString(authInfoAccessExtensionValue);
+			if (asn1Sequence == null || asn1Sequence.size() == 0) {
+				LOG.warn("Empty ASN1Sequence for AuthorityInformationAccess");
+				return locationsUrls;
+			}
 			AuthorityInformationAccess authorityInformationAccess = AuthorityInformationAccess.getInstance(asn1Sequence);
 			AccessDescription[] accessDescriptions = authorityInformationAccess.getAccessDescriptions();
 			for (AccessDescription accessDescription : accessDescriptions) {
@@ -748,7 +794,7 @@ public final class DSSASN1Utils {
 	 * @return the {@code List} of CRL URI, or empty list if the extension is not present
 	 */
 	public static List<String> getCrlUrls(final CertificateToken certificateToken) {
-		final List<String> urls = new ArrayList<String>();
+		final List<String> urls = new ArrayList<>();
 
 		final byte[] crlDistributionPointsBytes = certificateToken.getCertificate().getExtensionValue(Extension.cRLDistributionPoints.getId());
 		if (crlDistributionPointsBytes != null) {
@@ -786,7 +832,7 @@ public final class DSSASN1Utils {
 				return str.getString();
 			}
 		} catch (Exception e) {
-			LOG.warn("Unable to parse GN " + gn, e);
+			LOG.warn("Unable to parse GN '{}'", gn, e);
 		}
 		return null;
 	}
@@ -845,19 +891,50 @@ public final class DSSASN1Utils {
 	}
 
 	/**
-	 * This method returns a new IssuerSerial based on x500Principal of issuer and serial number
-	 *
-	 * @param issuerX500Principal
-	 *            the {@link X500Principal} of certificate token's issuer
-	 * @param serialNumber
-	 *            serial number of certificate token
-	 * @return a IssuerSerial
+	 * This method transforms token's signerId into a {@code CertificateIdentifier}
+	 * object
+	 * 
+	 * @param signerId {@link SignerId} to be transformed
+	 * @return {@link CertificateIdentifier}
 	 */
-	public static IssuerSerial getIssuerSerial(final X500Principal issuerX500Principal, BigInteger serialNumber) {
-		final X500Name issuerX500Name = X500Name.getInstance(issuerX500Principal.getEncoded());
-		final GeneralName generalName = new GeneralName(issuerX500Name);
-		final GeneralNames generalNames = new GeneralNames(generalName);
-		return new IssuerSerial(generalNames, serialNumber);
+	public static CertificateIdentifier toIssuerSerialInfo(SignerId signerId) {
+		X500Principal issuerX500Principal = toX500Principal(signerId.getIssuer());
+		return toCertificateIdentifier(issuerX500Principal, signerId.getSerialNumber(), signerId.getSubjectKeyIdentifier());
+	}
+	
+	/**
+	 * Transforms x500Name to X500Principal
+	 * 
+	 * @param x500Name {@link X500Name}
+	 * @return {@link X500Principal}
+	 */
+	public static X500Principal toX500Principal(X500Name x500Name) {
+		if (x500Name == null) {
+			return null;
+		}
+		try {
+			return new X500Principal(x500Name.getEncoded());
+		} catch (IOException e) {
+			throw new DSSException(String.format("Cannot extract X500Principal! Reason : %s", e.getMessage()), e);
+		}
+	}
+	
+	/**
+	 * This method transforms token's issuer and serial number information into a
+	 * {@code CertificateIdentifier} object
+	 * 
+	 * @param issuerX500Principal {@link X500Principal} of the issuer
+	 * @param serialNumber        {@link BigInteger} of the token
+	 * @param ski                 a byte array representing a SubjectKeyIdentifier
+	 *                            (SHA-1 digest of the public key)
+	 * @return {@link CertificateIdentifier}
+	 */
+	public static CertificateIdentifier toCertificateIdentifier(final X500Principal issuerX500Principal, final BigInteger serialNumber, final byte[] ski) {
+		CertificateIdentifier certificateIdentifier = new CertificateIdentifier();
+		certificateIdentifier.setIssuerName(issuerX500Principal);
+		certificateIdentifier.setSerialNumber(serialNumber);
+		certificateIdentifier.setSki(ski);
+		return certificateIdentifier;
 	}
 
 	/**
@@ -875,8 +952,30 @@ public final class DSSASN1Utils {
 		return new IssuerSerial(generalNames, serialNumber);
 	}
 
+	/**
+	 * This method compares two {@code X500Principal}s. {@code X500Principal.CANONICAL} and
+	 * {@code X500Principal.RFC2253} forms are compared.
+	 *
+	 * @param firstX500Principal
+	 *            the first X500Principal object to be compared
+	 * @param secondX500Principal
+	 *            the second X500Principal object to be compared
+	 * @return true if the two parameters contain the same key/values
+	 */
+	public static boolean x500PrincipalAreEquals(final X500Principal firstX500Principal, final X500Principal secondX500Principal) {
+		if ((firstX500Principal == null) || (secondX500Principal == null)) {
+			return false;
+		}
+		if (firstX500Principal.equals(secondX500Principal)) {
+			return true;
+		}
+		final Map<String, String> firstStringStringHashMap = DSSASN1Utils.get(firstX500Principal);
+		final Map<String, String> secondStringStringHashMap = DSSASN1Utils.get(secondX500Principal);
+		return firstStringStringHashMap.entrySet().containsAll(secondStringStringHashMap.entrySet());
+	}
+
 	public static Map<String, String> get(final X500Principal x500Principal) {
-		Map<String, String> treeMap = new HashMap<String, String>();
+		Map<String, String> treeMap = new HashMap<>();
 		final byte[] encoded = x500Principal.getEncoded();
 		final ASN1Sequence asn1Sequence = ASN1Sequence.getInstance(encoded);
 		final ASN1Encodable[] asn1Encodables = asn1Sequence.toArray();
@@ -898,6 +997,18 @@ public final class DSSASN1Utils {
 			}
 		}
 		return treeMap;
+	}
+
+	/**
+	 * This method normalizes the X500Principal object
+	 * 
+	 * @param x500Principal
+	 *            to be normalized
+	 * @return {@code X500Principal} normalized
+	 */
+	public static X500Principal getNormalizedX500Principal(final X500Principal x500Principal) {
+		final String utf8Name = DSSASN1Utils.getUtf8String(x500Principal);
+		return new X500Principal(utf8Name);
 	}
 
 	public static String getUtf8String(final X500Principal x500Principal) {
@@ -975,8 +1086,8 @@ public final class DSSASN1Utils {
 		return string;
 	}
 
-	public static String extractAttributeFromX500Principal(ASN1ObjectIdentifier identifier, X500Principal x500PrincipalName) {
-		final X500Name x500Name = X500Name.getInstance(x500PrincipalName.getEncoded());
+	public static String extractAttributeFromX500Principal(ASN1ObjectIdentifier identifier, X500PrincipalHelper principal) {
+		final X500Name x500Name = X500Name.getInstance(principal.getEncoded());
 		RDN[] rdns = x500Name.getRDNs(identifier);
 		for (RDN rdn : rdns) {
 			if (rdn.isMultiValued()) {
@@ -997,7 +1108,7 @@ public final class DSSASN1Utils {
 	}
 
 	public static String getSubjectCommonName(CertificateToken cert) {
-		return extractAttributeFromX500Principal(BCStyle.CN, cert.getSubjectX500Principal());
+		return extractAttributeFromX500Principal(BCStyle.CN, cert.getSubject());
 	}
 
 	public static String getHumanReadableName(CertificateToken cert) {
@@ -1006,7 +1117,7 @@ public final class DSSASN1Utils {
 
 	private static String firstNotNull(CertificateToken cert, ASN1ObjectIdentifier... oids) {
 		for (ASN1ObjectIdentifier oid : oids) {
-			String value = extractAttributeFromX500Principal(oid, cert.getSubjectX500Principal());
+			String value = extractAttributeFromX500Principal(oid, cert.getSubject());
 			if (value != null) {
 				return value;
 			}
@@ -1038,7 +1149,7 @@ public final class DSSASN1Utils {
 		try {
 			return Time.getInstance(encodable).getDate();
 		} catch (Exception e) {
-			LOG.warn("Unable to retrieve the date : " + encodable, e);
+			LOG.warn("Unable to retrieve the date {}", encodable, e);
 			return null;
 		}
 	}
@@ -1069,29 +1180,129 @@ public final class DSSASN1Utils {
 			ASN1Sequence seq = (ASN1Sequence) is.readObject();
 			return IssuerSerial.getInstance(seq);
 		} catch (Exception e) {
-			LOG.error("Unable to decode IssuerSerialV2 textContent '" + Utils.toBase64(binaries) + "' : " + e.getMessage(), e);
+			LOG.error("Unable to decode IssuerSerialV2 textContent '{}' : {}", Utils.toBase64(binaries), e.getMessage(), e);
 			return null;
 		}
 	}
 
 	/**
-	 * Returns ats-hash-index table from timestamp's unsigned properties
+	 * Transforms an object of class {@code IssuerSerial} into instance of
+	 * {@code CertificateIdentifier}
+	 * 
+	 * @param issuerAndSerial {@link IssuerSerial} to transform
+	 * @return {@link CertificateIdentifier}
+	 */
+	public static CertificateIdentifier toCertificateIdentifier(IssuerSerial issuerAndSerial) {
+		if (issuerAndSerial == null) {
+			return null;
+		}
+		try {
+			CertificateIdentifier certificateIdentifier = new CertificateIdentifier();
+			GeneralNames gnames = issuerAndSerial.getIssuer();
+			if (gnames != null) {
+				GeneralName[] names = gnames.getNames();
+				if (names.length == 1) {
+					certificateIdentifier.setIssuerName(new X500Principal(names[0].getName().toASN1Primitive().getEncoded(ASN1Encoding.DER)));
+				} else {
+					LOG.warn("More than one GeneralName");
+				}
+			}
+
+			ASN1Integer serialNumber = issuerAndSerial.getSerial();
+			if (serialNumber != null) {
+				certificateIdentifier.setSerialNumber(serialNumber.getValue());
+			}
+
+			return certificateIdentifier;
+		} catch (Exception e) {
+			LOG.error("Unable to read the IssuerSerial object", e);
+			return null;
+		}
+	}
+
+	/**
+	 * Returns ats-hash-index table, with a related version present in from timestamp's unsigned properties
 	 * 
 	 * @param timestampUnsignedAttributes {@link AttributeTable} unsigned properties of the timestamp
-	 * @return the content of SignedAttribute: ATS-hash-index unsigned attribute {itu-t(0) identified-organization(4)
-	 *         etsi(0) electronic-signature-standard(1733) attributes(2) 5}
+	 * @return the content of SignedAttribute: ATS-hash-index unsigned attribute with a present version
 	 */
 	public static ASN1Sequence getAtsHashIndex(AttributeTable timestampUnsignedAttributes) {
-		if (timestampUnsignedAttributes != null) {
-			final Attribute atsHashIndexAttribute = timestampUnsignedAttributes.get(id_aa_ATSHashIndex);
+		ASN1ObjectIdentifier atsHashIndexVersionIdentifier = getAtsHashIndexVersionIdentifier(timestampUnsignedAttributes);
+		return getAtsHashIndexByVersion(timestampUnsignedAttributes, atsHashIndexVersionIdentifier);
+	}
+
+	/**
+	 * Returns ats-hash-index table, with a specified version present in from timestamp's unsigned properties
+	 * 
+	 * @param timestampUnsignedAttributes {@link AttributeTable} unsigned properties of the timestamp
+	 * @param atsHashIndexVersionIdentifier {@link ASN1ObjectIdentifier} identifier of ats-hash-index table to get
+	 * @return the content of SignedAttribute: ATS-hash-index unsigned attribute with a requested version if present
+	 */
+	public static ASN1Sequence getAtsHashIndexByVersion(AttributeTable timestampUnsignedAttributes, 
+			ASN1ObjectIdentifier atsHashIndexVersionIdentifier) {
+		if (timestampUnsignedAttributes != null && atsHashIndexVersionIdentifier != null) {
+			final Attribute atsHashIndexAttribute = timestampUnsignedAttributes.get(atsHashIndexVersionIdentifier);
 			if (atsHashIndexAttribute != null) {
 				final ASN1Set attrValues = atsHashIndexAttribute.getAttrValues();
-				if (attrValues != null && attrValues.size() > 0) {
+				if (attrValues != null && attrValues.size() == 1) {
 					return (ASN1Sequence) attrValues.getObjectAt(0).toASN1Primitive();
 				}
 			}
 		}
 		return null;
+	}
+	
+	/**
+	 * Returns {@code ASN1ObjectIdentifier} of the found AtsHashIndex
+	 * @param timestampUnsignedAttributes {@link AttributeTable} of the timestamp's unsignedAttributes
+	 * @return {@link ASN1ObjectIdentifier} of the AtsHashIndex element version
+	 */
+	public static ASN1ObjectIdentifier getAtsHashIndexVersionIdentifier(AttributeTable timestampUnsignedAttributes) {
+		if (timestampUnsignedAttributes != null) {
+			Attributes attributes = timestampUnsignedAttributes.toASN1Structure();
+			for (Attribute attribute : attributes.getAttributes()) {
+				ASN1ObjectIdentifier attrType = attribute.getAttrType();
+				if (id_aa_ATSHashIndex.equals(attrType) || id_aa_ATSHashIndexV2.equals(attrType) || id_aa_ATSHashIndexV3.equals(attrType)) {
+					LOG.debug("Unsigned attribute of type [{}] found in the timestamp.", attrType);
+					return attrType;
+				}
+			}
+			LOG.warn("The timestamp unsignedAttributes does not contain ATSHashIndex!");
+		}
+		return null;
+	}
+	
+	/**
+	 * Returns octets from the given attribute by defined atsh-hash-index type
+	 * @param attribute {@link Attribute} to get byte array from
+	 * @param atsHashIndexVersionIdentifier {@link ASN1ObjectIdentifier} to specify rules
+	 * @return byte array
+	 */
+	public static List<byte[]> getOctetStringForAtsHashIndex(Attribute attribute, ASN1ObjectIdentifier atsHashIndexVersionIdentifier) {
+		
+		List<byte[]> octets = new ArrayList<>();
+		/*
+		 *  id_aa_ATSHashIndexV3 (EN 319 122-1 v1.1.1) -> Each one shall contain the hash
+		 *  value of the octets resulting from concatenating the Attribute.attrType field and one of the instances of
+		 *  AttributeValue within the Attribute.attrValues within the unsignedAttrs field. One concatenation
+		 *  operation shall be performed as indicated above, and the hash value of the obtained result included in
+		 *  unsignedAttrsHashIndex
+		 */
+		if (id_aa_ATSHashIndexV3.equals(atsHashIndexVersionIdentifier)) {
+			byte[] attrType = getDEREncoded(attribute.getAttrType());
+			for (ASN1Encodable asn1Encodable : attribute.getAttrValues().toArray()) {
+				octets.add(DSSUtils.concatenate(attrType, getDEREncoded(asn1Encodable)));
+			}
+		} else {
+			/*
+			 * id_aa_ATSHashIndex (TS 101 733 v2.2.1) and id_aa_ATSHashIndexV2 (EN 319 122-1 v1.0.0) ->
+			 * The field unsignedAttrsHashIndex shall be a sequence of octet strings. Each one shall contain the hash value of
+			 * one instance of Attribute within the unsignedAttrs field of the SignerInfo.
+			 */
+			octets.add(getDEREncoded(attribute));
+		}
+		
+		return octets;
 	}
 	
 	/**
@@ -1138,15 +1349,14 @@ public final class DSSASN1Utils {
 	}
 	
 	/**
-	 * Finds {@link TimeStampToken}s with a given {@code oid}
+	 * Finds archive {@link TimeStampToken}s
 	 * @param unsignedAttributes {@link AttributeTable} to obtain timestamps from
-	 * @param oid {@link ASN1ObjectIdentifier} to collect
 	 */
-	public static List<TimeStampToken> findTimeStampTokens(AttributeTable unsignedAttributes, ASN1ObjectIdentifier oid) {
-		List<TimeStampToken> timeStamps = new ArrayList<TimeStampToken>();
-		Attribute[] signatureTimeStamps = getAsn1Attributes(unsignedAttributes, oid);
-		if (signatureTimeStamps != null) {
-			for (final Attribute attribute : signatureTimeStamps) {
+	public static List<TimeStampToken> findArchiveTimeStampTokens(AttributeTable unsignedAttributes) {
+		List<TimeStampToken> timeStamps = new ArrayList<>();
+		Attribute[] attributes = unsignedAttributes.toASN1Structure().getAttributes();
+		for (final Attribute attribute : attributes) {
+			if (isArchiveTimeStampToken(attribute)) {
 				TimeStampToken timeStampToken = getTimeStampToken(attribute);
 				if (timeStampToken != null) {
 					timeStamps.add(timeStampToken);
@@ -1154,6 +1364,31 @@ public final class DSSASN1Utils {
 			}
 		}
 		return timeStamps;
+	}
+	
+	/**
+	 * Checks if the attribute is of an allowed archive timestamp type
+	 * 
+	 * @param attribute {@link Attribute} to check
+	 * @return true if the attribute represents an archive timestamp element, false otherwise
+	 */
+	public static boolean isArchiveTimeStampToken(Attribute attribute) {
+		return isAttributeOfType(attribute, OID.id_aa_ets_archiveTimestampV2) || isAttributeOfType(attribute, OID.id_aa_ets_archiveTimestampV3);
+	}
+	
+	/**
+	 * Checks if the given attribute is an instance of the expected asn1ObjectIdentifier type
+	 * 
+	 * @param attribute {@link Attribute} to check
+	 * @param asn1ObjectIdentifier {@link ASN1ObjectIdentifier} type to check against
+	 * @return TRUE if the attribute is of type asn1ObjectIdentifier, FALSE otherwise
+	 */
+	public static boolean isAttributeOfType(Attribute attribute, ASN1ObjectIdentifier asn1ObjectIdentifier) {
+		if (attribute == null) {
+			return false;
+		}
+		ASN1ObjectIdentifier objectIdentifier = attribute.getAttrType();
+		return asn1ObjectIdentifier.equals(objectIdentifier);
 	}
 	
 	/**
@@ -1183,7 +1418,7 @@ public final class DSSASN1Utils {
 	public static CMSSignedData getCMSSignedData(Attribute attribute) throws CMSException, IOException {
 		ASN1Encodable value = getAsn1Encodable(attribute);
 		if (value instanceof DEROctetString) {
-			LOG.warn("Illegal content for CMSSignedData (OID : {}) : OCTET STRING is not allowed !", attribute.getAttrType().toString());
+			LOG.warn("Illegal content for CMSSignedData (OID : {}) : OCTET STRING is not allowed !", attribute.getAttrType());
 		} else {
 			ASN1Primitive asn1Primitive = value.toASN1Primitive();
 			return new CMSSignedData(asn1Primitive.getEncoded());
@@ -1216,7 +1451,7 @@ public final class DSSASN1Utils {
 	 * 
 	 * @param encodable
 	 *                  the encoded data to be parsed
-	 * @return an instance of RevocationValues or null if the parsing failled
+	 * @return an instance of RevocationValues or null if the parsing failed
 	 */
 	public static RevocationValues getRevocationValues(ASN1Encodable encodable) {
 		if (encodable != null) {
@@ -1224,6 +1459,98 @@ public final class DSSASN1Utils {
 				return RevocationValues.getInstance(encodable);
 			} catch (Exception e) {
 				LOG.warn("Unable to parse RevocationValues", e);
+			}
+		}
+		return null;
+	}
+
+	public static CertificateRef getCertificateRef(OtherCertID otherCertId) {
+		CertificateRef certRef = new CertificateRef();
+		DigestAlgorithm digestAlgo = DigestAlgorithm.forOID(otherCertId.getAlgorithmHash().getAlgorithm().getId());
+		certRef.setCertDigest(new Digest(digestAlgo, otherCertId.getCertHash()));
+		certRef.setCertificateIdentifier(toCertificateIdentifier(otherCertId.getIssuerSerial()));
+		return certRef;
+	}
+
+	/**
+	 * This method extract the PSD2 QcStatement informations for a given certificate
+	 * 
+	 * @param certToken the certificate
+	 * @return an instance of {@code PSD2QcType} or null
+	 */
+	public static PSD2QcType getPSD2QcStatement(CertificateToken certToken) {
+		PSD2QcType result = null;
+		final byte[] qcStatement = certToken.getCertificate().getExtensionValue(Extension.qCStatements.getId());
+		if (Utils.isArrayNotEmpty(qcStatement)) {
+			try {
+				final ASN1Sequence seq = getAsn1SequenceFromDerOctetString(qcStatement);
+				for (int i = 0; i < seq.size(); i++) {
+					final QCStatement statement = QCStatement.getInstance(seq.getObjectAt(i));
+					if (OID.psd2_qcStatement.equals(statement.getStatementId())) {
+						result = new PSD2QcType();
+						ASN1Sequence psd2Seq = ASN1Sequence.getInstance(statement.getStatementInfo());
+						ASN1Sequence rolesSeq = ASN1Sequence.getInstance(psd2Seq.getObjectAt(0));
+
+						List<RoleOfPSP> rolesOfPSP = new ArrayList<>();
+						for (int ii = 0; ii < rolesSeq.size(); ii++) {
+							ASN1Sequence oneRoleSeq = ASN1Sequence.getInstance(rolesSeq.getObjectAt(ii));
+							RoleOfPSP roleOfPSP = new RoleOfPSP();
+							ASN1ObjectIdentifier oid = (ASN1ObjectIdentifier) oneRoleSeq.getObjectAt(0);
+							roleOfPSP.setPspOid(RoleOfPspOid.fromOid(oid.getId()));
+							roleOfPSP.setPspName(getString(oneRoleSeq.getObjectAt(1)));
+							rolesOfPSP.add(roleOfPSP);
+						}
+						result.setRolesOfPSP(rolesOfPSP);
+						result.setNcaName(getString(psd2Seq.getObjectAt(1)));
+						result.setNcaId(getString(psd2Seq.getObjectAt(2)));
+					}
+				}
+			} catch (Exception e) {
+				LOG.warn("Unable to read QCStatement", e);
+			}
+		}
+		return result;
+	}
+
+	public static List<String> getSubjectAlternativeNames(CertificateToken certToken) {
+		List<String> result = new ArrayList<>();
+		try {
+			Collection<List<?>> subjectAlternativeNames = certToken.getCertificate().getSubjectAlternativeNames();
+			if (Utils.isCollectionNotEmpty(subjectAlternativeNames)) {
+				for (List<?> list : subjectAlternativeNames) {
+					// type + value
+					if (Utils.collectionSize(list) == 2) {
+						Object value = list.get(1);
+						if (value instanceof String) {
+							result.add((String) value);
+						} else {
+							LOG.trace("Ignored value : {}", value);
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			LOG.warn("Unable to extract SubjectAlternativeNames", e);
+		}
+		return result;
+	}
+
+	public static SemanticsIdentifier getSemanticsIdentifier(CertificateToken certToken) {
+		final byte[] qcStatement = certToken.getCertificate().getExtensionValue(Extension.qCStatements.getId());
+		if (Utils.isArrayNotEmpty(qcStatement)) {
+			try {
+				final ASN1Sequence seq = getAsn1SequenceFromDerOctetString(qcStatement);
+				for (int i = 0; i < seq.size(); i++) {
+					final QCStatement statement = QCStatement.getInstance(seq.getObjectAt(i));
+					if (RFC3739QCObjectIdentifiers.id_qcs_pkixQCSyntax_v2.equals(statement.getStatementId())) {
+						SemanticsInformation semanticsInfo = SemanticsInformation.getInstance(statement.getStatementInfo());
+						if (semanticsInfo != null && semanticsInfo.getSemanticsIdentifier() != null) {
+							return SemanticsIdentifier.fromOid(semanticsInfo.getSemanticsIdentifier().getId());
+						}
+					}
+				}
+			} catch (Exception e) {
+				LOG.warn("Unable to extract the SemanticsIdentifier", e);
 			}
 		}
 		return null;

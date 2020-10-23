@@ -20,7 +20,6 @@
  */
 package eu.europa.esig.dss.crl.x509.impl;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -39,13 +38,13 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.crl.AbstractCRLUtils;
 import eu.europa.esig.dss.crl.CRLBinary;
 import eu.europa.esig.dss.crl.CRLValidity;
 import eu.europa.esig.dss.crl.ICRLUtils;
 import eu.europa.esig.dss.enumerations.KeyUsageBit;
 import eu.europa.esig.dss.enumerations.SignatureAlgorithm;
+import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 
 public class CRLUtilsX509CRLImpl extends AbstractCRLUtils implements ICRLUtils {
@@ -70,7 +69,7 @@ public class CRLUtilsX509CRLImpl extends AbstractCRLUtils implements ICRLUtils {
 		
 		final X509CRLValidity crlValidity= new X509CRLValidity(crlBinary);
 		
-		try (InputStream bais = new ByteArrayInputStream(crlBinary.getBinaries())) {
+		try (InputStream bais = crlValidity.toCRLInputStream()) {
 			
 			X509CRL x509CRL = loadCRL(bais);
 			crlValidity.setX509CRL(x509CRL);
@@ -82,7 +81,7 @@ public class CRLUtilsX509CRLImpl extends AbstractCRLUtils implements ICRLUtils {
 			crlValidity.setNextUpdate(x509CRL.getNextUpdate());
 
 			final X500Principal x509CRLIssuerX500Principal = x509CRL.getIssuerX500Principal();
-			final X500Principal issuerTokenSubjectX500Principal = issuerToken.getSubjectX500Principal();
+			final X500Principal issuerTokenSubjectX500Principal = issuerToken.getSubject().getPrincipal();
 			if (x509CRLIssuerX500Principal.equals(issuerTokenSubjectX500Principal)) {
 				crlValidity.setIssuerX509PrincipalMatches(true);
 			}
@@ -109,8 +108,8 @@ public class CRLUtilsX509CRLImpl extends AbstractCRLUtils implements ICRLUtils {
 			crlValidity.setIssuerToken(issuerToken);
 		} catch (GeneralSecurityException e) {
 			String msg = String.format("CRL Signature cannot be validated : %s", e.getMessage());
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(msg, e);
+			if (LOG.isTraceEnabled()) {
+				LOG.trace(msg, e);
 			} else {
 				LOG.warn(msg);
 			}
@@ -120,20 +119,18 @@ public class CRLUtilsX509CRLImpl extends AbstractCRLUtils implements ICRLUtils {
 
 	@Override
 	public X509CRLEntry getRevocationInfo(CRLValidity crlValidity, BigInteger serialNumber) {
-		X509CRL crl = getCRL(crlValidity);
-		return crl.getRevokedCertificate(serialNumber);
-	}
-
-	private X509CRL getCRL(CRLValidity crlValidity) {
 		X509CRL crl = null;
 		if (crlValidity instanceof X509CRLValidity) {
-			X509CRLValidity x509Validity = (X509CRLValidity) crlValidity;
-			crl = x509Validity.getX509CRL();
+			crl = ((X509CRLValidity) crlValidity).getX509CRL();
 		}
 		if (crl == null) {
-			crl = loadCRL(crlValidity.getCrlInputStream());
+			try (InputStream is = crlValidity.toCRLInputStream()) {
+				crl = loadCRL(is);
+			} catch (IOException e) {
+				throw new DSSException(String.format("Unable to get revocation info. Reason : %s", e.getMessage()), e);
+			}
 		}
-		return crl;
+		return crl.getRevokedCertificate(serialNumber);
 	}
 
 	/**

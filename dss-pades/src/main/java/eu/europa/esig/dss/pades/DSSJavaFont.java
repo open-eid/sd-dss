@@ -1,18 +1,32 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.pades;
 
 import java.awt.Font;
-import java.io.InputStream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import eu.europa.esig.dss.model.DSSException;
 
 public class DSSJavaFont extends AbstractDSSFont {
-
-	private static final Logger LOG = LoggerFactory.getLogger(DSSJavaFont.class);
 	
 	private static final int DEFAULT_FONT_STYLE = Font.PLAIN;
+
+	private Font javaFont;
 	
 	public DSSJavaFont(Font javaFont) {
 		this.javaFont = javaFont;
@@ -34,26 +48,18 @@ public class DSSJavaFont extends AbstractDSSFont {
 	}
 
 	@Override
-	public InputStream getInputStream() {
-		throw new DSSException("InputStream cannot be obtained from DSSJavaFont. Please use DSSFileFont implementation.");
+	public Font getJavaFont() {
+		return javaFont;
 	}
 
-	@Override
 	public String getName() {
 		return javaFont.getFontName();
 	}
 
 	@Override
 	public void setSize(float size) {
-		this.size = size;
+		super.setSize(size);
 		this.javaFont = javaFont.deriveFont(size);
-	}
-
-	@Override
-	public boolean isLogicalFont() {
-		LOG.warn("The given font is logical (one of standart 14 fonts) and cannot be embedded to a PDF document. "
-				+ "Please, use DSSFileFont implementation to get the document compatible with the PDF/A standard.");
-		return true;
 	}
 
 }

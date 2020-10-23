@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.cades.validation;
 
 import static eu.europa.esig.dss.spi.OID.id_aa_ets_archiveTimestampV2;
@@ -36,6 +56,7 @@ import eu.europa.esig.dss.enumerations.ArchiveTimestampType;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
@@ -66,17 +87,18 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 	}
 	
 	@Override
-	public byte[] getContentTimestampData(TimestampToken timestampToken) {
-		return DSSUtils.toByteArray(getOriginalDocument());
+	public DSSDocument getContentTimestampData(TimestampToken timestampToken) {
+		return getOriginalDocument();
 	}
 
 	@Override
-	public byte[] getSignatureTimestampData(TimestampToken timestampToken) {
-		return signerInformation.getSignature();
+	public DSSDocument getSignatureTimestampData(TimestampToken timestampToken) {
+		byte[] signature = signerInformation.getSignature();
+		return new InMemoryDocument(signature);
 	}
 
 	@Override
-	public byte[] getTimestampX1Data(TimestampToken timestampToken) {
+	public DSSDocument getTimestampX1Data(TimestampToken timestampToken) {
 		try (ByteArrayOutputStream data = new ByteArrayOutputStream()) {
 			data.write(signerInformation.getSignature());
 			// We don't include the outer SEQUENCE, only the attrType and
@@ -88,15 +110,21 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 				data.write(DSSASN1Utils.getDEREncoded(attribute.getAttrValues()));
 			}
 			// Method is common to Type 1 and Type 2
-			data.write(getTimestampX2Data(timestampToken));
-			return data.toByteArray();
+			data.write(getTimestampX2DataBytes(timestampToken));
+			byte[] byteArray = data.toByteArray();
+			return new InMemoryDocument(byteArray);
 		} catch (IOException e) {
 			throw new DSSException(e);
 		}
 	}
 
 	@Override
-	public byte[] getTimestampX2Data(final TimestampToken timestampToken) {
+	public DSSDocument getTimestampX2Data(final TimestampToken timestampToken) {
+		byte[] timestampX2DataBytes = getTimestampX2DataBytes(timestampToken);
+		return new InMemoryDocument(timestampX2DataBytes);
+	}
+	
+	private byte[] getTimestampX2DataBytes(final TimestampToken timestampToken) {
 		try (ByteArrayOutputStream data = new ByteArrayOutputStream()) {
 			// Those are common to Type 1 and Type 2
 			final Attribute certAttribute = CMSUtils.getUnsignedAttribute(signerInformation, id_aa_ets_certificateRefs);
@@ -117,10 +145,10 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 	}
 
 	@Override
-	public byte[] getArchiveTimestampData(final TimestampToken timestampToken) throws DSSException {
+	public DSSDocument getArchiveTimestampData(final TimestampToken timestampToken) throws DSSException {
 
 		final ArchiveTimestampType archiveTimestampType = timestampToken.getArchiveTimestampType();
-		byte[] archiveTimestampData;
+		DSSDocument archiveTimestampData;
 		switch (archiveTimestampType) {
 		case CAdES_V2:
 			/**
@@ -130,6 +158,10 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 			 */
 			archiveTimestampData = getArchiveTimestampDataV2(timestampToken, true);
 			if (!timestampToken.matchData(archiveTimestampData, true)) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Unable to match message imprint for an Archive TimestampToken V2 with Id '{}' "
+							+ "by including unsigned attribute tags and length, try to compute the data without...", timestampToken.getDSSIdAsString());
+				}
 				archiveTimestampData = getArchiveTimestampDataV2(timestampToken, false);
 			}
 			break;
@@ -142,18 +174,28 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 		return archiveTimestampData;
 	}
 
-	private byte[] getArchiveTimestampDataV3(final TimestampToken timestampToken) throws DSSException {
+	private DSSDocument getArchiveTimestampDataV3(final TimestampToken timestampToken) throws DSSException {
 
 		final Attribute atsHashIndexAttribute = timestampExtractor.getVerifiedAtsHashIndex(signerInformation, timestampToken);
 
-        final DigestAlgorithm messageImprintDigestAlgorithm = timestampToken.getSignedDataDigestAlgo();
+        final DigestAlgorithm messageImprintDigestAlgorithm = timestampToken.getMessageImprint().getAlgorithm();
         byte[] originalDocumentDigest = getOriginalDocumentDigest(messageImprintDigestAlgorithm);
-        return timestampExtractor.getArchiveTimestampDataV3(signerInformation, atsHashIndexAttribute, originalDocumentDigest);
+        if (originalDocumentDigest != null) {
+            byte[] archiveTimestampDataV3 = timestampExtractor.getArchiveTimestampDataV3(signerInformation, atsHashIndexAttribute, originalDocumentDigest);
+            return new InMemoryDocument(archiveTimestampDataV3);
+        }
+		LOG.error("The original document is not found for TimestampToken with Id '{}'! "
+				+ "Unable to compute message imprint.", timestampToken.getDSSIdAsString());
+        return null;
 	}
 	
 	private byte[] getOriginalDocumentDigest(DigestAlgorithm algo) {
 		DSSDocument originalDocument = getOriginalDocument();
-		return Utils.fromBase64(originalDocument.getDigest(algo));
+		if (originalDocument != null) {
+			return Utils.fromBase64(originalDocument.getDigest(algo));
+		} else {
+			return null;
+		}
 	}
 	
 	/**
@@ -178,7 +220,7 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 	 * @return
 	 * @throws DSSException
 	 */
-	private byte[] getArchiveTimestampDataV2(TimestampToken timestampToken, boolean includeUnsignedAttrsTagAndLength) throws DSSException {
+	private DSSDocument getArchiveTimestampDataV2(TimestampToken timestampToken, boolean includeUnsignedAttrsTagAndLength) throws DSSException {
 
 		try (ByteArrayOutputStream data = new ByteArrayOutputStream()) {
 
@@ -190,6 +232,11 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 			
 			if (CMSUtils.isDetachedSignature(cmsSignedData)) {
 				byte[] originalDocumentBinaries = getOriginalDocumentBinaries();
+				if (originalDocumentBinaries == null) {
+					LOG.warn("The detached content is not provided for a TimestampToken with Id '{}'. "
+							+ "Not possible to compute message imprint!", timestampToken.getDSSIdAsString());
+					return null;
+				}
 				data.write(originalDocumentBinaries);
 			}
 			
@@ -208,14 +255,14 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 			data.write(signerInfoBytes);
 
 			final byte[] result = data.toByteArray();
-			return result;
-
+			return new InMemoryDocument(result);
 		} catch (IOException e) {
 			throw new DSSException(e);
 		} catch (Exception e) {
 			// When error in computing or in format the algorithm just continues.
-			LOG.warn("When error in computing or in format the algorithm just continue...", e);
-			return DSSUtils.EMPTY_BYTE_ARRAY;
+			LOG.error("An error in computing of message impring for a TimestampToken with Id : {}. Reason : {}", 
+					timestampToken.getDSSIdAsString(), e.getMessage(), e);
+			return null;
 		}
 	}
 	
@@ -238,12 +285,11 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 		 * Detached signatures have either no encapContentInfo in signedData, or it
 		 * exists but has no eContent
 		 */
-		byte[] originalDocumentBinaries = DSSUtils.toByteArray(getOriginalDocument());
-		if (Utils.isArrayNotEmpty(originalDocumentBinaries)) {
-			return originalDocumentBinaries;
-		} else {
-			throw new DSSException("Signature is detached and no original data provided.");
+		DSSDocument originalDocument = getOriginalDocument();
+		if (originalDocument != null) {
+			return DSSUtils.toByteArray(getOriginalDocument());
 		}
+		return null;
 	}
 	
 	private byte[] getCertificateDataBytes(final SignedData signedData) throws IOException {
@@ -390,7 +436,12 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 	}
 	
 	private DSSDocument getOriginalDocument() {
-		return CMSUtils.getOriginalDocument(cmsSignedData, detachedDocuments);
+		try {
+			return CMSUtils.getOriginalDocument(cmsSignedData, detachedDocuments);
+		} catch (DSSException e) {
+			LOG.error("Cannot extract original document! Reason : {}", e.getMessage());
+			return null;
+		}
 	}
 
 }

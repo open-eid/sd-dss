@@ -20,11 +20,13 @@
  */
 package eu.europa.esig.dss.pades.signature;
 
-import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.DSSDocument;
+import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.pades.PAdESSignatureParameters;
-import eu.europa.esig.dss.pdf.PDFTimestampService;
-import eu.europa.esig.dss.pdf.PdfObjFactory;
+import eu.europa.esig.dss.pades.PAdESTimestampParameters;
+import eu.europa.esig.dss.pades.timestamp.PAdESTimestampService;
+import eu.europa.esig.dss.pdf.IPdfObjFactory;
+import eu.europa.esig.dss.pdf.PDFSignatureService;
 import eu.europa.esig.dss.signature.SignatureExtension;
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
 
@@ -34,16 +36,27 @@ import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
 class PAdESLevelBaselineT implements SignatureExtension<PAdESSignatureParameters> {
 
 	private final TSPSource tspSource;
+	private final IPdfObjFactory pdfObjectFactory;
 
-	public PAdESLevelBaselineT(TSPSource tspSource) {
+	protected PAdESLevelBaselineT(TSPSource tspSource, IPdfObjFactory pdfObjectFactory) {
 		this.tspSource = tspSource;
+		this.pdfObjectFactory = pdfObjectFactory;
 	}
 
 	@Override
 	public DSSDocument extendSignatures(final DSSDocument document, final PAdESSignatureParameters params) throws DSSException {
 		// Will add a DocumentTimeStamp. signature-timestamp (CMS) is impossible to add while extending
-		final PDFTimestampService timestampService = PdfObjFactory.newTimestampSignatureService();
-		return timestampService.timestamp(document, params, tspSource);
+		return timestampDocument(document, params.getSignatureTimestampParameters(), params.getPasswordProtection());
+	}
+	
+	protected DSSDocument timestampDocument(final DSSDocument document, final PAdESTimestampParameters timestampParameters, final String pwd) {
+		PAdESTimestampService padesTimestampService = new PAdESTimestampService(tspSource, newPdfSignatureService());
+		timestampParameters.setPasswordProtection(pwd);
+		return padesTimestampService.timestampDocument(document, timestampParameters);
+	}
+	
+	protected PDFSignatureService newPdfSignatureService() {
+		return pdfObjectFactory.newSignatureTimestampService();
 	}
 
 }

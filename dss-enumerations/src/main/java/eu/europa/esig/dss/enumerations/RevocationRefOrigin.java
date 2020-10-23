@@ -32,9 +32,4 @@ public enum RevocationRefOrigin {
 	 */
 	ATTRIBUTE_REVOCATION_REFS,
 
-	/**
-	 * The revocation reference was found in a timestamp attribute (used in CAdES)
-	 */
-	TIMESTAMP_REVOCATION_REFS,
-
 }

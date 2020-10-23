@@ -23,14 +23,14 @@ package eu.europa.esig.dss.validation.timestamp;
 import org.bouncycastle.tsp.TimeStampToken;
 
 import eu.europa.esig.dss.enumerations.CertificateSourceType;
-import eu.europa.esig.dss.spi.x509.CertificatePool;
-import eu.europa.esig.dss.validation.CAdESCertificateSource;
+import eu.europa.esig.dss.spi.DSSASN1Utils;
+import eu.europa.esig.dss.validation.CMSCertificateSource;
 
 @SuppressWarnings("serial")
-public class TimestampCertificateSource extends CAdESCertificateSource {
+public class TimestampCertificateSource extends CMSCertificateSource {
 
-	public TimestampCertificateSource(TimeStampToken timestampToken, CertificatePool certPool) {
-		super(timestampToken.toCMSSignedData(), certPool);
+	public TimestampCertificateSource(final TimeStampToken timestampToken) {
+		super(timestampToken.toCMSSignedData(), DSSASN1Utils.getFirstSignerInformation(timestampToken.toCMSSignedData()));
 	}
 
 	@Override

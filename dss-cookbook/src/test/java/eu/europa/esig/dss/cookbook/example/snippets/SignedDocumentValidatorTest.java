@@ -1,6 +1,26 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.cookbook.example.snippets;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.File;
 import java.util.Arrays;
@@ -9,12 +29,13 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.transform.Templates;
 import javax.xml.validation.Schema;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.detailedreport.DetailedReportFacade;
 import eu.europa.esig.dss.detailedreport.DetailedReportXmlDefiner;
 import eu.europa.esig.dss.detailedreport.jaxb.ObjectFactory;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlDetailedReport;
+import eu.europa.esig.dss.enumerations.TokenExtractionStategy;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
@@ -22,8 +43,8 @@ import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
 import eu.europa.esig.dss.validation.SignaturePolicyProvider;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
-import eu.europa.esig.dss.validation.executor.DefaultSignatureProcessExecutor;
 import eu.europa.esig.dss.validation.executor.ValidationLevel;
+import eu.europa.esig.dss.validation.executor.signature.DefaultSignatureProcessExecutor;
 import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.validationreport.jaxb.ValidationReportType;
 
@@ -32,7 +53,7 @@ public class SignedDocumentValidatorTest {
 	@Test
 	public void test() throws Exception {
 
-		DSSDocument document = new FileDocument(new File("src/test/resources/signedXmlXadesLT.xml"));
+		DSSDocument document = new FileDocument(new File("src/test/resources/signature-pool/signedXmlXadesLT.xml"));
 
 		// tag::demo[]
 		
@@ -42,6 +63,10 @@ public class SignedDocumentValidatorTest {
 		
 		// Allows specifying a custom certificate verifier (online or offline)
 		documentValidator.setCertificateVerifier(new CommonCertificateVerifier());
+		
+		// Allows specifying which tokens need to be extracted in the diagnostic data (Base64).
+		// Default : NONE)
+		documentValidator.setTokenExtractionStategy(TokenExtractionStategy.EXTRACT_CERTIFICATES_AND_TIMESTAMPS);
 
 		// Allows defining of a signing certificate in the explicit way, in case if the certificate
 		// is not provided in the signature itself (can be used for non-ASiC signatures)
@@ -69,6 +94,11 @@ public class SignedDocumentValidatorTest {
 		// Default : true
 		documentValidator.setEnableEtsiValidationReport(true);
 		
+		// Sets if the semantics for Indication / SubIndication must be included in the
+		// Simple Report (see table 5 / 6 of the ETSI TS 119 102-1)
+		// Default : false
+		documentValidator.setIncludeSemantics(true);
+
 		// Executes the validation process and produces validation reports:
 		// Simple report, Detailed report, Diagnostic data and ETSI Validation Report (if enabled)
 		Reports reports = documentValidator.validateDocument();

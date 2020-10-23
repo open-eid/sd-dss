@@ -25,12 +25,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import eu.europa.esig.dss.asic.xades.ASiCWithXAdESSignatureParameters;
 import eu.europa.esig.dss.asic.xades.signature.ASiCWithXAdESService;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.enumerations.ObjectIdentifierQualifier;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
@@ -39,14 +40,15 @@ import eu.europa.esig.dss.model.Policy;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.SignaturePolicyProvider;
+import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 
 public class ASiCEXAdESLevelBPolicyIdTest extends AbstractASiCEXAdESTestSignature {
 
-	private DocumentSignatureService<ASiCWithXAdESSignatureParameters> service;
+	private DocumentSignatureService<ASiCWithXAdESSignatureParameters, XAdESTimestampParameters> service;
 	private ASiCWithXAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text");
 
@@ -58,7 +60,8 @@ public class ASiCEXAdESLevelBPolicyIdTest extends AbstractASiCEXAdESTestSignatur
 		signatureParameters.aSiC().setContainerType(ASiCContainerType.ASiC_E);
 		Policy policy = new Policy();
 		policy.setId("urn:oid:1.3.6.1.4.1.10015.1000.3.2.1");
-		policy.setQualifier("OIDAsURN");
+		policy.setQualifier(ObjectIdentifierQualifier.OID_AS_URN);
+		policy.setDocumentationReferences("http://nowina.lu/test.pdf", "https://www.test.ee/public/bdoc-spec21.pdf");
 		policy.setDigestAlgorithm(DigestAlgorithm.SHA1);
 		policy.setDigestValue(Utils.fromBase64("gIHiaetEE94gbkCRygQ9WspxUdw="));
 		policy.setSpuri("https://www.sk.ee/repository/bdoc-spec21.pdf");
@@ -70,14 +73,14 @@ public class ASiCEXAdESLevelBPolicyIdTest extends AbstractASiCEXAdESTestSignatur
 	@Override
 	protected SignaturePolicyProvider getSignaturePolicyProvider() {
 		SignaturePolicyProvider spp = new SignaturePolicyProvider();
-		Map<String, DSSDocument> signaturePoliciesByUrl = new HashMap<String, DSSDocument>();
+		Map<String, DSSDocument> signaturePoliciesByUrl = new HashMap<>();
 		signaturePoliciesByUrl.put("https://www.sk.ee/repository/bdoc-spec21.pdf", new FileDocument(new File("src/test/resources/bdoc-spec21.pdf")));
 		spp.setSignaturePoliciesByUrl(signaturePoliciesByUrl);
 		return spp;
 	}
 
 	@Override
-	protected DocumentSignatureService<ASiCWithXAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<ASiCWithXAdESSignatureParameters, XAdESTimestampParameters> getService() {
 		return service;
 	}
 

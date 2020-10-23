@@ -24,7 +24,7 @@ import eu.europa.esig.dss.DomUtils;
 import eu.europa.esig.dss.model.Policy;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
-import eu.europa.esig.dss.xades.XPathQueryHolder;
+import eu.europa.esig.dss.xades.definition.XAdESPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -51,10 +51,11 @@ public class BDocTmSupport implements Serializable {
     return BDOC_TM_POLICY_ID.equals(policyId);
   }
 
-  public static boolean hasBDocTmPolicyId(Element signatureElement, XPathQueryHolder xPathQueryHolder) {
-    Element policyIdentifier = DomUtils.getElement(signatureElement, xPathQueryHolder.XPATH_SIGNATURE_POLICY_IDENTIFIER);
+  public static boolean hasBDocTmPolicyId(Element signatureElement, XAdESPaths xadesPaths) {
+
+    Element policyIdentifier = DomUtils.getElement(signatureElement, xadesPaths.getSignaturePolicyIdentifier());
     if (policyIdentifier != null) {
-      final Element policyId = DomUtils.getElement(policyIdentifier, xPathQueryHolder.XPATH__POLICY_ID);
+      final Element policyId = DomUtils.getElement(policyIdentifier, xadesPaths.getCurrentSignaturePolicyId());
       if (policyId != null) {
         String policyIdString = Utils.trim(policyId.getTextContent());
         return Utils.areStringsEqualIgnoreCase(BDocTmSupport.BDOC_TM_POLICY_ID, policyIdString);

@@ -23,6 +23,7 @@ package eu.europa.esig.dss.ws.signature.dto.parameters;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
@@ -33,12 +34,13 @@ import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.ws.dto.RemoteCertificate;
 import eu.europa.esig.dss.ws.dto.RemoteDocument;
+import eu.europa.esig.dss.ws.dto.TimestampDTO;
 
 @SuppressWarnings("serial")
 public class RemoteSignatureParameters implements Serializable {
 
 	private RemoteCertificate signingCertificate;
-	private List<RemoteCertificate> certificateChain = new ArrayList<RemoteCertificate>();
+	private List<RemoteCertificate> certificateChain = new ArrayList<>();
 
 	/**
 	 * The documents to be signed
@@ -89,19 +91,24 @@ public class RemoteSignatureParameters implements Serializable {
 	 * The mask generation function
 	 */
 	private MaskGenerationFunction maskGenerationFunction = signatureAlgorithm.getMaskGenerationFunction();
+	
+	/**
+	 * This object represents the list of content timestamps to be added into the signature.
+	 */
+	private List<TimestampDTO> contentTimestamps;
 
 	/**
-	 * The object representing the parameters related to the content timestamp (Baseline-B)
+	 * The object represents the parameters related to the content timestamp (Baseline-B)
 	 */
 	private RemoteTimestampParameters contentTimestampParameters;
 
 	/**
-	 * The object representing the parameters related to the signature timestamp (Baseline-T)
+	 * The object represents the parameters related to the signature timestamp (Baseline-T)
 	 */
 	private RemoteTimestampParameters signatureTimestampParameters;
 
 	/**
-	 * The object representing the parameters related to the archive timestamp (Baseline-LTA)
+	 * The object represents the parameters related to the archive timestamp (Baseline-LTA)
 	 */
 	private RemoteTimestampParameters archiveTimestampParameters;
 
@@ -115,6 +122,11 @@ public class RemoteSignatureParameters implements Serializable {
 	 * the signing certificate.
 	 */
 	private boolean generateTBSWithoutCertificate = false;
+
+	/**
+	 * PAdES: The image information to be included.
+	 */
+	private RemoteSignatureImageParameters imageParameters;
 
 	public RemoteSignatureParameters() {
 	}
@@ -167,9 +179,7 @@ public class RemoteSignatureParameters implements Serializable {
 	 *            the expected signature level
 	 */
 	public void setSignatureLevel(final SignatureLevel signatureLevel) {
-		if (signatureLevel == null) {
-			throw new NullPointerException("signatureLevel");
-		}
+		Objects.requireNonNull(signatureLevel, "signatureLevel must be defined!");
 		this.signatureLevel = signatureLevel;
 	}
 
@@ -275,6 +285,15 @@ public class RemoteSignatureParameters implements Serializable {
 	public EncryptionAlgorithm getEncryptionAlgorithm() {
 		return encryptionAlgorithm;
 	}
+	
+	/**
+	 * Get the mask generation function
+	 * 
+	 * @return the mask generation function.
+	 */
+	public MaskGenerationFunction getMaskGenerationFunction() {
+		return maskGenerationFunction;
+	}
 
 	/**
 	 * Gets the signature algorithm.
@@ -283,6 +302,23 @@ public class RemoteSignatureParameters implements Serializable {
 	 */
 	public SignatureAlgorithm getSignatureAlgorithm() {
 		return signatureAlgorithm;
+	}
+	
+	/**
+	 * Gets a list of content timestamps
+	 * @return list of {@link TimestampDTO}s
+	 */
+	public List<TimestampDTO> getContentTimestamps() {
+		return contentTimestamps;
+	}
+	
+	/**
+	 * Sets a list of content timestamps to be added into the signature
+	 * @param contentTimestamps 
+	 * 			list of content {@link TimestampDTO}s to set
+	 */
+	public void setContentTimestamps(List<TimestampDTO> contentTimestamps) {
+		this.contentTimestamps = contentTimestamps;
 	}
 
 	/**
@@ -391,13 +427,31 @@ public class RemoteSignatureParameters implements Serializable {
 		this.generateTBSWithoutCertificate = generateTBSWithoutCertificate;
 	}
 
+	/**
+	 * Get the image information to be included (PAdES).
+	 *
+	 * @return the image information to be included.
+	 */
+	public RemoteSignatureImageParameters getImageParameters() {
+		return this.imageParameters;
+	}
+
+	/**
+	 * 	Set the image information to be included (PAdES).
+	 *
+	 * @param imageParameters the image information to be included.
+	 */
+	public void setImageParameters(final RemoteSignatureImageParameters imageParameters) {
+		this.imageParameters = imageParameters;
+	}
+
 	@Override
 	public String toString() {
 		return "RemoteSignatureParameters [signWithExpiredCertificate=" + signWithExpiredCertificate + ", signatureLevel=" + signatureLevel + ", generateTBSWithoutCertificate="
 				+ generateTBSWithoutCertificate + ", signaturePackaging=" + signaturePackaging + ", signatureAlgorithm=" + signatureAlgorithm + ", encryptionAlgorithm=" 
 				+ encryptionAlgorithm + ", digestAlgorithm=" + digestAlgorithm + ", referenceDigestAlgorithm=" + referenceDigestAlgorithm + ", maskGenerationFunction=" 
 				+ maskGenerationFunction + ", bLevelParams=" + bLevelParams + ", contentTimestampParameters=" + contentTimestampParameters + ", signatureTimestampParameters=" 
-				+ signatureTimestampParameters + ", archiveTimestampParameters=" + archiveTimestampParameters + "]";
+				+ signatureTimestampParameters + ", archiveTimestampParameters=" + archiveTimestampParameters + ", imageParameters=" + imageParameters + "]";
 	}
 
 	@Override
@@ -417,6 +471,7 @@ public class RemoteSignatureParameters implements Serializable {
 		result = prime * result + ((signatureLevel == null) ? 0 : signatureLevel.hashCode());
 		result = prime * result + ((signaturePackaging == null) ? 0 : signaturePackaging.hashCode());
 		result = prime * result + ((signatureTimestampParameters == null) ? 0 : signatureTimestampParameters.hashCode());
+		result = prime * result + ((imageParameters == null) ? 0 : imageParameters.hashCode());
 		return result;
 	}
 
@@ -451,6 +506,13 @@ public class RemoteSignatureParameters implements Serializable {
 				return false;
 			}
 		} else if (!contentTimestampParameters.equals(other.contentTimestampParameters)) {
+			return false;
+		}
+		if (imageParameters == null) {
+			if (other.imageParameters != null) {
+				return false;
+			}
+		} else if (!imageParameters.equals(other.imageParameters)) {
 			return false;
 		}
 		if (digestAlgorithm != other.digestAlgorithm) {

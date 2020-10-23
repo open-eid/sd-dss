@@ -21,12 +21,13 @@
 package eu.europa.esig.dss.cades.signature;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
 
-import org.junit.Before;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import eu.europa.esig.dss.cades.CAdESSignatureParameters;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
@@ -43,34 +44,28 @@ import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.spi.DSSUtils;
 
-@RunWith(Parameterized.class)
+@Tag("slow")
 public class CAdESLevelBNONEWithRSAandMGF1Test extends AbstractCAdESTestSignature {
 
 	private static final String HELLO_WORLD = "Hello World";
 
-	private DocumentSignatureService<CAdESSignatureParameters> service;
+	private DocumentSignatureService<CAdESSignatureParameters, CAdESTimestampParameters> service;
 	private CAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	private final DigestAlgorithm digestAlgo;
-
-	@Parameters(name = "Combination {index} of NONEwithRSAandMGF1 + precomputed digest algorithm {0}")
-	public static Collection<DigestAlgorithm> data() {
-		Collection<DigestAlgorithm> rsaCombinations = new ArrayList<DigestAlgorithm>();
+	private static Stream<Arguments> data() {
+		List<Arguments> args = new ArrayList<>();
 		for (DigestAlgorithm digestAlgorithm : DigestAlgorithm.values()) {
 			if (SignatureAlgorithm.getAlgorithm(EncryptionAlgorithm.RSA, digestAlgorithm, MaskGenerationFunction.MGF1) != null) {
-				rsaCombinations.add(digestAlgorithm);
+				args.add(Arguments.of(digestAlgorithm));
 			}
 		}
-		return rsaCombinations;
+		return args.stream();
 	}
 
-	public CAdESLevelBNONEWithRSAandMGF1Test(DigestAlgorithm digestAlgo) {
-		this.digestAlgo = digestAlgo;
-	}
-
-	@Before
-	public void init() throws Exception {
+	@ParameterizedTest(name = "Combination {index} of NONEwithRSAandMGF1 + precomputed digest algorithm {0}")
+	@MethodSource("data")
+	public void init(DigestAlgorithm digestAlgo) {
 		documentToSign = new InMemoryDocument(HELLO_WORLD.getBytes());
 
 		signatureParameters = new CAdESSignatureParameters();
@@ -82,6 +77,12 @@ public class CAdESLevelBNONEWithRSAandMGF1Test extends AbstractCAdESTestSignatur
 		signatureParameters.setMaskGenerationFunction(MaskGenerationFunction.MGF1);
 
 		service = new CAdESService(getOfflineCertificateVerifier());
+
+		super.signAndVerify();
+	}
+
+	@Override
+	public void signAndVerify() {
 	}
 
 	@Override
@@ -89,15 +90,14 @@ public class CAdESLevelBNONEWithRSAandMGF1Test extends AbstractCAdESTestSignatur
 		ToBeSigned dataToSign = service.getDataToSign(documentToSign, signatureParameters);
 
 		byte[] originalDigest = DSSUtils.digest(signatureParameters.getDigestAlgorithm(), dataToSign.getBytes());
-		Digest digest = new Digest(signatureParameters.getDigestAlgorithm(),
-				originalDigest);
+		Digest digest = new Digest(signatureParameters.getDigestAlgorithm(), originalDigest);
 
 		SignatureValue signatureValue = getToken().signDigest(digest, MaskGenerationFunction.MGF1, getPrivateKeyEntry());
 		return service.signDocument(documentToSign, signatureParameters, signatureValue);
 	}
 
 	@Override
-	protected DocumentSignatureService<CAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<CAdESSignatureParameters, CAdESTimestampParameters> getService() {
 		return service;
 	}
 

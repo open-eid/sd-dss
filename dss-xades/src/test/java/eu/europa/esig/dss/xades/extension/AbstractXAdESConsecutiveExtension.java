@@ -1,15 +1,35 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.xades.extension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Set;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.AbstractSignatureParameters;
 import eu.europa.esig.dss.detailedreport.DetailedReport;
@@ -23,14 +43,15 @@ import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.simplereport.SimpleReport;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
+import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 import eu.europa.esig.dss.xades.signature.XAdESService;
 
-public abstract class AbstractXAdESConsecutiveExtension<SP extends AbstractSignatureParameters> extends PKIFactoryAccess {
+public abstract class AbstractXAdESConsecutiveExtension<SP extends AbstractSignatureParameters<XAdESTimestampParameters>> extends PKIFactoryAccess {
 	
 	protected SignatureLevel signatureLevel;
 	protected XAdESService service;
@@ -42,7 +63,7 @@ public abstract class AbstractXAdESConsecutiveExtension<SP extends AbstractSigna
 	protected abstract SignatureLevel getThirdSignSignatureLevel();
 	protected abstract SignatureLevel getFourthSignSignatureLevel();
 	
-	@Before
+	@BeforeEach
 	public void init() {
 		signatureLevel = SignatureLevel.XAdES_BASELINE_B;
 		
@@ -141,7 +162,7 @@ public abstract class AbstractXAdESConsecutiveExtension<SP extends AbstractSigna
 		for (String sigId : signatureIds) {
 			Indication basicIndication = detailedReport.getBasicValidationIndication(sigId);
 			assertNotNull(basicIndication);
-			assertFalse(Indication.FAILED.equals(basicIndication));
+			assertNotEquals(Indication.FAILED, basicIndication);
 			if (!Indication.PASSED.equals(basicIndication)) {
 				assertNotNull(detailedReport.getBasicValidationSubIndication(sigId));
 			}
@@ -152,7 +173,7 @@ public abstract class AbstractXAdESConsecutiveExtension<SP extends AbstractSigna
 			for (String tspId : timestampIds) {
 				Indication timestampIndication = detailedReport.getTimestampValidationIndication(tspId);
 				assertNotNull(timestampIndication);
-				assertFalse(Indication.FAILED.equals(timestampIndication));
+				assertNotEquals(Indication.FAILED, timestampIndication);
 				if (!Indication.PASSED.equals(timestampIndication)) {
 					assertNotNull(detailedReport.getTimestampValidationSubIndication(tspId));
 				}
@@ -162,7 +183,7 @@ public abstract class AbstractXAdESConsecutiveExtension<SP extends AbstractSigna
 		for (String sigId : signatureIds) {
 			Indication ltvIndication = detailedReport.getLongTermValidationIndication(sigId);
 			assertNotNull(ltvIndication);
-			assertFalse(Indication.FAILED.equals(ltvIndication));
+			assertNotEquals(Indication.FAILED, ltvIndication);
 			if (!Indication.PASSED.equals(ltvIndication)) {
 				assertNotNull(detailedReport.getLongTermValidationSubIndication(sigId));
 			}
@@ -171,7 +192,7 @@ public abstract class AbstractXAdESConsecutiveExtension<SP extends AbstractSigna
 		for (String sigId : signatureIds) {
 			Indication archiveDataIndication = detailedReport.getArchiveDataValidationIndication(sigId);
 			assertNotNull(archiveDataIndication);
-			assertFalse(Indication.FAILED.equals(archiveDataIndication));
+			assertNotEquals(Indication.FAILED, archiveDataIndication);
 			if (!Indication.PASSED.equals(archiveDataIndication)) {
 				assertNotNull(detailedReport.getArchiveDataValidationSubIndication(sigId));
 			}

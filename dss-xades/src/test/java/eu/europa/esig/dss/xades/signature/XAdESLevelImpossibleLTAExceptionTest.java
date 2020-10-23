@@ -20,28 +20,31 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.File;
-import java.io.IOException;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import eu.europa.esig.dss.alert.exception.AlertException;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.model.DSSDocument;
-import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
+import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 
 public class XAdESLevelImpossibleLTAExceptionTest extends AbstractXAdESTestSignature {
 
-	private DocumentSignatureService<XAdESSignatureParameters> service;
+	private DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> service;
 	private XAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	@Before
-	public void init() throws Exception {
+	@BeforeEach
+	public void init() {
 		documentToSign = new FileDocument(new File("src/test/resources/sample.xml"));
 
 		signatureParameters = new XAdESSignatureParameters();
@@ -54,9 +57,12 @@ public class XAdESLevelImpossibleLTAExceptionTest extends AbstractXAdESTestSigna
 	}
 
 	@Override
-	@Test(expected = DSSException.class)
-	public void signAndVerify() throws IOException {
-		super.signAndVerify(); // unable to extend to LT (no online CRL/OCSP)
+	@Test
+	public void signAndVerify() {
+		Exception exception = assertThrows(AlertException.class, () -> {
+			super.signAndVerify(); // unable to extend to LT (no online CRL/OCSP)
+		});
+		assertTrue(exception.getMessage().contains("Revocation data is missing for one or more certificate(s)."));
 	}
 
 	@Override
@@ -65,7 +71,7 @@ public class XAdESLevelImpossibleLTAExceptionTest extends AbstractXAdESTestSigna
 	}
 
 	@Override
-	protected DocumentSignatureService<XAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> getService() {
 		return service;
 	}
 

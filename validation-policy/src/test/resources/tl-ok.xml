@@ -5,7 +5,7 @@
     <Signatures>
         <Signature Id="id-247fe7e18cb7a65ccd44568c56d39b5b">
             <SignatureFilename>https___ec_europa_eu_information_society_policy_esignature_trusted_list_tl_pivot_191_mp_xml.xml</SignatureFilename>
-            <DateTime>2017-12-12T08:29:06</DateTime>
+            <ClaimedSigningTime>2017-12-12T08:29:06</ClaimedSigningTime>
             <SignatureFormat>XAdES-BASELINE-B</SignatureFormat>
             <StructuralValidation>
                 <Valid>true</Valid>
@@ -31,19 +31,24 @@
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>true</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-9C1A3B646EAF132398EF319E41C8E7ED725B64D5772580AE125D59C0F6845630">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-9C1A3B646EAF132398EF319E41C8E7ED725B64D5772580AE125D59C0F6845630"/>
             <CertificateChain>
                 <ChainItem Certificate="C-9C1A3B646EAF132398EF319E41C8E7ED725B64D5772580AE125D59C0F6845630"/>
             </CertificateChain>
             <ContentType>text/xml</ContentType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             
-            <FoundCertificates/>
+            <FoundCertificates>
+            	<RelatedCertificate Certificate="C-9C1A3B646EAF132398EF319E41C8E7ED725B64D5772580AE125D59C0F6845630">
+                	<CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue match="true">
+                        	<DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>6qz7DAsN4y1JuLukpR2AjAaILpw=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
             <FoundRevocations/>
             <FoundTimestamps/>
             <SignatureScopes>
@@ -93,6 +98,7 @@
             <NotBefore>2016-09-15T09:00:12</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-9C1A3B646EAF132398EF319E41C8E7ED725B64D5772580AE125D59C0F6845630</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>nonRepudiation</KeyUsage>
             </KeyUsageBits>

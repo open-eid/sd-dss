@@ -20,15 +20,18 @@
  */
 package eu.europa.esig.dss.asic.cades.extension.asice;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import eu.europa.esig.dss.asic.cades.extension.AbstractTestASiCwithCAdESExtension;
+import org.junit.jupiter.api.Test;
+
+import eu.europa.esig.dss.asic.cades.extension.AbstractASiCWithCAdESTestExtension;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
 
-public class ASiCeExtensionWithCAdESBToTWithFailTimestampTest extends AbstractTestASiCwithCAdESExtension {
+public class ASiCeExtensionWithCAdESBToTWithFailTimestampTest extends AbstractASiCWithCAdESTestExtension {
 
 	@Override
 	protected TSPSource getUsedTSPSourceAtExtensionTime() {
@@ -51,9 +54,12 @@ public class ASiCeExtensionWithCAdESBToTWithFailTimestampTest extends AbstractTe
 	}
 
 	@Override
-	@Test(expected = DSSException.class)
-	public void test() throws Exception {
-		super.test();
+	@Test
+	public void extendAndVerify() throws Exception {
+		Exception exception = assertThrows(DSSException.class, () -> {
+			super.extendAndVerify();
+		});
+		assertEquals("No retrieved timestamp token (TSP Status : Error for testing / PKIFailureInfo: 0x40000000)", exception.getMessage());
 	}
 
 }

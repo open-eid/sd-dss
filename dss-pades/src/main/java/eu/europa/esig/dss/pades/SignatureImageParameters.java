@@ -21,7 +21,11 @@
 package eu.europa.esig.dss.pades;
 
 import java.awt.Color;
+import java.io.Serializable;
 
+import eu.europa.esig.dss.enumerations.VisualSignatureAlignmentHorizontal;
+import eu.europa.esig.dss.enumerations.VisualSignatureAlignmentVertical;
+import eu.europa.esig.dss.enumerations.VisualSignatureRotation;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.pdf.visible.CommonDrawerUtils;
 
@@ -29,82 +33,11 @@ import eu.europa.esig.dss.pdf.visible.CommonDrawerUtils;
  * Parameters for a visible signature creation
  *
  */
-public class SignatureImageParameters {
+public class SignatureImageParameters implements Serializable {
 
-	public static final int DEFAULT_PAGE = 1;
+	private static final int DEFAULT_PAGE = 1;
 
-	public static final int NO_SCALING = 100;
-
-	/**
-	 * Visual signature horizontal position on the pdf page
-	 */
-	public enum VisualSignatureAlignmentHorizontal {
-		/**
-		 * default, x axis is the x coordinate
-		 */
-		NONE,
-		/**
-		 * x axis is left padding
-		 */
-		LEFT,
-		/**
-		 * x axis automatically calculated
-		 */
-		CENTER,
-		/**
-		 * x axis is right padding
-		 */
-		RIGHT;
-	}
-
-	/**
-	 * Visual signature vertical position on the pdf page
-	 */
-	public enum VisualSignatureAlignmentVertical {
-		/**
-		 * default, y axis is the y coordinate
-		 */
-		NONE,
-		/**
-		 * y axis is the top padding
-		 */
-		TOP,
-		/**
-		 * y axis automatically calculated
-		 */
-		MIDDLE,
-		/**
-		 * y axis is the bottom padding
-		 */
-		BOTTOM;
-	}
-
-	/**
-	 * Rotation support
-	 *
-	 */
-	public enum VisualSignatureRotation {
-		/**
-		 * default, no rotate
-		 */
-		NONE,
-		/**
-		 * automatically rotate
-		 */
-		AUTOMATIC,
-		/**
-		 * rotate by 90
-		 */
-		ROTATE_90,
-		/**
-		 * rotate by 180
-		 */
-		ROTATE_180,
-		/**
-		 * rotate by 270
-		 */
-		ROTATE_270;
-	}
+	private static final int NO_SCALING = 100;
 
 	/**
 	 * This variable contains the image to use (company logo,...)
@@ -239,14 +172,6 @@ public class SignatureImageParameters {
 	public void setZoom(int zoom) {
 		this.zoom = zoom;
 	}
-	
-	/**
-	 * Returns a coefficient applying to a signature field width/height calculation
-	 * @return {@code float} scale factor
-	 */
-	public float getScaleFactor() {
-		return zoom / 100f;
-	}
 
 	/**
 	 * Returns a page number where the signature field must be placed
@@ -374,7 +299,7 @@ public class SignatureImageParameters {
 	 * Returns a horizontal alignment value of the signature field
 	 * @return {@link VisualSignatureAlignmentHorizontal}
 	 */
-    public SignatureImageParameters.VisualSignatureAlignmentHorizontal getVisualSignatureAlignmentHorizontal() {
+	public VisualSignatureAlignmentHorizontal getVisualSignatureAlignmentHorizontal() {
         return alignmentHorizontal;
     }
 
@@ -390,7 +315,7 @@ public class SignatureImageParameters {
 	 * Returns a vertical alignment value of the signature field
 	 * @return {@link VisualSignatureAlignmentVertical}
 	 */
-    public SignatureImageParameters.VisualSignatureAlignmentVertical getVisualSignatureAlignmentVertical() {
+	public VisualSignatureAlignmentVertical getVisualSignatureAlignmentVertical() {
         return alignmentVertical;
     }
 
@@ -401,4 +326,13 @@ public class SignatureImageParameters {
 	public void setAlignmentVertical(VisualSignatureAlignmentVertical alignmentVertical) {
 		this.alignmentVertical = alignmentVertical;
 	}
+
+	@Override
+	public String toString() {
+		return "SignatureImageParameters [image=" + image + ", page=" + page + ", xAxis=" + xAxis + ", yAxis=" + yAxis
+				+ ", width=" + width + ", height=" + height + ", zoom=" + zoom + ", backgroundColor=" + backgroundColor
+				+ ", dpi=" + dpi + ", rotation=" + rotation + ", alignmentHorizontal=" + alignmentHorizontal
+				+ ", alignmentVertical=" + alignmentVertical + ", textParameters=" + textParameters + "]";
+	}
+	
 }

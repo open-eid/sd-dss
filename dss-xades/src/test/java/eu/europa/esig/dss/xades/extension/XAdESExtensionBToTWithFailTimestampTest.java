@@ -20,13 +20,16 @@
  */
 package eu.europa.esig.dss.xades.extension;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
 
-public class XAdESExtensionBToTWithFailTimestampTest extends AbstractTestXAdESExtension {
+public class XAdESExtensionBToTWithFailTimestampTest extends AbstractXAdESTestExtension {
 
 	@Override
 	protected TSPSource getUsedTSPSourceAtExtensionTime() {
@@ -44,9 +47,12 @@ public class XAdESExtensionBToTWithFailTimestampTest extends AbstractTestXAdESEx
 	}
 
 	@Override
-	@Test(expected = DSSException.class)
-	public void test() throws Exception {
-		super.test();
+	@Test
+	public void extendAndVerify() throws Exception {
+		Exception exception = assertThrows(DSSException.class, () -> {
+			super.extendAndVerify();
+		});
+		assertEquals("No retrieved timestamp token (TSP Status : Error for testing / PKIFailureInfo: 0x40000000)", exception.getMessage());
 	}
 
 }

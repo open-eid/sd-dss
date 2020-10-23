@@ -28,22 +28,24 @@ import eu.europa.esig.dss.diagnostic.SignatureWrapper;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlContainerInfo;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlManifestFile;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlSignatureScope;
+import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.Indication;
 import eu.europa.esig.dss.enumerations.SignatureForm;
 import eu.europa.esig.dss.enumerations.SignatureScopeType;
 import eu.europa.esig.dss.enumerations.SubIndication;
+import eu.europa.esig.dss.i18n.I18nProvider;
+import eu.europa.esig.dss.i18n.MessageTag;
 import eu.europa.esig.dss.policy.jaxb.LevelConstraint;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.process.ChainItem;
-import eu.europa.esig.dss.validation.process.MessageTag;
 
 public class AllFilesSignedCheck extends ChainItem<XmlCV> {
 
 	private final SignatureWrapper signature;
 	private final XmlContainerInfo containerInfo;
 
-	public AllFilesSignedCheck(XmlCV result, SignatureWrapper signature, XmlContainerInfo containerInfo, LevelConstraint constraint) {
-		super(result, constraint);
+	public AllFilesSignedCheck(I18nProvider i18nProvider, XmlCV result, SignatureWrapper signature, XmlContainerInfo containerInfo, LevelConstraint constraint) {
+		super(i18nProvider, result, constraint);
 		this.signature = signature;
 		this.containerInfo = containerInfo;
 	}
@@ -52,9 +54,9 @@ public class AllFilesSignedCheck extends ChainItem<XmlCV> {
 	protected boolean process() {
 
 		/* ASiC-S -> nb files = 1 */
-		if ("ASiC-S".equals(containerInfo.getContainerType())) {
+		if (ASiCContainerType.ASiC_S.equals(containerInfo.getContainerType())) {
 			return 1 == Utils.collectionSize(containerInfo.getContentFiles());
-		} else if ("ASiC-E".equals(containerInfo.getContainerType())) {
+		} else if (ASiCContainerType.ASiC_E.equals(containerInfo.getContainerType())) {
 			String signatureFilename = signature.getSignatureFilename();
 			List<String> coveredFiles = getCoveredFilesBySignatureFilename(signatureFilename);
 			List<String> contentFiles = containerInfo.getContentFiles();
@@ -103,11 +105,11 @@ public class AllFilesSignedCheck extends ChainItem<XmlCV> {
 				return xmlManifestFile.getEntries();
 			}
 		}
-		return new ArrayList<String>();
+		return new ArrayList<>();
 	}
 
 	private List<String> getCoveredFilesFromScope() {
-		List<String> result = new ArrayList<String>();
+		List<String> result = new ArrayList<>();
 		List<XmlSignatureScope> signatureScopes = signature.getSignatureScopes();
 		for (XmlSignatureScope xmlSignatureScope : signatureScopes) {
 			if (SignatureScopeType.FULL == xmlSignatureScope.getScope()) {

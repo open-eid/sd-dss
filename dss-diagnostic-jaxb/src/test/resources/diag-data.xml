@@ -1,0 +1,1182 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<DiagnosticData xmlns="http://dss.esig.europa.eu/validation/diagnostic">
+    <DocumentName>SK_MIN-P-EN-B-LT-V-3.pdf</DocumentName>
+    <ValidationDate>2020-03-11T09:53:25</ValidationDate>
+    <Signatures>
+        <Signature Id="S-66E2E6A060AF9318230EA29AE2CC56E0FDCAA4A6CC8A2ADD39738F1EFBAE0F76">
+            <SignatureFilename>SK_MIN-P-EN-B-LT-V-3.pdf</SignatureFilename>
+            <ClaimedSigningTime>2019-05-15T08:17:51</ClaimedSigningTime>
+            <SignatureFormat>PAdES-BASELINE-LT</SignatureFormat>
+            <StructuralValidation>
+                <Valid>true</Valid>
+            </StructuralValidation>
+            <DigestMatchers>
+                <DigestMatcher type="MESSAGE_DIGEST">
+                    <DigestMethod>SHA256</DigestMethod>
+                    <DigestValue>VSuiwaiVOfkjTPDg0/WQTxxXrdmATdtvf025nJ3SIRs=</DigestValue>
+                    <DataFound>true</DataFound>
+                    <DataIntact>true</DataIntact>
+                </DigestMatcher>
+            </DigestMatchers>
+            <BasicSignature>
+                <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
+                <KeyLengthUsedToSignThisToken>2048</KeyLengthUsedToSignThisToken>
+                <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
+                <SignatureIntact>true</SignatureIntact>
+                <SignatureValid>true</SignatureValid>
+            </BasicSignature>
+            <SigningCertificate Certificate="C-3CF95234A0190CD33AB408C7FC243CA31C3DFB7722D150B09207DC4A7EBF33A0"/>
+            <CertificateChain>
+                <ChainItem Certificate="C-3CF95234A0190CD33AB408C7FC243CA31C3DFB7722D150B09207DC4A7EBF33A0"/>
+                <ChainItem Certificate="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B"/>
+                <ChainItem Certificate="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F"/>
+            </CertificateChain>
+            <ContentType>1.2.840.113549.1.7.1</ContentType>
+            <SignatureProductionPlace>
+                <CountryName>Bratislava</CountryName>
+            </SignatureProductionPlace>
+            <CommitmentTypeIndications/>
+            <SignerInformationStore>
+                <SignerInfo Current="true">
+                    <IssuerName>C=SK,L=Bratislava,SERIALNUMBER=NTRSK-36061701,O=Narodny bezpecnostny urad,OU=SEP,CN=SNCA3</IssuerName>
+                    <SerialNumber>7510568329472141951325</SerialNumber>
+                </SignerInfo>
+            </SignerInformationStore>
+            <PDFRevision>
+                <SignatureFieldName>Signature2</SignatureFieldName>
+                <PDFSignatureDictionary>
+                    <SignerName>Pečať NBÚ</SignerName>
+                    <Type>Sig</Type>
+                    <Filter>Adobe.PPKLite</Filter>
+                    <SubFilter>ETSI.CAdES.detached</SubFilter>
+                    <ContactInfo>podatelna@nbu.gov.sk</ContactInfo>
+                    <Reason>Potvrdzujem presnosť a neporušenosť tohto dokumentu</Reason>
+                    <SignatureByteRange>0 54328 78060 597951</SignatureByteRange>
+                </PDFSignatureDictionary>
+            </PDFRevision>
+            <SignerDocumentRepresentations HashOnly="false" DocHashOnly="false"/>
+            <FoundCertificates>
+                <RelatedCertificate Certificate="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B">
+                    <Origin>SIGNED_DATA</Origin>
+                    <Origin>DSS_DICTIONARY</Origin>
+                </RelatedCertificate>
+                <RelatedCertificate Certificate="C-3CF95234A0190CD33AB408C7FC243CA31C3DFB7722D150B09207DC4A7EBF33A0">
+                    <Origin>SIGNED_DATA</Origin>
+                    <CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <IssuerSerial match="true">MIGQMIGBpH8wfTELMAkGA1UEBhMCU0sxEzARBgNVBAcMCkJyYXRpc2xhdmExFzAVBgNVBAUTDk5UUlNLLTM2MDYxNzAxMSIwIAYDVQQKDBlOYXJvZG55IGJlenBlY25vc3RueSB1cmFkMQwwCgYDVQQLDANTRVAxDjAMBgNVBAMMBVNOQ0EzAgoBlyYS1vVeAAFd</IssuerSerial>
+                        <DigestAlgoAndValue match="true">
+                            <DigestMethod>SHA256</DigestMethod>
+                            <DigestValue>PPlSNKAZDNM6tAjH/CQ8oxw9+3ci0VCwkgfcSn6/M6A=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
+            <FoundRevocations>
+                <RelatedRevocation Revocation="R-51CBD5624AB597508601AA48CC653C4FFE05FE691977224F2B74C9A9EA1B0ED2">
+                    <Type>OCSP</Type>
+                    <Origin>DSS_DICTIONARY</Origin>
+                </RelatedRevocation>
+            </FoundRevocations>
+            <FoundTimestamps>
+                <FoundTimestamp Timestamp="T-8B7D55AFED499B486D6BF0FBFF5B24135535CB1CB1FB317B999B210D138B9018" Location="CAdES"/>
+            </FoundTimestamps>
+            <SignatureScopes>
+                <SignatureScope SignerData="D-4CC29A694C9F13BEB5A2BB32E8FACFE33C80EF17D53B130FDD2A421F8FB697C6">
+                    <Scope>PARTIAL</Scope>
+                    <Name>Partial PDF</Name>
+                    <Description>The document ByteRange : [0, 54328, 78060, 597951]</Description>
+                </SignatureScope>
+            </SignatureScopes>
+            <SignatureDigestReference>
+                <DigestMethod>SHA256</DigestMethod>
+                <DigestValue>gGndojae4NglmKpEckQNGMgKcbLTlV+Yg5FdwbyqbPI=</DigestValue>
+            </SignatureDigestReference>
+            <SignatureValue>dPj3AOP1ROcs1/Se9YljT+y1AD6Sbmcb1CMb2k4h7hjZiwDM3jK8I6K2lqDSZFM2uIciu8nf+3mL+ABav/7rS80LpFVCfRs4lC+rB7G8IJHBW8l/lbJVDCP800kAiozFaBHMvhpnbp7s+VUDQpMFGPACixzXKh2ErY67+sd2sa9lwIST0WmvTYGGnlYQAXm/W2ds6VVK0D6/VRlwCQW4dYdNNCNIy2jEcnw5VCogyDDSSyPDTBt5DwJa10PIeExd0I08ODhMXlxbvYMDm+8NgcTjjTyI7GXLPEJ7Z/NDmzrBQ9AbfLoJmBv7ldscB3LUYWq+0abcWvcrkwMWVjBk4w==</SignatureValue>
+        </Signature>
+    </Signatures>
+    <UsedCertificates>
+        <Certificate Id="C-08EF9A0929BD4B939BDB2C087A575931BD9FFDA730C675C339F9D95730031F92">
+            <SubjectDistinguishedName Format="CANONICAL">cn=nsa ocsp,ou=ocsp responder p1,o=nbu,2.5.4.5=#130e4e5452534b2d3336303631373031,l=bratislava,c=sk</SubjectDistinguishedName>
+            <SubjectDistinguishedName Format="RFC2253">CN=NSA OCSP,OU=OCSP Responder P1,O=NBU,2.5.4.5=#130e4e5452534b2d3336303631373031,L=Bratislava,C=SK</SubjectDistinguishedName>
+            <IssuerDistinguishedName Format="CANONICAL">cn=snca3,ou=sep,o=narodny bezpecnostny urad,2.5.4.5=#130e4e5452534b2d3336303631373031,l=bratislava,c=sk</IssuerDistinguishedName>
+            <IssuerDistinguishedName Format="RFC2253">CN=SNCA3,OU=SEP,O=Narodny bezpecnostny urad,2.5.4.5=#130e4e5452534b2d3336303631373031,L=Bratislava,C=SK</IssuerDistinguishedName>
+            <SerialNumber>8902725170025667232078</SerialNumber>
+            <CommonName>NSA OCSP</CommonName>
+            <Locality>Bratislava</Locality>
+            <CountryName>SK</CountryName>
+            <OrganizationName>NBU</OrganizationName>
+            <OrganizationalUnit>OCSP Responder P1</OrganizationalUnit>
+            <AuthorityInformationAccessUrls>
+                <aiaUrl>http://cdp.nbu.gov.sk/snca/certs3/snca3.p7c</aiaUrl>
+            </AuthorityInformationAccessUrls>
+            <CRLDistributionPoints>
+                <crlUrl>http://cdp1.nbu.gov.sk/snca/crls3/snca3.crl</crlUrl>
+                <crlUrl>http://cdp2.nbu.gov.sk/snca/crls3/snca3.crl</crlUrl>
+            </CRLDistributionPoints>
+            <OCSPAccessUrls/>
+            <Sources>
+                <Source>OCSP_RESPONSE</Source>
+                <Source>TRUSTED_LIST</Source>
+            </Sources>
+            <NotAfter>2023-06-10T12:43:39</NotAfter>
+            <NotBefore>2018-06-11T12:43:39</NotBefore>
+            <PublicKeySize>3072</PublicKeySize>
+            <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-38EF9A0929BD4B939BDB2C087A575931BD9FFDA730C675C339F9D95730031F92</EntityKey>
+            <KeyUsageBits>
+                <KeyUsage>digitalSignature</KeyUsage>
+                <KeyUsage>nonRepudiation</KeyUsage>
+            </KeyUsageBits>
+            <ExtendedKeyUsages>
+                <extendedKeyUsagesOid Description="ocspSigning">1.3.6.1.5.5.7.3.9</extendedKeyUsagesOid>
+            </ExtendedKeyUsages>
+            <IdPkixOcspNoCheck>true</IdPkixOcspNoCheck>
+            <BasicSignature>
+                <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
+                <KeyLengthUsedToSignThisToken>4096</KeyLengthUsedToSignThisToken>
+                <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
+                <SignatureIntact>true</SignatureIntact>
+                <SignatureValid>true</SignatureValid>
+            </BasicSignature>
+            <SigningCertificate Certificate="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B"/>
+            <CertificateChain>
+                <ChainItem Certificate="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B"/>
+                <ChainItem Certificate="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F"/>
+            </CertificateChain>
+            <Trusted>true</Trusted>
+            <SelfSigned>false</SelfSigned>
+            <CertificatePolicies>
+                <certificatePolicy>1.3.158.36061701.1.3.2</certificatePolicy>
+                <certificatePolicy cpsUrl="http:/ep.nbu.gov.sk/snca/doc/cp_ocsp_snca.pdf">1.3.158.36061701.0.1.5</certificatePolicy>
+                <certificatePolicy>1.3.158.36061701.0.0.0.1.2.2</certificatePolicy>
+            </CertificatePolicies>
+            <QCStatementIds/>
+            <QCTypes/>
+            <TrustedServiceProviders>
+                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                    <TSPNames>
+                        <TSPName lang="sk">Národný bezpečnostný úrad</TSPName>
+                        <TSPName lang="en">National Security Authority</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers>
+                        <TSPRegistrationIdentifier>VATSK-2021594245</TSPRegistrationIdentifier>
+                        <TSPRegistrationIdentifier>NTRSK-36061701</TSPRegistrationIdentifier>
+                    </TSPRegistrationIdentifiers>
+                    <TrustedServices>
+                        <TrustedService ServiceDigitalIdentifier="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(2) Koreňová certifikačná autorita 3</ServiceName>
+                                <ServiceName lang="en">(2) Root Certification Authority 3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/NationalRootCA-QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/recognisedatnationallevel</Status>
+                            <StartDate>2016-06-30T22:00:00</StartDate>
+                            <ServiceSupplyPoints>
+                                <ServiceSupplyPoint>http://ep.nbu.gov.sk/kca/crls3/kcanbusr3.crl</ServiceSupplyPoint>
+                                <ServiceSupplyPoint>http://ocsp.nbu.gov.sk/ocsp/valid</ServiceSupplyPoint>
+                            </ServiceSupplyPoints>
+                        </TrustedService>
+                    </TrustedServices>
+                </TrustedServiceProvider>
+                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                    <TSPNames>
+                        <TSPName lang="sk">Národný bezpečnostný úrad</TSPName>
+                        <TSPName lang="en">National Security Authority</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers>
+                        <TSPRegistrationIdentifier>VATSK-2021594245</TSPRegistrationIdentifier>
+                        <TSPRegistrationIdentifier>NTRSK-36061701</TSPRegistrationIdentifier>
+                    </TSPRegistrationIdentifiers>
+                    <TrustedServices>
+                        <TrustedService ServiceDigitalIdentifier="C-08EF9A0929BD4B939BDB2C087A575931BD9FFDA730C675C339F9D95730031F92">
+                            <ServiceNames>
+                                <ServiceName lang="en">(109) NSA OCSP</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/Certstatus/OCSP/QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2019-07-31T08:00:00</StartDate>
+                            <AdditionalServiceInfoUris>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
+                            </AdditionalServiceInfoUris>
+                        </TrustedService>
+                        <TrustedService ServiceDigitalIdentifier="C-08EF9A0929BD4B939BDB2C087A575931BD9FFDA730C675C339F9D95730031F92">
+                            <ServiceNames>
+                                <ServiceName lang="en">(109) NSA OCSP</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/Certstatus/OCSP/QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2018-10-19T08:00:00</StartDate>
+                            <EndDate>2019-07-31T08:00:00</EndDate>
+                            <AdditionalServiceInfoUris>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
+                            </AdditionalServiceInfoUris>
+                        </TrustedService>
+                    </TrustedServices>
+                </TrustedServiceProvider>
+                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                    <TSPNames>
+                        <TSPName lang="sk">Národný bezpečnostný úrad</TSPName>
+                        <TSPName lang="en">National Security Authority</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers>
+                        <TSPRegistrationIdentifier>VATSK-2021594245</TSPRegistrationIdentifier>
+                        <TSPRegistrationIdentifier>NTRSK-36061701</TSPRegistrationIdentifier>
+                    </TSPRegistrationIdentifiers>
+                    <TrustedServices>
+                        <TrustedService ServiceDigitalIdentifier="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(82) SNCA3</ServiceName>
+                                <ServiceName lang="en">(82) SNCA3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2019-07-31T08:00:00</StartDate>
+                            <CapturedQualifiers>
+                                <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESeal</Qualifier>
+                            </CapturedQualifiers>
+                            <AdditionalServiceInfoUris>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
+                            </AdditionalServiceInfoUris>
+                            <ServiceSupplyPoints>
+                                <ServiceSupplyPoint>http://ep.nbu.gov.sk/snca/crls3/snca3.crl</ServiceSupplyPoint>
+                                <ServiceSupplyPoint>http://snca3-ocsp.nbu.gov.sk/ocsp/snca3</ServiceSupplyPoint>
+                            </ServiceSupplyPoints>
+                        </TrustedService>
+                        <TrustedService ServiceDigitalIdentifier="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(82) SNCA3</ServiceName>
+                                <ServiceName lang="en">(82) SNCA3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2017-12-18T00:00:00</StartDate>
+                            <EndDate>2019-07-31T08:00:00</EndDate>
+                            <CapturedQualifiers>
+                                <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESeal</Qualifier>
+                            </CapturedQualifiers>
+                            <AdditionalServiceInfoUris>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
+                            </AdditionalServiceInfoUris>
+                        </TrustedService>
+                    </TrustedServices>
+                </TrustedServiceProvider>
+            </TrustedServiceProviders>
+            <Revocations/>
+            <DigestAlgoAndValue>
+                <DigestMethod>SHA256</DigestMethod>
+                <DigestValue>CO+aCSm9S5Ob2ywIeldZMb2f/acwxnXDOfnZVzADH5I=</DigestValue>
+            </DigestAlgoAndValue>
+        </Certificate>
+        <Certificate Id="C-3CF95234A0190CD33AB408C7FC243CA31C3DFB7722D150B09207DC4A7EBF33A0">
+            <SubjectDistinguishedName Format="CANONICAL">c=sk,l=bratislava,2.5.4.5=#130e4e5452534b2d3336303631373031,o=narodný bezpečnostný úrad,cn=pečať nbú</SubjectDistinguishedName>
+            <SubjectDistinguishedName Format="RFC2253">C=SK,L=Bratislava,2.5.4.5=#130e4e5452534b2d3336303631373031,O=Narodný bezpečnostný úrad,CN=Pečať NBÚ</SubjectDistinguishedName>
+            <IssuerDistinguishedName Format="CANONICAL">cn=snca3,ou=sep,o=narodny bezpecnostny urad,2.5.4.5=#130e4e5452534b2d3336303631373031,l=bratislava,c=sk</IssuerDistinguishedName>
+            <IssuerDistinguishedName Format="RFC2253">CN=SNCA3,OU=SEP,O=Narodny bezpecnostny urad,2.5.4.5=#130e4e5452534b2d3336303631373031,L=Bratislava,C=SK</IssuerDistinguishedName>
+            <SerialNumber>7510568329472141951325</SerialNumber>
+            <CommonName>Pečať NBÚ</CommonName>
+            <Locality>Bratislava</Locality>
+            <CountryName>SK</CountryName>
+            <OrganizationName>Narodný bezpečnostný úrad</OrganizationName>
+            <AuthorityInformationAccessUrls>
+                <aiaUrl>http://ep.nbu.gov.sk/snca/certs3/snca3.p7c</aiaUrl>
+            </AuthorityInformationAccessUrls>
+            <CRLDistributionPoints>
+                <crlUrl>http://cdp1.nbu.gov.sk/snca/crls3/snca3.crl</crlUrl>
+            </CRLDistributionPoints>
+            <OCSPAccessUrls>
+                <ocspServerUrl>http://snca3-ocsp.nbu.gov.sk/ocsp/snca3</ocspServerUrl>
+            </OCSPAccessUrls>
+            <Sources>
+                <Source>SIGNATURE</Source>
+            </Sources>
+            <NotAfter>2021-07-03T07:43:30</NotAfter>
+            <NotBefore>2018-07-04T07:43:30</NotBefore>
+            <PublicKeySize>2048</PublicKeySize>
+            <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-3CF95234A0190CD33AB408C7FC243CA31C3DFB7722D150B09207DC4A7EBF33A0</EntityKey>
+            <KeyUsageBits>
+                <KeyUsage>digitalSignature</KeyUsage>
+                <KeyUsage>nonRepudiation</KeyUsage>
+            </KeyUsageBits>
+            <ExtendedKeyUsages/>
+            <IdPkixOcspNoCheck>false</IdPkixOcspNoCheck>
+            <BasicSignature>
+                <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
+                <KeyLengthUsedToSignThisToken>4096</KeyLengthUsedToSignThisToken>
+                <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
+                <SignatureIntact>true</SignatureIntact>
+                <SignatureValid>true</SignatureValid>
+            </BasicSignature>
+            <SigningCertificate Certificate="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B"/>
+            <CertificateChain>
+                <ChainItem Certificate="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B"/>
+                <ChainItem Certificate="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F"/>
+            </CertificateChain>
+            <Trusted>false</Trusted>
+            <SelfSigned>false</SelfSigned>
+            <CertificatePolicies>
+                <certificatePolicy>1.3.158.36061701.0.0.0.1.2.2</certificatePolicy>
+                <certificatePolicy cpsUrl="http:/ep.nbu.gov.sk/snca/doc/cp_snca.pdf">1.3.158.36061701.0.1.2</certificatePolicy>
+            </CertificatePolicies>
+            <QCStatementIds>
+                <qcStatementOid Description="qc-compliance">0.4.0.1862.1.1</qcStatementOid>
+                <qcStatementOid Description="qc-sscd">0.4.0.1862.1.4</qcStatementOid>
+            </QCStatementIds>
+            <QCTypes/>
+            <TrustedServiceProviders>
+                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                    <TSPNames>
+                        <TSPName lang="sk">Národný bezpečnostný úrad</TSPName>
+                        <TSPName lang="en">National Security Authority</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers>
+                        <TSPRegistrationIdentifier>VATSK-2021594245</TSPRegistrationIdentifier>
+                        <TSPRegistrationIdentifier>NTRSK-36061701</TSPRegistrationIdentifier>
+                    </TSPRegistrationIdentifiers>
+                    <TrustedServices>
+                        <TrustedService ServiceDigitalIdentifier="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(2) Koreňová certifikačná autorita 3</ServiceName>
+                                <ServiceName lang="en">(2) Root Certification Authority 3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/NationalRootCA-QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/recognisedatnationallevel</Status>
+                            <StartDate>2016-06-30T22:00:00</StartDate>
+                            <CapturedQualifiers/>
+                            <AdditionalServiceInfoUris/>
+                            <ServiceSupplyPoints>
+                                <ServiceSupplyPoint>http://ep.nbu.gov.sk/kca/crls3/kcanbusr3.crl</ServiceSupplyPoint>
+                                <ServiceSupplyPoint>http://ocsp.nbu.gov.sk/ocsp/valid</ServiceSupplyPoint>
+                            </ServiceSupplyPoints>
+                        </TrustedService>
+                    </TrustedServices>
+                </TrustedServiceProvider>
+                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                    <TSPNames>
+                        <TSPName lang="sk">Národný bezpečnostný úrad</TSPName>
+                        <TSPName lang="en">National Security Authority</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers>
+                        <TSPRegistrationIdentifier>VATSK-2021594245</TSPRegistrationIdentifier>
+                        <TSPRegistrationIdentifier>NTRSK-36061701</TSPRegistrationIdentifier>
+                    </TSPRegistrationIdentifiers>
+                    <TrustedServices>
+                        <TrustedService ServiceDigitalIdentifier="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(82) SNCA3</ServiceName>
+                                <ServiceName lang="en">(82) SNCA3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2019-07-31T08:00:00</StartDate>
+                            <CapturedQualifiers>
+                                <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESeal</Qualifier>
+                            </CapturedQualifiers>
+                            <AdditionalServiceInfoUris>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
+                            </AdditionalServiceInfoUris>
+                            <ServiceSupplyPoints>
+                                <ServiceSupplyPoint>http://ep.nbu.gov.sk/snca/crls3/snca3.crl</ServiceSupplyPoint>
+                                <ServiceSupplyPoint>http://snca3-ocsp.nbu.gov.sk/ocsp/snca3</ServiceSupplyPoint>
+                            </ServiceSupplyPoints>
+                        </TrustedService>
+                        <TrustedService ServiceDigitalIdentifier="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(82) SNCA3</ServiceName>
+                                <ServiceName lang="en">(82) SNCA3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2017-12-18T00:00:00</StartDate>
+                            <EndDate>2019-07-31T08:00:00</EndDate>
+                            <CapturedQualifiers>
+                                <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESeal</Qualifier>
+                            </CapturedQualifiers>
+                            <AdditionalServiceInfoUris>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
+                            </AdditionalServiceInfoUris>
+                        </TrustedService>
+                    </TrustedServices>
+                </TrustedServiceProvider>
+            </TrustedServiceProviders>
+            <Revocations>
+                <CertificateRevocation Revocation="R-BAB71CBB8526D5ABEA7D356B90708788A0525BB27308B5112AAF1D442FB239D9">
+                    <Status>GOOD</Status>
+                </CertificateRevocation>
+                <CertificateRevocation Revocation="R-51CBD5624AB597508601AA48CC653C4FFE05FE691977224F2B74C9A9EA1B0ED2">
+                    <Status>GOOD</Status>
+                </CertificateRevocation>
+            </Revocations>
+            <DigestAlgoAndValue>
+                <DigestMethod>SHA256</DigestMethod>
+                <DigestValue>PPlSNKAZDNM6tAjH/CQ8oxw9+3ci0VCwkgfcSn6/M6A=</DigestValue>
+            </DigestAlgoAndValue>
+        </Certificate>
+        <Certificate Id="C-4329A61FF2ADF1F4D135B25F8CC988B7998C5B8396353B8D55192F78BAB3BAF8">
+            <SubjectDistinguishedName Format="CANONICAL">cn=time stamp authority 7,ou=ts,o=narodny bezpecnostny urad,2.5.4.5=#130e4e5452534b2d3336303631373031,l=bratislava,c=sk</SubjectDistinguishedName>
+            <SubjectDistinguishedName Format="RFC2253">CN=Time Stamp Authority 7,OU=TS,O=Narodny bezpecnostny urad,2.5.4.5=#130e4e5452534b2d3336303631373031,L=Bratislava,C=SK</SubjectDistinguishedName>
+            <IssuerDistinguishedName Format="CANONICAL">cn=snca3,ou=sep,o=narodny bezpecnostny urad,2.5.4.5=#130e4e5452534b2d3336303631373031,l=bratislava,c=sk</IssuerDistinguishedName>
+            <IssuerDistinguishedName Format="RFC2253">CN=SNCA3,OU=SEP,O=Narodny bezpecnostny urad,2.5.4.5=#130e4e5452534b2d3336303631373031,L=Bratislava,C=SK</IssuerDistinguishedName>
+            <SerialNumber>7364851701840196141394</SerialNumber>
+            <CommonName>Time Stamp Authority 7</CommonName>
+            <Locality>Bratislava</Locality>
+            <CountryName>SK</CountryName>
+            <OrganizationName>Narodny bezpecnostny urad</OrganizationName>
+            <OrganizationalUnit>TS</OrganizationalUnit>
+            <AuthorityInformationAccessUrls>
+                <aiaUrl>http://cdp.nbu.gov.sk/snca/certs3/snca3.p7c</aiaUrl>
+            </AuthorityInformationAccessUrls>
+            <CRLDistributionPoints>
+                <crlUrl>http://cdp1.nbu.gov.sk/snca/crls3/snca3.crl</crlUrl>
+                <crlUrl>http://cdp2.nbu.gov.sk/snca/crls3/snca3.crl</crlUrl>
+            </CRLDistributionPoints>
+            <OCSPAccessUrls>
+                <ocspServerUrl>http://snca3-ocsp.nbu.gov.sk/ocsp/snca3</ocspServerUrl>
+            </OCSPAccessUrls>
+            <Sources>
+                <Source>TIMESTAMP</Source>
+                <Source>TRUSTED_LIST</Source>
+            </Sources>
+            <NotAfter>2023-06-10T13:18:44</NotAfter>
+            <NotBefore>2018-06-11T13:18:44</NotBefore>
+            <PublicKeySize>3072</PublicKeySize>
+            <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-4329A61FF2ADF1F4D135B25F8CC988B7998C5B8396353B8D55192F78BAB3BAF8</EntityKey>
+            <KeyUsageBits>
+                <KeyUsage>nonRepudiation</KeyUsage>
+            </KeyUsageBits>
+            <ExtendedKeyUsages>
+                <extendedKeyUsagesOid Description="timeStamping">1.3.6.1.5.5.7.3.8</extendedKeyUsagesOid>
+            </ExtendedKeyUsages>
+            <IdPkixOcspNoCheck>false</IdPkixOcspNoCheck>
+            <BasicSignature>
+                <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
+                <KeyLengthUsedToSignThisToken>4096</KeyLengthUsedToSignThisToken>
+                <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
+                <SignatureIntact>true</SignatureIntact>
+                <SignatureValid>true</SignatureValid>
+            </BasicSignature>
+            <SigningCertificate Certificate="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B"/>
+            <CertificateChain>
+                <ChainItem Certificate="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B"/>
+                <ChainItem Certificate="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F"/>
+            </CertificateChain>
+            <Trusted>true</Trusted>
+            <SelfSigned>false</SelfSigned>
+            <CertificatePolicies>
+                <certificatePolicy>1.3.158.36061701.0.0.0.1.2.2</certificatePolicy>
+                <certificatePolicy cpsUrl="http:/ep.nbu.gov.sk/snca/doc/cp_tsa_snca.pdf">1.3.158.36061701.0.1.4</certificatePolicy>
+            </CertificatePolicies>
+            <QCStatementIds/>
+            <QCTypes/>
+            <TrustedServiceProviders>
+                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                    <TSPNames>
+                        <TSPName lang="sk">Národný bezpečnostný úrad</TSPName>
+                        <TSPName lang="en">National Security Authority</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers>
+                        <TSPRegistrationIdentifier>VATSK-2021594245</TSPRegistrationIdentifier>
+                        <TSPRegistrationIdentifier>NTRSK-36061701</TSPRegistrationIdentifier>
+                    </TSPRegistrationIdentifiers>
+                    <TrustedServices>
+                        <TrustedService ServiceDigitalIdentifier="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(2) Koreňová certifikačná autorita 3</ServiceName>
+                                <ServiceName lang="en">(2) Root Certification Authority 3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/NationalRootCA-QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/recognisedatnationallevel</Status>
+                            <StartDate>2016-06-30T22:00:00</StartDate>
+                            <CapturedQualifiers/>
+                            <AdditionalServiceInfoUris/>
+                            <ServiceSupplyPoints>
+                                <ServiceSupplyPoint>http://ep.nbu.gov.sk/kca/crls3/kcanbusr3.crl</ServiceSupplyPoint>
+                                <ServiceSupplyPoint>http://ocsp.nbu.gov.sk/ocsp/valid</ServiceSupplyPoint>
+                            </ServiceSupplyPoints>
+                        </TrustedService>
+                    </TrustedServices>
+                </TrustedServiceProvider>
+                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                    <TSPNames>
+                        <TSPName lang="sk">Národný bezpečnostný úrad</TSPName>
+                        <TSPName lang="en">National Security Authority</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers>
+                        <TSPRegistrationIdentifier>VATSK-2021594245</TSPRegistrationIdentifier>
+                        <TSPRegistrationIdentifier>NTRSK-36061701</TSPRegistrationIdentifier>
+                    </TSPRegistrationIdentifiers>
+                    <TrustedServices>
+                        <TrustedService ServiceDigitalIdentifier="C-4329A61FF2ADF1F4D135B25F8CC988B7998C5B8396353B8D55192F78BAB3BAF8">
+                            <ServiceNames>
+                                <ServiceName lang="en">(105) Time Stamp Authority 7</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/TSA/QTST</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2019-07-31T08:00:00</StartDate>
+                            <CapturedQualifiers/>
+                            <AdditionalServiceInfoUris/>
+                        </TrustedService>
+                        <TrustedService ServiceDigitalIdentifier="C-4329A61FF2ADF1F4D135B25F8CC988B7998C5B8396353B8D55192F78BAB3BAF8">
+                            <ServiceNames>
+                                <ServiceName lang="en">(105) Time Stamp Authority 7</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/TSA/QTST</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2018-12-04T12:00:00</StartDate>
+                            <EndDate>2019-07-31T08:00:00</EndDate>
+                            <CapturedQualifiers/>
+                            <AdditionalServiceInfoUris/>
+                        </TrustedService>
+                    </TrustedServices>
+                </TrustedServiceProvider>
+                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                    <TSPNames>
+                        <TSPName lang="sk">Národný bezpečnostný úrad</TSPName>
+                        <TSPName lang="en">National Security Authority</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers>
+                        <TSPRegistrationIdentifier>VATSK-2021594245</TSPRegistrationIdentifier>
+                        <TSPRegistrationIdentifier>NTRSK-36061701</TSPRegistrationIdentifier>
+                    </TSPRegistrationIdentifiers>
+                    <TrustedServices>
+                        <TrustedService ServiceDigitalIdentifier="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(82) SNCA3</ServiceName>
+                                <ServiceName lang="en">(82) SNCA3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2019-07-31T08:00:00</StartDate>
+                            <CapturedQualifiers>
+                                <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESeal</Qualifier>
+                            </CapturedQualifiers>
+                            <AdditionalServiceInfoUris>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
+                            </AdditionalServiceInfoUris>
+                            <ServiceSupplyPoints>
+                                <ServiceSupplyPoint>http://ep.nbu.gov.sk/snca/crls3/snca3.crl</ServiceSupplyPoint>
+                                <ServiceSupplyPoint>http://snca3-ocsp.nbu.gov.sk/ocsp/snca3</ServiceSupplyPoint>
+                            </ServiceSupplyPoints>
+                        </TrustedService>
+                        <TrustedService ServiceDigitalIdentifier="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(82) SNCA3</ServiceName>
+                                <ServiceName lang="en">(82) SNCA3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2017-12-18T00:00:00</StartDate>
+                            <EndDate>2019-07-31T08:00:00</EndDate>
+                            <CapturedQualifiers>
+                                <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESeal</Qualifier>
+                            </CapturedQualifiers>
+                            <AdditionalServiceInfoUris>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
+                            </AdditionalServiceInfoUris>
+                        </TrustedService>
+                    </TrustedServices>
+                </TrustedServiceProvider>
+            </TrustedServiceProviders>
+            <Revocations/>
+            <DigestAlgoAndValue>
+                <DigestMethod>SHA256</DigestMethod>
+                <DigestValue>QymmH/Kt8fTRNbJfjMmIt5mMW4OWNTuNVRkveLqzuvg=</DigestValue>
+            </DigestAlgoAndValue>
+        </Certificate>
+        <Certificate Id="C-C727784E842E5158A2A849FEBD4988EB836122272E79C59FEA39EFE636690D6F">
+            <SubjectDistinguishedName Format="CANONICAL">cn=nsa ocsp,ou=ocsp responder p2,o=nbu,2.5.4.5=#130e4e5452534b2d3336303631373031,l=bratislava,c=sk</SubjectDistinguishedName>
+            <SubjectDistinguishedName Format="RFC2253">CN=NSA OCSP,OU=OCSP Responder P2,O=NBU,2.5.4.5=#130e4e5452534b2d3336303631373031,L=Bratislava,C=SK</SubjectDistinguishedName>
+            <IssuerDistinguishedName Format="CANONICAL">cn=snca3,ou=sep,o=narodny bezpecnostny urad,2.5.4.5=#130e4e5452534b2d3336303631373031,l=bratislava,c=sk</IssuerDistinguishedName>
+            <IssuerDistinguishedName Format="RFC2253">CN=SNCA3,OU=SEP,O=Narodny bezpecnostny urad,2.5.4.5=#130e4e5452534b2d3336303631373031,L=Bratislava,C=SK</IssuerDistinguishedName>
+            <SerialNumber>9053050132831022350671</SerialNumber>
+            <CommonName>NSA OCSP</CommonName>
+            <Locality>Bratislava</Locality>
+            <CountryName>SK</CountryName>
+            <OrganizationName>NBU</OrganizationName>
+            <OrganizationalUnit>OCSP Responder P2</OrganizationalUnit>
+            <AuthorityInformationAccessUrls>
+                <aiaUrl>http://cdp.nbu.gov.sk/snca/certs3/snca3.p7c</aiaUrl>
+            </AuthorityInformationAccessUrls>
+            <CRLDistributionPoints>
+                <crlUrl>http://cdp1.nbu.gov.sk/snca/crls3/snca3.crl</crlUrl>
+                <crlUrl>http://cdp2.nbu.gov.sk/snca/crls3/snca3.crl</crlUrl>
+            </CRLDistributionPoints>
+            <OCSPAccessUrls/>
+            <Sources>
+                <Source>OCSP_RESPONSE</Source>
+                <Source>TRUSTED_LIST</Source>
+            </Sources>
+            <NotAfter>2023-06-10T13:05:04</NotAfter>
+            <NotBefore>2018-06-11T13:05:04</NotBefore>
+            <PublicKeySize>3072</PublicKeySize>
+            <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-C727784E842E5158A2A849FEBD4988EB836122272E79C59FEA39EFE636690D6F</EntityKey>
+            <KeyUsageBits>
+                <KeyUsage>digitalSignature</KeyUsage>
+                <KeyUsage>nonRepudiation</KeyUsage>
+            </KeyUsageBits>
+            <ExtendedKeyUsages>
+                <extendedKeyUsagesOid Description="ocspSigning">1.3.6.1.5.5.7.3.9</extendedKeyUsagesOid>
+            </ExtendedKeyUsages>
+            <IdPkixOcspNoCheck>true</IdPkixOcspNoCheck>
+            <BasicSignature>
+                <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
+                <KeyLengthUsedToSignThisToken>4096</KeyLengthUsedToSignThisToken>
+                <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
+                <SignatureIntact>true</SignatureIntact>
+                <SignatureValid>true</SignatureValid>
+            </BasicSignature>
+            <SigningCertificate Certificate="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B"/>
+            <CertificateChain>
+                <ChainItem Certificate="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B"/>
+                <ChainItem Certificate="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F"/>
+            </CertificateChain>
+            <Trusted>true</Trusted>
+            <SelfSigned>false</SelfSigned>
+            <CertificatePolicies>
+                <certificatePolicy>1.3.158.36061701.1.3.2</certificatePolicy>
+                <certificatePolicy cpsUrl="http:/ep.nbu.gov.sk/snca/doc/cp_ocsp_snca.pdf">1.3.158.36061701.0.1.5</certificatePolicy>
+                <certificatePolicy>1.3.158.36061701.0.0.0.1.2.2</certificatePolicy>
+            </CertificatePolicies>
+            <QCStatementIds/>
+            <QCTypes/>
+            <TrustedServiceProviders>
+                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                    <TSPNames>
+                        <TSPName lang="sk">Národný bezpečnostný úrad</TSPName>
+                        <TSPName lang="en">National Security Authority</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers>
+                        <TSPRegistrationIdentifier>VATSK-2021594245</TSPRegistrationIdentifier>
+                        <TSPRegistrationIdentifier>NTRSK-36061701</TSPRegistrationIdentifier>
+                    </TSPRegistrationIdentifiers>
+                    <TrustedServices>
+                        <TrustedService ServiceDigitalIdentifier="C-C727784E842E5158A2A849FEBD4988EB836122272E79C59FEA39EFE636690D6F">
+                            <ServiceNames>
+                                <ServiceName lang="en">(108) NSA OCSP</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/Certstatus/OCSP/QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2019-07-31T08:00:00</StartDate>
+                            <AdditionalServiceInfoUris>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
+                            </AdditionalServiceInfoUris>
+                        </TrustedService>
+                        <TrustedService ServiceDigitalIdentifier="C-C727784E842E5158A2A849FEBD4988EB836122272E79C59FEA39EFE636690D6F">
+                            <ServiceNames>
+                                <ServiceName lang="en">(108) NSA OCSP</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/Certstatus/OCSP/QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2018-10-19T08:00:00</StartDate>
+                            <EndDate>2019-07-31T08:00:00</EndDate>
+                            <AdditionalServiceInfoUris>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
+                            </AdditionalServiceInfoUris>
+                        </TrustedService>
+                    </TrustedServices>
+                </TrustedServiceProvider>
+                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                    <TSPNames>
+                        <TSPName lang="sk">Národný bezpečnostný úrad</TSPName>
+                        <TSPName lang="en">National Security Authority</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers>
+                        <TSPRegistrationIdentifier>VATSK-2021594245</TSPRegistrationIdentifier>
+                        <TSPRegistrationIdentifier>NTRSK-36061701</TSPRegistrationIdentifier>
+                    </TSPRegistrationIdentifiers>
+                    <TrustedServices>
+                        <TrustedService ServiceDigitalIdentifier="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(2) Koreňová certifikačná autorita 3</ServiceName>
+                                <ServiceName lang="en">(2) Root Certification Authority 3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/NationalRootCA-QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/recognisedatnationallevel</Status>
+                            <StartDate>2016-06-30T22:00:00</StartDate>
+                            <ServiceSupplyPoints>
+                                <ServiceSupplyPoint>http://ep.nbu.gov.sk/kca/crls3/kcanbusr3.crl</ServiceSupplyPoint>
+                                <ServiceSupplyPoint>http://ocsp.nbu.gov.sk/ocsp/valid</ServiceSupplyPoint>
+                            </ServiceSupplyPoints>
+                        </TrustedService>
+                    </TrustedServices>
+                </TrustedServiceProvider>
+                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                    <TSPNames>
+                        <TSPName lang="sk">Národný bezpečnostný úrad</TSPName>
+                        <TSPName lang="en">National Security Authority</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers>
+                        <TSPRegistrationIdentifier>VATSK-2021594245</TSPRegistrationIdentifier>
+                        <TSPRegistrationIdentifier>NTRSK-36061701</TSPRegistrationIdentifier>
+                    </TSPRegistrationIdentifiers>
+                    <TrustedServices>
+                        <TrustedService ServiceDigitalIdentifier="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(82) SNCA3</ServiceName>
+                                <ServiceName lang="en">(82) SNCA3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2019-07-31T08:00:00</StartDate>
+                            <CapturedQualifiers>
+                                <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESeal</Qualifier>
+                            </CapturedQualifiers>
+                            <AdditionalServiceInfoUris>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
+                            </AdditionalServiceInfoUris>
+                            <ServiceSupplyPoints>
+                                <ServiceSupplyPoint>http://ep.nbu.gov.sk/snca/crls3/snca3.crl</ServiceSupplyPoint>
+                                <ServiceSupplyPoint>http://snca3-ocsp.nbu.gov.sk/ocsp/snca3</ServiceSupplyPoint>
+                            </ServiceSupplyPoints>
+                        </TrustedService>
+                        <TrustedService ServiceDigitalIdentifier="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(82) SNCA3</ServiceName>
+                                <ServiceName lang="en">(82) SNCA3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2017-12-18T00:00:00</StartDate>
+                            <EndDate>2019-07-31T08:00:00</EndDate>
+                            <CapturedQualifiers>
+                                <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESeal</Qualifier>
+                            </CapturedQualifiers>
+                            <AdditionalServiceInfoUris>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
+                            </AdditionalServiceInfoUris>
+                        </TrustedService>
+                    </TrustedServices>
+                </TrustedServiceProvider>
+            </TrustedServiceProviders>
+            <Revocations/>
+            <DigestAlgoAndValue>
+                <DigestMethod>SHA256</DigestMethod>
+                <DigestValue>xyd4ToQuUViiqEn+vUmI64NhIicuecWf6jnv5jZpDW8=</DigestValue>
+            </DigestAlgoAndValue>
+        </Certificate>
+        <Certificate Id="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F">
+            <SubjectDistinguishedName Format="CANONICAL">cn=kca nbu sr 3,ou=sibep,o=narodny bezpecnostny urad,l=bratislava,c=sk</SubjectDistinguishedName>
+            <SubjectDistinguishedName Format="RFC2253">CN=KCA NBU SR 3,OU=SIBEP,O=Narodny bezpecnostny urad,L=Bratislava,C=SK</SubjectDistinguishedName>
+            <IssuerDistinguishedName Format="CANONICAL">cn=kca nbu sr 3,ou=sibep,o=narodny bezpecnostny urad,l=bratislava,c=sk</IssuerDistinguishedName>
+            <IssuerDistinguishedName Format="RFC2253">CN=KCA NBU SR 3,OU=SIBEP,O=Narodny bezpecnostny urad,L=Bratislava,C=SK</IssuerDistinguishedName>
+            <SerialNumber>1</SerialNumber>
+            <CommonName>KCA NBU SR 3</CommonName>
+            <Locality>Bratislava</Locality>
+            <CountryName>SK</CountryName>
+            <OrganizationName>Narodny bezpecnostny urad</OrganizationName>
+            <OrganizationalUnit>SIBEP</OrganizationalUnit>
+            <AuthorityInformationAccessUrls/>
+            <CRLDistributionPoints>
+                <crlUrl>http://ep.nbusr.sk/kca/crls3/kcanbusr3.crl</crlUrl>
+                <crlUrl>ldap://ep.nbusr.sk/cn%3dKCA%20NBU%20SR%203,ou%3dSIBEP,o%3dNarodny%20bezpecnostny%20urad,l%3dBratislava,c%3dSK?certificateRevocationList</crlUrl>
+                <crlUrl>ldap:///cn%3dKCA%20NBU%20SR%203,ou%3dSIBEP,o%3dNarodny%20bezpecnostny%20urad,l%3dBratislava,c%3dSK?certificateRevocationList</crlUrl>
+            </CRLDistributionPoints>
+            <OCSPAccessUrls/>
+            <Sources>
+                <Source>TRUSTED_LIST</Source>
+            </Sources>
+            <NotAfter>2025-11-06T07:29:09</NotAfter>
+            <NotBefore>2009-11-06T09:59:39</NotBefore>
+            <PublicKeySize>4096</PublicKeySize>
+            <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F</EntityKey>
+            <KeyUsageBits>
+                <KeyUsage>keyCertSign</KeyUsage>
+                <KeyUsage>crlSign</KeyUsage>
+            </KeyUsageBits>
+            <ExtendedKeyUsages/>
+            <IdPkixOcspNoCheck>false</IdPkixOcspNoCheck>
+            <BasicSignature>
+                <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
+                <KeyLengthUsedToSignThisToken>4096</KeyLengthUsedToSignThisToken>
+                <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
+                <SignatureIntact>true</SignatureIntact>
+                <SignatureValid>true</SignatureValid>
+            </BasicSignature>
+            <CertificateChain/>
+            <Trusted>true</Trusted>
+            <SelfSigned>true</SelfSigned>
+            <CertificatePolicies>
+                <certificatePolicy cpsUrl="http://ep.nbusr.sk/kca/doc/kca_cps.pdf">1.3.158.36061701.0.0.0.1.2.2</certificatePolicy>
+            </CertificatePolicies>
+            <QCStatementIds/>
+            <QCTypes/>
+            <TrustedServiceProviders>
+                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                    <TSPNames>
+                        <TSPName lang="sk">Národný bezpečnostný úrad</TSPName>
+                        <TSPName lang="en">National Security Authority</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers>
+                        <TSPRegistrationIdentifier>VATSK-2021594245</TSPRegistrationIdentifier>
+                        <TSPRegistrationIdentifier>NTRSK-36061701</TSPRegistrationIdentifier>
+                    </TSPRegistrationIdentifiers>
+                    <TrustedServices>
+                        <TrustedService ServiceDigitalIdentifier="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(2) Koreňová certifikačná autorita 3</ServiceName>
+                                <ServiceName lang="en">(2) Root Certification Authority 3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/NationalRootCA-QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/recognisedatnationallevel</Status>
+                            <StartDate>2016-06-30T22:00:00</StartDate>
+                            <ServiceSupplyPoints>
+                                <ServiceSupplyPoint>http://ep.nbu.gov.sk/kca/crls3/kcanbusr3.crl</ServiceSupplyPoint>
+                                <ServiceSupplyPoint>http://ocsp.nbu.gov.sk/ocsp/valid</ServiceSupplyPoint>
+                            </ServiceSupplyPoints>
+                        </TrustedService>
+                        <TrustedService ServiceDigitalIdentifier="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(2) Koreňová certifikačná autorita 3</ServiceName>
+                                <ServiceName lang="en">(2) Root Certification Authority 3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/NationalRootCA-QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/setbynationallaw</Status>
+                            <StartDate>2002-03-15T00:00:00</StartDate>
+                            <EndDate>2016-06-30T22:00:00</EndDate>
+                        </TrustedService>
+                    </TrustedServices>
+                </TrustedServiceProvider>
+            </TrustedServiceProviders>
+            <Revocations/>
+            <DigestAlgoAndValue>
+                <DigestMethod>SHA256</DigestMethod>
+                <DigestValue>2DR34DiMQLoJL+ykhKXr060wKL9gIgEy6VFYwA3c6Y8=</DigestValue>
+            </DigestAlgoAndValue>
+        </Certificate>
+        <Certificate Id="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B">
+            <SubjectDistinguishedName Format="CANONICAL">cn=snca3,ou=sep,o=narodny bezpecnostny urad,2.5.4.5=#130e4e5452534b2d3336303631373031,l=bratislava,c=sk</SubjectDistinguishedName>
+            <SubjectDistinguishedName Format="RFC2253">CN=SNCA3,OU=SEP,O=Narodny bezpecnostny urad,2.5.4.5=#130e4e5452534b2d3336303631373031,L=Bratislava,C=SK</SubjectDistinguishedName>
+            <IssuerDistinguishedName Format="CANONICAL">cn=kca nbu sr 3,ou=sibep,o=narodny bezpecnostny urad,l=bratislava,c=sk</IssuerDistinguishedName>
+            <IssuerDistinguishedName Format="RFC2253">CN=KCA NBU SR 3,OU=SIBEP,O=Narodny bezpecnostny urad,L=Bratislava,C=SK</IssuerDistinguishedName>
+            <SerialNumber>1934</SerialNumber>
+            <CommonName>SNCA3</CommonName>
+            <Locality>Bratislava</Locality>
+            <CountryName>SK</CountryName>
+            <OrganizationName>Narodny bezpecnostny urad</OrganizationName>
+            <OrganizationalUnit>SEP</OrganizationalUnit>
+            <AuthorityInformationAccessUrls>
+                <aiaUrl>http://ep.nbusr.sk/kca/certs/kca3/kcanbusr3_p7c.p7c</aiaUrl>
+                <aiaUrl>ldap://ep.nbusr.sk/cn=KCA NBU SR 3,ou=SIBEP,o=Narodny bezpecnostny urad,l=Bratislava,c=SK?caCertificate;binary</aiaUrl>
+                <aiaUrl>ldap:///cn=KCA NBU SR 3,ou=SIBEP,o=Narodny bezpecnostny urad,l=Bratislava,c=SK?caCertificate;binary</aiaUrl>
+            </AuthorityInformationAccessUrls>
+            <CRLDistributionPoints>
+                <crlUrl>http://ep.nbusr.sk/kca/crls3/kcanbusr3.crl</crlUrl>
+                <crlUrl>ldap://ep.nbusr.sk/cn%3dKCA%20NBU%20SR%203,ou%3dSIBEP,o%3dNarodny%20bezpecnostny%20urad,l%3dBratislava,c%3dSK?certificateRevocationList</crlUrl>
+                <crlUrl>ldap:///cn%3dKCA%20NBU%20SR%203,ou%3dSIBEP,o%3dNarodny%20bezpecnostny%20urad,l%3dBratislava,c%3dSK?certificateRevocationList</crlUrl>
+            </CRLDistributionPoints>
+            <OCSPAccessUrls/>
+            <Sources>
+                <Source>SIGNATURE</Source>
+                <Source>TIMESTAMP</Source>
+                <Source>TRUSTED_LIST</Source>
+            </Sources>
+            <NotAfter>2025-11-06T07:29:09</NotAfter>
+            <NotBefore>2017-06-14T11:59:46</NotBefore>
+            <PublicKeySize>4096</PublicKeySize>
+            <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B</EntityKey>
+            <KeyUsageBits>
+                <KeyUsage>keyCertSign</KeyUsage>
+                <KeyUsage>crlSign</KeyUsage>
+            </KeyUsageBits>
+            <ExtendedKeyUsages/>
+            <IdPkixOcspNoCheck>false</IdPkixOcspNoCheck>
+            <BasicSignature>
+                <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
+                <KeyLengthUsedToSignThisToken>4096</KeyLengthUsedToSignThisToken>
+                <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
+                <SignatureIntact>true</SignatureIntact>
+                <SignatureValid>true</SignatureValid>
+            </BasicSignature>
+            <SigningCertificate Certificate="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F"/>
+            <CertificateChain>
+                <ChainItem Certificate="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F"/>
+            </CertificateChain>
+            <Trusted>true</Trusted>
+            <SelfSigned>false</SelfSigned>
+            <CertificatePolicies>
+                <certificatePolicy cpsUrl="http://ep.nbusr.sk/kca/doc/kca_cps.pdf">1.3.158.36061701.0.0.0.1.2.2</certificatePolicy>
+            </CertificatePolicies>
+            <QCStatementIds/>
+            <QCTypes/>
+            <TrustedServiceProviders>
+                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                    <TSPNames>
+                        <TSPName lang="sk">Národný bezpečnostný úrad</TSPName>
+                        <TSPName lang="en">National Security Authority</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers>
+                        <TSPRegistrationIdentifier>VATSK-2021594245</TSPRegistrationIdentifier>
+                        <TSPRegistrationIdentifier>NTRSK-36061701</TSPRegistrationIdentifier>
+                    </TSPRegistrationIdentifiers>
+                    <TrustedServices>
+                        <TrustedService ServiceDigitalIdentifier="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(2) Koreňová certifikačná autorita 3</ServiceName>
+                                <ServiceName lang="en">(2) Root Certification Authority 3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/NationalRootCA-QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/recognisedatnationallevel</Status>
+                            <StartDate>2016-06-30T22:00:00</StartDate>
+                            <ServiceSupplyPoints>
+                                <ServiceSupplyPoint>http://ep.nbu.gov.sk/kca/crls3/kcanbusr3.crl</ServiceSupplyPoint>
+                                <ServiceSupplyPoint>http://ocsp.nbu.gov.sk/ocsp/valid</ServiceSupplyPoint>
+                            </ServiceSupplyPoints>
+                        </TrustedService>
+                    </TrustedServices>
+                </TrustedServiceProvider>
+                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                    <TSPNames>
+                        <TSPName lang="sk">Národný bezpečnostný úrad</TSPName>
+                        <TSPName lang="en">National Security Authority</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers>
+                        <TSPRegistrationIdentifier>VATSK-2021594245</TSPRegistrationIdentifier>
+                        <TSPRegistrationIdentifier>NTRSK-36061701</TSPRegistrationIdentifier>
+                    </TSPRegistrationIdentifiers>
+                    <TrustedServices>
+                        <TrustedService ServiceDigitalIdentifier="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(82) SNCA3</ServiceName>
+                                <ServiceName lang="en">(82) SNCA3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2019-07-31T08:00:00</StartDate>
+                            <CapturedQualifiers>
+                                <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESeal</Qualifier>
+                            </CapturedQualifiers>
+                            <AdditionalServiceInfoUris>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
+                            </AdditionalServiceInfoUris>
+                            <ServiceSupplyPoints>
+                                <ServiceSupplyPoint>http://ep.nbu.gov.sk/snca/crls3/snca3.crl</ServiceSupplyPoint>
+                                <ServiceSupplyPoint>http://snca3-ocsp.nbu.gov.sk/ocsp/snca3</ServiceSupplyPoint>
+                            </ServiceSupplyPoints>
+                        </TrustedService>
+                        <TrustedService ServiceDigitalIdentifier="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B">
+                            <ServiceNames>
+                                <ServiceName lang="sk">(82) SNCA3</ServiceName>
+                                <ServiceName lang="en">(82) SNCA3</ServiceName>
+                            </ServiceNames>
+                            <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
+                            <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
+                            <StartDate>2017-12-18T00:00:00</StartDate>
+                            <EndDate>2019-07-31T08:00:00</EndDate>
+                            <CapturedQualifiers>
+                                <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESeal</Qualifier>
+                            </CapturedQualifiers>
+                            <AdditionalServiceInfoUris>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForWebSiteAuthentication</AdditionalServiceInfoUri>
+                            </AdditionalServiceInfoUris>
+                        </TrustedService>
+                    </TrustedServices>
+                </TrustedServiceProvider>
+            </TrustedServiceProviders>
+            <Revocations/>
+            <DigestAlgoAndValue>
+                <DigestMethod>SHA256</DigestMethod>
+                <DigestValue>8jC+yyex7iLrS4PoS1SJBK8uVaUp8G1bMVpCp/mvXhs=</DigestValue>
+            </DigestAlgoAndValue>
+        </Certificate>
+    </UsedCertificates>
+    <UsedRevocations>
+        <Revocation Id="R-51CBD5624AB597508601AA48CC653C4FFE05FE691977224F2B74C9A9EA1B0ED2">
+            <Origin>INPUT_DOCUMENT</Origin>
+            <Type>OCSP</Type>
+            <ProductionDate>2019-05-15T08:30:37</ProductionDate>
+            <ThisUpdate>2019-05-15T08:30:34</ThisUpdate>
+            <NextUpdate>2019-05-15T08:40:34</NextUpdate>
+            <ArchiveCutOff>2017-06-14T11:59:46</ArchiveCutOff>
+            <CertHashExtensionPresent>true</CertHashExtensionPresent>
+            <CertHashExtensionMatch>true</CertHashExtensionMatch>
+            <BasicSignature>
+                <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
+                <KeyLengthUsedToSignThisToken>3072</KeyLengthUsedToSignThisToken>
+                <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
+                <SignatureIntact>true</SignatureIntact>
+                <SignatureValid>true</SignatureValid>
+            </BasicSignature>
+            <SigningCertificate Certificate="C-C727784E842E5158A2A849FEBD4988EB836122272E79C59FEA39EFE636690D6F"/>
+            <CertificateChain>
+                <ChainItem Certificate="C-C727784E842E5158A2A849FEBD4988EB836122272E79C59FEA39EFE636690D6F"/>
+                <ChainItem Certificate="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B"/>
+                <ChainItem Certificate="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F"/>
+            </CertificateChain>
+            <FoundCertificates>
+                <RelatedCertificate Certificate="C-C727784E842E5158A2A849FEBD4988EB836122272E79C59FEA39EFE636690D6F">
+                    <Origin>BASIC_OCSP_RESP</Origin>
+                    <CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <SerialInfo>
+                        	<IssuerName>CN=NSA OCSP,OU=OCSP Responder P2,O=NBU,2.5.4.5=#130e4e5452534b2d3336303631373031,L=Bratislava,C=SK</IssuerName>
+                        </SerialInfo>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
+            <DigestAlgoAndValue>
+                <DigestMethod>SHA256</DigestMethod>
+                <DigestValue>UcvVYkq1l1CGAapIzGU8T/4F/mkZdyJPK3TJqeobDtI=</DigestValue>
+            </DigestAlgoAndValue>
+        </Revocation>
+        <Revocation Id="R-BAB71CBB8526D5ABEA7D356B90708788A0525BB27308B5112AAF1D442FB239D9">
+            <Origin>EXTERNAL</Origin>
+            <Type>OCSP</Type>
+            <SourceAddress>http://snca3-ocsp.nbu.gov.sk/ocsp/snca3</SourceAddress>
+            <ProductionDate>2020-03-11T09:53:25</ProductionDate>
+            <ThisUpdate>2020-03-11T09:53:23</ThisUpdate>
+            <NextUpdate>2020-03-11T10:03:23</NextUpdate>
+            <ArchiveCutOff>2017-06-14T11:59:46</ArchiveCutOff>
+            <CertHashExtensionPresent>true</CertHashExtensionPresent>
+            <CertHashExtensionMatch>true</CertHashExtensionMatch>
+            <BasicSignature>
+                <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
+                <KeyLengthUsedToSignThisToken>3072</KeyLengthUsedToSignThisToken>
+                <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
+                <SignatureIntact>true</SignatureIntact>
+                <SignatureValid>true</SignatureValid>
+            </BasicSignature>
+            <SigningCertificate Certificate="C-08EF9A0929BD4B939BDB2C087A575931BD9FFDA730C675C339F9D95730031F92"/>
+            <CertificateChain>
+                <ChainItem Certificate="C-08EF9A0929BD4B939BDB2C087A575931BD9FFDA730C675C339F9D95730031F92"/>
+                <ChainItem Certificate="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B"/>
+                <ChainItem Certificate="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F"/>
+            </CertificateChain>
+            <FoundCertificates>
+                <RelatedCertificate Certificate="C-08EF9A0929BD4B939BDB2C087A575931BD9FFDA730C675C339F9D95730031F92">
+                    <Origin>BASIC_OCSP_RESP</Origin>
+                    <CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <SerialInfo>
+                        	<IssuerName>CN=NSA OCSP,OU=OCSP Responder P1,O=NBU,2.5.4.5=#130e4e5452534b2d3336303631373031,L=Bratislava,C=SK</IssuerName>
+                        </SerialInfo>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
+            <DigestAlgoAndValue>
+                <DigestMethod>SHA256</DigestMethod>
+                <DigestValue>urccu4Um1avqfTVrkHCHiKBSW7JzCLURKq8dRC+yOdk=</DigestValue>
+            </DigestAlgoAndValue>
+        </Revocation>
+    </UsedRevocations>
+    <UsedTimestamps>
+        <Timestamp Type="SIGNATURE_TIMESTAMP" Id="T-8B7D55AFED499B486D6BF0FBFF5B24135535CB1CB1FB317B999B210D138B9018">
+            <ProductionTime>2019-05-15T08:17:57</ProductionTime>
+            <DigestMatcher type="MESSAGE_IMPRINT">
+                <DigestMethod>SHA256</DigestMethod>
+                <DigestValue>s1OmDNWgwWELiJ2Org3IwHFmCzkCxSHNHtAeCf4IYKc=</DigestValue>
+                <DataFound>true</DataFound>
+                <DataIntact>true</DataIntact>
+            </DigestMatcher>
+            <BasicSignature>
+                <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
+                <KeyLengthUsedToSignThisToken>3072</KeyLengthUsedToSignThisToken>
+                <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
+                <SignatureIntact>true</SignatureIntact>
+                <SignatureValid>true</SignatureValid>
+            </BasicSignature>
+            <SigningCertificate Certificate="C-4329A61FF2ADF1F4D135B25F8CC988B7998C5B8396353B8D55192F78BAB3BAF8"/>
+            <CertificateChain>
+                <ChainItem Certificate="C-4329A61FF2ADF1F4D135B25F8CC988B7998C5B8396353B8D55192F78BAB3BAF8"/>
+                <ChainItem Certificate="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B"/>
+                <ChainItem Certificate="C-D83477E0388C40BA092FECA484A5EBD3AD3028BF60220132E95158C00DDCE98F"/>
+            </CertificateChain>
+            <FoundCertificates>
+                <RelatedCertificate Certificate="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B">
+                    <Origin>SIGNED_DATA</Origin>
+                </RelatedCertificate>
+                <RelatedCertificate Certificate="C-4329A61FF2ADF1F4D135B25F8CC988B7998C5B8396353B8D55192F78BAB3BAF8">
+                    <Origin>SIGNED_DATA</Origin>
+                    <CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue>
+                            <DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>+HwUTkb/lRY1nOA02v4Nyiv6LVU=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                    <CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue>
+                            <DigestMethod>SHA256</DigestMethod>
+                            <DigestValue>QymmH/Kt8fTRNbJfjMmIt5mMW4OWNTuNVRkveLqzuvg=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
+            <FoundRevocations/>
+            <TimestampedObjects>
+                <TimestampedObject Token="D-4CC29A694C9F13BEB5A2BB32E8FACFE33C80EF17D53B130FDD2A421F8FB697C6" Category="SIGNED_DATA"/>
+                <TimestampedObject Token="S-66E2E6A060AF9318230EA29AE2CC56E0FDCAA4A6CC8A2ADD39738F1EFBAE0F76" Category="SIGNATURE"/>
+                <TimestampedObject Token="C-3CF95234A0190CD33AB408C7FC243CA31C3DFB7722D150B09207DC4A7EBF33A0" Category="CERTIFICATE"/>
+                <TimestampedObject Token="C-F230BECB27B1EE22EB4B83E84B548904AF2E55A529F06D5B315A42A7F9AF5E1B" Category="CERTIFICATE"/>
+            </TimestampedObjects>
+            <DigestAlgoAndValue>
+                <DigestMethod>SHA256</DigestMethod>
+                <DigestValue>i31Vr+1Jm0hta/D7/1skE1U1yxyx+zF7mZshDROLkBg=</DigestValue>
+            </DigestAlgoAndValue>
+        </Timestamp>
+    </UsedTimestamps>
+    <OriginalDocuments>
+        <SignerData Id="D-4CC29A694C9F13BEB5A2BB32E8FACFE33C80EF17D53B130FDD2A421F8FB697C6">
+            <ReferencedName>Partial PDF</ReferencedName>
+            <DigestAlgoAndValue>
+                <DigestMethod>SHA256</DigestMethod>
+                <DigestValue>BGY0w8JQcgmewoiWWp9tUBq1CaIIwyGuksGBCcdE5Zk=</DigestValue>
+            </DigestAlgoAndValue>
+        </SignerData>
+    </OriginalDocuments>
+    <TrustedLists>
+        <TrustedList Id="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC">
+            <CountryCode>SK</CountryCode>
+            <Url>http://tl.nbu.gov.sk/kca/tsl/tsl.xml</Url>
+            <SequenceNumber>62</SequenceNumber>
+            <Version>5</Version>
+            <LastLoading>2020-03-11T09:53:10</LastLoading>
+            <IssueDate>2020-02-21T08:00:00</IssueDate>
+            <NextUpdate>2020-08-19T00:00:00</NextUpdate>
+            <WellSigned>true</WellSigned>
+        </TrustedList>
+        <TrustedList Id="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B" LOTL="true">
+            <CountryCode>EU</CountryCode>
+            <Url>https://ec.europa.eu/tools/lotl/eu-lotl.xml</Url>
+            <SequenceNumber>258</SequenceNumber>
+            <Version>5</Version>
+            <LastLoading>2020-03-11T09:53:09</LastLoading>
+            <IssueDate>2020-03-09T10:00:00</IssueDate>
+            <NextUpdate>2020-09-09T00:00:00</NextUpdate>
+            <WellSigned>true</WellSigned>
+        </TrustedList>
+    </TrustedLists>
+</DiagnosticData>

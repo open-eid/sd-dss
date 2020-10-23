@@ -5,7 +5,7 @@
     <Signatures>
         <Signature Id="id-6e3f28661e4daf3708fc24faf5e6df0084a7b55ac46b454f303748b8c682b2fc">
             <SignatureFilename>pDF</SignatureFilename>
-            <DateTime>2016-05-12T14:39:15</DateTime>
+            <ClaimedSigningTime>2016-05-12T14:39:15</ClaimedSigningTime>
             <SignatureFormat>PAdES-BASELINE-B</SignatureFormat>
             <StructuralValidation>
                 <Valid>true</Valid>
@@ -26,12 +26,7 @@
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>true</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-3967083A1B9CE00484905529E22C64BBF622EE356088D62371B8069A84FE47F7">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-3967083A1B9CE00484905529E22C64BBF622EE356088D62371B8069A84FE47F7"/>
             <CertificateChain>
                 <ChainItem Certificate="C-3967083A1B9CE00484905529E22C64BBF622EE356088D62371B8069A84FE47F7"/>
                 <ChainItem Certificate="C-DE5AE81F11D1B93516A65E6BBEFC07C17D9EEF01B66E1330CB0424D7AC2FD569"/>
@@ -40,7 +35,7 @@
             <SignatureProductionPlace>
                 <CountryName>Berlin</CountryName>
             </SignatureProductionPlace>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             <FoundCertificates/>
             <FoundRevocations/>
             <FoundTimestamps/>
@@ -86,6 +81,7 @@
             <NotBefore>2016-05-12T04:47:22</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-3967083A1B9CE00484905529E22C64BBF622EE356088D62371B8069A84FE47F72</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>nonRepudiation</KeyUsage>
             </KeyUsageBits>
@@ -113,13 +109,14 @@
             </QCStatementIds>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>D-Trust GmbH</TSPName>
-                    <TSPRegistrationIdentifier>VATDE-202620438</TSPRegistrationIdentifier>
-                    <CountryCode>DE</CountryCode>
+                <TrustedServiceProvider TL="TL-C876A5D23654549B5B16B869E1368AFF6EB2E5ECD13F05C489E23F6A919A2164" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames>
+                    	<TSPName lang="en">D-Trust GmbH</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATDE-202620438</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-DE5AE81F11D1B93516A65E6BBEFC07C17D9EEF01B66E1330CB0424D7AC2FD569">
-                            <ServiceName>D-TRUST Qualified Root CA 3 2014:PN</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST Qualified Root CA 3 2014:PN</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/withdrawn</Status>
                             <StartDate>2017-09-25T22:00:00</StartDate>
@@ -127,12 +124,12 @@
                                 <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCWithQSCD</Qualifier>
                             </CapturedQualifiers>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</additionalServiceInfoUri>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-DE5AE81F11D1B93516A65E6BBEFC07C17D9EEF01B66E1330CB0424D7AC2FD569">
-                            <ServiceName>D-TRUST Qualified Root CA 3 2014:PN</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST Qualified Root CA 3 2014:PN</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-06-30T22:00:00</StartDate>
@@ -141,12 +138,12 @@
                                 <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCWithQSCD</Qualifier>
                             </CapturedQualifiers>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</additionalServiceInfoUri>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-DE5AE81F11D1B93516A65E6BBEFC07C17D9EEF01B66E1330CB0424D7AC2FD569">
-                            <ServiceName>D-TRUST Qualified Root CA 3 2014:PN</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST Qualified Root CA 3 2014:PN</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision</Status>
                             <StartDate>2001-10-21T22:00:00</StartDate>
@@ -155,11 +152,11 @@
                                 <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCWithSSCD</Qualifier>
                             </CapturedQualifiers>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-DE5AE81F11D1B93516A65E6BBEFC07C17D9EEF01B66E1330CB0424D7AC2FD569">
-                            <ServiceName>D-TRUST Qualified CA 3 2014:PN</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST Qualified CA 3 2014:PN</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/withdrawn</Status>
                             <StartDate>2017-09-25T22:00:00</StartDate>
@@ -167,11 +164,11 @@
                                 <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCWithQSCD</Qualifier>
                             </CapturedQualifiers>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-DE5AE81F11D1B93516A65E6BBEFC07C17D9EEF01B66E1330CB0424D7AC2FD569">
-                            <ServiceName>D-TRUST Qualified CA 3 2014:PN</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST Qualified CA 3 2014:PN</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-06-30T22:00:00</StartDate>
@@ -180,11 +177,11 @@
                                 <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCWithQSCD</Qualifier>
                             </CapturedQualifiers>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-DE5AE81F11D1B93516A65E6BBEFC07C17D9EEF01B66E1330CB0424D7AC2FD569">
-                            <ServiceName>D-TRUST Qualified CA 3 2014:PN</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST Qualified CA 3 2014:PN</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision</Status>
                             <StartDate>2001-10-21T22:00:00</StartDate>
@@ -199,7 +196,7 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-3967083a1b9ce00484905529e22c64bbf622ee356088d62371b8069a84fe47f7ce5b5ad67683a8a2ae283364782aa32e718ab9b80ae030215e575716d4d58673">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <Base64Encoded>MIIFLjCCBBagAwIBAgIDFqTDMA0GCSqGSIb3DQEBCwUAME0xCzAJBgNVBAYTAkRFMRUwEwYDVQQKDAxELVRydXN0IEdtYkgxJzAlBgNVBAMMHkQtVFJVU1QgUXVhbGlmaWVkIENBIDMgMjAxNDpQTjAeFw0xNTA1MTIwNDQ3MjJaFw0xOTA1MjIwNDQ3MjJaMIGRMQswCQYDVQQGEwJERTEVMBMGA1UEChMMc2VjcnlwdCBHbWJIMRkwFwYDVQQDExBNYXR0aGlhcyBTY2hsZWRlMR8wHQYDVQQqExZNYXR0aGlhcyBKb2hhbm4gU3RlZmFuMRAwDgYDVQQEEwdTY2hsZWRlMR0wGwYDVQQFExREVFJXTTQyOTc4OTQ4NTg3MDI0NTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKHUADdNKcnmzUAdjHyMs0q987RTQUXlniEZnzqcX+C8+izqkDFY2CXThlQUY/+R98K6vswObnlcIb99JXyjcteP0WLjVM8amiKbx+BUa4OtD5F7EN2RpFYnTJ+GVlab+DFfzk0kWlY9UK3qfmEXb5Zu8z5U7C4rZe/tQPAQ4KTDnJtVS//Zffmz/kL8rp8tXGJzMFaf0Br2JfkR4hnqlz2yD2tQstLonS41SRVz5oBr84BZaAB2n0Vo6faIyN2ZcXvdWUbP3LZ6EK1FNh0umSEKv2F0hRC/PU6Sm8V/aaa2d5qHjuIhArDmL6pR9TQEIxW4Prj2EIwonRxi37i0m0ECAwEAAaOCAdAwggHMMB8GA1UdIwQYMBaAFL/3PwRWlqHMG9zUZ5EF/doVpTfeMCUGCCsGAQUFBwEDBBkwFzAIBgYEAI5GAQEwCwYGBACORgEDAgEeMDgGCCsGAQUFBwEBBCwwKjAoBggrBgEFBQcwAYYcaHR0cDovL3F1YWwub2NzcC5kLXRydXN0Lm5ldDAXBgNVHSAEEDAOMAwGCisGAQQBpTQCHwEwgcoGA1UdHwSBwjCBvzCBvKCBuaCBtoZ4bGRhcDovL2RpcmVjdG9yeS5kLXRydXN0Lm5ldC9DTj1ELVRSVVNUJTIwUXVhbGlmaWVkJTIwQ0ElMjAzJTIwMjAxNCUzQVBOLE89RC1UcnVzdCUyMEdtYkgsQz1ERT9jZXJ0aWZpY2F0ZXJldm9jYXRpb25saXN0hjpodHRwOi8vY3JsLmQtdHJ1c3QubmV0L2NybC9kLXRydXN0X3F1YWxpZmllZF9jYV8zXzIwMTQuY3JsMDMGA1UdEgQsMCqBEGluZm9AZC10cnVzdC5uZXSGFmh0dHA6Ly93d3cuZC10cnVzdC5uZXQwHQYDVR0OBBYEFL39LHj0X6yKdrY9uNvmqtUyhr0oMA4GA1UdDwEB/wQEAwIGQDANBgkqhkiG9w0BAQsFAAOCAQEAASHyvz3xrUXAY0JOcrZufYq6qKANKclClFLT5YAC8NvkLxaoG4ciqao6nHs4ZSmgMpIj8pBh3RIoJX1rDRFjy2L8SsorgiAB/m+R3/b27vInV/3CJ1NfUcJH/5Zuj2s4A7Ioiu6QkAR2o9oG+yMA6v1JG8C3ATPEOQUslOCgnxkB29fTkGFIEuxi64CAIybxJFLWxI5D9iA/NLyKTIX4KB5bqzxYGggdzyqAaUdSa6WBJ8LOEWQg3Rhhr3S37g3AXIo/vCezCiEDRSbpfsuJEKGu2KV5mEZBIjDXwZWAjylZJJjxrQvGnoDg1gpUwGa7RMX+P6qbfHA38m7/h75HOw==</Base64Encoded>
@@ -229,9 +226,10 @@
             	<Source>OCSP_RESPONSE</Source>
             </Sources>
             <NotAfter>2031-10-26T08:36:50</NotAfter>
-            <NotBefore>2018-09-17T14:01:52</NotBefore>
+            <NotBefore>2015-09-17T14:01:52</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-B1D2241CA12BD9F10ECF52EA62388E6F2F3E6E6099F3C56168FF87CFF4A96677</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>nonRepudiation</KeyUsage>
             </KeyUsageBits>
@@ -256,18 +254,19 @@
             <QCStatementIds/>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>D-Trust GmbH</TSPName>
-                    <TSPRegistrationIdentifier>VATDE-202620438</TSPRegistrationIdentifier>
-                    <CountryCode>DE</CountryCode>
+                <TrustedServiceProvider TL="TL-C876A5D23654549B5B16B869E1368AFF6EB2E5ECD13F05C489E23F6A919A2164" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames>
+                    	<TSPName lang="en">D-Trust GmbH</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATDE-202620438</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-454A164B9236CF9C380DF9959F751DED503F91BE3EC646C7042CBB0E1E17A7D5">
-                            <ServiceName>D-TRUST qualified Signature ID card</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST qualified Signature ID card</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2017-03-17T11:00:00</StartDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                     </TrustedServices>
@@ -299,9 +298,10 @@
             	<Source>OCSP_RESPONSE</Source>
             </Sources>
             <NotAfter>2031-10-26T08:36:50</NotAfter>
-            <NotBefore>2018-09-17T14:01:52</NotBefore>
+            <NotBefore>2015-09-17T14:01:52</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-B1D2241CA12BD9F10ECF52EA62388E6F2F3E6E6099F3C56168FF87CFF4A95626</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>nonRepudiation</KeyUsage>
             </KeyUsageBits>
@@ -326,18 +326,19 @@
             <QCStatementIds/>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>D-Trust GmbH</TSPName>
-                    <TSPRegistrationIdentifier>VATDE-202620438</TSPRegistrationIdentifier>
-                    <CountryCode>DE</CountryCode>
+                <TrustedServiceProvider TL="TL-C876A5D23654549B5B16B869E1368AFF6EB2E5ECD13F05C489E23F6A919A2164" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames>
+                    	<TSPName lang="en">D-Trust GmbH</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATDE-202620438</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-454A164B9236CF9C380DF9959F751DED503F91BE3EC646C7042CBB0E1E17A7D5">
-                            <ServiceName>D-TRUST qualified Signature ID card</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST qualified Signature ID card</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2017-03-17T11:00:00</StartDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                     </TrustedServices>
@@ -372,6 +373,7 @@
             <NotBefore>2015-10-17T14:40:38</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-DE5AE81F11D1B93516A65E6BBEFC07C17D9EEF01B66E1330CB0424D7AC2FD569</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -381,7 +383,7 @@
             <BasicSignature>
                 <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
                 <KeyLengthUsedToSignThisToken>2048</KeyLengthUsedToSignThisToken>
-                <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
+                <DigestAlgoUsedToSignThisToken>SHA1</DigestAlgoUsedToSignThisToken>
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>true</SignatureValid>
             </BasicSignature>
@@ -399,63 +401,64 @@
             </QCStatementIds>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>D-Trust GmbH</TSPName>
-                    <TSPRegistrationIdentifier>VATDE-202620438</TSPRegistrationIdentifier>
-                    <CountryCode>DE</CountryCode>
+                <TrustedServiceProvider TL="TL-C876A5D23654549B5B16B869E1368AFF6EB2E5ECD13F05C489E23F6A919A2164" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames>
+                    	<TSPName lang="en">D-Trust GmbH</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATDE-202620438</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-5454A5036E584DDA98B55AE89C34BA27571302F176C3034DAE254C34363AE8F3">
-                            <ServiceName>D-TRUST Qualified Root CA 3 2014:PN</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST Qualified Root CA 3 2014:PN</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/withdrawn</Status>
                             <StartDate>2017-09-25T22:00:00</StartDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</additionalServiceInfoUri>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-5454A5036E584DDA98B55AE89C34BA27571302F176C3034DAE254C34363AE8F3">
-                            <ServiceName>D-TRUST Qualified Root CA 3 2014:PN</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST Qualified Root CA 3 2014:PN</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-06-30T22:00:00</StartDate>
                             <EndDate>2017-09-25T22:00:00</EndDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</additionalServiceInfoUri>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-5454A5036E584DDA98B55AE89C34BA27571302F176C3034DAE254C34363AE8F3">
-                            <ServiceName>D-TRUST Qualified Root CA 3 2014:PN</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST Qualified Root CA 3 2014:PN</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision</Status>
                             <StartDate>2001-10-21T22:00:00</StartDate>
                             <EndDate>2016-06-30T22:00:00</EndDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-5454A5036E584DDA98B55AE89C34BA27571302F176C3034DAE254C34363AE8F3">
-                            <ServiceName>D-TRUST Qualified CA 3 2014:PN</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST Qualified CA 3 2014:PN</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/withdrawn</Status>
                             <StartDate>2017-09-25T22:00:00</StartDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-5454A5036E584DDA98B55AE89C34BA27571302F176C3034DAE254C34363AE8F3">
-                            <ServiceName>D-TRUST Qualified CA 3 2014:PN</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST Qualified CA 3 2014:PN</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-06-30T22:00:00</StartDate>
                             <EndDate>2017-09-25T22:00:00</EndDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-5454A5036E584DDA98B55AE89C34BA27571302F176C3034DAE254C34363AE8F3">
-                            <ServiceName>D-TRUST Qualified CA 3 2014:PN</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST Qualified CA 3 2014:PN</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision</Status>
                             <StartDate>2001-10-21T22:00:00</StartDate>
@@ -466,7 +469,7 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-3967083a1b9ce00484905529e22c64bbf622ee356088d62371b8069a84fe47f7ce5b5ad67683a8a2ae283364782aa32e718ab9b80ae030215e575716d4d52222">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
 				</CertificateRevocation>
             </Revocations>
             <Base64Encoded>MIIFCTCCA/GgAwIBAgIDFZkkMA0GCSqGSIb3DQEBCwUAMFIxCzAJBgNVBAYTAkRFMRUwEwYDVQQKDAxELVRydXN0IEdtYkgxLDAqBgNVBAMMI0QtVFJVU1QgUXVhbGlmaWVkIFJvb3QgQ0EgMyAyMDE0OlBOMB4XDTE0MTExNzE0NDAzOFoXDTE5MTExNzE0NDAzOFowTTELMAkGA1UEBhMCREUxFTATBgNVBAoMDEQtVHJ1c3QgR21iSDEnMCUGA1UEAwweRC1UUlVTVCBRdWFsaWZpZWQgQ0EgMyAyMDE0OlBOMIIBJDANBgkqhkiG9w0BAQEFAAOCAREAMIIBDAKCAQEAkJnuU3/qkL0bqv5nlgEG0a/yAFdkzyeRHra2HmW6CBRPbpZaCjIXX4RTckVLQFSmsz0CpmYyxbCTu07po9VgAHJkwimK8+4RN7cFCJdWfMRwFoibBOM34iuipTQY/aLZQQDxILNxwvqc6z00BtvZOs2AdqRNdpq9EscAXwGaLzg+lvEf+65bda8hWvz87WvpSO0jaKR7qJXHdPL5RWE4edmAqEFmS5p/q8MFfZxyfomu6Vc8xFbpjYWwj/bKK69C5A2XfjxsoRZ+ve+JoDFLO2znTT3pjANc7aNCUS6M7o1a2LIgjAmUfMBv10222/z3QBJa3O+u+8e4Yg0JAl1W6wIFAOUauy2jggHpMIIB5TAfBgNVHSMEGDAWgBTqNJBVRZmoTR+myVNsiYCCTdkhEDAYBggrBgEFBQcBAwQMMAowCAYGBACORgEBMDgGCCsGAQUFBwEBBCwwKjAoBggrBgEFBQcwAYYcaHR0cDovL3F1YWwub2NzcC5kLXRydXN0Lm5ldDAXBgNVHSAEEDAOMAwGCisGAQQBpTQCHwEwMwYDVR0RBCwwKoEQaW5mb0BkLXRydXN0Lm5ldIYWaHR0cDovL3d3dy5kLXRydXN0Lm5ldDCB3AYDVR0fBIHUMIHRMIGHoIGEoIGBhn9sZGFwOi8vZGlyZWN0b3J5LmQtdHJ1c3QubmV0L0NOPUQtVFJVU1QlMjBRdWFsaWZpZWQlMjBSb290JTIwQ0ElMjAzJTIwMjAxNCUzQVBOLE89RC1UcnVzdCUyMEdtYkgsQz1ERT9jZXJ0aWZpY2F0ZXJldm9jYXRpb25saXN0MEWgQ6BBhj9odHRwOi8vY3JsLmQtdHJ1c3QubmV0L2NybC9kLXRydXN0X3F1YWxpZmllZF9yb290X2NhXzNfMjAxNC5jcmwwHQYDVR0OBBYEFL/3PwRWlqHMG9zUZ5EF/doVpTfeMA4GA1UdDwEB/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgEAMA0GCSqGSIb3DQEBCwUAA4IBAQCQB6CSFV2KAXoB38bgVsjCPGyVWJzg9fbnh8k6deq+cfZQbQGayPzREAn+HPJ++mNBac8O7xcae6Sk6QdvAM/wfGw8jCs67HtYb/CtCrB8vBFtxraddW6qxOdNaymtZlnBav5WaHJJYN/vYyOlG9BCHxOSvTAiqT8NXnExdSUkUL5HkacCp7yrm2TsjelVGmngKSnn1sYvv8B9lwX/Y9NQUm5KjCy7nVqvuq3tKHRRewP2pFrks3OeBhDG+EGa7hB10e7dvYnOzQYy7qHNsOwQnLsCnjqEASZLMfW2+mjMTk652100H2JB4ggNSjj+cSJ1rAqoRpOq9HvgwO310syi</Base64Encoded>
@@ -497,6 +500,7 @@
             <NotBefore>2014-11-17T14:30:30</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-5454A5036E584DDA98B55AE89C34BA27571302F176C3034DAE254C34363AE8F3</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -520,40 +524,41 @@
             </QCStatementIds>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>D-Trust GmbH</TSPName>
-                    <TSPRegistrationIdentifier>VATDE-202620438</TSPRegistrationIdentifier>
-                    <CountryCode>DE</CountryCode>
+                <TrustedServiceProvider TL="TL-C876A5D23654549B5B16B869E1368AFF6EB2E5ECD13F05C489E23F6A919A2164" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames>
+                    	<TSPName lang="en">D-Trust GmbH</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATDE-202620438</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-5454A5036E584DDA98B55AE89C34BA27571302F176C3034DAE254C34363AE8F3">
-                            <ServiceName>D-TRUST Qualified Root CA 3 2014:PN</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST Qualified Root CA 3 2014:PN</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/withdrawn</Status>
                             <StartDate>2017-09-25T22:00:00</StartDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</additionalServiceInfoUri>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-5454A5036E584DDA98B55AE89C34BA27571302F176C3034DAE254C34363AE8F3">
-                            <ServiceName>D-TRUST Qualified Root CA 3 2014:PN</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST Qualified Root CA 3 2014:PN</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-06-30T22:00:00</StartDate>
                             <EndDate>2017-09-25T22:00:00</EndDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</additionalServiceInfoUri>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</AdditionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                         <TrustedService ServiceDigitalIdentifier="C-5454A5036E584DDA98B55AE89C34BA27571302F176C3034DAE254C34363AE8F3">
-                            <ServiceName>D-TRUST Qualified Root CA 3 2014:PN</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST Qualified Root CA 3 2014:PN</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision</Status>
                             <StartDate>2001-10-21T22:00:00</StartDate>
                             <EndDate>2016-06-30T22:00:00</EndDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/RootCA-QC</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                     </TrustedServices>
@@ -588,6 +593,7 @@
             <NotBefore>2016-10-26T08:36:38</NotBefore>
             <PublicKeySize>4096</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-554A164B9236CF9C380DF9959F751DED503F91BE3EC646C7042CBB0E1E17A7D5</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -610,18 +616,19 @@
             <QCStatementIds/>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>D-Trust GmbH</TSPName>
-                    <TSPRegistrationIdentifier>VATDE-202620438</TSPRegistrationIdentifier>
-                    <CountryCode>DE</CountryCode>
+                <TrustedServiceProvider TL="TL-C876A5D23654549B5B16B869E1368AFF6EB2E5ECD13F05C489E23F6A919A2164" LOTL="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E">
+                    <TSPNames>
+                    	<TSPName lang="en">D-Trust GmbH</TSPName>
+                    </TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATDE-202620438</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-454A164B9236CF9C380DF9959F751DED503F91BE3EC646C7042CBB0E1E17A7D5">
-                            <ServiceName>D-TRUST qualified Signature ID card</ServiceName>
+                            <ServiceNames><ServiceName lang="en">D-TRUST qualified Signature ID card</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2017-03-17T11:00:00</StartDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                     </TrustedServices>
@@ -687,7 +694,7 @@
         </SignerData>
     </OriginalDocuments>
     <TrustedLists>
-        <TrustedList>
+        <TrustedList Id="TL-C876A5D23654549B5B16B869E1368AFF6EB2E5ECD13F05C489E23F6A919A2164">
             <CountryCode>DE</CountryCode>
             <Url>https://www.nrca-ds.de/st/TSL-XML.xml</Url>
             <SequenceNumber>69</SequenceNumber>
@@ -697,15 +704,15 @@
             <NextUpdate>2019-07-14T00:00:00</NextUpdate>
             <WellSigned>true</WellSigned>
         </TrustedList>
+    	<TrustedList Id="LOTL-5593FFFD1C67322CB1EDD3E26916E1487F630F7FA22644ADA5B90DA7F1C9E05E" LOTL="true">
+	        <CountryCode>EU</CountryCode>
+	        <Url>https://ec.europa.eu/information_society/policy/esignature/trusted-list/tl-mp.xml</Url>
+	        <SequenceNumber>228</SequenceNumber>
+	        <Version>5</Version>
+	        <LastLoading>2019-01-15T17:04:27</LastLoading>
+	        <IssueDate>2019-01-09T07:40:00</IssueDate>
+	        <NextUpdate>2019-07-08T00:00:00</NextUpdate>
+	        <WellSigned>true</WellSigned>
+	    </TrustedList>
     </TrustedLists>
-    <ListOfTrustedLists>
-        <CountryCode>EU</CountryCode>
-        <Url>https://ec.europa.eu/information_society/policy/esignature/trusted-list/tl-mp.xml</Url>
-        <SequenceNumber>228</SequenceNumber>
-        <Version>5</Version>
-        <LastLoading>2019-01-15T17:04:27</LastLoading>
-        <IssueDate>2019-01-09T07:40:00</IssueDate>
-        <NextUpdate>2019-07-08T00:00:00</NextUpdate>
-        <WellSigned>true</WellSigned>
-    </ListOfTrustedLists>
 </DiagnosticData>

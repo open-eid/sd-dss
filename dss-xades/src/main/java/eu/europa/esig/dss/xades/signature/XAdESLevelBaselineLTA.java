@@ -23,22 +23,28 @@ package eu.europa.esig.dss.xades.signature;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 
 import eu.europa.esig.dss.DomUtils;
-import eu.europa.esig.dss.XAdESNamespaces;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.model.DSSException;
-import eu.europa.esig.dss.model.TimestampParameters;
+import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.spi.DSSUtils;
+import eu.europa.esig.dss.spi.x509.revocation.crl.CRLToken;
+import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPToken;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.ValidationContext;
+import eu.europa.esig.dss.validation.ValidationDataForInclusion;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 import eu.europa.esig.dss.xades.DSSXMLUtils;
+import eu.europa.esig.dss.xades.XAdESTimestampParameters;
+import eu.europa.esig.dss.xades.definition.xades141.XAdES141Element;
 
 /**
  * Holds level LTA aspects of XAdES
@@ -73,10 +79,13 @@ public class XAdESLevelBaselineLTA extends XAdESLevelBaselineLT implements Seria
 
 			checkSignatureIntegrity();
 
+			// must be executed before data removing
 			final ValidationContext validationContext = xadesSignature.getSignatureValidationContext(certificateVerifier);
-
 			String indent = removeLastTimestampValidationData();
-			incorporateTimestampValidationData(validationContext, indent);
+			
+			ValidationDataForInclusion validationDataForInclusion = getValidationDataForInclusion(validationContext);
+			
+			incorporateTimestampValidationData(validationDataForInclusion, indent);
 		}
 
 		incorporateArchiveTimestamp();
@@ -104,26 +113,34 @@ public class XAdESLevelBaselineLTA extends XAdESLevelBaselineLT implements Seria
 	/**
 	 * This method incorporates the timestamp validation data in the signature
 	 *
-	 * @param validationContext
+	 * @param validationDataForInclusion {@link ValidationDataForInclusion} to be included into the signature
 	 */
-	private void incorporateTimestampValidationData(final ValidationContext validationContext, String indent) {
+	private void incorporateTimestampValidationData(final ValidationDataForInclusion validationDataForInclusion, String indent) {
 
-		final Element timeStampValidationDataDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, XAdESNamespaces.XAdES141,
-				XADES141_TIME_STAMP_VALIDATION_DATA);
+		Set<CertificateToken> certificateValuesToAdd = validationDataForInclusion.getCertificateTokens();
+		List<CRLToken> crlsToAdd = validationDataForInclusion.getCrlTokens();
+		List<OCSPToken> ocspsToAdd = validationDataForInclusion.getOcspTokens();
+		
+		if (Utils.isCollectionNotEmpty(certificateValuesToAdd) || Utils.isCollectionNotEmpty(crlsToAdd) || Utils.isCollectionNotEmpty(ocspsToAdd)) {
+			
+			final Element timeStampValidationDataDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, getXades141Namespace(),
+					XAdES141Element.TIMESTAMP_VALIDATION_DATA);
+			
+			incorporateCertificateValues(timeStampValidationDataDom, certificateValuesToAdd, indent);
+			incorporateRevocationValues(timeStampValidationDataDom, crlsToAdd, ocspsToAdd, indent);
 
-		incorporateCertificateValues(timeStampValidationDataDom, validationContext, indent);
-		incorporateRevocationValues(timeStampValidationDataDom, validationContext, indent);
+			String id = "1";
+			final List<TimestampToken> archiveTimestamps = xadesSignature.getArchiveTimestamps();
+			if (archiveTimestamps.size() > 0) {
+				final TimestampToken timestampToken = archiveTimestamps.get(archiveTimestamps.size() - 1);
+				id = timestampToken.getDSSIdAsString();
+			}
 
-		String id = "1";
-		final List<TimestampToken> archiveTimestamps = xadesSignature.getArchiveTimestamps();
-		if (archiveTimestamps.size() > 0) {
-			final TimestampToken timestampToken = archiveTimestamps.get(archiveTimestamps.size() - 1);
-			id = timestampToken.getDSSIdAsString();
-		}
-
-		timeStampValidationDataDom.setAttribute("Id", "id-" + id);
-		if (params.isPrettyPrint()) {
-			DSSXMLUtils.indentAndReplace(documentDom, timeStampValidationDataDom);
+			timeStampValidationDataDom.setAttribute("Id", "id-" + id);
+			if (params.isPrettyPrint()) {
+				DSSXMLUtils.indentAndReplace(documentDom, timeStampValidationDataDom);
+			}
+			
 		}
 	}
 
@@ -131,7 +148,7 @@ public class XAdESLevelBaselineLTA extends XAdESLevelBaselineLT implements Seria
 	 * This method incorporate timestamp type object.
 	 */
 	private void incorporateArchiveTimestamp() {
-		final TimestampParameters archiveTimestampParameters = params.getArchiveTimestampParameters();
+		final XAdESTimestampParameters archiveTimestampParameters = params.getArchiveTimestampParameters();
 		final String canonicalizationMethod = archiveTimestampParameters.getCanonicalizationMethod();
 		final byte[] archiveTimestampData = xadesSignature.getTimestampSource().getArchiveTimestampData(canonicalizationMethod);
 		if (LOG.isTraceEnabled()) {

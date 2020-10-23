@@ -158,44 +158,42 @@ class CRLParser {
 			length = DERUtil.readLength(s);
 		}
 
-		if (tagNo == BERTags.SEQUENCE) {
+		while (tagNo == BERTags.SEQUENCE) {
+			tag = DERUtil.readTag(s);
 
-			while (true) {
-				tag = DERUtil.readTag(s);
+			if (tag < 0) {
+				// EOF
+				return null;
+			}
 
-				if (tag < 0) {
-					// EOF
-					return null;
-				}
+			tagNo = DERUtil.readTagNumber(s, tag);
+			length = DERUtil.readLength(s);
 
-				tagNo = DERUtil.readTagNumber(s, tag);
-				length = DERUtil.readLength(s);
+			if (tagNo == BERTags.SEQUENCE) {
 
-				if (tagNo == BERTags.SEQUENCE) {
+				byte[] entryArray = readNbBytes(s, length);
 
-					byte[] entryArray = readNbBytes(s, length);
+				try (InputStream is = new ByteArrayInputStream(entryArray)) {
+					int entryTag = DERUtil.readTag(is);
+					int entryTagNo = DERUtil.readTagNumber(is, entryTag);
+					int entryLength = DERUtil.readLength(is);
 
-					try (InputStream is = new ByteArrayInputStream(entryArray)) {
-						int entryTag = DERUtil.readTag(is);
-						int entryTagNo = DERUtil.readTagNumber(is, entryTag);
-						int entryLength = DERUtil.readLength(is);
-
-						// SerialNumber
-						if (BERTags.INTEGER == entryTagNo) {
-							ASN1Integer asn1SerialNumber = rebuildASN1Integer(readNbBytes(is, entryLength));
-							if (serialNumber.equals(asn1SerialNumber.getValue())) {
-								ASN1Sequence asn1Sequence = rebuildASN1Sequence(entryArray);
-								CRLEntry crlEntry = CRLEntry.getInstance(asn1Sequence);
-								return new X509CRLEntryObject(crlEntry);
-							}
+					// SerialNumber
+					if (BERTags.INTEGER == entryTagNo) {
+						ASN1Integer asn1SerialNumber = rebuildASN1Integer(readNbBytes(is, entryLength));
+						if (serialNumber.equals(asn1SerialNumber.getValue())) {
+							ASN1Sequence asn1Sequence = rebuildASN1Sequence(entryArray);
+							CRLEntry crlEntry = CRLEntry.getInstance(asn1Sequence);
+							return new X509CRLEntryObject(crlEntry);
 						}
 					}
-				} else {
-					LOG.debug("Should only contain SEQUENCEs : tagNo = {} (ignored)", tagNo);
-					skip(s, length);
 				}
+			} else {
+				LOG.debug("Should only contain SEQUENCEs : tagNo = {} (ignored)", tagNo);
+				skip(s, length);
 			}
 		}
+
 		return null;
 	}
 
@@ -342,7 +340,7 @@ class CRLParser {
 				LOG.debug("TBSCertList -> crlExtensions : {}", Hex.toHexString(array));
 			}
 
-			ASN1Sequence sequenceExtensions = (ASN1Sequence) ASN1Sequence.fromByteArray(array);
+			ASN1Sequence sequenceExtensions = (ASN1Sequence) ASN1Primitive.fromByteArray(array);
 			extractExtensions(sequenceExtensions, infos);
 
 			tag = DERUtil.readTag(s);
@@ -399,10 +397,12 @@ class CRLParser {
 	 * @throws IOException
 	 */
 	private void skip(InputStream s, int length) throws IOException {
-		int skipped = 0;
+		long skipped = 0;
+		long skip = -1;
 		// Loops because BufferedInputStream.skip only skips in its buffer
-		while (skipped < length) {
-			skipped += s.skip((long) length - skipped);
+		while (skipped < length && skip != 0) {
+			skip = s.skip(length - skipped);
+			skipped += skip;
 		}
 	}
 

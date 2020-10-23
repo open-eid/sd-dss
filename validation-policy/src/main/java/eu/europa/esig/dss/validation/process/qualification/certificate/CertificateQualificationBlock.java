@@ -23,7 +23,9 @@ package eu.europa.esig.dss.validation.process.qualification.certificate;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import eu.europa.esig.dss.detailedreport.jaxb.XmlCertificate;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlConclusion;
@@ -32,11 +34,14 @@ import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.diagnostic.TrustedServiceWrapper;
 import eu.europa.esig.dss.enumerations.Indication;
 import eu.europa.esig.dss.enumerations.ValidationTime;
+import eu.europa.esig.dss.i18n.I18nProvider;
+import eu.europa.esig.dss.i18n.MessageTag;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.process.Chain;
 import eu.europa.esig.dss.validation.process.ChainItem;
-import eu.europa.esig.dss.validation.process.ValidationProcessDefinition;
+import eu.europa.esig.dss.validation.process.qualification.signature.checks.AcceptableListOfTrustedListsCheck;
 import eu.europa.esig.dss.validation.process.qualification.signature.checks.AcceptableTrustedListCheck;
+import eu.europa.esig.dss.validation.process.qualification.signature.checks.AcceptableTrustedListPresenceCheck;
 import eu.europa.esig.dss.validation.process.qualification.trust.filter.TrustedServiceFilter;
 import eu.europa.esig.dss.validation.process.qualification.trust.filter.TrustedServicesFilterFactory;
 
@@ -46,81 +51,101 @@ public class CertificateQualificationBlock extends Chain<XmlCertificate> {
 	private final Date validationTime;
 	private final CertificateWrapper signingCertificate;
 	private final List<XmlTLAnalysis> tlAnalysis;
-	private final String lotlCountryCode;
 
-	public CertificateQualificationBlock(XmlConclusion buildingBlocksConclusion, Date validationTime, CertificateWrapper signingCertificate,
-			List<XmlTLAnalysis> tlAnalysis, String lotlCountryCode) {
-		super(new XmlCertificate());
-		result.setTitle(ValidationProcessDefinition.CERT_QUALIFICATION.getTitle());
+	public CertificateQualificationBlock(I18nProvider i18nProvider, XmlConclusion buildingBlocksConclusion, Date validationTime, CertificateWrapper signingCertificate,
+			List<XmlTLAnalysis> tlAnalysis) {
+		super(i18nProvider, new XmlCertificate());
+		Objects.requireNonNull(validationTime, "The validationTime shall be provided!");
+		Objects.requireNonNull(signingCertificate, "The signingCertificate shall be provided!");
+		
+		result.setId(signingCertificate.getId());
 
 		this.buildingBlocksConclusion = buildingBlocksConclusion;
 		this.validationTime = validationTime;
 		this.signingCertificate = signingCertificate;
 		this.tlAnalysis = tlAnalysis;
-		this.lotlCountryCode = lotlCountryCode;
+	}
+	
+	@Override
+	protected MessageTag getTitle() {
+		return MessageTag.CERT_QUALIFICATION;
 	}
 
 	@Override
 	protected void initChain() {
-
 		// cover incomplete cert chain / expired/ revoked certs
 		ChainItem<XmlCertificate> item = firstItem = isAcceptableBuildingBlockConclusion(buildingBlocksConclusion);
 
-		if (signingCertificate != null && signingCertificate.hasTrustedServices()) {
-
-			XmlTLAnalysis lotlAnalysis = getTlAnalysis(lotlCountryCode);
-			if (lotlAnalysis != null) {
-				item = item.setNextItem(isAcceptableTL(lotlAnalysis));
-			}
-
-			Set<String> acceptableCountries = new HashSet<String>();
+		if (signingCertificate.isTrustedListReached()) {
 
 			List<TrustedServiceWrapper> originalTSPs = signingCertificate.getTrustedServices();
-			Set<String> countryCodes = getCountryCodes(originalTSPs);
-			for (String countryCode : countryCodes) {
-				XmlTLAnalysis currentTL = getTlAnalysis(countryCode);
-				if (currentTL != null) {
-					AcceptableTrustedListCheck<XmlCertificate> acceptableTL = isAcceptableTL(currentTL);
-					item = item.setNextItem(acceptableTL);
-					if (acceptableTL.process()) {
-						acceptableCountries.add(countryCode);
+			
+			Set<String> listOfTrustedListUrls = originalTSPs.stream().filter(t -> t.getListOfTrustedLists() != null)
+					.map(t -> t.getListOfTrustedLists().getUrl()).collect(Collectors.toSet());
+
+			Set<String> acceptableLOTLUrls = new HashSet<>();
+			for (String lotlURL : listOfTrustedListUrls) {
+				XmlTLAnalysis lotlAnalysis = getTlAnalysis(lotlURL);
+				if (lotlAnalysis != null) {
+					AcceptableListOfTrustedListsCheck<XmlCertificate> acceptableLOTL = isAcceptableLOTL(lotlAnalysis);
+					item = item.setNextItem(acceptableLOTL);
+					if (acceptableLOTL.process()) {
+						acceptableLOTLUrls.add(lotlURL);
 					}
 				}
 			}
+			
+			// filter TLs with a found valid set of LOTLs (if assigned)
+			Set<String> trustedListUrls = originalTSPs.stream().filter(t -> t.getTrustedList() != null && 
+					(t.getListOfTrustedLists() == null || acceptableLOTLUrls.contains(t.getListOfTrustedLists().getUrl())) )
+					.map(t -> t.getTrustedList().getUrl()).collect(Collectors.toSet());
 
-			// 1. filter by service for CAQC
-			TrustedServiceFilter filter = TrustedServicesFilterFactory.createFilterByCountries(acceptableCountries);
-			List<TrustedServiceWrapper> acceptableServices = filter.filter(originalTSPs);
+			Set<String> acceptableTLUrls = new HashSet<>();
+			if (Utils.isCollectionNotEmpty(trustedListUrls)) {
+				for (String tlURL : trustedListUrls) {
+					XmlTLAnalysis currentTL = getTlAnalysis(tlURL);
+					if (currentTL != null) {
+						AcceptableTrustedListCheck<XmlCertificate> acceptableTL = isAcceptableTL(currentTL);
+						item = item.setNextItem(acceptableTL);
+						if (acceptableTL.process()) {
+							acceptableTLUrls.add(tlURL);
+						}
+					}
+				}
+			}
+			
+			item = item.setNextItem(isAcceptableTLPresent(acceptableTLUrls));
+			
+			if (Utils.isCollectionNotEmpty(acceptableTLUrls)) {
 
-			filter = TrustedServicesFilterFactory.createFilterByCaQc();
-			List<TrustedServiceWrapper> caqcServices = filter.filter(acceptableServices);
-
-			CertQualificationAtTimeBlock certQualAtIssuanceBlock = new CertQualificationAtTimeBlock(ValidationTime.CERTIFICATE_ISSUANCE_TIME,
-					signingCertificate, caqcServices);
-			result.getValidationCertificateQualification().add(certQualAtIssuanceBlock.execute());
-
-			CertQualificationAtTimeBlock certQualAtSigningTimeBlock = new CertQualificationAtTimeBlock(ValidationTime.VALIDATION_TIME, validationTime,
-					signingCertificate, caqcServices);
-			result.getValidationCertificateQualification().add(certQualAtSigningTimeBlock.execute());
-
+				// 1. filter by service for CAQC
+				TrustedServiceFilter filter = TrustedServicesFilterFactory.createFilterByUrls(acceptableTLUrls);
+				List<TrustedServiceWrapper> acceptableServices = filter.filter(originalTSPs);
+	
+				filter = TrustedServicesFilterFactory.createFilterByCaQc();
+				List<TrustedServiceWrapper> caqcServices = filter.filter(acceptableServices);
+	
+				CertQualificationAtTimeBlock certQualAtIssuanceBlock = new CertQualificationAtTimeBlock(i18nProvider, ValidationTime.CERTIFICATE_ISSUANCE_TIME,
+						signingCertificate, caqcServices);
+				result.getValidationCertificateQualification().add(certQualAtIssuanceBlock.execute());
+	
+				CertQualificationAtTimeBlock certQualAtSigningTimeBlock = new CertQualificationAtTimeBlock(i18nProvider, ValidationTime.VALIDATION_TIME, 
+						validationTime, signingCertificate, caqcServices);
+				result.getValidationCertificateQualification().add(certQualAtSigningTimeBlock.execute());
+			
+			}
 		}
 	}
 
-	private XmlTLAnalysis getTlAnalysis(String countryCode) {
-		for (XmlTLAnalysis xmlTLAnalysis : tlAnalysis) {
-			if (Utils.areStringsEqual(countryCode, xmlTLAnalysis.getCountryCode())) {
-				return xmlTLAnalysis;
+	private XmlTLAnalysis getTlAnalysis(String url) {
+		if (Utils.isCollectionNotEmpty(tlAnalysis)) {
+			for (XmlTLAnalysis xmlTLAnalysis : tlAnalysis) {
+				if (Utils.areStringsEqual(url, xmlTLAnalysis.getURL())) {
+					return xmlTLAnalysis;
+				}
 			}
 		}
 		return null;
-	}
-
-	private Set<String> getCountryCodes(List<TrustedServiceWrapper> caqcServices) {
-		Set<String> countryCodes = new HashSet<String>();
-		for (TrustedServiceWrapper trustedServiceWrapper : caqcServices) {
-			countryCodes.add(trustedServiceWrapper.getCountryCode());
-		}
-		return countryCodes;
 	}
 
 	@Override
@@ -142,12 +167,20 @@ public class CertificateQualificationBlock extends Chain<XmlCertificate> {
 		}
 	}
 
+	private AcceptableListOfTrustedListsCheck<XmlCertificate> isAcceptableLOTL(XmlTLAnalysis xmlLOTLAnalysis) {
+		return new AcceptableListOfTrustedListsCheck<>(i18nProvider, result, xmlLOTLAnalysis, getWarnLevelConstraint());
+	}
+
 	private AcceptableTrustedListCheck<XmlCertificate> isAcceptableTL(XmlTLAnalysis xmlTLAnalysis) {
-		return new AcceptableTrustedListCheck<XmlCertificate>(result, xmlTLAnalysis, getFailLevelConstraint());
+		return new AcceptableTrustedListCheck<>(i18nProvider, result, xmlTLAnalysis, getWarnLevelConstraint());
+	}
+
+	private ChainItem<XmlCertificate> isAcceptableTLPresent(Set<String> acceptableUrls) {
+		return new AcceptableTrustedListPresenceCheck<>(i18nProvider, result, acceptableUrls, getFailLevelConstraint());
 	}
 
 	private ChainItem<XmlCertificate> isAcceptableBuildingBlockConclusion(XmlConclusion buildingBlocksConclusion) {
-		return new AcceptableBuildingBlockConclusionCheck(result, buildingBlocksConclusion, getWarnLevelConstraint());
+		return new AcceptableBuildingBlockConclusionCheck(i18nProvider, result, buildingBlocksConclusion, getWarnLevelConstraint());
 	}
 
 }

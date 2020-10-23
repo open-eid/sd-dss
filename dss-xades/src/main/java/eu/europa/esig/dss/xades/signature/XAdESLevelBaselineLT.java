@@ -21,14 +21,20 @@
 package eu.europa.esig.dss.xades.signature;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Set;
 
 import org.w3c.dom.Element;
 
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.model.x509.CertificateToken;
+import eu.europa.esig.dss.spi.x509.revocation.crl.CRLToken;
+import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPToken;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.SignatureCryptographicVerification;
 import eu.europa.esig.dss.validation.ValidationContext;
+import eu.europa.esig.dss.validation.ValidationDataForInclusion;
 
 /**
  * LT profile of XAdES signature
@@ -53,29 +59,40 @@ public class XAdESLevelBaselineLT extends XAdESLevelBaselineT implements Seriali
 	 */
 	@Override
 	protected void extendSignatureTag() throws DSSException {
-
-		assertExtendSignatureToLTPossible();
+		
 		super.extendSignatureTag();
-		Element levelTUnsignedProperties = (Element) unsignedSignaturePropertiesDom.cloneNode(true);
-
+		
 		if (xadesSignature.hasLTAProfile()) {
 			return;
 		}
 
-		// Timestamps can already be loaded in memory (force reload)
+		// Data sources can already be loaded in memory (force reload)
+		xadesSignature.resetCertificateSource();
+		xadesSignature.resetRevocationSources();
 		xadesSignature.resetTimestampSource();
+
+		assertExtendSignatureToLTPossible();
+		Element levelTUnsignedProperties = (Element) unsignedSignaturePropertiesDom.cloneNode(true);
 
 		/**
 		 * In all cases the -LT level need to be regenerated.
 		 */
 		checkSignatureIntegrity();
 
+		// must be executed before data removing
 		final ValidationContext validationContext = xadesSignature.getSignatureValidationContext(certificateVerifier);
 
 		String indent = removeOldCertificateValues();
 		removeOldRevocationValues();
-		incorporateCertificateValues(unsignedSignaturePropertiesDom, validationContext, indent);
-		incorporateRevocationValues(unsignedSignaturePropertiesDom, validationContext, indent);
+		
+		ValidationDataForInclusion validationDataForInclusion = getValidationDataForInclusion(validationContext);
+
+		Set<CertificateToken> certificateValuesToAdd = validationDataForInclusion.getCertificateTokens();
+		List<CRLToken> crlsToAdd = validationDataForInclusion.getCrlTokens();
+		List<OCSPToken> ocspsToAdd = validationDataForInclusion.getOcspTokens();
+		
+		incorporateCertificateValues(unsignedSignaturePropertiesDom, certificateValuesToAdd, indent);
+		incorporateRevocationValues(unsignedSignaturePropertiesDom, crlsToAdd, ocspsToAdd, indent);
 		
 		unsignedSignaturePropertiesDom = indentIfPrettyPrint(unsignedSignaturePropertiesDom, levelTUnsignedProperties);
 	}
@@ -125,8 +142,10 @@ public class XAdESLevelBaselineLT extends XAdESLevelBaselineT implements Seriali
 	private void assertExtendSignatureToLTPossible() {
 		final SignatureLevel signatureLevel = params.getSignatureLevel();
 		if (SignatureLevel.XAdES_BASELINE_LT.equals(signatureLevel) && xadesSignature.hasLTAProfile()) {
-			final String exceptionMessage = "Cannot extend signature. The signedData is already extended with [%s].";
+			final String exceptionMessage = "Cannot extend the signature. The signedData is already extended with [%s]!";
 			throw new DSSException(String.format(exceptionMessage, "XAdES LTA"));
+		} else if (xadesSignature.areAllSelfSignedCertificates()) {
+			throw new DSSException("Cannot extend the signature. The signature contains only self-signed certificate chains!");
 		}
 	}
 

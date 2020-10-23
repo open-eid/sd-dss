@@ -49,8 +49,7 @@ public class CAdESLevelBaselineT extends CAdESSignatureExtension {
 	@Override
 	protected SignerInformation extendCMSSignature(CMSSignedData signedData, SignerInformation signerInformation, CAdESSignatureParameters parameters)
 			throws DSSException {
-		final CAdESSignature cadesSignature = new CAdESSignature(signedData, signerInformation);
-		cadesSignature.setDetachedContents(parameters.getDetachedContents());
+		final CAdESSignature cadesSignature = newCAdESSignature(signedData, signerInformation, parameters.getDetachedContents());
 		assertExtendSignaturePossible(cadesSignature);
 
 		AttributeTable unsignedAttributes = CMSUtils.getUnsignedAttributes(signerInformation);
@@ -62,9 +61,9 @@ public class CAdESLevelBaselineT extends CAdESSignatureExtension {
 	/**
 	 * @param cadesSignature
 	 */
-	protected void assertExtendSignaturePossible(CAdESSignature cadesSignature) throws DSSException {
+	private void assertExtendSignaturePossible(CAdESSignature cadesSignature) throws DSSException {
 		final String exceptionMessage = "Cannot extend signature. The signedData is already extended with [%s].";
-		if (cadesSignature.isDataForSignatureLevelPresent(SignatureLevel.CAdES_BASELINE_LTA)) {
+		if (SignatureLevel.CAdES_BASELINE_LTA.equals(cadesSignature.getDataFoundUpToLevel())) {
 			throw new DSSException(String.format(exceptionMessage, "CAdES LTA"));
 		}
 		AttributeTable unsignedAttributes = CMSUtils.getUnsignedAttributes(cadesSignature.getSignerInformation());

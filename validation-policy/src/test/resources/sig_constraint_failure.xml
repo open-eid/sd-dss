@@ -22,18 +22,23 @@
 	            <SignatureIntact>true</SignatureIntact>
 	            <SignatureValid>true</SignatureValid>
 	        </BasicSignature>
-	        <SigningCertificate Certificate="C-CAA0910D7F836EB51888AD951455258EDA15F1F84B5D077F324B8FE60407C314">
-	            <AttributePresent>true</AttributePresent>
-	            <DigestValuePresent>true</DigestValuePresent>
-	            <DigestValueMatch>true</DigestValueMatch>
-	            <IssuerSerialMatch>true</IssuerSerialMatch>
-	        </SigningCertificate>
+	        <SigningCertificate Certificate="C-CAA0910D7F836EB51888AD951455258EDA15F1F84B5D077F324B8FE60407C314"/>
 	        <CertificateChain>
 	            <ChainItem Certificate="C-CAA0910D7F836EB51888AD951455258EDA15F1F84B5D077F324B8FE60407C314"/>
 	            <ChainItem Certificate="C-4855220002BCE218101315CE272CC1B4A5F4DAE037032F63305EF90886701C67"/>
 	        </CertificateChain>
 	        <ContentType>1.2.840.113549.1.7.1</ContentType>
-            <FoundCertificates/>
+            <FoundCertificates>
+            	<RelatedCertificate Certificate="C-CAA0910D7F836EB51888AD951455258EDA15F1F84B5D077F324B8FE60407C314">
+                	<CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue match="true">
+                        	<DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>2XT5uIRnsODHwsXx40XiH1lBuq4=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
             <FoundRevocations/>
             <FoundTimestamps/>
 	        <SignatureScopes>
@@ -67,6 +72,7 @@
             <NotBefore>2013-01-10T15:13:21</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-4855220002BCE218101315CE272CC1B4A5F4DAE037032F63305EF90886701C67</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>crlSign</KeyUsage>
                 <KeyUsage>keyCertSign</KeyUsage>
@@ -109,6 +115,7 @@
             <NotBefore>2008-10-22T14:07:37</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-5C58468D55F58E497E743982D2B50010B6D165374ACF83A7D4A32DB768C4408E</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>crlSign</KeyUsage>
                 <KeyUsage>keyCertSign</KeyUsage>
@@ -148,6 +155,7 @@
             <NotBefore>2016-04-15T02:00:00</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-CAA0910D7F836EB51888AD951455258EDA15F1F84B5D077F324B8FE60407C314</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
                 <KeyUsage>keyEncipherment</KeyUsage>
@@ -176,7 +184,7 @@
             <TrustedServiceProviders />
             <Revocations>
 	            <CertificateRevocation Revocation="R-79ADAE6C275B8805AF16746D43CEA07C1E1102C6476C9E9C4B2B4F30230B4F74">
-	                <Status>true</Status>
+	                <Status>GOOD</Status>
 	            </CertificateRevocation>
             </Revocations>
             <DigestAlgoAndValue>
@@ -201,6 +209,7 @@
             <NotBefore>2016-03-08T14:10:43</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-D9CAABC3225B7030CDB83E3846E3691C14ED790B1764CE1B4F043157899C5C58</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>
@@ -225,7 +234,7 @@
             <TrustedServiceProviders />
             <Revocations>
 	            <CertificateRevocation Revocation="R-44E8F4F581737AD1B43EA4562D51AB3F3EB458C3A0E91979EF35F133EE31797E">
-	                <Status>true</Status>
+	                <Status>GOOD</Status>
 	            </CertificateRevocation>
             </Revocations>
             <DigestAlgoAndValue>
@@ -250,6 +259,7 @@
             <NotBefore>2016-01-07T14:04:39</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-DF3CBD3815591583E63725FA33DAF5CB01852E6CF82C9DFD4F091D160349C733</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>nonRepudiation</KeyUsage>
                 <KeyUsage>digitalSignature</KeyUsage>
@@ -295,6 +305,7 @@
             <NotBefore>2006-01-12T15:41:57</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-8DA084FCF99CE07722F89B3205939806FA5CB811E1C813F6A108C7D336B3408E</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>crlSign</KeyUsage>
                 <KeyUsage>keyCertSign</KeyUsage>
@@ -334,6 +345,7 @@
             <NotBefore>2015-09-01T02:00:00</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-819F1F410A503DB645E0851141333A75A74E55E5F07DF45ED33C062085751900</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>

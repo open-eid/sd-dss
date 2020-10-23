@@ -23,24 +23,27 @@ package eu.europa.esig.dss.diagnostic;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificate;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlContainerInfo;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDiagnosticData;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanRevocation;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanToken;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanCertificateToken;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanRevocationToken;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlRevocation;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlSignature;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlSignerData;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlSignerRole;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlTimestamp;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlTrustedList;
+import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.CertificateSourceType;
+import eu.europa.esig.dss.enumerations.CertificateStatus;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.EncryptionAlgorithm;
 import eu.europa.esig.dss.enumerations.MaskGenerationFunction;
-import eu.europa.esig.dss.enumerations.OrphanTokenType;
 import eu.europa.esig.dss.enumerations.RevocationReason;
 import eu.europa.esig.dss.enumerations.RevocationType;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
@@ -72,7 +75,7 @@ public class DiagnosticData {
 	 * @return list of signature ids, is never null, can be empty
 	 */
 	public List<String> getSignatureIdList() {
-		List<String> signatureIds = new ArrayList<String>();
+		List<String> signatureIds = new ArrayList<>();
 		List<XmlSignature> signatures = wrapped.getSignatures();
 		if (signatures != null) {
 			for (XmlSignature xmlSignature : signatures) {
@@ -99,7 +102,7 @@ public class DiagnosticData {
 	 */
 	public Date getFirstSignatureDate() {
 		SignatureWrapper firstSignature = getFirstSignatureNullSafe();
-		return firstSignature.getDateTime();
+		return firstSignature.getClaimedSigningTime();
 	}
 
 	/**
@@ -111,7 +114,7 @@ public class DiagnosticData {
 	 */
 	public Date getSignatureDate(final String signatureId) {
 		SignatureWrapper signature = getSignatureByIdNullSafe(signatureId);
-		return signature.getDateTime();
+		return signature.getClaimedSigningTime();
 	}
 
 	/**
@@ -136,6 +139,28 @@ public class DiagnosticData {
 		return signature.getSignatureFormat();
 	}
 
+	/**
+	 * This method returns the signed assertions for the first signature.
+	 *
+	 * @return list of {@link XmlSignerRole}s
+	 */
+	public List<XmlSignerRole> getSignedAssertionsInFirstSignature() {
+		SignatureWrapper signature = getFirstSignatureNullSafe();
+		return signature.getSignedAssertions();
+	}
+
+	/**
+	 * This method returns the signed assertions for the given signature.
+	 *
+	 * @param signatureId The identifier of the signature, for which the signed
+	 *                    assertions are sought.
+	 * @return list of {@link XmlSignerRole}s
+	 */
+	public List<XmlSignerRole> getSignedAssertions(final String signatureId) {
+		SignatureWrapper signature = getSignatureByIdNullSafe(signatureId);
+		return signature.getSignedAssertions();
+	}
+	
 	/**
 	 * This method returns the {@code DigestAlgorithm} of the first signature.
 	 *
@@ -193,16 +218,6 @@ public class DiagnosticData {
 	}
 
 	/**
-	 * This method returns signing certificate dss id for the first signature.
-	 *
-	 * @return signing certificate dss id.
-	 */
-	public String getFirstSigningCertificateId() {
-		SignatureWrapper signature = getFirstSignatureNullSafe();
-		return signature.getSigningCertificate().getId();
-	}
-
-	/**
 	 * This method returns signing certificate dss id for the given signature.
 	 *
 	 * @param signatureId
@@ -211,7 +226,10 @@ public class DiagnosticData {
 	 */
 	public String getSigningCertificateId(final String signatureId) {
 		SignatureWrapper signature = getSignatureByIdNullSafe(signatureId);
-		return signature.getSigningCertificate().getId();
+		if (signature.getSigningCertificate() != null) {
+			return signature.getSigningCertificate().getId();
+		}
+		return null;
 	}
 
 	/**
@@ -235,7 +253,7 @@ public class DiagnosticData {
 	 */
 	public List<String> getSignatureCertificateChain(final String signatureId) {
 		SignatureWrapper signature = getSignatureByIdNullSafe(signatureId);
-		List<String> result = new ArrayList<String>();
+		List<String> result = new ArrayList<>();
 		for (CertificateWrapper certWrapper : signature.getCertificateChain()) {
 			result.add(certWrapper.getId());
 		}
@@ -275,6 +293,34 @@ public class DiagnosticData {
 	public String getPolicyDescription(final String signatureId) {
 		SignatureWrapper signature = getSignatureByIdNullSafe(signatureId);
 		return signature.getPolicyDescription();
+	}
+	
+	/**
+	 * The documentation references of the policy
+	 * 
+	 * @param signatureId
+	 *            The identifier of the signature.
+	 * @return the policy documentation references
+	 */
+	public List<String> getPolicyDocumentationReferences(final String signatureId) {
+		SignatureWrapper signature = getSignatureByIdNullSafe(signatureId);
+		return signature.getPolicyDocumentationReferences();
+	}
+
+	/**
+	 * This method returns the list of identifier of the all timestamps found during the validation.
+	 *
+	 * @return The list of identifier of the timestamps
+	 */
+	public List<String> getTimestampIdList() {
+		List<TimestampWrapper> timestampList = getTimestampList();
+		List<String> timestampIdList = new ArrayList<>();
+		if (timestampList != null) {
+			for (TimestampWrapper timestampWrapper : timestampList) {
+				timestampIdList.add(timestampWrapper.getId());
+			}
+		}
+		return timestampIdList;
 	}
 
 	/**
@@ -420,9 +466,9 @@ public class DiagnosticData {
 	public boolean isValidCertificate(final String dssCertificateId) {
 		CertificateWrapper certificate = getUsedCertificateByIdNullSafe(dssCertificateId);
 		
-		final boolean signatureValid = (certificate.getCurrentBasicSignature() != null) && certificate.getCurrentBasicSignature().isSignatureValid();
+		final boolean signatureValid = certificate.isSignatureValid();
 		CertificateRevocationWrapper latestRevocationData = getLatestRevocationDataForCertificate(certificate) ;
-		final boolean revocationValid = (latestRevocationData != null) && latestRevocationData.isStatus();
+		final boolean revocationValid = (latestRevocationData != null) && latestRevocationData.getStatus().isGood();
 		final boolean trusted = certificate.isTrusted();
 
 		final boolean validity = signatureValid && (trusted ? true : revocationValid);
@@ -483,16 +529,15 @@ public class DiagnosticData {
 	/**
 	 * This method returns the revocation status for the given certificate.
 	 *
-	 * @param dssCertificateId
-	 *            DSS certificate identifier to be checked
-	 * @return revocation status
+	 * @param dssCertificateId DSS certificate identifier to be checked
+	 * @return certificate status
 	 */
-	public boolean getCertificateRevocationStatus(final String dssCertificateId) {
+	public CertificateStatus getCertificateRevocationStatus(final String dssCertificateId) {
 		CertificateWrapper certificate = getUsedCertificateByIdNullSafe(dssCertificateId);
 		if (certificate.isRevocationDataAvailable()) {
-			return getLatestRevocationDataForCertificate(certificate).isStatus();
+			return getLatestRevocationDataForCertificate(certificate).getStatus();
 		}
-		return false;
+		return CertificateStatus.UNKNOWN;
 	}
 
 	/**
@@ -626,7 +671,7 @@ public class DiagnosticData {
 	 * @return list of {@link CertificateWrapper}s
 	 */
 	public List<CertificateWrapper> getCertificatesFromSource(CertificateSourceType certificateSourceType) {
-		List<CertificateWrapper> certificates = new ArrayList<CertificateWrapper>();
+		List<CertificateWrapper> certificates = new ArrayList<>();
 		for (CertificateWrapper certificate : getUsedCertificates()) {
 			if (certificate.getSources().contains(certificateSourceType)) {
 				certificates.add(certificate);
@@ -636,29 +681,151 @@ public class DiagnosticData {
 	}
 	
 	/**
-	 * Returns a list of all found {@link XmlOrphanRevocation}s
-	 * @return list of {@link XmlOrphanRevocation}s
+	 * Returns a list of all found {@link OrphanCertificateWrapper} values
+	 * 
+	 * @return list of {@link OrphanCertificateWrapper}s
 	 */
-	public List<XmlOrphanRevocation> getAllOrphanRevocations() {
-		List<XmlOrphanRevocation> orphanRevocations = new ArrayList<XmlOrphanRevocation>();
+	public List<OrphanCertificateWrapper> getAllOrphanCertificateObjects() {
+		List<OrphanCertificateWrapper> orphanCertificateValues = new ArrayList<>();
 		for (SignatureWrapper signatureWrapper : getSignatures()) {
-			orphanRevocations.addAll(signatureWrapper.getOrphanRevocations());
+			for (OrphanCertificateWrapper certificate : extractOrphanCertificateObjects(signatureWrapper.foundCertificates())) {
+				if (!orphanCertificateValues.contains(certificate)) {
+					orphanCertificateValues.add(certificate);
+				}
+			}
 		}
-		return orphanRevocations;
+		for (TimestampWrapper timestampWrapper : getTimestampList()) {
+			for (OrphanCertificateWrapper certificate : extractOrphanCertificateObjects(timestampWrapper.foundCertificates())) {
+				if (!orphanCertificateValues.contains(certificate)) {
+					orphanCertificateValues.add(certificate);
+				}
+			}
+		}
+		for (RevocationWrapper revocationWrapper : getAllRevocationData()) {
+			for (OrphanCertificateWrapper certificate : extractOrphanCertificateObjects(revocationWrapper.foundCertificates())) {
+				if (!orphanCertificateValues.contains(certificate)) {
+					orphanCertificateValues.add(certificate);
+				}
+			}
+		}
+		return orphanCertificateValues;
+	}
+	
+	private List<OrphanCertificateWrapper> extractOrphanCertificateObjects(FoundCertificatesProxy foundCertificates) {
+		List<OrphanCertificateWrapper> orphanCertificateValues = new ArrayList<>();
+		List<OrphanCertificateWrapper> orphanCertificateData = foundCertificates.getOrphanCertificates();
+		for (OrphanCertificateWrapper certificate : orphanCertificateData) {
+			if (certificate.getOrigins().size() > 0) {
+				orphanCertificateValues.add(certificate);
+			}
+		}
+		return orphanCertificateValues;
 	}
 	
 	/**
-	 * Returns a list of all found {@link XmlOrphanToken} certificates
-	 * @return list of {@link XmlOrphanToken}s
+	 * Returns a list of all found orphan certificate references
+	 * 
+	 * @return list of {@link OrphanTokenWrapper}s
 	 */
-	public List<XmlOrphanToken> getAllOrphanCertificates() {
-		List<XmlOrphanToken> orphanCertificateTokens = new ArrayList<XmlOrphanToken>();
-		for (XmlOrphanToken orphanToken : wrapped.getOrphanTokens()) {
-			if (OrphanTokenType.CERTIFICATE.equals(orphanToken.getType())) {
-				orphanCertificateTokens.add(orphanToken);
+	public List<OrphanTokenWrapper> getAllOrphanCertificateReferences() {
+		List<OrphanTokenWrapper> orphanCertificateRefs = new ArrayList<>();
+		List<OrphanCertificateWrapper> allOrphanCertificateObjects = getAllOrphanCertificateObjects();
+		if (wrapped.getOrphanTokens() != null && wrapped.getOrphanTokens().getOrphanCertificates() != null) {
+			for (XmlOrphanCertificateToken orphanCertificateToken : wrapped.getOrphanTokens().getOrphanCertificates()) {
+				OrphanTokenWrapper orphanTokenWrapper = new OrphanTokenWrapper(orphanCertificateToken);
+				if (!allOrphanCertificateObjects.contains(orphanTokenWrapper)) {
+					orphanCertificateRefs.add(orphanTokenWrapper);
+				}
 			}
 		}
-		return orphanCertificateTokens;
+		return orphanCertificateRefs;
+	}
+	
+	/**
+	 * Returns a list of all found {@link OrphanRevocationWrapper} values
+	 * 
+	 * @return list of {@link OrphanRevocationWrapper}s
+	 */
+	public List<OrphanRevocationWrapper> getAllOrphanRevocationObjects() {
+		List<OrphanRevocationWrapper> orphanRevocationValues = new ArrayList<>();
+		for (SignatureWrapper signatureWrapper : getSignatures()) {
+			for (OrphanRevocationWrapper revocation : extractOrphanRevocationDataObjects(signatureWrapper.foundRevocations())) {
+				if (!orphanRevocationValues.contains(revocation)) {
+					orphanRevocationValues.add(revocation);
+				}
+			}
+		}
+		for (TimestampWrapper timestampWrapper : getTimestampList()) {
+			for (OrphanRevocationWrapper revocation : extractOrphanRevocationDataObjects(timestampWrapper.foundRevocations())) {
+				if (!orphanRevocationValues.contains(revocation)) {
+					orphanRevocationValues.add(revocation);
+				}
+			}
+		}
+		return orphanRevocationValues;
+	}
+	
+	private List<OrphanRevocationWrapper> extractOrphanRevocationDataObjects(FoundRevocationsProxy foundRevocations) {
+		List<OrphanRevocationWrapper> orphanRevocationValues = new ArrayList<>();
+		List<OrphanRevocationWrapper> orphanRevocationData = foundRevocations.getOrphanRevocationData();
+		for (OrphanRevocationWrapper revocation : orphanRevocationData) {
+			if (revocation.getOrigins().size() > 0) {
+				orphanRevocationValues.add(revocation);
+			}
+		}
+		return orphanRevocationValues;
+	}
+	
+	/**
+	 * Returns a list of all found orphan revocation references
+	 * 
+	 * @return list of {@link OrphanTokenWrapper}s
+	 */
+	public List<OrphanTokenWrapper> getAllOrphanRevocationReferences() {
+		List<OrphanTokenWrapper> orphanRevocationRefs = new ArrayList<>();
+		List<OrphanRevocationWrapper> allOrphanRevocationObjects = getAllOrphanRevocationObjects();
+		if (wrapped.getOrphanTokens() != null && wrapped.getOrphanTokens().getOrphanRevocations() != null) {
+			for (XmlOrphanRevocationToken orphanRevocationToken : wrapped.getOrphanTokens().getOrphanRevocations()) {
+				OrphanTokenWrapper orphanTokenWrapper = new OrphanTokenWrapper(orphanRevocationToken);
+				if (!allOrphanRevocationObjects.contains(orphanTokenWrapper)) {
+					orphanRevocationRefs.add(orphanTokenWrapper);
+				}
+			}
+		}
+		return orphanRevocationRefs;
+	}
+	
+	/**
+	 * Returns a list of cross-certificates
+	 * 
+	 * @param certificate {@link CertificateWrapper} to find cross certificates for
+	 * @return a list of cross certificate {@link CertificateWrapper}s
+	 */
+	public List<CertificateWrapper> getCrossCertificates(CertificateWrapper certificate) {
+		List<CertificateWrapper> crossCertificates = new ArrayList<>();
+		for (CertificateWrapper candidate : getEquivalentCertificates(certificate)) {
+			if (!certificate.getCertificateDN().equals(candidate.getCertificateDN()) || 
+					!certificate.getCertificateIssuerDN().equals(candidate.getCertificateIssuerDN())) {
+				crossCertificates.add(candidate);
+			}
+		}
+		return crossCertificates;
+	}
+
+	/**
+	 * Returns a list of equivalent certificates (certificates with the same public key)
+	 * 
+	 * @param certificate {@link CertificateWrapper} to find equivalent certificates for
+	 * @return a list of equivalent certificates
+	 */
+	public List<CertificateWrapper> getEquivalentCertificates(CertificateWrapper certificate) {
+		List<CertificateWrapper> equivalentCertificates = new ArrayList<>();
+		for (CertificateWrapper candidate : getUsedCertificates()) {
+			if (!certificate.equals(candidate) && certificate.getEntityKey().equals(candidate.getEntityKey())) {
+				equivalentCertificates.add(candidate);
+			}
+		}
+		return equivalentCertificates;
 	}
 
 	/**
@@ -668,7 +835,7 @@ public class DiagnosticData {
 	 */
 	public List<SignatureWrapper> getSignatures() {
 		if (foundSignatures == null) {
-			foundSignatures = new ArrayList<SignatureWrapper>();
+			foundSignatures = new ArrayList<>();
 			List<XmlSignature> xmlSignatures = wrapped.getSignatures();
 			if (xmlSignatures != null) {
 				for (XmlSignature xmlSignature : xmlSignatures) {
@@ -686,7 +853,7 @@ public class DiagnosticData {
 	 */
 	public List<TimestampWrapper> getTimestampList() {
 		if (usedTimestamps == null) {
-			usedTimestamps = new ArrayList<TimestampWrapper>();
+			usedTimestamps = new ArrayList<>();
 			List<XmlTimestamp> xmlTimestamps = wrapped.getUsedTimestamps();
 			if (xmlTimestamps != null) {
 				for (XmlTimestamp xmlTimestamp : xmlTimestamps) {
@@ -704,7 +871,7 @@ public class DiagnosticData {
 	 */
 	public List<CertificateWrapper> getUsedCertificates() {
 		if (usedCertificates == null) {
-			usedCertificates = new ArrayList<CertificateWrapper>();
+			usedCertificates = new ArrayList<>();
 			List<XmlCertificate> xmlCertificates = wrapped.getUsedCertificates();
 			if (xmlCertificates != null) {
 				for (XmlCertificate certificate : xmlCertificates) {
@@ -721,7 +888,7 @@ public class DiagnosticData {
 	 * @return a set of SignatureWrapper
 	 */
 	public Set<SignatureWrapper> getAllSignatures() {
-		Set<SignatureWrapper> signatures = new HashSet<SignatureWrapper>();
+		Set<SignatureWrapper> signatures = new HashSet<>();
 		List<SignatureWrapper> mixedSignatures = getSignatures();
 		for (SignatureWrapper signatureWrapper : mixedSignatures) {
 			if (signatureWrapper.getParent() == null) {
@@ -737,7 +904,7 @@ public class DiagnosticData {
 	 * @return a set of SignatureWrapper
 	 */
 	public Set<SignatureWrapper> getAllCounterSignatures() {
-		Set<SignatureWrapper> signatures = new HashSet<SignatureWrapper>();
+		Set<SignatureWrapper> signatures = new HashSet<>();
 		List<SignatureWrapper> mixedSignatures = getSignatures();
 		for (SignatureWrapper signatureWrapper : mixedSignatures) {
 			if (signatureWrapper.getParent() != null) {
@@ -753,7 +920,7 @@ public class DiagnosticData {
 	 * @return set of {@link SignatureWrapper}s
 	 */
 	public Set<SignatureWrapper> getAllCounterSignaturesForMasterSignature(SignatureWrapper masterSignatureWrapper) {
-		Set<SignatureWrapper> signatures = new HashSet<SignatureWrapper>();
+		Set<SignatureWrapper> signatures = new HashSet<>();
 		List<SignatureWrapper> mixedSignatures = getSignatures();
 		for (SignatureWrapper signatureWrapper : mixedSignatures) {
 			if (signatureWrapper.getParent() != null && signatureWrapper.getParent().equals(masterSignatureWrapper)) {
@@ -769,7 +936,7 @@ public class DiagnosticData {
 	 * @return a set of TimestampWrapper
 	 */
 	public Set<TimestampWrapper> getTimestampSet() {
-		return new HashSet<TimestampWrapper>(getTimestampList());
+		return new LinkedHashSet<>(getTimestampList());
 	}
 
 	/**
@@ -778,7 +945,7 @@ public class DiagnosticData {
 	 * @return a set of revocation data
 	 */
 	public Set<RevocationWrapper> getAllRevocationData() {
-		Set<RevocationWrapper> revocationData = new HashSet<RevocationWrapper>();
+		Set<RevocationWrapper> revocationData = new HashSet<>();
 		for (XmlRevocation xmlRevocation : wrapped.getUsedRevocations()) {
 			revocationData.add(new RevocationWrapper(xmlRevocation));
 		}
@@ -818,10 +985,14 @@ public class DiagnosticData {
 	
 	/**
 	 * Returns a complete list of original signer documents signed by all signatures
-	 * @return list of {@link XmlSignerData}s
+	 * @return list of {@link SignerDataWrapper}s
 	 */
-	public List<XmlSignerData> getOriginalSignerDocuments() {
-		return wrapped.getOriginalDocuments();
+	public List<SignerDataWrapper> getOriginalSignerDocuments() {
+		List<SignerDataWrapper> signerDocuments = new ArrayList<>();
+		for (XmlSignerData signerData : wrapped.getOriginalDocuments()) {
+			signerDocuments.add(new SignerDataWrapper(signerData));
+		}
+		return signerDocuments;
 	}
 
 	/**
@@ -847,7 +1018,7 @@ public class DiagnosticData {
 	 * 
 	 * @return the container type (ASiC-S/E)
 	 */
-	public String getContainerType() {
+	public ASiCContainerType getContainerType() {
 		XmlContainerInfo containerInfo = wrapped.getContainerInfo();
 		if (containerInfo != null) {
 			return containerInfo.getContainerType();
@@ -904,7 +1075,14 @@ public class DiagnosticData {
 	 * @return the JAXB model of the used trusted lists
 	 */
 	public List<XmlTrustedList> getTrustedLists() {
-		return wrapped.getTrustedLists();
+		List<XmlTrustedList> result = new ArrayList<>();
+		List<XmlTrustedList> trustedLists = wrapped.getTrustedLists();
+		for (XmlTrustedList xmlTrustedList : trustedLists) {
+			if (!xmlTrustedList.isLOTL()) {
+				result.add(xmlTrustedList);
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -912,21 +1090,15 @@ public class DiagnosticData {
 	 * 
 	 * @return the JAXB model of the LOTL
 	 */
-	public XmlTrustedList getListOfTrustedLists() {
-		return wrapped.getListOfTrustedLists();
-	}
-
-	/**
-	 * This method returns the LOTL country code
-	 * 
-	 * @return the country code of the used LOTL
-	 */
-	public String getLOTLCountryCode() {
-		XmlTrustedList listOfTrustedLists = wrapped.getListOfTrustedLists();
-		if (listOfTrustedLists != null) {
-			return listOfTrustedLists.getCountryCode();
+	public List<XmlTrustedList> getListOfTrustedLists() {
+		List<XmlTrustedList> result = new ArrayList<>();
+		List<XmlTrustedList> trustedLists = wrapped.getTrustedLists();
+		for (XmlTrustedList xmlTrustedList : trustedLists) {
+			if (xmlTrustedList.isLOTL()) {
+				result.add(xmlTrustedList);
+			}
 		}
-		return null;
+		return result;
 	}
 
 	public Date getValidationDate() {

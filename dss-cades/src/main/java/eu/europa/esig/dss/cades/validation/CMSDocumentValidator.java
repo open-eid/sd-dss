@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.SignerInformation;
@@ -90,17 +91,18 @@ public class CMSDocumentValidator extends SignedDocumentValidator {
 	@Override
 	public boolean isSupported(DSSDocument dssDocument) {
 		byte firstByte = DSSUtils.readFirstByte(dssDocument);
-		return DSSASN1Utils.isASN1SequenceTag(firstByte);
+		if (DSSASN1Utils.isASN1SequenceTag(firstByte)) {
+			return !DSSUtils.isTimestampToken(dssDocument);
+		}
+		return false;
 	}
 
 	@Override
 	public List<AdvancedSignature> getSignatures() {
-		List<AdvancedSignature> signatures = new ArrayList<AdvancedSignature>();
+		List<AdvancedSignature> signatures = new ArrayList<>();
 		if (cmsSignedData != null) {
-			for (final Object signerInformationObject : cmsSignedData.getSignerInfos().getSigners()) {
-
-				final SignerInformation signerInformation = (SignerInformation) signerInformationObject;
-				final CAdESSignature cadesSignature = new CAdESSignature(cmsSignedData, signerInformation, validationCertPool);
+			for (final SignerInformation signerInformation : cmsSignedData.getSignerInfos().getSigners()) {
+				final CAdESSignature cadesSignature = new CAdESSignature(cmsSignedData, signerInformation);
 				if (document != null) {
 					cadesSignature.setSignatureFilename(document.getName());
 				}
@@ -108,6 +110,7 @@ public class CMSDocumentValidator extends SignedDocumentValidator {
 				cadesSignature.setContainerContents(containerContents);
 				cadesSignature.setManifestFiles(manifestFiles);
 				cadesSignature.setProvidedSigningCertificateToken(providedSigningCertificateToken);
+				cadesSignature.prepareOfflineCertificateVerifier(certificateVerifier);
 				signatures.add(cadesSignature);
 			}
 		}
@@ -115,28 +118,36 @@ public class CMSDocumentValidator extends SignedDocumentValidator {
 	}
 
 	@Override
-	public List<DSSDocument> getOriginalDocuments(final String signatureId) throws DSSException {
-		if (Utils.isStringBlank(signatureId)) {
-			throw new NullPointerException("signatureId");
-		}
-		List<DSSDocument> results = new ArrayList<DSSDocument>();
+	public List<DSSDocument> getOriginalDocuments(final String signatureId) {
+		Objects.requireNonNull(signatureId, "Signature Id cannot be null");
 
-		for (final Object signerInformationObject : cmsSignedData.getSignerInfos().getSigners()) {
+		List<DSSDocument> results = new ArrayList<>();
 
-			final SignerInformation signerInformation = (SignerInformation) signerInformationObject;
-			final CAdESSignature cadesSignature = new CAdESSignature(cmsSignedData, signerInformation, validationCertPool);
+		for (final SignerInformation signerInformation : cmsSignedData.getSignerInfos().getSigners()) {
+			final CAdESSignature cadesSignature = new CAdESSignature(cmsSignedData, signerInformation);
 			cadesSignature.setSignatureFilename(document.getName());
 			cadesSignature.setDetachedContents(detachedContents);
 			cadesSignature.setProvidedSigningCertificateToken(providedSigningCertificateToken);
-			if (Utils.areStringsEqual(cadesSignature.getId(), signatureId)) {
+			if (Utils.areStringsEqual(cadesSignature.getId(), signatureId) || isCounterSignature(cadesSignature, signatureId)) {
 				results.add(cadesSignature.getOriginalDocument());
 			}
 		}
 		return results;
 	}
+	
+	private boolean isCounterSignature(final CAdESSignature masterSignature, final String signatureId) {
+		for (final SignerInformation counterSignerInformation : masterSignature.getSignerInformation().getCounterSignatures()) {
+			final CAdESSignature countersignature = new CAdESSignature(cmsSignedData, counterSignerInformation);
+			countersignature.setMasterSignature(masterSignature);
+			if (Utils.areStringsEqual(countersignature.getId(), signatureId) || isCounterSignature(countersignature, signatureId)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	@Override
-	public List<DSSDocument> getOriginalDocuments(final AdvancedSignature advancedSignature) throws DSSException {
+	public List<DSSDocument> getOriginalDocuments(final AdvancedSignature advancedSignature) {
 		final CAdESSignature cadesSignature = (CAdESSignature) advancedSignature;
 		try {
 			return Arrays.asList(cadesSignature.getOriginalDocument());

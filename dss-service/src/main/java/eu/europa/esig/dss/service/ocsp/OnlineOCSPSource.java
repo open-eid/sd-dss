@@ -24,22 +24,29 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
+import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.Extensions;
+import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.cert.ocsp.CertificateID;
 import org.bouncycastle.cert.ocsp.OCSPException;
 import org.bouncycastle.cert.ocsp.OCSPReq;
 import org.bouncycastle.cert.ocsp.OCSPReqBuilder;
 import org.bouncycastle.cert.ocsp.OCSPResp;
+import org.bouncycastle.cert.ocsp.SingleResp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.RevocationOrigin;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.x509.CertificateToken;
+import eu.europa.esig.dss.model.x509.revocation.ocsp.OCSP;
 import eu.europa.esig.dss.service.NonceSource;
 import eu.europa.esig.dss.service.http.commons.OCSPDataLoader;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
@@ -50,8 +57,6 @@ import eu.europa.esig.dss.spi.x509.revocation.RevocationSourceAlternateUrlsSuppo
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPRespStatus;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPSource;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPToken;
-import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPTokenBuilder;
-import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPTokenUtils;
 import eu.europa.esig.dss.utils.Utils;
 
 /**
@@ -59,7 +64,7 @@ import eu.europa.esig.dss.utils.Utils;
  * to retrieve the OCSP response.
  */
 @SuppressWarnings("serial")
-public class OnlineOCSPSource implements OCSPSource, RevocationSourceAlternateUrlsSupport<OCSPToken>, OnlineRevocationSource<OCSPToken> {
+public class OnlineOCSPSource implements OCSPSource, RevocationSourceAlternateUrlsSupport<OCSP>, OnlineRevocationSource<OCSP> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(OnlineOCSPSource.class);
 
@@ -72,15 +77,32 @@ public class OnlineOCSPSource implements OCSPSource, RevocationSourceAlternateUr
 	 * The data loader used to retrieve the OCSP response.
 	 */
 	private DataLoader dataLoader;
+	
+	/**
+	 * The DigestAlgorithm to be used in hash calculation for CertID on a request building
+	 */
+	private DigestAlgorithm certIDDigestAlgorithm = DigestAlgorithm.SHA1;
 
 	/**
 	 * Create an OCSP source The default constructor for OnlineOCSPSource. The
 	 * default {@code OCSPDataLoader} is set. It is possible to change it with
-	 * {@code
-	 * #setDataLoader}.
+	 * {@code #setDataLoader(dataLoader)}.
 	 */
 	public OnlineOCSPSource() {
 		dataLoader = new OCSPDataLoader();
+		LOG.trace("+OnlineOCSPSource with the default data loader.");
+	}
+	
+	/**
+	 * Creates an Online OCSP Source with the provided {@code DataLoader} instance.
+	 * It is still possible to change the defined instance with 
+	 * {@code #setDataLoader(dataLoader)}.
+	 * 
+	 * @param dataLoader {@link DataLoader} to use
+	 */
+	public OnlineOCSPSource(final DataLoader dataLoader) {
+		this.dataLoader = dataLoader;
+		LOG.trace("+OnlineOCSPSource with the specific data loader.");
 	}
 
 	@Override
@@ -97,6 +119,17 @@ public class OnlineOCSPSource implements OCSPSource, RevocationSourceAlternateUr
 	public void setNonceSource(NonceSource nonceSource) {
 		this.nonceSource = nonceSource;
 	}
+	
+	/**
+	 * This method allows setting of DigestAlgorithm to be used in hash calculation
+	 * for CertID element in an OCSP request building
+	 * 
+	 * @param certIDDigestAlgorithm {@link DigestAlgorithm}
+	 */
+	public void setCertIDDigestAlgorithm(DigestAlgorithm certIDDigestAlgorithm) {
+		Objects.requireNonNull(certIDDigestAlgorithm, "The certIDDigestAlgorithm must not be null!");
+		this.certIDDigestAlgorithm = certIDDigestAlgorithm;
+	}
 
 	@Override
 	public OCSPToken getRevocationToken(CertificateToken certificateToken, CertificateToken issuerCertificateToken) {
@@ -106,9 +139,7 @@ public class OnlineOCSPSource implements OCSPSource, RevocationSourceAlternateUr
 	@Override
 	public OCSPToken getRevocationToken(CertificateToken certificateToken, CertificateToken issuerCertificateToken,
 			List<String> alternativeUrls) {
-		if (dataLoader == null) {
-			throw new NullPointerException("DataLoader is not provided !");
-		}
+		Objects.requireNonNull(dataLoader, "DataLoader is not provided !");
 
 		final String dssIdAsString = certificateToken.getDSSIdAsString();
 		LOG.trace("--> OnlineOCSPSource queried for {}", dssIdAsString);
@@ -118,12 +149,12 @@ public class OnlineOCSPSource implements OCSPSource, RevocationSourceAlternateUr
 
 		final List<String> ocspAccessLocations = DSSASN1Utils.getOCSPAccessLocations(certificateToken);
 		if (Utils.isCollectionEmpty(ocspAccessLocations) && Utils.isCollectionEmpty(alternativeUrls)) {
-			LOG.debug("No OCSP location found for {}", dssIdAsString);
+			LOG.warn("No OCSP location found for {}", dssIdAsString);
 			return null;
 		}
 		ocspAccessLocations.addAll(alternativeUrls);
 
-		final CertificateID certId = DSSRevocationUtils.getOCSPCertificateID(certificateToken, issuerCertificateToken);
+		final CertificateID certId = DSSRevocationUtils.getOCSPCertificateID(certificateToken, issuerCertificateToken, certIDDigestAlgorithm);
 
 		BigInteger nonce = null;
 		if (nonceSource != null) {
@@ -139,18 +170,20 @@ public class OnlineOCSPSource implements OCSPSource, RevocationSourceAlternateUr
 				final byte[] ocspRespBytes = dataLoader.post(ocspAccessLocation, content);
 				if (!Utils.isArrayEmpty(ocspRespBytes)) {
 					final OCSPResp ocspResp = new OCSPResp(ocspRespBytes);
+					verifyNonce(ocspResp, nonce);
 					OCSPRespStatus status = OCSPRespStatus.fromInt(ocspResp.getStatus());
 					if (OCSPRespStatus.SUCCESSFUL.equals(status)) {
-						OCSPTokenBuilder ocspTokenBuilder = new OCSPTokenBuilder(ocspResp, certificateToken, issuerCertificateToken);
-						ocspTokenBuilder.setNonce(nonce);
-						ocspTokenBuilder.setSourceURL(ocspAccessLocation);
-						OCSPToken ocspToken = ocspTokenBuilder.build();
-						OCSPTokenUtils.checkTokenValidity(ocspToken, certificateToken, issuerCertificateToken);
-						ocspToken.setOrigins(Collections.singleton(RevocationOrigin.EXTERNAL));
+						BasicOCSPResp basicResponse = (BasicOCSPResp) ocspResp.getResponseObject();
+						SingleResp latestSingleResponse = DSSRevocationUtils.getLatestSingleResponse(basicResponse, certificateToken, issuerCertificateToken);
+						OCSPToken ocspToken = new OCSPToken(basicResponse, latestSingleResponse, certificateToken, issuerCertificateToken);
+						ocspToken.setSourceURL(ocspAccessLocation);
+						ocspToken.setExternalOrigin(RevocationOrigin.EXTERNAL);
 						return ocspToken;
 					} else {
-						LOG.warn("OCSP Response status with URL '{}' : {}", ocspAccessLocation, status);
+						LOG.warn("Ignored OCSP Response from URL '{}' : status -> {}", ocspAccessLocation, status);
 					}
+				} else {
+					LOG.warn("OCSP Data Loader for certificate {} responded with an empty byte array!", certificateToken.getDSSIdAsString());
 				}
 			} catch (Exception e) {
 				if (nbTries == 0) {
@@ -185,6 +218,37 @@ public class OnlineOCSPSource implements OCSPSource, RevocationSourceAlternateUr
 			return ocspReqData;
 		} catch (OCSPException | IOException e) {
 			throw new DSSException("Cannot build OCSP Request", e);
+		}
+	}
+	
+	private void verifyNonce(final OCSPResp ocspResp, final BigInteger expectedNonceValue) {
+		if (expectedNonceValue != null) {
+			BigInteger receivedNonce = getEmbeddedNonceValue(ocspResp);
+			if (!expectedNonceValue.equals(receivedNonce)) {
+				throw new DSSException(String.format("Nonce received from OCSP response '%s' does not match a dispatched nonce '%s'.", 
+						receivedNonce, expectedNonceValue));
+			}
+		}
+	}
+	
+	private BigInteger getEmbeddedNonceValue(final OCSPResp ocspResp) {
+		try {
+			BasicOCSPResp basicOCSPResp = (BasicOCSPResp)ocspResp.getResponseObject();
+			
+			Extension extension = basicOCSPResp.getExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce);
+			ASN1OctetString extnValue = extension.getExtnValue();
+			ASN1Primitive value;
+			try {
+				value = ASN1Primitive.fromByteArray(extnValue.getOctets());
+			} catch (IOException ex) {
+				throw new OCSPException("Invalid encoding of nonce extension value in OCSP response", ex);
+			}
+			if (value instanceof DEROctetString) {
+				return new BigInteger(((DEROctetString) value).getOctets());
+			}
+			throw new OCSPException("Nonce extension value in OCSP response is not an OCTET STRING");
+		} catch (Exception e) {
+			throw new DSSException(String.format("Unable to extract the nonce from the OCSPResponse! Reason : [%s]", e.getMessage()), e);
 		}
 	}
 

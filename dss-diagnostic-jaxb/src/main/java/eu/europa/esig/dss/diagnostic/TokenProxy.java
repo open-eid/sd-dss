@@ -43,15 +43,15 @@ public interface TokenProxy {
 
 	String getKeyLengthUsedToSignThisToken();
 
-	boolean isIssuerSerialMatch();
-
-	boolean isAttributePresent();
-
-	boolean isDigestValueMatch();
-
-	boolean isDigestValuePresent();
-
 	CertificateWrapper getSigningCertificate();
+	
+	boolean isSigningCertificateReferencePresent();
+	
+	boolean isSigningCertificateReferenceUnique();
+	
+	CertificateRefWrapper getSigningCertificateReference();
+	
+	List<CertificateRefWrapper> getSigningCertificateReferences();
 
 	byte[] getSigningCertificatePublicKey();
 
@@ -60,5 +60,19 @@ public interface TokenProxy {
 	boolean isTrustedChain();
 
 	List<XmlDigestMatcher> getDigestMatchers();
+
+	/**
+	 * Returns FoundCertificatesProxy to access embedded certificates
+	 * 
+	 * @return {@link FoundCertificatesProxy}
+	 */
+	FoundCertificatesProxy foundCertificates();
+
+	/**
+	 * Returns FoundRevocationsProxy to access embedded revocation data
+	 * 
+	 * @return {@link FoundRevocationsProxy}
+	 */
+	FoundRevocationsProxy foundRevocations();
 
 }

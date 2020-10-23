@@ -27,7 +27,7 @@ import java.util.List;
 @SuppressWarnings("serial")
 public class SignerLocation implements Serializable {
 
-	private List<String> postalAddress = new ArrayList<String>();
+	private List<String> postalAddress = new ArrayList<>();
 	private String postalCode;
 	private String locality;
 	private String stateOrProvince;
@@ -93,7 +93,7 @@ public class SignerLocation implements Serializable {
 	 */
 	public void addPostalAddress(final String addressItem) {
 		if (postalAddress == null) {
-			postalAddress = new ArrayList<String>();
+			postalAddress = new ArrayList<>();
 		}
 		postalAddress.add(addressItem);
 	}
@@ -109,6 +109,28 @@ public class SignerLocation implements Serializable {
 		result = (prime * result) + ((stateOrProvince == null) ? 0 : stateOrProvince.hashCode());
 		result = (prime * result) + ((street == null) ? 0 : street.hashCode());
 		return result;
+	}
+	
+	public boolean isEmpty() {
+		if (postalAddress != null && !postalAddress.isEmpty()) {
+			return false;
+		}
+		if (postalCode != null && !postalCode.isEmpty()) {
+			return false;
+		}
+		if (locality != null && !locality.isEmpty()) {
+			return false;
+		}
+		if (stateOrProvince != null && !stateOrProvince.isEmpty()) {
+			return false;
+		}
+		if (country != null && !country.isEmpty()) {
+			return false;
+		}
+		if (street != null && !street.isEmpty()) {
+			return false;
+		}
+		return true;
 	}
 
 	@Override

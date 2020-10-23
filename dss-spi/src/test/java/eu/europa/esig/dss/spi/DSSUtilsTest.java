@@ -20,14 +20,13 @@
  */
 package eu.europa.esig.dss.spi;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -35,22 +34,28 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.Security;
 import java.security.cert.X509Certificate;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.TimeZone;
 
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.enumerations.EncryptionAlgorithm;
+import eu.europa.esig.dss.enumerations.KeyUsageBit;
 import eu.europa.esig.dss.enumerations.SignatureAlgorithm;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.x509.CertificateToken;
-import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.client.http.NativeHTTPDataLoader;
 import eu.europa.esig.dss.utils.Utils;
 
@@ -60,7 +65,7 @@ public class DSSUtilsTest {
 
 	private static CertificateToken certificateWithAIA;
 
-	@BeforeClass
+	@BeforeAll
 	public static void init() {
 		certificateWithAIA = DSSUtils.loadCertificate(new File("src/test/resources/TSP_Certificate_2014.crt"));
 		assertNotNull(certificateWithAIA);
@@ -68,6 +73,8 @@ public class DSSUtilsTest {
 
 	@Test
 	public void digest() {
+		Security.addProvider(DSSSecurityProvider.getSecurityProvider());
+
 		byte[] data = "Hello world!".getBytes(StandardCharsets.UTF_8);
 		assertEquals("d3486ae9136e7856bc42212385ea797094475802", Utils.toHex(DSSUtils.digest(DigestAlgorithm.SHA1, data)));
 		assertEquals("7e81ebe9e604a0c97fef0e4cfe71f9ba0ecba13332bde953ad1c66e4", Utils.toHex(DSSUtils.digest(DigestAlgorithm.SHA224, data)));
@@ -81,6 +88,17 @@ public class DSSUtilsTest {
 				Utils.toHex(DSSUtils.digest(DigestAlgorithm.SHA3_384, data)));
 		assertEquals("95decc72f0a50ae4d9d5378e1b2252587cfc71977e43292c8f1b84648248509f1bc18bc6f0b0d0b8606a643eff61d611ae84e6fbd4a2683165706bd6fd48b334",
 				Utils.toHex(DSSUtils.digest(DigestAlgorithm.SHA3_512, data)));
+
+		assertEquals("ee8ee3ada079996b80d926eef439a502", Utils.toHex(DSSUtils.digest(DigestAlgorithm.SHAKE128, data)));
+		assertEquals("e80627c7a1dd02229936bb2822572025e17b91ef3a94f7ade9d810aee8d6a873",
+				Utils.toHex(DSSUtils.digest(DigestAlgorithm.SHAKE256, data)));
+
+		// BC JCAJCE
+		// org.bouncycastle.jcajce.provider.digest.DigestShake256_512
+		String shake256_512 = "e80627c7a1dd02229936bb2822572025e17b91ef3a94f7ade9d810aee8d6a873f3d6795a6f7b042a3b65ba0faa872f32e513eb8f460dc60768ee86a05d22e7ac";
+		assertEquals(512, Utils.fromHex(shake256_512).length * 8);
+		assertEquals(shake256_512,
+				Utils.toHex(DSSUtils.digest(DigestAlgorithm.SHAKE256_512, data)));
 	}
 
 	@Test
@@ -99,11 +117,9 @@ public class DSSUtilsTest {
 
 	@Test
 	public void testDontSkipCertificatesWhenMultipleAreFoundInP7c() throws IOException {
-		try {
-			DSSUtils.loadCertificate(new FileInputStream("src/test/resources/certchain.p7c"));
-			fail("Should not load single certificate (first?)");
-		} catch (DSSException dssEx) {
-			assertEquals("Could not parse certificate", dssEx.getMessage());
+		try (FileInputStream fis = new FileInputStream("src/test/resources/certchain.p7c")) {
+			DSSException exception = assertThrows(DSSException.class, () -> DSSUtils.loadCertificate(fis));
+			assertEquals("Could not parse certificate", exception.getMessage());
 		}
 	}
 
@@ -163,9 +179,11 @@ public class DSSUtilsTest {
 		// assertNotNull(certificate3);
 	}
 
-	@Test(expected = DSSException.class)
-	public void loadCertificateDoesNotThrowNullPointerExceptionWhenProvidedNonCertificateFile() throws Exception {
-		DSSUtils.loadCertificate(new ByteArrayInputStream("test".getBytes("UTF-8")));
+	@Test
+	public void loadCertificateDoesNotThrowNullPointerExceptionWhenProvidedNonCertificateFile() throws IOException {
+		try (ByteArrayInputStream bais = new ByteArrayInputStream("test".getBytes("UTF-8"))) {
+			assertThrows(DSSException.class, () -> DSSUtils.loadCertificate(bais));
+		}
 	}
 
 	@Test
@@ -256,8 +274,8 @@ public class DSSUtilsTest {
 
 		Thread.sleep(1);
 		String deterministicId3 = DSSUtils.getDeterministicId(new Date(), certificateWithAIA.getDSSId());
-
-		assertThat(deterministicId2, not(equalTo(deterministicId3)));
+		
+		assertNotEquals(deterministicId2, deterministicId3);
 	}
 
 	@Test
@@ -282,7 +300,7 @@ public class DSSUtilsTest {
 
 	@Test
 	public void printSecurityProviders() {
-		DSSUtils.printSecurityProviders();
+		assertDoesNotThrow(() -> DSSUtils.printSecurityProviders());
 	}
 
 	@Test
@@ -300,6 +318,68 @@ public class DSSUtilsTest {
 		assertTrue(token.isSelfSigned());
 		assertTrue(token.isSignedBy(token));
 		assertEquals(SignatureAlgorithm.RSA_SSA_PSS_SHA256_MGF1, token.getSignatureAlgorithm());
+	}
+	
+	@Test
+	public void getUTCDateTest() throws Exception {
+		String pattern = "yyyy-MM-dd HH:mm:ss";
+		SimpleDateFormat dateFormat = new SimpleDateFormat(pattern);
+		dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+		
+		Date date = DSSUtils.getUtcDate(2001, 0, 1);
+		String formattedDate = dateFormat.format(date);
+		assertEquals("2001-01-01 00:00:00", formattedDate);
+		
+		Date parsedDate = dateFormat.parse(formattedDate);
+		assertEquals(date, parsedDate);
+	}
+	
+	@Test
+	public void removeControlCharactersTest() {
+		assertEquals(" ", DSSUtils.removeControlCharacters(" "));
+		assertEquals("Nowina Solutions", DSSUtils.removeControlCharacters("Nowina Solutions"));
+		assertEquals("Новина", DSSUtils.removeControlCharacters("Новина"));
+		assertEquals("πτλς", DSSUtils.removeControlCharacters("πτλς"));
+		assertEquals("ხელმოწერა", DSSUtils.removeControlCharacters("ხელმოწერა"));
+		assertEquals("", DSSUtils.removeControlCharacters("\n"));
+		assertEquals("", DSSUtils.removeControlCharacters("\r\n"));
+		assertEquals("http://xadessrv.plugtests.net/capso/ocsp?ca=RotCAOK", DSSUtils.removeControlCharacters(
+				new String(Utils.fromBase64("aHR0cDovL3hhZGVzc3J2LnBsdWd0ZXN0cy5uZXQvY2Fwc28vb2NzcD9jYT1SAG90Q0FPSw=="))));
+	}
+
+	@Test
+	public void loadEdDSACert() throws NoSuchAlgorithmException, IOException {
+
+		// RFC 8410
+
+		Security.addProvider(DSSSecurityProvider.getSecurityProvider());
+		
+		CertificateToken token = DSSUtils.loadCertificateFromBase64EncodedString(
+				"MIIBLDCB36ADAgECAghWAUdKKo3DMDAFBgMrZXAwGTEXMBUGA1UEAwwOSUVURiBUZXN0IERlbW8wHhcNMTYwODAxMTIxOTI0WhcNNDAxMjMxMjM1OTU5WjAZMRcwFQYDVQQDDA5JRVRGIFRlc3QgRGVtbzAqMAUGAytlbgMhAIUg8AmJMKdUdIt93LQ+91oNvzoNJjga9OukqY6qm05qo0UwQzAPBgNVHRMBAf8EBTADAQEAMA4GA1UdDwEBAAQEAwIDCDAgBgNVHQ4BAQAEFgQUmx9e7e0EM4Xk97xiPFl1uQvIuzswBQYDK2VwA0EAryMB/t3J5v/BzKc9dNZIpDmAgs3babFOTQbs+BolzlDUwsPrdGxO3YNGhW7Ibz3OGhhlxXrCe1Cgw1AH9efZBw==");
+		assertNotNull(token);
+		logger.info("{}", token);
+		logger.info("{}", token.getPublicKey());
+		assertFalse(token.isSelfSigned());
+		assertFalse(token.isSignedBy(token));
+		assertEquals(SignatureAlgorithm.ED25519, token.getSignatureAlgorithm());
+		assertTrue(token.checkKeyUsage(KeyUsageBit.KEY_AGREEMENT));
+		assertEquals(EncryptionAlgorithm.X25519, EncryptionAlgorithm.forKey(token.getPublicKey()));
+
+		X509CertificateHolder holder = new X509CertificateHolder(token.getEncoded());
+		SubjectPublicKeyInfo subjectPublicKeyInfo = holder.getSubjectPublicKeyInfo();
+		assertNotNull(subjectPublicKeyInfo);
+		assertEquals(EncryptionAlgorithm.X25519.getOid(), subjectPublicKeyInfo.getAlgorithm().getAlgorithm().getId());
+
+		token = DSSUtils
+				.loadCertificateFromBase64EncodedString(
+				"MIIBCDCBuwIUGW78zw0OL0GptJi++a91dBa7DsQwBQYDK2VwMCcxCzAJBgNVBAYTAkRFMRgwFgYDVQQDDA93d3cuZXhhbXBsZS5jb20wHhcNMTkwMzMxMTc1MTIyWhcNMjEwMjI4MTc1MTIyWjAnMQswCQYDVQQGEwJERTEYMBYGA1UEAwwPd3d3LmV4YW1wbGUuY29tMCowBQYDK2VwAyEAK87g0b8CC1eA5mvKXt9uezZwJYWEyg74Y0xTZEkqCcwwBQYDK2VwA0EAIIu/aa3Qtr3IE5to/nvWVY9y3ciwG5DnA70X3ALUhFs+U5aLtfY8sNT1Ng72ht+UBwByuze20UsL9qMsmknQCA==");
+		assertNotNull(token);
+		logger.info("{}", token);
+		logger.info("{}", token.getPublicKey());
+		assertEquals(SignatureAlgorithm.ED25519, token.getSignatureAlgorithm());
+		assertEquals(EncryptionAlgorithm.ED25519, EncryptionAlgorithm.forKey(token.getPublicKey()));
+		assertTrue(token.isSelfSigned());
+		assertTrue(token.isSignedBy(token));
 	}
 
 }

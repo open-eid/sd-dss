@@ -47,6 +47,7 @@ import org.bouncycastle.asn1.DERSet;
 import org.bouncycastle.asn1.DERUTF8String;
 import org.bouncycastle.asn1.cms.Attribute;
 import org.bouncycastle.asn1.cms.AttributeTable;
+import org.bouncycastle.asn1.esf.CommitmentTypeIndication;
 import org.bouncycastle.asn1.esf.OtherHashAlgAndValue;
 import org.bouncycastle.asn1.esf.SigPolicyQualifierInfo;
 import org.bouncycastle.asn1.esf.SigPolicyQualifiers;
@@ -64,7 +65,11 @@ import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.cades.CAdESSignatureParameters;
 import eu.europa.esig.dss.cades.CMSUtils;
+import eu.europa.esig.dss.cades.SignedAssertion;
+import eu.europa.esig.dss.cades.SignedAssertions;
 import eu.europa.esig.dss.cades.SignerAttributeV2;
+import eu.europa.esig.dss.enumerations.CommitmentType;
+import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.Policy;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.OID;
@@ -109,7 +114,7 @@ public class CAdESLevelBaselineB {
 	}
 
 	public AttributeTable getSignedAttributes(final CAdESSignatureParameters parameters) {
-		if (parameters.getSignedData() != null) {
+		if (Utils.isArrayNotEmpty(parameters.getSignedData())) {
 			LOG.debug("Using explict SignedAttributes from parameter");
 			return CMSUtils.getAttributesFromByteArray(parameters.getSignedData());
 		}
@@ -128,8 +133,7 @@ public class CAdESLevelBaselineB {
 		// mime-type attribute breaks parallel signatures by adding PKCS7 as a mime-type for subsequent signers.
 		// This attribute is not mandatory, so it has been disabled.
 
-		final AttributeTable signedAttributesTable = new AttributeTable(signedAttributes);
-		return signedAttributesTable;
+		return new AttributeTable(signedAttributes);
 	}
 
 	/**
@@ -151,7 +155,7 @@ public class CAdESLevelBaselineB {
 		final List<String> claimedSignerRoles = parameters.bLevel().getClaimedSignerRoles();
 		if (claimedSignerRoles != null) {
 
-			List<org.bouncycastle.asn1.x509.Attribute> claimedAttributes = new ArrayList<org.bouncycastle.asn1.x509.Attribute>(claimedSignerRoles.size());
+			List<org.bouncycastle.asn1.x509.Attribute> claimedAttributes = new ArrayList<>(claimedSignerRoles.size());
 			for (final String claimedSignerRole : claimedSignerRoles) {
 				final DERUTF8String roles = new DERUTF8String(claimedSignerRole);
 				final org.bouncycastle.asn1.x509.Attribute id_aa_ets_signerAttr = new org.bouncycastle.asn1.x509.Attribute(OID.id_at_role,
@@ -167,6 +171,22 @@ public class CAdESLevelBaselineB {
 						new DERSet(new SignerAttributeV2(claimedAttributes.toArray(new org.bouncycastle.asn1.x509.Attribute[claimedAttributes.size()]))));
 			}
 			signedAttributes.add(signerAttributes);
+			return;
+		}
+		
+		final List<String> signedAssertions = parameters.bLevel().getSignedAssertions();
+		if (signedAssertions != null && parameters.isEn319122()) {
+			List<SignedAssertion> assertionsToAdd = new ArrayList<>();
+			for (final String signedAssertion : signedAssertions) {
+			    SignedAssertion sa = new SignedAssertion(signedAssertion);
+			    assertionsToAdd.add(sa);  
+			}
+
+			if(!assertionsToAdd.isEmpty()) {
+			   org.bouncycastle.asn1.cms.Attribute signerAttributes = new org.bouncycastle.asn1.cms.Attribute(OID.id_aa_ets_signerAttrV2,
+						new DERSet(new SignerAttributeV2(new SignedAssertions(assertionsToAdd))));
+			   signedAttributes.add(signerAttributes);
+			}
 		}
 	}
 
@@ -209,7 +229,7 @@ public class CAdESLevelBaselineB {
 		}
 
 		final eu.europa.esig.dss.model.SignerLocation signerLocationParameter = parameters.bLevel().getSignerLocation();
-		if (signerLocationParameter != null) {
+		if (signerLocationParameter != null && !signerLocationParameter.isEmpty()) {
 
 			final DERUTF8String country = signerLocationParameter.getCountry() == null ? null : new DERUTF8String(signerLocationParameter.getCountry());
 			final DERUTF8String locality = signerLocationParameter.getLocality() == null ? null : new DERUTF8String(signerLocationParameter.getLocality());
@@ -243,19 +263,21 @@ public class CAdESLevelBaselineB {
 	private void addCommitmentType(final CAdESSignatureParameters parameters, final ASN1EncodableVector signedAttributes) {
 
 		// TODO (19/08/2014): commitmentTypeQualifier is not implemented
-		final List<String> commitmentTypeIndications = parameters.bLevel().getCommitmentTypeIndications();
+		final List<CommitmentType> commitmentTypeIndications = parameters.bLevel().getCommitmentTypeIndications();
 		if (Utils.isCollectionNotEmpty(commitmentTypeIndications)) {
 
 			final int size = commitmentTypeIndications.size();
 			ASN1Encodable[] asn1Encodables = new ASN1Encodable[size];
 			for (int ii = 0; ii < size; ii++) {
+				
+				final CommitmentType commitmentType = commitmentTypeIndications.get(ii);
+				if (commitmentType.getOid() == null) {
+					throw new DSSException("The commitmentTypeIndication OID must be defined for CAdES creation!");
+				}
 
-				final String commitmentTypeId = commitmentTypeIndications.get(ii);
-				final ASN1ObjectIdentifier objectIdentifier = new ASN1ObjectIdentifier(commitmentTypeId);
-				// final CommitmentTypeIndication commitmentTypeIndication = new
-				// CommitmentTypeIndication(objectIdentifier);
-				// final ASN1Primitive asn1Primitive = commitmentTypeIndication.toASN1Primitive();
-				asn1Encodables[ii] = new DERSequence(objectIdentifier);
+				final ASN1ObjectIdentifier objectIdentifier = new ASN1ObjectIdentifier(commitmentType.getOid());
+				final CommitmentTypeIndication commitmentTypeIndication = new CommitmentTypeIndication(objectIdentifier);
+				asn1Encodables[ii] = commitmentTypeIndication.toASN1Primitive(); // DER encoded
 			}
 			final DERSet attrValues = new DERSet(asn1Encodables);
 			final Attribute attribute = new Attribute(id_aa_ets_commitmentType, attrValues);
@@ -377,10 +399,10 @@ public class CAdESLevelBaselineB {
 		final String contentIdentifierPrefix = parameters.getContentIdentifierPrefix();
 		if (Utils.isStringNotBlank(contentIdentifierPrefix)) {
 			if (Utils.isStringBlank(parameters.getContentIdentifierSuffix())) {
-				StringBuffer suffixBuffer = new StringBuffer();
-				suffixBuffer.append(new ASN1GeneralizedTime(new Date()).getTimeString());
-				suffixBuffer.append(new SecureRandom().nextLong());
-				parameters.setContentIdentifierSuffix(suffixBuffer.toString());
+				StringBuilder suffixBuilder = new StringBuilder();
+				suffixBuilder.append(new ASN1GeneralizedTime(new Date()).getTimeString());
+				suffixBuilder.append(new SecureRandom().nextLong());
+				parameters.setContentIdentifierSuffix(suffixBuilder.toString());
 			}
 			final String contentIdentifierString = contentIdentifierPrefix + parameters.getContentIdentifierSuffix();
 			final ContentIdentifier contentIdentifier = new ContentIdentifier(contentIdentifierString.getBytes());

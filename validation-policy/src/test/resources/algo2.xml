@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <DiagnosticData xmlns="http://dss.esig.europa.eu/validation/diagnostic">
     <DocumentName>test_eid-sk2016.asice</DocumentName>
-    <ValidationDate>2019-10-07T07:18:36</ValidationDate>
+    <ValidationDate>2019-10-04T07:18:36</ValidationDate>
     <ContainerInfo>
         <ContainerType>ASiC-E</ContainerType>
         <ZipComment>LIB DigiDoc4j/DEV format: application/vnd.etsi.asic-e+zip signatureProfile: ASiC_E_BASELINE_LT Java: 1.8.0_161/Oracle Corporation OS: Linux/amd64/3.10.0-514.el7.x86_64 JVM: OpenJDK 64-Bit Server VM/Oracle Corporation/25.161-b14</ZipComment>
@@ -24,7 +24,7 @@
         <Signature Id="S-2F3BB2B6290792FB8928065EF4E2EB36FADBDAB8CF4DB41BE1D4DFD00CB68155">
             <DAIdentifier>S1568982874411</DAIdentifier>
             <SignatureFilename>META-INF/signatures0.xml</SignatureFilename>
-            <DateTime>2019-09-20T12:34:34</DateTime>
+            <ClaimedSigningTime>2019-09-20T12:34:34</ClaimedSigningTime>
             <SignatureFormat>XAdES-BASELINE-LT</SignatureFormat>
             <StructuralValidation>
                 <Valid>true</Valid>
@@ -50,19 +50,14 @@
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>true</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-7C7A9FE7D2806E276868C5DDC67C0587C4D4B875A2E2DD4DD299A7A3576F20B1">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-7C7A9FE7D2806E276868C5DDC67C0587C4D4B875A2E2DD4DD299A7A3576F20B1"/>
             <CertificateChain>
                 <ChainItem Certificate="C-7C7A9FE7D2806E276868C5DDC67C0587C4D4B875A2E2DD4DD299A7A3576F20B1"/>
                 <ChainItem Certificate="C-E73F1F19A4459A6067A45E84DB585D6C1DF8F12A739D733F5B28996546F1875A"/>
                 <ChainItem Certificate="C-3E84BA4342908516E77573C0992F0979CA084E4685681FF195CCBA8A229B8A76"/>
             </CertificateChain>
             <MimeType>image/jpeg</MimeType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             <SignerRole Category="claimed">
                 <Role>Lisateenuste ärijuht</Role>
             </SignerRole>
@@ -75,8 +70,8 @@
                     <Origin>KEY_INFO</Origin>
                     <CertificateRef>
                         <Origin>SIGNING_CERTIFICATE</Origin>
-                        <IssuerSerial>MHgwZKRiMGAxCzAJBgNVBAYTAkVFMSIwIAYDVQQKExlBUyBTZXJ0aWZpdHNlZXJpbWlza2Vza3VzMRcwFQYDVQRhEw5OVFJFRS0xMDc0NzAxMzEUMBIGA1UEAxMLRUlELVNLIDIwMTYCEAls4tkExDMgXWfYPasghRE=</IssuerSerial>
-                        <DigestAlgoAndValue>
+                        <IssuerSerial match="true">MHgwZKRiMGAxCzAJBgNVBAYTAkVFMSIwIAYDVQQKExlBUyBTZXJ0aWZpdHNlZXJpbWlza2Vza3VzMRcwFQYDVQRhEw5OVFJFRS0xMDc0NzAxMzEUMBIGA1UEAxMLRUlELVNLIDIwMTYCEAls4tkExDMgXWfYPasghRE=</IssuerSerial>
+                        <DigestAlgoAndValue match="true">
                             <DigestMethod>SHA256</DigestMethod>
                             <DigestValue>fHqf59KAbidoaMXdxnwFh8TUuHWi4t1N0pmno1dvILE=</DigestValue>
                         </DigestAlgoAndValue>
@@ -137,6 +132,7 @@
             <NotBefore>2019-08-30T21:00:00</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-FB704940EA123E4B26FA6CA9D998B5BBA0A823BE0B6BA99116220C1015105C2B</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>
@@ -162,18 +158,17 @@
             <QCStatementIds/>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>SK ID Solutions AS</TSPName>
-                    <TSPRegistrationIdentifier>VATEE-100687640</TSPRegistrationIdentifier>
-                    <CountryCode>EE</CountryCode>
+                <TrustedServiceProvider TL="TL-EE" LOTL="LOTL-EU">
+                    <TSPNames><TSPName lang="en">SK ID Solutions AS</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATEE-100687640</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-E73F1F19A4459A6067A45E84DB585D6C1DF8F12A739D733F5B28996546F1875A">
-                            <ServiceName>EID-SK 2016 qualified certificates for electronic signatures</ServiceName>
+                            <ServiceNames><ServiceName lang="en">EID-SK 2016 qualified certificates for electronic signatures</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-12-21T10:00:00</StartDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                     </TrustedServices>
@@ -206,6 +201,7 @@
             <NotBefore>2019-08-29T13:50:53</NotBefore>
             <PublicKeySize>6144</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-7C7A9FE7D2806E276868C5DDC67C0587C4D4B875A2E2DD4DD299A7A3576F20B1</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>nonRepudiation</KeyUsage>
             </KeyUsageBits>
@@ -240,13 +236,12 @@
                 <qcTypeOid Description="qc-type-esign">0.4.0.1862.1.6.1</qcTypeOid>
             </QCTypes>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>SK ID Solutions AS</TSPName>
-                    <TSPRegistrationIdentifier>VATEE-100687640</TSPRegistrationIdentifier>
-                    <CountryCode>EE</CountryCode>
+                <TrustedServiceProvider TL="TL-EE" LOTL="LOTL-EU">
+                    <TSPNames><TSPName lang="en">SK ID Solutions AS</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATEE-100687640</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-E73F1F19A4459A6067A45E84DB585D6C1DF8F12A739D733F5B28996546F1875A">
-                            <ServiceName>EID-SK 2016 qualified certificates for electronic signatures</ServiceName>
+                            <ServiceNames><ServiceName lang="en">EID-SK 2016 qualified certificates for electronic signatures</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-12-21T10:00:00</StartDate>
@@ -255,7 +250,7 @@
                                 <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCStatement</Qualifier>
                             </CapturedQualifiers>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                     </TrustedServices>
@@ -263,7 +258,7 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-748238795970CAF5EE7ACA4F4F35BCD54CFDFE93B43E8D92CC0AAB8F88910F90">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <Base64Encoded>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</Base64Encoded>
@@ -292,6 +287,7 @@
             <NotBefore>2019-01-01T21:00:00</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-25D45A834C1EA0E669A8A5882D741C96189FEFC08F8CAE9ACCABF77758330754</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
                 <KeyUsage>nonRepudiation</KeyUsage>
@@ -317,18 +313,17 @@
             <QCStatementIds/>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>SK ID Solutions AS</TSPName>
-                    <TSPRegistrationIdentifier>VATEE-100687640</TSPRegistrationIdentifier>
-                    <CountryCode>EE</CountryCode>
+                <TrustedServiceProvider TL="TL-EE" LOTL="LOTL-EU">
+                    <TSPNames><TSPName lang="en">SK ID Solutions AS</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATEE-100687640</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-25D45A834C1EA0E669A8A5882D741C96189FEFC08F8CAE9ACCABF77758330754">
-                            <ServiceName>SK Time-Stamping Authority for qualified electronic time stamps (SK-TSA 2019)</ServiceName>
+                            <ServiceNames><ServiceName lang="en">SK Time-Stamping Authority for qualified electronic time stamps (SK-TSA 2019)</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/TSA/QTST</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2019-03-10T22:00:00</StartDate>
                             <ServiceSupplyPoints>
-                                <serviceSupplyPoint>http://tsa.sk.ee</serviceSupplyPoint>
+                                <ServiceSupplyPoint>http://tsa.sk.ee</ServiceSupplyPoint>
                             </ServiceSupplyPoints>
                         </TrustedService>
                     </TrustedServices>
@@ -363,6 +358,7 @@
             <NotBefore>2016-08-30T09:21:09</NotBefore>
             <PublicKeySize>4096</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-2E73F1F19A4459A6067A45E84DB585D6C1DF8F12A739D733F5B28996546F1875</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -396,18 +392,17 @@
             </QCStatementIds>
             <QCTypes/>
             <TrustedServiceProviders>
-                <TrustedServiceProvider>
-                    <TSPName>SK ID Solutions AS</TSPName>
-                    <TSPRegistrationIdentifier>VATEE-100687640</TSPRegistrationIdentifier>
-                    <CountryCode>EE</CountryCode>
+                <TrustedServiceProvider TL="TL-EE" LOTL="LOTL-EU">
+                    <TSPNames><TSPName lang="en">SK ID Solutions AS</TSPName></TSPNames>
+                    <TSPRegistrationIdentifiers><TSPRegistrationIdentifier>VATEE-100687640</TSPRegistrationIdentifier></TSPRegistrationIdentifiers>
                     <TrustedServices>
                         <TrustedService ServiceDigitalIdentifier="C-E73F1F19A4459A6067A45E84DB585D6C1DF8F12A739D733F5B28996546F1875A">
-                            <ServiceName>EID-SK 2016 qualified certificates for electronic signatures</ServiceName>
+                            <ServiceNames><ServiceName lang="en">EID-SK 2016 qualified certificates for electronic signatures</ServiceName></ServiceNames>
                             <ServiceType>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceType>
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Status>
                             <StartDate>2016-12-21T10:00:00</StartDate>
                             <AdditionalServiceInfoUris>
-                                <additionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</additionalServiceInfoUri>
+                                <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
                         </TrustedService>
                     </TrustedServices>
@@ -436,6 +431,7 @@
             <NotBefore>2010-10-30T10:10:30</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-3E84BA4342908516E77573C0992F0979CA084E4685681FF195CCBA8A229B8A76</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -468,7 +464,7 @@
     </UsedCertificates>
     <UsedRevocations>
         <Revocation Id="R-748238795970CAF5EE7ACA4F4F35BCD54CFDFE93B43E8D92CC0AAB8F88910F90">
-            <Origin>SIGNATURE</Origin>
+            <Origin>INPUT_DOCUMENT</Origin>
             <Type>OCSP</Type>
             <ProductionDate>2019-09-20T12:34:47</ProductionDate>
             <ThisUpdate>2019-09-20T12:34:47</ThisUpdate>
@@ -512,6 +508,8 @@
                 <ChainItem Certificate="C-25D45A834C1EA0E669A8A5882D741C96189FEFC08F8CAE9ACCABF77758330754"/>
                 <ChainItem Certificate="C-3E84BA4342908516E77573C0992F0979CA084E4685681FF195CCBA8A229B8A76"/>
             </CertificateChain>
+            <FoundCertificates/>
+            <FoundRevocations/>
             <TimestampedObjects>
                 <TimestampedObject Token="D-B6024AC42C035D00E46E007E492D44A95D0405CB5A330B11EFF535970F53DD08" Category="SIGNED_DATA"/>
                 <TimestampedObject Token="S-2F3BB2B6290792FB8928065EF4E2EB36FADBDAB8CF4DB41BE1D4DFD00CB68155" Category="SIGNATURE"/>
@@ -531,7 +529,7 @@
         </SignerData>
     </OriginalDocuments>
     <TrustedLists>
-        <TrustedList>
+        <TrustedList Id="TL-EE">
             <CountryCode>EE</CountryCode>
             <Url>https://sr.riik.ee/tsl/estonian-tsl.xml</Url>
             <SequenceNumber>47</SequenceNumber>
@@ -541,15 +539,15 @@
             <NextUpdate>2020-03-05T00:00:00</NextUpdate>
             <WellSigned>true</WellSigned>
         </TrustedList>
+        <TrustedList Id="LOTL-EU" LOTL="true">
+	        <CountryCode>EU</CountryCode>
+	        <Url>https://ec.europa.eu/tools/lotl/eu-lotl.xml</Url>
+	        <SequenceNumber>250</SequenceNumber>
+	        <Version>5</Version>
+	        <LastLoading>2019-10-07T07:14:04</LastLoading>
+	        <IssueDate>2019-10-04T11:00:00</IssueDate>
+	        <NextUpdate>2020-04-04T00:00:00</NextUpdate>
+	        <WellSigned>true</WellSigned>
+        </TrustedList>
     </TrustedLists>
-    <ListOfTrustedLists>
-        <CountryCode>EU</CountryCode>
-        <Url>https://ec.europa.eu/tools/lotl/eu-lotl.xml</Url>
-        <SequenceNumber>250</SequenceNumber>
-        <Version>5</Version>
-        <LastLoading>2019-10-07T07:14:04</LastLoading>
-        <IssueDate>2019-10-04T11:00:00</IssueDate>
-        <NextUpdate>2020-04-04T00:00:00</NextUpdate>
-        <WellSigned>true</WellSigned>
-    </ListOfTrustedLists>
 </DiagnosticData>

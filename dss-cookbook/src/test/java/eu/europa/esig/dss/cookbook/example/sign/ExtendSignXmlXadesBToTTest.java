@@ -20,7 +20,7 @@
  */
 package eu.europa.esig.dss.cookbook.example.sign;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.cookbook.example.CookbookTools;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
@@ -40,7 +40,7 @@ public class ExtendSignXmlXadesBToTTest extends CookbookTools {
 
 		// tag::demo[]
 
-		DSSDocument document = new FileDocument("src/test/resources/signedXmlXadesB.xml");
+		DSSDocument document = new FileDocument("src/test/resources/signature-pool/signedXmlXadesB.xml");
 
 		XAdESSignatureParameters parameters = new XAdESSignatureParameters();
 		parameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_T);

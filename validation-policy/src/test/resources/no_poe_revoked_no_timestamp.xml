@@ -5,7 +5,7 @@
     <Signatures>
 	    <Signature Id="xmldsig-22bfe6ce-8d82-496a-9e97-e0f8e68403c2">
 	    	<SignatureFilename>firmaok.zip.p7m</SignatureFilename>
-	        <DateTime>2014-10-14T14:49:13</DateTime>
+	        <ClaimedSigningTime>2014-10-14T14:49:13</ClaimedSigningTime>
 	        <SignatureFormat>XAdES-BASELINE-B</SignatureFormat>
 	        <DigestMatchers>
                 <DigestMatcher type="REFERENCE" name="#test">
@@ -23,23 +23,28 @@
             </DigestMatchers>
 	        <BasicSignature>
 	            <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
-	            <KeyLengthUsedToSignThisToken>1024</KeyLengthUsedToSignThisToken>
+	            <KeyLengthUsedToSignThisToken>2048</KeyLengthUsedToSignThisToken>
 	            <DigestAlgoUsedToSignThisToken>SHA256</DigestAlgoUsedToSignThisToken>
 	            <SignatureIntact>true</SignatureIntact>
 	            <SignatureValid>true</SignatureValid>
 	        </BasicSignature>
-	        <SigningCertificate Certificate="C-725A763273585DD8DFA026EB2066F5667FFF6ED45F72052B3F9C2D3565DF6B5E">
-	            <AttributePresent>true</AttributePresent>
-	            <DigestValuePresent>true</DigestValuePresent>
-	            <DigestValueMatch>true</DigestValueMatch>
-	            <IssuerSerialMatch>true</IssuerSerialMatch>
-	        </SigningCertificate>
+	        <SigningCertificate Certificate="C-725A763273585DD8DFA026EB2066F5667FFF6ED45F72052B3F9C2D3565DF6B5E"/>
 	        <CertificateChain>
 	            <ChainItem Certificate="C-725A763273585DD8DFA026EB2066F5667FFF6ED45F72052B3F9C2D3565DF6B5E"/>
 	            <ChainItem Certificate="C-B689BFCFDAEE078405383971E848C3D077457CD0EC6B685550F10ED250F8FDC5"/>
 	        </CertificateChain>
 	        <ContentType>text/xml</ContentType>
-            <FoundCertificates/>
+            <FoundCertificates>
+            	<RelatedCertificate Certificate="C-725A763273585DD8DFA026EB2066F5667FFF6ED45F72052B3F9C2D3565DF6B5E">
+                	<CertificateRef>
+                        <Origin>SIGNING_CERTIFICATE</Origin>
+                        <DigestAlgoAndValue match="true">
+                        	<DigestMethod>SHA1</DigestMethod>
+                            <DigestValue>PiDIr5bYnMtpqheAf9Nz2N9Sp7c=</DigestValue>
+                        </DigestAlgoAndValue>
+                    </CertificateRef>
+                </RelatedCertificate>
+            </FoundCertificates>
             <FoundRevocations/>
             <FoundTimestamps/>
 	        <SignatureScopes>
@@ -73,6 +78,7 @@
             <NotBefore>2013-04-19T16:26:15</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-B689BFCFDAEE078405383971E848C3D077457CD0EC6B685550F10ED250F8FDC5</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -113,8 +119,9 @@
             </Sources>
             <NotAfter>2014-10-30T01:00:00</NotAfter>
             <NotBefore>2014-10-08T10:46:20</NotBefore>
-            <PublicKeySize>1024</PublicKeySize>
+            <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-725A763273585DD8DFA026EB2066F5667FFF6ED45F72052B3F9C2D3565DF6B5E</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>nonRepudiation</KeyUsage>
             </KeyUsageBits>
@@ -144,12 +151,12 @@
             <TrustedServiceProviders />
 			<Revocations>
 	            <CertificateRevocation Revocation="R-0574F0CFD174789DDCB57C5F2EC6EC43DD341BF7789708E28E87AF9A2696CA56">
-	                <Status>false</Status>
+	                <Status>REVOKED</Status>
 	                <Reason>cessationOfOperation</Reason>
 	                <RevocationDate>2014-10-15T15:12:23</RevocationDate>
 	            </CertificateRevocation>
 	            <CertificateRevocation Revocation="R-55F56C98A1A43A431C6DD59F46D921DDE91F9FFE23FB1E4CC53A372CD38B4495">
-	                <Status>false</Status>
+	                <Status>REVOKED</Status>
 	                <Reason>cessationOfOperation</Reason>
 	                <RevocationDate>2014-10-15T15:12:23</RevocationDate>
 	            </CertificateRevocation>
@@ -176,6 +183,7 @@
             <NotBefore>2015-12-10T18:56:42</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-200BB21E10FDE02A75E6738ECB5D61BAFBE10028171C85A47E7F297B7E2F859A</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>
@@ -211,6 +219,8 @@
             <ProductionDate>2016-05-04T15:03:54</ProductionDate>
             <ThisUpdate>2016-05-04T14:30:00</ThisUpdate>
             <NextUpdate>2016-05-04T21:03:54</NextUpdate>
+            <CertHashExtensionPresent>true</CertHashExtensionPresent>
+            <CertHashExtensionMatch>true</CertHashExtensionMatch>
             <BasicSignature>
                 <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
                 <KeyLengthUsedToSignThisToken>2048</KeyLengthUsedToSignThisToken>

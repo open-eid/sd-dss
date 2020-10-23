@@ -23,7 +23,7 @@ package eu.europa.esig.dss.cookbook.example.sign;
 import java.awt.Color;
 import java.awt.Font;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.cookbook.example.CookbookTools;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
@@ -31,7 +31,7 @@ import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
-import eu.europa.esig.dss.pades.DSSFileFont;
+import eu.europa.esig.dss.pades.DSSFont;
 import eu.europa.esig.dss.pades.DSSJavaFont;
 import eu.europa.esig.dss.pades.PAdESSignatureParameters;
 import eu.europa.esig.dss.pades.SignatureImageParameters;
@@ -87,13 +87,14 @@ public class SignPdfPadesBVisibleExistingTest extends CookbookTools {
 			// Initialize text to generate for visual signature
 			// tag::font[]
 			SignatureImageTextParameters textParameters = new SignatureImageTextParameters();
-			DSSJavaFont font = new DSSJavaFont(new Font(Font.SERIF, Font.PLAIN, 16));
+			DSSFont font = new DSSJavaFont(Font.SERIF);
+			font.setSize(16); // Specifies the text size value (the default font size is 12pt)
 			textParameters.setFont(font);
 			textParameters.setTextColor(Color.BLUE);
 			textParameters.setText("My visual signature");
 			imageParameters.setTextParameters(textParameters);
 			// end::font[]
-			parameters.setSignatureImageParameters(imageParameters);
+			parameters.setImageParameters(imageParameters);
 
 			parameters.setSignatureFieldId("ExistingSignatureField");
 

@@ -26,7 +26,7 @@ import java.util.List;
 import eu.europa.esig.dss.AbstractSignatureParameters;
 import eu.europa.esig.dss.CertificateReorderer;
 import eu.europa.esig.dss.model.x509.CertificateToken;
-import eu.europa.esig.dss.spi.x509.CertificateSource;
+import eu.europa.esig.dss.spi.x509.ListCertificateSource;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 
 /**
@@ -49,16 +49,15 @@ public class BaselineBCertificateSelector extends CertificateReorderer {
 	public List<CertificateToken> getCertificates() {
 
 		List<CertificateToken> orderedCertificates = getOrderedCertificates();
-
-		CertificateSource trustedCertSource = certificateVerifier.getTrustedCertSource();
+		
+		ListCertificateSource trustedCertSources = certificateVerifier.getTrustedCertSources();
 
 		// if true, trust anchor certificates (and upper certificates) are not included in the signature
-		if (parameters.bLevel().isTrustAnchorBPPolicy() && trustedCertSource != null) {
+		if (parameters.bLevel().isTrustAnchorBPPolicy() && !trustedCertSources.isEmpty()) {
 
-			List<CertificateToken> result = new LinkedList<CertificateToken>();
+			List<CertificateToken> result = new LinkedList<>();
 			for (CertificateToken certificateToken : orderedCertificates) {
-				if (trustedCertSource.isTrusted(certificateToken)) {
-					// trust anchor and its parents are skipped
+				if (trustedCertSources.isTrusted(certificateToken)) {
 					break;
 				}
 				result.add(certificateToken);

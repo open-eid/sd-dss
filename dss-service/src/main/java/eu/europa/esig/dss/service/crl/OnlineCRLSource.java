@@ -20,7 +20,6 @@
  */
 package eu.europa.esig.dss.service.crl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +33,7 @@ import eu.europa.esig.dss.crl.CRLValidity;
 import eu.europa.esig.dss.enumerations.RevocationOrigin;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.x509.CertificateToken;
+import eu.europa.esig.dss.model.x509.revocation.crl.CRL;
 import eu.europa.esig.dss.service.http.commons.CommonsDataLoader;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.DSSRevocationUtils;
@@ -54,7 +54,7 @@ import eu.europa.esig.dss.utils.Utils;
  * apache-ldap-api is provided.
  *
  */
-public class OnlineCRLSource implements CRLSource, RevocationSourceAlternateUrlsSupport<CRLToken>, OnlineRevocationSource<CRLToken> {
+public class OnlineCRLSource implements CRLSource, RevocationSourceAlternateUrlsSupport<CRL>, OnlineRevocationSource<CRL> {
 	
 	private static final long serialVersionUID = 6912729291417315212L;
 
@@ -143,16 +143,15 @@ public class OnlineCRLSource implements CRLSource, RevocationSourceAlternateUrls
 			return null;
 		}
 		try {
-			CRLBinary crlBinary = new CRLBinary(dataAndUrl.getData());
+			CRLBinary crlBinary = CRLUtils.buildCRLBinary(dataAndUrl.getData());
 			final CRLValidity crlValidity = CRLUtils.buildCRLValidity(crlBinary, issuerToken);
 			final CRLToken crlToken = new CRLToken(certificateToken, crlValidity);
-			crlToken.setOrigins(Collections.singleton(RevocationOrigin.EXTERNAL));
+			crlToken.setExternalOrigin(RevocationOrigin.EXTERNAL);
 			crlToken.setSourceURL(dataAndUrl.getUrlString());
-			crlToken.setAvailable(true);
 			crlToken.setRevocationTokenKey(DSSRevocationUtils.getCRLRevocationTokenKey(dataAndUrl.getUrlString()));
 			return crlToken;
-		} catch (IOException e) {
-			LOG.warn("Unable to parse/validate the CRL (url:" + dataAndUrl.getUrlString() + ") : " + e.getMessage(), e);
+		} catch (Exception e) {
+			LOG.warn("Unable to parse/validate the CRL (url: {}) : {}", dataAndUrl.getUrlString(), e.getMessage(), e);
 			return null;
 		}
 	}
@@ -170,7 +169,7 @@ public class OnlineCRLSource implements CRLSource, RevocationSourceAlternateUrls
 		try {
 			return dataLoader.get(downloadUrls);
 		} catch (DSSException e) {
-			LOG.warn("Unable to download CRL from URLs {}", downloadUrls, e);
+			LOG.warn("Unable to download CRL from URLs [{}]. Reason : [{}]", downloadUrls, e.getMessage(), e);
 			return null;
 		}
 	}
@@ -187,7 +186,7 @@ public class OnlineCRLSource implements CRLSource, RevocationSourceAlternateUrls
 
 		if (preferredProtocol != null) {
 
-			final List<String> priorityUrls = new ArrayList<String>();
+			final List<String> priorityUrls = new ArrayList<>();
 			for (final String url : urls) {
 				if (preferredProtocol.isTheSame(url)) {
 					priorityUrls.add(url);

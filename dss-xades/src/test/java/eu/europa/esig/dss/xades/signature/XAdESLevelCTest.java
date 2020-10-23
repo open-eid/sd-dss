@@ -20,41 +20,43 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
+import eu.europa.esig.dss.diagnostic.CertificateRefWrapper;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
+import eu.europa.esig.dss.diagnostic.RelatedCertificateWrapper;
+import eu.europa.esig.dss.diagnostic.RelatedRevocationWrapper;
+import eu.europa.esig.dss.diagnostic.RevocationRefWrappper;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificateRef;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlFoundCertificate;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlFoundRevocation;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlRevocationRef;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
+import eu.europa.esig.dss.model.x509.revocation.crl.CRL;
+import eu.europa.esig.dss.model.x509.revocation.ocsp.OCSP;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
-import eu.europa.esig.dss.spi.x509.revocation.crl.CRLRef;
-import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPRef;
+import eu.europa.esig.dss.spi.x509.CertificateRef;
+import eu.europa.esig.dss.spi.x509.revocation.RevocationRef;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
-import eu.europa.esig.dss.validation.CertificateRef;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
+import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 
 public class XAdESLevelCTest extends AbstractXAdESTestSignature {
 
-	private DocumentSignatureService<XAdESSignatureParameters> service;
+	private DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> service;
 	private XAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		documentToSign = new FileDocument(new File("src/test/resources/sample.xml"));
 
@@ -70,25 +72,30 @@ public class XAdESLevelCTest extends AbstractXAdESTestSignature {
 	}
 
 	@Override
+	protected void verifySourcesAndDiagnosticData(List<AdvancedSignature> signatures, DiagnosticData diagnosticData) {
+		super.verifySourcesAndDiagnosticDataWithOrphans(signatures, diagnosticData);
+	}
+
+	@Override
 	protected void checkAdvancedSignatures(List<AdvancedSignature> signatures) {
 		super.checkAdvancedSignatures(signatures);
 
 		AdvancedSignature advancedSignature = signatures.get(0);
 
-		List<CertificateRef> certificateRefs = advancedSignature.getCertificateRefs();
+		Set<CertificateRef> certificateRefs = advancedSignature.getCertificateSource().getAllCertificateRefs();
 		assertTrue(Utils.isCollectionNotEmpty(certificateRefs));
 		for (CertificateRef certificateRef : certificateRefs) {
 			assertNotNull(certificateRef.getCertDigest());
-			assertNotNull(certificateRef.getIssuerInfo());
+			assertNotNull(certificateRef.getCertificateIdentifier());
 		}
 
-		List<OCSPRef> ocspRefs = advancedSignature.getCompleteRevocationOCSPReferences();
-		List<CRLRef> crlRefs = advancedSignature.getCompleteRevocationCRLReferences();
+		List<RevocationRef<OCSP>> ocspRefs = advancedSignature.getOCSPSource().getCompleteRevocationRefs();
+		List<RevocationRef<CRL>> crlRefs = advancedSignature.getCRLSource().getCompleteRevocationRefs();
 
 		assertTrue(Utils.isCollectionNotEmpty(ocspRefs) || Utils.isCollectionNotEmpty(crlRefs));
 
 		if (!ocspRefs.isEmpty()) {
-			for (OCSPRef ocspRef : ocspRefs) {
+			for (RevocationRef<OCSP> ocspRef : ocspRefs) {
 				assertNotNull(ocspRef.getDigest());
 				assertNotNull(ocspRef.getDigest().getAlgorithm());
 				assertNotNull(ocspRef.getDigest().getValue());
@@ -96,7 +103,7 @@ public class XAdESLevelCTest extends AbstractXAdESTestSignature {
 		}
 
 		if (!crlRefs.isEmpty()) {
-			for (CRLRef crlRef : crlRefs) {
+			for (RevocationRef<CRL> crlRef : crlRefs) {
 				assertNotNull(crlRef.getDigest());
 				assertNotNull(crlRef.getDigest().getAlgorithm());
 				assertNotNull(crlRef.getDigest().getValue());
@@ -109,12 +116,11 @@ public class XAdESLevelCTest extends AbstractXAdESTestSignature {
 	protected void checkNoDuplicateCompleteCertificates(DiagnosticData diagnosticData) {
 		Set<SignatureWrapper> allSignatures = diagnosticData.getAllSignatures();
 		for (SignatureWrapper signatureWrapper : allSignatures) {
-			List<XmlFoundCertificate> allFoundCertificates = signatureWrapper.getAllFoundCertificates();
-			for (XmlFoundCertificate foundCert : allFoundCertificates) {
-//				assertEquals(0, foundCert.getOrigins().size()); // only refs + can be present in KeyInfo
-				List<XmlCertificateRef> certificateRefs = foundCert.getCertificateRefs();
+			List<RelatedCertificateWrapper> allFoundCertificates = signatureWrapper.foundCertificates().getRelatedCertificates();
+			for (RelatedCertificateWrapper foundCert : allFoundCertificates) {
+				List<CertificateRefWrapper> certificateRefs = foundCert.getReferences();
 				assertEquals(1, certificateRefs.size());
-				XmlCertificateRef xmlCertificateRef = certificateRefs.get(0);
+				CertificateRefWrapper xmlCertificateRef = certificateRefs.get(0);
 				assertNotNull(xmlCertificateRef);
 				assertNotNull(xmlCertificateRef.getOrigin());
 			}
@@ -125,16 +131,22 @@ public class XAdESLevelCTest extends AbstractXAdESTestSignature {
 	protected void checkNoDuplicateCompleteRevocationData(DiagnosticData diagnosticData) {
 		Set<SignatureWrapper> allSignatures = diagnosticData.getAllSignatures();
 		for (SignatureWrapper signatureWrapper : allSignatures) {
-			List<XmlFoundRevocation> allFoundRevocations = signatureWrapper.getAllFoundRevocations();
-			for (XmlFoundRevocation foundRevocation : allFoundRevocations) {
+			List<RelatedRevocationWrapper> allFoundRevocations = signatureWrapper.foundRevocations().getRelatedRevocationData();
+			for (RelatedRevocationWrapper foundRevocation : allFoundRevocations) {
 				assertEquals(0, foundRevocation.getOrigins().size()); // only refs
-				List<XmlRevocationRef> revocationRefs = foundRevocation.getRevocationRefs();
+				List<RevocationRefWrappper> revocationRefs = foundRevocation.getReferences();
 				assertEquals(1, revocationRefs.size());
-				XmlRevocationRef xmlRevocationRef = revocationRefs.get(0);
+				RevocationRefWrappper xmlRevocationRef = revocationRefs.get(0);
 				assertNotNull(xmlRevocationRef);
 				assertNotNull(xmlRevocationRef.getOrigins());
 			}
 		}
+	}
+
+	@Override
+	protected void checkOrphanTokens(DiagnosticData diagnosticData) {
+		assertEquals(1, diagnosticData.getAllOrphanCertificateReferences().size());
+		assertEquals(2, diagnosticData.getAllOrphanRevocationReferences().size());
 	}
 
 	@Override
@@ -143,7 +155,7 @@ public class XAdESLevelCTest extends AbstractXAdESTestSignature {
 	}
 
 	@Override
-	protected DocumentSignatureService<XAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> getService() {
 		return service;
 	}
 

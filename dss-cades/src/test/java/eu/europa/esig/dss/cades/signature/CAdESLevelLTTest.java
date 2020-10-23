@@ -20,13 +20,13 @@
  */
 package eu.europa.esig.dss.cades.signature;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import eu.europa.esig.dss.cades.CAdESSignatureParameters;
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
@@ -40,19 +40,19 @@ import eu.europa.esig.dss.diagnostic.jaxb.XmlRevocation;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlTimestamp;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
+import eu.europa.esig.dss.enumerations.TokenExtractionStategy;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.utils.Utils;
-import eu.europa.esig.dss.validation.CertificateVerifier;
 
 public class CAdESLevelLTTest extends AbstractCAdESTestSignature {
 
-	private DocumentSignatureService<CAdESSignatureParameters> service;
+	private DocumentSignatureService<CAdESSignatureParameters, CAdESTimestampParameters> service;
 	private CAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		documentToSign = new InMemoryDocument("Hello World".getBytes());
 
@@ -67,12 +67,8 @@ public class CAdESLevelLTTest extends AbstractCAdESTestSignature {
 	}
 
 	@Override
-	protected CertificateVerifier getOfflineCertificateVerifier() {
-		CertificateVerifier certificateVerifier = super.getOfflineCertificateVerifier();
-		certificateVerifier.setIncludeCertificateTokenValues(true);
-		certificateVerifier.setIncludeCertificateRevocationValues(true);
-		certificateVerifier.setIncludeTimestampTokenValues(true);
-		return certificateVerifier;
+	protected TokenExtractionStategy getTokenExtractionStrategy() {
+		return TokenExtractionStategy.EXTRACT_ALL;
 	}
 
 	@Override
@@ -123,7 +119,7 @@ public class CAdESLevelLTTest extends AbstractCAdESTestSignature {
 	}
 
 	@Override
-	protected DocumentSignatureService<CAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<CAdESSignatureParameters, CAdESTimestampParameters> getService() {
 		return service;
 	}
 

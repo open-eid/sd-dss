@@ -32,11 +32,11 @@ import java.io.InputStream;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.bouncycastle.asn1.ASN1Encodable;
@@ -48,7 +48,6 @@ import org.bouncycastle.asn1.ASN1String;
 import org.bouncycastle.asn1.ASN1UTCTime;
 import org.bouncycastle.asn1.DERNull;
 import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERUTF8String;
 import org.bouncycastle.asn1.cms.Attribute;
 import org.bouncycastle.asn1.cms.AttributeTable;
@@ -69,7 +68,6 @@ import org.bouncycastle.asn1.x509.AttCertValidityPeriod;
 import org.bouncycastle.asn1.x509.AttributeCertificate;
 import org.bouncycastle.asn1.x509.AttributeCertificateInfo;
 import org.bouncycastle.asn1.x509.RoleSyntax;
-import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.CMSSignedDataParser;
@@ -84,6 +82,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.cades.CMSUtils;
+import eu.europa.esig.dss.cades.SignedAssertion;
+import eu.europa.esig.dss.cades.SignedAssertions;
 import eu.europa.esig.dss.cades.SignerAttributeV2;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.DigestMatcherType;
@@ -93,42 +93,34 @@ import eu.europa.esig.dss.enumerations.MaskGenerationFunction;
 import eu.europa.esig.dss.enumerations.SignatureAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureForm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
-import eu.europa.esig.dss.enumerations.TimestampedObjectType;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.Digest;
 import eu.europa.esig.dss.model.DigestDocument;
-import eu.europa.esig.dss.model.identifier.TokenIdentifier;
+import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.DSSSecurityProvider;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.OID;
-import eu.europa.esig.dss.spi.x509.CertificatePool;
+import eu.europa.esig.dss.spi.x509.CertificateIdentifier;
+import eu.europa.esig.dss.spi.x509.CertificateValidity;
+import eu.europa.esig.dss.spi.x509.revocation.crl.OfflineCRLSource;
+import eu.europa.esig.dss.spi.x509.revocation.ocsp.OfflineOCSPSource;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
-import eu.europa.esig.dss.validation.CAdESCertificateSource;
-import eu.europa.esig.dss.validation.CandidatesForSigningCertificate;
-import eu.europa.esig.dss.validation.CertificateRef;
-import eu.europa.esig.dss.validation.CertificateValidity;
-import eu.europa.esig.dss.validation.CommitmentType;
 import eu.europa.esig.dss.validation.DefaultAdvancedSignature;
-import eu.europa.esig.dss.validation.IssuerSerialInfo;
 import eu.europa.esig.dss.validation.ManifestEntry;
 import eu.europa.esig.dss.validation.ManifestFile;
 import eu.europa.esig.dss.validation.ReferenceValidation;
-import eu.europa.esig.dss.validation.SignatureCRLSource;
 import eu.europa.esig.dss.validation.SignatureCertificateSource;
 import eu.europa.esig.dss.validation.SignatureCryptographicVerification;
 import eu.europa.esig.dss.validation.SignatureDigestReference;
 import eu.europa.esig.dss.validation.SignatureIdentifier;
-import eu.europa.esig.dss.validation.SignatureOCSPSource;
 import eu.europa.esig.dss.validation.SignaturePolicy;
 import eu.europa.esig.dss.validation.SignaturePolicyProvider;
 import eu.europa.esig.dss.validation.SignatureProductionPlace;
 import eu.europa.esig.dss.validation.SignerRole;
-import eu.europa.esig.dss.validation.timestamp.TimestampToken;
-import eu.europa.esig.dss.validation.timestamp.TimestampedReference;
 
 /**
  * CAdES Signature class helper
@@ -139,79 +131,26 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 
 	private static final Logger LOG = LoggerFactory.getLogger(CAdESSignature.class);
 
-	private static final Date JANUARY_1950 = DSSUtils.getUtcDate(1950, 1, 1);
+	// month param is zero-based (i.e. 0 for January)
+	private static final Date JANUARY_1950 = DSSUtils.getUtcDate(1950, 0, 1);
 
-	private static final Date JANUARY_2050 = DSSUtils.getUtcDate(2050, 1, 1);
+	private static final Date JANUARY_2050 = DSSUtils.getUtcDate(2050, 0, 1);
 
 	private final CMSSignedData cmsSignedData;
 
 	private final SignerInformation signerInformation;
 
 	/**
-	 * The reference to the signing certificate. If the signing certificate is
-	 * an input provided by the DA then getSigningCer MUST be called.
-	 */
-	private CertificateValidity signingCertificateValidity;
-
-	/**
-	 * @param data
-	 *            byte array representing CMSSignedData
-	 * @throws org.bouncycastle.cms.CMSException
-	 */
-	public CAdESSignature(final byte[] data) throws CMSException {
-		this(data, new CertificatePool());
-	}
-
-	/**
-	 * @param data
-	 *            byte array representing CMSSignedData
-	 * @param certPool
-	 *            can be null
-	 * @throws org.bouncycastle.cms.CMSException
-	 */
-	public CAdESSignature(final byte[] data, final CertificatePool certPool) throws CMSException {
-		this(new CMSSignedData(data), certPool);
-	}
-
-	/**
 	 * The default constructor for CAdESSignature.
 	 *
-	 * @param cms
-	 *            CMSSignedData
-	 * @param certPool
-	 *            can be null
-	 */
-	public CAdESSignature(final CMSSignedData cms, final CertificatePool certPool) {
-		this(cms, DSSASN1Utils.getFirstSignerInformation(cms), certPool);
-	}
-
-	public CAdESSignature(final CMSSignedData cms, final CertificatePool certPool, List<DSSDocument> detachedContents) {
-		this(cms, certPool);
-		setDetachedContents(detachedContents);
-	}
-
-	/**
 	 * @param cmsSignedData
 	 *            CMSSignedData
 	 * @param signerInformation
 	 *            an expanded SignerInfo block from a CMS Signed message
 	 */
 	public CAdESSignature(final CMSSignedData cmsSignedData, final SignerInformation signerInformation) {
-		this(cmsSignedData, signerInformation, new CertificatePool());
-	}
-
-	/**
-	 * The default constructor for CAdESSignature.
-	 *
-	 * @param cmsSignedData
-	 *            CMSSignedData
-	 * @param signerInformation
-	 *            an expanded SignerInfo block from a CMS Signed message
-	 * @param certPool
-	 *            can be null
-	 */
-	public CAdESSignature(final CMSSignedData cmsSignedData, final SignerInformation signerInformation, final CertificatePool certPool) {
-		super(certPool);
+		Objects.requireNonNull(cmsSignedData, "CMSSignedData cannot be null!");
+		Objects.requireNonNull(signerInformation, "SignerInformation must be provided!");
 		this.cmsSignedData = cmsSignedData;
 		this.signerInformation = signerInformation;
 	}
@@ -224,16 +163,16 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	@Override
 	public SignatureCertificateSource getCertificateSource() {
 		if (offlineCertificateSource == null) {
-			offlineCertificateSource = new CAdESCertificateSource(cmsSignedData, signerInformation, certPool);
+			offlineCertificateSource = new CAdESCertificateSource(cmsSignedData, signerInformation);
 		}
 		return offlineCertificateSource;
 	}
 
 	@Override
-	public SignatureCRLSource getCRLSource() {
+	public OfflineCRLSource getCRLSource() {
 		if (signatureCRLSource == null) {
 			try {
-				signatureCRLSource = new CAdESCRLSource(cmsSignedData, CMSUtils.getUnsignedAttributes(signerInformation));
+				signatureCRLSource = new CAdESCRLSource(cmsSignedData, signerInformation.getUnsignedAttributes());
 			} catch (Exception e) {
 				// When error in computing or in format of the algorithm: just
 				// continues (will try to get online information)
@@ -244,9 +183,9 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	@Override
-	public SignatureOCSPSource getOCSPSource() {
+	public OfflineOCSPSource getOCSPSource() {
 		if (signatureOCSPSource == null) {
-			signatureOCSPSource = new CAdESOCSPSource(cmsSignedData, CMSUtils.getUnsignedAttributes(signerInformation));
+			signatureOCSPSource = new CAdESOCSPSource(cmsSignedData, signerInformation.getUnsignedAttributes());
 		}
 		return signatureOCSPSource;
 	}
@@ -254,7 +193,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	@Override
 	public CAdESTimestampSource getTimestampSource() {
 		if (signatureTimestampSource == null) {
-			signatureTimestampSource = new CAdESTimestampSource(this, certPool);
+			signatureTimestampSource = new CAdESTimestampSource(this);
 		}
 		return (CAdESTimestampSource) signatureTimestampSource;
 	}
@@ -265,82 +204,6 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	 */
 	public SignerId getSignerId() {
 		return signerInformation.getSID();
-	}
-
-	/**
-	 * ETSI TS 101 733 V2.2.1 (2013-04)
-	 * 5.6.3 Signature Verification Process
-	 * ...the public key from the first certificate identified in the sequence
-	 * of certificate identifiers from SigningCertificate shall be the key used
-	 * to verify the digital signature.
-	 *
-	 * @return
-	 */
-	@Override
-	public CandidatesForSigningCertificate getCandidatesForSigningCertificate() {
-		if (candidatesForSigningCertificate != null) {
-			return candidatesForSigningCertificate;
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Searching the signing certificate...");
-		}
-		candidatesForSigningCertificate = new CandidatesForSigningCertificate();
-
-		final Collection<CertificateToken> keyInfoCertificates = getCertificateSource().getKeyInfoCertificates();
-		final SignerId signerId = getSignerId();
-		for (final CertificateToken certificateToken : keyInfoCertificates) {
-
-			final CertificateValidity certificateValidity = new CertificateValidity(certificateToken);
-			candidatesForSigningCertificate.add(certificateValidity);
-
-			final X509CertificateHolder x509CertificateHolder = DSSASN1Utils.getX509CertificateHolder(certificateToken);
-			final boolean match = signerId.match(x509CertificateHolder);
-			certificateValidity.setSignerIdMatch(match);
-			if (match) {
-				this.signingCertificateValidity = certificateValidity;
-				break;
-			}
-		}
-		if (signingCertificateValidity == null) {
-			LOG.warn("Signing certificate not found: {} {}", signerId.getIssuer(), signerId.getSerialNumber());
-		} else if (!verifySignedReferencesToSigningCertificate()) {
-			LOG.warn("There is no valid signed reference to the signing certificate: {}", signingCertificateValidity.getCertificateToken().getAbbreviation());
-		}
-		return candidatesForSigningCertificate;
-	}
-
-	private boolean verifySignedReferencesToSigningCertificate() {
-
-		List<CertificateRef> signingCertificateRefs = getCertificateSource().getSigningCertificateValues();
-		if (Utils.isCollectionNotEmpty(signingCertificateRefs)) {
-			signingCertificateValidity.setAttributePresent(true);
-
-			final CertificateToken foundSigningCertificate = signingCertificateValidity.getCertificateToken();
-
-			for (CertificateRef certificateRef : signingCertificateRefs) {
-				Digest certDigest = certificateRef.getCertDigest();
-				if (certDigest != null) {
-					final byte[] expectedDigest = foundSigningCertificate.getDigest(certDigest.getAlgorithm());
-					signingCertificateValidity.setDigestPresent(true);
-					signingCertificateValidity.setDigestEqual(Arrays.equals(expectedDigest, certDigest.getValue()));
-				}
-
-				IssuerSerialInfo issuerInfo = certificateRef.getIssuerInfo();
-				if (issuerInfo != null) {
-					signingCertificateValidity.setSerialNumberEqual(foundSigningCertificate.getSerialNumber().equals(issuerInfo.getSerialNumber()));
-					signingCertificateValidity
-							.setDistinguishedNameEqual(DSSUtils.x500PrincipalAreEquals(foundSigningCertificate.getIssuerX500Principal(), issuerInfo.getIssuerName()));
-				}
-
-				// RFC 2634 / 5035 : The first certificate identified in the sequence of
-				// certificate identifiers MUST be the certificate used to verify the signature.
-				if (signingCertificateValidity.isDigestEqual()) {
-					return true;
-				}
-			}
-		}
-
-		return false;
 	}
 
 	@Override
@@ -399,7 +262,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 								policyQualifierInfoValue);
 					}
 				} catch (Exception e) {
-					LOG.error("Unable to read SigPolicyQualifierInfo " + ii, e.getMessage());
+					LOG.error("Unable to read SigPolicyQualifierInfo {} : {}", ii, e.getMessage());
 				}
 			}
 			if (signaturePolicy.getPolicyContent() != null) {
@@ -410,9 +273,17 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	private boolean isZeroHash(byte[] hashValue) {
-		// The hashValue within the sigPolicyHash may be set to zero to indicate that
+		// The hashValue within the sigPolicyHash may be set to zero or be empty to indicate that
 		// the policy hash value is not known.
-		return (hashValue != null) && (hashValue.length == 1) && (hashValue[0] == 0);
+		return isZeroHashEmpty(hashValue) || doesZeroHashContainSigneZeroByte(hashValue);
+	}
+	
+	private boolean isZeroHashEmpty(byte[] hashValue) {
+		return (hashValue != null) && (hashValue.length == 0);
+	}
+	
+	private boolean doesZeroHashContainSigneZeroByte(byte[] hashValue) {
+		return (hashValue != null) && (hashValue.length == 1) && ((hashValue[0] == '0') || (hashValue[0] == 0x00));
 	}
 
 	@Override
@@ -431,7 +302,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			 * dates with year values before 1950 or after 2049 must be encoded
 			 * as GeneralizedTime".
 			 */
-			if (!(signingDate.before(JANUARY_1950) && signingDate.after(JANUARY_2050))) {
+			if (signingDate.compareTo(JANUARY_1950) >= 0 && signingDate.before(JANUARY_2050)) {
 				// must be ASN1UTCTime
 				if (!(attrValue instanceof ASN1UTCTime)) {
 					LOG.error(
@@ -510,33 +381,50 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	@Override
-	public CommitmentType getCommitmentTypeIndication() {
+	public List<eu.europa.esig.dss.validation.CommitmentTypeIndication> getCommitmentTypeIndications() {
 		final Attribute commitmentTypeIndicationAttribute = getSignedAttribute(PKCSObjectIdentifiers.id_aa_ets_commitmentType);
 		if (commitmentTypeIndicationAttribute == null) {
 			return null;
 		}
 
 		try {
-			CommitmentType commitmentType = null;
+			List<eu.europa.esig.dss.validation.CommitmentTypeIndication> commitmentTypeIndications = null;
 			final ASN1Set attrValues = commitmentTypeIndicationAttribute.getAttrValues();
 			final int size = attrValues.size();
 			if (size > 0) {
-				commitmentType = new CommitmentType();
+				commitmentTypeIndications = new ArrayList<>();
 				for (int ii = 0; ii < size; ii++) {
-					if (attrValues.getObjectAt(ii) instanceof DERSequence) {
-						final DERSequence derSequence = (DERSequence) attrValues.getObjectAt(ii);
-						final CommitmentTypeIndication commitmentTypeIndication = CommitmentTypeIndication.getInstance(derSequence);
+					if (attrValues.getObjectAt(ii) instanceof ASN1Sequence) {
+						final ASN1Sequence sequence = (ASN1Sequence) attrValues.getObjectAt(ii);
+						final CommitmentTypeIndication commitmentTypeIndication = CommitmentTypeIndication.getInstance(sequence);
 						final ASN1ObjectIdentifier commitmentTypeId = commitmentTypeIndication.getCommitmentTypeId();
-						commitmentType.addIdentifier(commitmentTypeId.getId());
+						commitmentTypeIndications.add(new eu.europa.esig.dss.validation.CommitmentTypeIndication(commitmentTypeId.getId()));
 					} else {
 						LOG.warn("Unsupported type for CommitmentType : {}", attrValues.getObjectAt(ii).getClass());
 					}
 				}
 			}
-			return commitmentType;
+			return commitmentTypeIndications;
 		} catch (Exception e) {
 			throw new DSSException("Error when dealing with CommitmentTypeIndication!", e);
 		}
+	}
+
+	@Override
+	public List<SignerRole> getSignedAssertions() {
+		List<SignerRole> result = new ArrayList<>();
+		final SignerAttributeV2 signerAttrV2 = getSignerAttributeV2();
+		if (signerAttrV2 != null) {
+		    for (final Object signerAttrValue : signerAttrV2.getValues()) {
+			    if (signerAttrValue instanceof SignedAssertions) {
+				    List<SignedAssertion> assertions = ((SignedAssertions) signerAttrValue).getAssertions();
+				    for (SignedAssertion sa: assertions) {
+						result.add(new SignerRole(sa.toString(), EndorsementType.SIGNED));
+				    }
+			    }
+		    }
+		}
+		return result;
 	}
 
 	@Override
@@ -556,7 +444,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 				return Collections.emptyList();
 			}
 
-			final List<SignerRole> claimedRoles = new ArrayList<SignerRole>();
+			final List<SignerRole> claimedRoles = new ArrayList<>();
 			for (final Object signerAttrValue : signerAttrValues) {
 				if (!(signerAttrValue instanceof org.bouncycastle.asn1.x509.Attribute[])) {
 					continue;
@@ -575,7 +463,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			}
 			return claimedRoles;
 		} catch (Exception e) {
-			LOG.error("Error when dealing with claimed signer roles: [" + signerAttrValues + "]", e);
+			LOG.error("Error when dealing with claimed signer roles : {}", signerAttrValues, e);
 			return Collections.emptyList();
 		}
 	}
@@ -595,7 +483,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			if (signerAttrValues == null) {
 				return Collections.emptyList();
 			}
-			List<SignerRole> roles = new ArrayList<SignerRole>();
+			List<SignerRole> roles = new ArrayList<>();
 			for (final Object signerAttrValue : signerAttrValues) {
 				if (signerAttrValue instanceof AttributeCertificate) {
 					final AttributeCertificate attributeCertificate = (AttributeCertificate) signerAttrValue;
@@ -607,18 +495,23 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 						final ASN1Encodable objectAt = attributes.getObjectAt(ii);
 						final org.bouncycastle.asn1.x509.Attribute attribute = org.bouncycastle.asn1.x509.Attribute.getInstance(objectAt);
 						final ASN1Set attrValues1 = attribute.getAttrValues();
-						DERSequence derSequence = (DERSequence) attrValues1.getObjectAt(0);
-						RoleSyntax roleSyntax = RoleSyntax.getInstance(derSequence);
-						SignerRole certifiedRole = new SignerRole(roleSyntax.getRoleNameAsString(), EndorsementType.CERTIFIED);
-						certifiedRole.setNotBefore(DSSASN1Utils.toDate(attrCertValidityPeriod.getNotBeforeTime()));
-						certifiedRole.setNotAfter(DSSASN1Utils.toDate(attrCertValidityPeriod.getNotAfterTime()));
-						roles.add(certifiedRole);
+						ASN1Encodable firstItem = attrValues1.getObjectAt(0);
+						if (firstItem instanceof ASN1Sequence) {
+							ASN1Sequence sequence = (ASN1Sequence) firstItem;
+							RoleSyntax roleSyntax = RoleSyntax.getInstance(sequence);
+							SignerRole certifiedRole = new SignerRole(roleSyntax.getRoleNameAsString(), EndorsementType.CERTIFIED);
+							certifiedRole.setNotBefore(DSSASN1Utils.toDate(attrCertValidityPeriod.getNotBeforeTime()));
+							certifiedRole.setNotAfter(DSSASN1Utils.toDate(attrCertValidityPeriod.getNotAfterTime()));
+							roles.add(certifiedRole);
+						} else {
+							LOG.warn("Unsupported type for RoleSyntax : {}", firstItem == null ? null : firstItem.getClass().getSimpleName());
+						}
 					}
 				}
 			}
 			return roles;
 		} catch (Exception e) {
-			LOG.error("Error when dealing with certified signer roles: [" + signerAttrValues + "]", e);
+			LOG.error("Error when dealing with certified signer roles : {}", signerAttrValues, e);
 			return Collections.emptyList();
 		}
 	}
@@ -631,7 +524,12 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			try {
 				return SignerAttribute.getInstance(attrValue);
 			} catch (Exception e) {
-				LOG.warn("Unable to parse signerAttr " + Utils.toBase64(DSSASN1Utils.getDEREncoded(attrValue)) + "", e);
+				String warningMessage = "Unable to parse signerAttr - [{}]. Reason : {}";
+				if (LOG.isDebugEnabled()) {
+					LOG.warn(warningMessage, Utils.toBase64(DSSASN1Utils.getDEREncoded(attrValue)), e.getMessage(), e);
+				} else {
+					LOG.warn(warningMessage, Utils.toBase64(DSSASN1Utils.getDEREncoded(attrValue)), e.getMessage());
+				}
 			}
 		}
 		return null;
@@ -645,27 +543,10 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			try {
 				return SignerAttributeV2.getInstance(attrValue);
 			} catch (Exception e) {
-				LOG.warn("Unable to parse signerAttrV2 " + Utils.toBase64(DSSASN1Utils.getDEREncoded(attrValue)) + "", e);
+				LOG.warn("Unable to parse signerAttrV2 : {}", Utils.toBase64(DSSASN1Utils.getDEREncoded(attrValue)), e);
 			}
 		}
 		return null;
-	}
-
-	public List<TimestampedReference> getTimestampReferencesForArchiveTimestamp(final List<TimestampToken> timestampedTimestamps) {
-		final List<TimestampedReference> archiveReferences = getSignatureTimestampReferences();
-		addReferencesForPreviousTimestamps(archiveReferences, timestampedTimestamps);
-		addReferences(archiveReferences, getTimestampedReferences());
-		return archiveReferences;
-	}
-
-	private List<TimestampedReference> getTimestampedReferences() {
-		final List<TimestampedReference> references = new ArrayList<TimestampedReference>();
-		final List<CertificateToken> certs = getCertificateSource().getCompleteCertificates();
-		for (final CertificateToken certificate : certs) {
-			references.add(new TimestampedReference(certificate.getDSSIdAsString(), TimestampedObjectType.CERTIFICATE));
-		}
-		addReferencesFromRevocationData(references);
-		return references;
 	}
 
 	@Override
@@ -722,7 +603,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 				return DigestAlgorithm.forOID(pssHashAlgo.getAlgorithm().getId());
 			}
 		} catch (IOException e) {
-			LOG.warn("Unable to analyze EncryptionAlgParams", e);
+			LOG.error("Unable to analyze EncryptionAlgParams", e);
 		}
 		return null;
 	}
@@ -765,17 +646,17 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 		signatureCryptographicVerification = new SignatureCryptographicVerification();
 		try {
 
-			final CertificateValidity bestCandidate = getTheBestCandidate();
+			final CertificateValidity bestCandidate = getCandidatesForSigningCertificate().getTheBestCandidate();
 			if (bestCandidate == null) {
 				signatureCryptographicVerification.setErrorMessage("There is no signing certificate within the signature.");
 				return;
 			}
 			boolean detachedSignature = CMSUtils.isDetachedSignature(cmsSignedData);
-			final SignerInformation signerInformationToCheck;
-			if (detachedSignature) {
+			SignerInformation signerInformationToCheck = null;
+			if (detachedSignature && !isCounterSignature()) {
 				if (Utils.isCollectionEmpty(detachedContents)) {
-					candidatesForSigningCertificate.setTheCertificateValidity(bestCandidate);
 					signatureCryptographicVerification.setErrorMessage("Detached file not found!");
+					getReferenceValidations(signerInformationToCheck);
 					return;
 				}
 				signerInformationToCheck = recreateSignerInformation();
@@ -784,17 +665,14 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			}
 
 			LOG.debug("CHECK SIGNATURE VALIDITY: ");
-			if (signingCertificateValidity != null) {
-				// for (final CertificateValidity certificateValidity :
-				// certificateValidityList) {
 
+			if (bestCandidate.getCertificateToken() != null) {
 				try {
-					candidatesForSigningCertificate.setTheCertificateValidity(signingCertificateValidity);
 
 					final JcaSimpleSignerInfoVerifierBuilder verifier = new JcaSimpleSignerInfoVerifierBuilder();
 					verifier.setProvider(DSSSecurityProvider.getSecurityProviderName());
 
-					final CertificateToken certificateToken = signingCertificateValidity.getCertificateToken();
+					final CertificateToken certificateToken = bestCandidate.getCertificateToken();
 					final PublicKey publicKey = certificateToken.getPublicKey();
 					final SignerInformationVerifier signerInformationVerifier = verifier.build(publicKey);
 					LOG.debug(" - WITH SIGNING CERTIFICATE: {}", certificateToken.getAbbreviation());
@@ -806,7 +684,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 					signatureCryptographicVerification.setErrorMessage(e.getMessage());
 					signatureCryptographicVerification.setSignatureIntact(false);
 				} catch (Exception e) {
-					LOG.error("Unable to validate CMS Signature : " + e.getMessage(), e);
+					LOG.error("Unable to validate CMS Signature : {}", e.getMessage(), e);
 					signatureCryptographicVerification.setErrorMessage(e.getMessage());
 					signatureCryptographicVerification.setSignatureIntact(false);
 				}
@@ -831,77 +709,77 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	
 	public List<ReferenceValidation> getReferenceValidations(SignerInformation signerInformationToCheck) {
 		if (referenceValidations == null) {
-			referenceValidations = new ArrayList<ReferenceValidation>();
-			ReferenceValidation validation = new ReferenceValidation();
-			validation.setType(DigestMatcherType.MESSAGE_DIGEST);
+			referenceValidations = new ArrayList<>();
 
 			DSSDocument originalDocument = null;
 			try {
 				originalDocument = getOriginalDocument();
 			} catch (DSSException e) {
-				validation.setFound(false);
+				LOG.warn("Original document not found");
 			}
 
-			Set<DigestAlgorithm> messageDigestAlgorithms = getMessageDigestAlgorithms();
-			byte[] expectedMessageDigestValue = getMessageDigestValue();
-			
-			if (originalDocument != null) {
-					
-				if (Utils.isArrayNotEmpty(expectedMessageDigestValue)) {
-					Digest messageDigest = new Digest();
-					messageDigest.setValue(expectedMessageDigestValue);
-					
-					validation.setFound(true);
-					
-					if (Utils.isCollectionNotEmpty(messageDigestAlgorithms)) {
-
-						// try to match with found digest algorithm(s)
-						for (DigestAlgorithm digestAlgorithm : messageDigestAlgorithms) {
-							String base64Digest = originalDocument.getDigest(digestAlgorithm);
-							if (Arrays.equals(expectedMessageDigestValue, Utils.fromBase64(base64Digest))) {
-								messageDigest.setAlgorithm(digestAlgorithm);
-								validation.setIntact(true);
-								break;
-							}
-						}
-						
-						// add digest algorithm if message digest does not much
-						if (messageDigest.getAlgorithm() == null && messageDigestAlgorithms.size() == 1) {
-							messageDigest.setAlgorithm(messageDigestAlgorithms.iterator().next());
-						}
-						validation.setDigest(messageDigest);
-						
-					} else {
-						LOG.warn("Message DigestAlgorithms not found in SignedData! Reference validation is not possible.");
-						
-					}
-					
-					// get references to documents contained in the manifest file (for ASiC-E container)
-					if (validation.isFound()) {
-						validation.getDependentValidations().addAll(getManifestEntryValidation(originalDocument, messageDigest));
-					}
-					
-				} else {
-					LOG.warn("message-digest is not present in SignedData!");
-					if (signerInformationToCheck != null) {
-						LOG.warn("Extracting digests from content SignatureValue...");
-						validation = getContentReferenceValidation(originalDocument, signerInformationToCheck);
-					}
-					
-				}
+			ReferenceValidation validation = null;
+			final byte[] messageDigestValue = getMessageDigestValue();
+			if (messageDigestValue == null) {
+				LOG.warn("message-digest is not present in SignedData! Extracting digests from content SignatureValue...");
+				validation = getContentReferenceValidation(originalDocument, signerInformationToCheck);
 			} else {
-				LOG.warn("The original document is not found or cannot be extracted. Reference validation is not possible.");
 				
+				validation = new ReferenceValidation();
+				validation.setType(DigestMatcherType.MESSAGE_DIGEST);
+				
+				Digest messageDigest = new Digest();
+				messageDigest.setValue(messageDigestValue);
+				validation.setDigest(messageDigest);
+				
+				Set<DigestAlgorithm> messageDigestAlgorithms = getMessageDigestAlgorithms();
+				
+				if (Utils.collectionSize(messageDigestAlgorithms) == 1) {
+					messageDigest.setAlgorithm(messageDigestAlgorithms.iterator().next());
+				}
+
+				if (originalDocument != null) {
+
+					validation.setFound(true);
+
+					validation.setIntact(verifyDigestAlgorithm(originalDocument, messageDigestAlgorithms, messageDigest));
+
+					// get references to documents contained in the manifest file (for ASiC-E
+					// container)
+					validation.getDependentValidations()
+							.addAll(getManifestEntryValidation(originalDocument, messageDigest));
+
+				} else {
+					LOG.warn("The original document is not found or cannot be extracted. Reference validation is not possible.");
+				}
 			}
-			
+
 			referenceValidations.add(validation);
 
 		}
 		return referenceValidations;
 	}
+
+	private boolean verifyDigestAlgorithm(DSSDocument originalDocument, Set<DigestAlgorithm> messageDigestAlgorithms,
+			Digest messageDigest) {
+		if (Utils.isCollectionNotEmpty(messageDigestAlgorithms)) {
+			// try to match with found digest algorithm(s)
+			for (DigestAlgorithm digestAlgorithm : messageDigestAlgorithms) {
+				String base64Digest = originalDocument.getDigest(digestAlgorithm);
+				if (Arrays.equals(messageDigest.getValue(), Utils.fromBase64(base64Digest))) {
+					messageDigest.setAlgorithm(digestAlgorithm);
+					return true;
+				}
+			}
+		} else {
+			LOG.warn("Message DigestAlgorithms not found in SignedData! Reference validation is not possible.");
+		}
+
+		return false;
+	}
 	
 	private List<ReferenceValidation> getManifestEntryValidation(final DSSDocument originalDocument, final Digest messageDigest) {
-		List<ReferenceValidation> manifestEntryValidations = new ArrayList<ReferenceValidation>();
+		List<ReferenceValidation> manifestEntryValidations = new ArrayList<>();
 		ManifestFile manifest = getSignedManifest(originalDocument, messageDigest);
 		if (manifest == null) {
 			if (LOG.isDebugEnabled()) {
@@ -938,7 +816,8 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 
 	@Override
 	public List<ReferenceValidation> getReferenceValidations() {
-		return getReferenceValidations(null);
+		checkSignatureIntegrity();
+		return referenceValidations;
 	}
 	
 	private ReferenceValidation getContentReferenceValidation(DSSDocument originalDocument, SignerInformation signerInformation) {
@@ -997,35 +876,15 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 		final SignerInformation signerInformationToCheck = cmsSignedDataParser.getSignerInfos().get(signerId);
 		return signerInformationToCheck;
 	}
-	
-	private CertificateValidity getTheBestCandidate() {
-		if (providedSigningCertificateToken == null) {
-			// To determine the signing certificate it is necessary to browse
-			// through all candidates found before.
-			candidatesForSigningCertificate = getCandidatesForSigningCertificate();
-		} else {
-
-			candidatesForSigningCertificate = new CandidatesForSigningCertificate();
-			final CertificateValidity certificateValidity = new CertificateValidity(providedSigningCertificateToken);
-			candidatesForSigningCertificate.add(certificateValidity);
-		}
-		return candidatesForSigningCertificate.getTheBestCandidate();
-	}
-
-	@Override
-	public void checkSigningCertificate() {
-
-		// TODO-Bob (13/07/2014):
-	}
 
 	public Set<DigestAlgorithm> getMessageDigestAlgorithms() {
-		Set<DigestAlgorithm> result = new HashSet<DigestAlgorithm>();
+		Set<DigestAlgorithm> result = new HashSet<>();
 		Set<AlgorithmIdentifier> digestAlgorithmIDs = cmsSignedData.getDigestAlgorithmIDs();
 		for (AlgorithmIdentifier algorithmIdentifier : digestAlgorithmIDs) {
 			String oid = algorithmIdentifier.getAlgorithm().getId();
 			DigestAlgorithm digestAlgorithm = getDigestAlgorithmForOID(oid);
 			if (digestAlgorithm != null) {
-				result.add(DigestAlgorithm.forOID(oid));
+				result.add(digestAlgorithm);
 			}
 		}
 		return result;
@@ -1088,16 +947,26 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			return null;
 		}
 		final ASN1Encodable asn1Encodable = contentHintAttribute.getAttrValues().getObjectAt(0);
-		final ContentHints contentHints = ContentHints.getInstance(asn1Encodable);
 		String contentHint = null;
-		if (contentHints != null) {
-			// content-type is mandatory
-			contentHint = contentHints.getContentType().toString();
-			// content-description is optional
-			if (contentHints.getContentDescription() != null) {
-				contentHint += " [" + contentHints.getContentDescription().toString() + "]";
+		try {
+			final ContentHints contentHints = ContentHints.getInstance(asn1Encodable);
+			if (contentHints != null) {
+				// content-type is mandatory
+				contentHint = contentHints.getContentType().toString();
+				// content-description is optional
+				if (contentHints.getContentDescription() != null) {
+					contentHint += " [" + contentHints.getContentDescription().toString() + "]";
+				}
+			}
+		} catch (Exception e) {
+			String warningMessage = "Unable to parse ContentHints - [{}]. Reason : {}";
+			if (LOG.isDebugEnabled()) {
+				LOG.warn(warningMessage, Utils.toBase64(DSSASN1Utils.getDEREncoded(asn1Encodable)), e.getMessage(), e);
+			} else {
+				LOG.warn(warningMessage, Utils.toBase64(DSSASN1Utils.getDEREncoded(asn1Encodable)), e.getMessage());
 			}
 		}
+
 		return contentHint;
 	}
 
@@ -1112,74 +981,40 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	public byte[] getSignatureValue() {
 		return signerInformation.getSignature();
 	}
+	
+	@Override
+	public boolean isCounterSignature() {
+		return signerInformation.isCounterSignature();
+	}
 
 	@Override
 	public List<AdvancedSignature> getCounterSignatures() {
-		final List<AdvancedSignature> countersignatures = new ArrayList<AdvancedSignature>();
-		for (final Object signer : signerInformation.getCounterSignatures().getSigners()) {
-			final SignerInformation signerInformation = (SignerInformation) signer;
-			final CAdESSignature countersignature = new CAdESSignature(cmsSignedData, signerInformation, certPool);
-			countersignature.setMasterSignature(this);
-			countersignatures.add(countersignature);
-		}
+		final List<AdvancedSignature> countersignatures = new ArrayList<>();
+		recursiveCollect(countersignatures, signerInformation, this);
 		return countersignatures;
 	}
 
-	@Override
-	public List<CertificateRef> getCertificateRefs() {
-		return getCertificateSource().getCompleteCertificateRefs();
+	private void recursiveCollect(List<AdvancedSignature> collector, SignerInformation currentSignerInformation, AdvancedSignature master) {
+		for (final SignerInformation counterSignerInformation : currentSignerInformation.getCounterSignatures()) {
+			final CAdESSignature countersignature = new CAdESSignature(cmsSignedData, counterSignerInformation);
+			countersignature.setMasterSignature(master);
+			collector.add(countersignature);
+			recursiveCollect(collector, counterSignerInformation, countersignature);
+		}
 	}
 
 	public DSSDocument getOriginalDocument() throws DSSException {
+		// RFC 5652 ch 11.4.
+		if (isCounterSignature()) {
+			return new InMemoryDocument(getMasterSignature().getSignatureValue());
+		}
+
 		return CMSUtils.getOriginalDocument(cmsSignedData, detachedContents);
 	}
 	
 	@Override
 	protected SignatureIdentifier buildSignatureIdentifier() {
-		final CertificateToken certificateToken = getSigningCertificateToken();
-		final TokenIdentifier identifier = certificateToken == null ? null : certificateToken.getDSSId();
-		
-		// introduce additional variables in order to avoid signatures with duplicate ids
-		Integer uniqueInteger = getUniqueIntegerIfNeeded();
-		if (uniqueInteger == 0) uniqueInteger = null;
-		String masterSignatureId = getMasterSignatureId();
-		String fileName = getSignatureFilename();
-
-		return SignatureIdentifier.buildSignatureIdentifier(getSigningTime(), identifier, uniqueInteger, masterSignatureId, fileName);
-	}
-	
-	/**
-	 * Returns Id of the {@code masterSignature} if exists, otherwise returns NULL
-	 * @return {@link String} masterSignature id
-	 */
-	private String getMasterSignatureId() {
-		AdvancedSignature masterSignature = getMasterSignature();
-		if (masterSignature != null) {
-			return masterSignature.getId();
-		}
-		return null;
-	}
-	
-	/**
-	 * Returns the related position of {@code this.signerInformation} in the cmsSignedData
-	 * among signers with the same SID
-	 * @return
-	 */
-	private int getUniqueIntegerIfNeeded() {
-		Collection<SignerInformation> signerInformations;
-		if (getMasterSignature() == null) {
-			signerInformations = cmsSignedData.getSignerInfos().getSigners(getSignerId());
-		} else {
-			signerInformations = this.signerInformation.getCounterSignatures().getSigners(getSignerId());
-		}
-		int counter = 0;
-		for (SignerInformation signerInformation : signerInformations) {
-			if (this.signerInformation == signerInformation) {
-				break;
-			}
-			counter++;
-		}
-		return counter;
+		return new CAdESSignatureIdentifier(this);
 	}
 	
 	@Override
@@ -1195,49 +1030,57 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 		}
 		return signedAttributes.get(oid);
 	}
+	
+	@Override
+	public Set<CertificateIdentifier> getSignerInformationStoreInfos() {
+		return getCertificateSource().getAllCertificateIdentifiers();
+	}
 
 	@Override
-	public boolean isDataForSignatureLevelPresent(final SignatureLevel signatureLevel) {
-		final AttributeTable unsignedAttributes = CMSUtils.getUnsignedAttributes(signerInformation);
-		final AttributeTable signedAttributes = CMSUtils.getSignedAttributes(signerInformation);
-		boolean dataForProfilePresent = true;
-		switch (signatureLevel) {
-		case CAdES_BASELINE_LTA:
-			dataForProfilePresent = hasLTAProfile();
-			// c &= fct() will process fct() all time ; c = c && fct() will process fct() only if c is true
-			dataForProfilePresent = dataForProfilePresent && isDataForSignatureLevelPresent(SignatureLevel.CAdES_BASELINE_LT);
-			break;
-		case CAdES_101733_A:
-			dataForProfilePresent = unsignedAttributes.get(id_aa_ets_archiveTimestampV2) != null;
-			dataForProfilePresent = dataForProfilePresent && isDataForSignatureLevelPresent(SignatureLevel.CAdES_BASELINE_LT);
-			dataForProfilePresent = dataForProfilePresent && isDataForSignatureLevelPresent(SignatureLevel.CAdES_101733_X);
-			break;
-		case CAdES_BASELINE_LT:
-			dataForProfilePresent = hasLTProfile();
-			dataForProfilePresent = dataForProfilePresent && isDataForSignatureLevelPresent(SignatureLevel.CAdES_BASELINE_T);
-			break;
-		case CAdES_101733_X:
-			dataForProfilePresent = ((unsignedAttributes.get(id_aa_ets_certCRLTimestamp) != null) || (unsignedAttributes.get(id_aa_ets_escTimeStamp) != null));
-			dataForProfilePresent = dataForProfilePresent && isDataForSignatureLevelPresent(SignatureLevel.CAdES_101733_C);
-			break;
-		case CAdES_101733_C:
-			dataForProfilePresent = unsignedAttributes.get(id_aa_ets_certificateRefs) != null;
-			dataForProfilePresent = dataForProfilePresent && isDataForSignatureLevelPresent(SignatureLevel.CAdES_BASELINE_T);
-			break;
-		case CAdES_BASELINE_T:
-			dataForProfilePresent = hasTProfile();
-			dataForProfilePresent = dataForProfilePresent && isDataForSignatureLevelPresent(SignatureLevel.CAdES_BASELINE_B);
-			break;
-		case CAdES_BASELINE_B:
-			dataForProfilePresent = ((signedAttributes.get(id_aa_signingCertificate) != null) || (signedAttributes.get(id_aa_signingCertificateV2) != null));
-			break;
-		case CMS_NOT_ETSI:
-			dataForProfilePresent = true;
-			break;
-		default:
-			throw new IllegalArgumentException("Unknown level " + signatureLevel);
+	public SignatureLevel getDataFoundUpToLevel() {
+		if (!hasBProfile()) {
+			return SignatureLevel.CMS_NOT_ETSI;
 		}
-		return dataForProfilePresent;
+		if (!hasTProfile()) {
+			return SignatureLevel.CAdES_BASELINE_B;
+		}
+
+		if (hasLTProfile()) {
+			if (hasLTAProfile()) {
+				return SignatureLevel.CAdES_BASELINE_LTA;
+			}
+			return SignatureLevel.CAdES_BASELINE_LT;
+		} else if (hasCProfile()) {
+			if (hasXProfile()) {
+// Revocation are not complete
+//				if (hasAProfile()) {
+//					return SignatureLevel.CAdES_101733_A;
+//				}
+				return SignatureLevel.CAdES_101733_X;
+			}
+			return SignatureLevel.CAdES_101733_C;
+		} else {
+			return SignatureLevel.CAdES_BASELINE_T;
+		}
+	}
+
+	public boolean hasBProfile() {
+		return ((getSignedAttribute(id_aa_signingCertificate) != null) || (getSignedAttribute(id_aa_signingCertificateV2) != null));
+	}
+
+	public boolean hasCProfile() {
+		AttributeTable unsignedAttributes = CMSUtils.getUnsignedAttributes(signerInformation);
+		return unsignedAttributes.get(id_aa_ets_certificateRefs) != null;
+	}
+
+	public boolean hasXProfile() {
+		AttributeTable unsignedAttributes = CMSUtils.getUnsignedAttributes(signerInformation);
+		return ((unsignedAttributes.get(id_aa_ets_certCRLTimestamp) != null) || (unsignedAttributes.get(id_aa_ets_escTimeStamp) != null));
+	}
+
+	public boolean hasAProfile() {
+		AttributeTable unsignedAttributes = CMSUtils.getUnsignedAttributes(signerInformation);
+		return unsignedAttributes.get(id_aa_ets_archiveTimestampV2) != null;
 	}
 
 	@Override

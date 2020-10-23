@@ -20,26 +20,27 @@
  */
 package eu.europa.esig.dss.cades.signature;
 
-import java.io.IOException;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import eu.europa.esig.dss.alert.exception.AlertException;
 import eu.europa.esig.dss.cades.CAdESSignatureParameters;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.model.DSSDocument;
-import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 
 public class CAdESLevelImpossibleLTExceptionTest extends AbstractCAdESTestSignature {
 
-	private DocumentSignatureService<CAdESSignatureParameters> service;
+	private DocumentSignatureService<CAdESSignatureParameters, CAdESTimestampParameters> service;
 	private CAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		documentToSign = new InMemoryDocument("Hello World".getBytes());
 
@@ -54,13 +55,16 @@ public class CAdESLevelImpossibleLTExceptionTest extends AbstractCAdESTestSignat
 	}
 
 	@Override
-	@Test(expected = DSSException.class)
-	public void signAndVerify() throws IOException {
-		super.signAndVerify(); // unable to extend to LT (no online CRL/OCSP)
+	@Test
+	public void signAndVerify() {
+		Exception exception = assertThrows(AlertException.class, () -> {
+			super.signAndVerify(); // unable to extend to LT (no online CRL/OCSP)
+		});
+		assertTrue(exception.getMessage().contains("Revocation data is missing for one or more certificate(s)."));
 	}
 
 	@Override
-	protected DocumentSignatureService<CAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<CAdESSignatureParameters, CAdESTimestampParameters> getService() {
 		return service;
 	}
 

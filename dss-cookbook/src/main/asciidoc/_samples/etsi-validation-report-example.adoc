@@ -1,0 +1,292 @@
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:ValidationReport xmlns="http://www.w3.org/2000/09/xmldsig#" xmlns:ns2="http://uri.etsi.org/19102/v1.2.1#" xmlns:ns4="http://uri.etsi.org/02231/v2#" xmlns:ns3="http://uri.etsi.org/01903/v1.3.2#">
+    <ns2:SignatureValidationReport>
+        <ns2:SignatureIdentifier id="S-3723FC8ECE93FD281E21E7239EFAFA0E286306CB5F57F777F5E3A0A3426CA6B1">
+            <ns2:DigestAlgAndValue>
+                <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+                <DigestValue>SGEPVFOj/zskv8+nlzixt+PbLxWE9SS67rkpd0V5Wi4=</DigestValue>
+            </ns2:DigestAlgAndValue>
+            <SignatureValue>m2sMUIIfYKHDVr1IMTyVufWJcwuxwhWjGvkF/xa/rOAKieZCe4LZPa0/uwzgwM4QAbPstdy4gHSQzCF0R6/fT9hv639kQS3TyZedw1raMeDj9mQOwKOlMl1OIxEI7jSf7xP6n62s0wQAhTJlARnOY1G5vppziVKb1vPED27HPBB4Yljn8j6hse+EJ0bwxAN1gwufbxZBvjHYgz/U/9EHafa1oGPcoIBrXvoUdzVX76sVE3nlDvX4psEU4eq7paIZA7AWGSfWk8/k98pPqFcP2VYJaAju9GI+uZNMfRgPdOvGPxTjUBYiEyr3satod+cMQGiAzie80n0ovQrfn7ebcA==</SignatureValue>
+            <ns2:HashOnly>false</ns2:HashOnly>
+            <ns2:DocHashOnly>false</ns2:DocHashOnly>
+        </ns2:SignatureIdentifier>
+        <ns2:ValidationConstraintsEvaluationReport>
+            <ns2:ValidationConstraint>
+                <ns2:ValidationConstraintIdentifier>urn:cef:dss:bbb:formatChecking</ns2:ValidationConstraintIdentifier>
+                <ns2:ConstraintStatus>
+                    <ns2:Status>urn:etsi:019102:constraintStatus:applied</ns2:Status>
+                </ns2:ConstraintStatus>
+                <ns2:ValidationStatus>
+                    <ns2:MainIndication>urn:etsi:019102:mainindication:passed</ns2:MainIndication>
+                </ns2:ValidationStatus>
+            </ns2:ValidationConstraint>
+            ...
+            <ns2:ValidationConstraint>
+                <ns2:ValidationConstraintIdentifier>urn:cef:dss:bbb:validationTimeSliding</ns2:ValidationConstraintIdentifier>
+                <ns2:ConstraintStatus>
+                    <ns2:Status>urn:etsi:019102:constraintStatus:disabled</ns2:Status>
+                </ns2:ConstraintStatus>
+            </ns2:ValidationConstraint>
+        </ns2:ValidationConstraintsEvaluationReport>
+        <ns2:ValidationTimeInfo>
+            <ns2:ValidationTime>2020-01-21T06:07:03Z</ns2:ValidationTime>
+            <ns2:BestSignatureTime>
+                <ns2:POETime>2020-01-21T06:07:03Z</ns2:POETime>
+                <ns2:TypeOfProof>urn:etsi:019102:poetype:validation</ns2:TypeOfProof>
+            </ns2:BestSignatureTime>
+        </ns2:ValidationTimeInfo>
+        <ns2:SignersDocument>
+            <ns2:DigestAlgAndValue>
+                <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+                <DigestValue>XC6PrKORnL59qX5UJCibBUw/kPLQNtqQx81H+vdlPXw=</DigestValue>
+            </ns2:DigestAlgAndValue>
+            <ns2:SignersDocumentRef VOReference="D-BD598965790CA5673910D64EFEDA798485364C66B6F4E7C49D23E1FF8BAFBBE8"/>
+        </ns2:SignersDocument>
+        <ns2:SignatureAttributes>
+            <ns2:SigningTime Signed="true">
+                <ns2:Time>2019-08-27T14:06:11Z</ns2:Time>
+            </ns2:SigningTime>
+            <ns2:SigningCertificate Signed="true">
+                <ns2:AttributeObject VOReference="C-4FAB29027727E58E4518ED0B6AE554D055F05B3D9197E0D16B20028D227D1A9F"/>
+                <ns2:CertID>
+                    <ns2:X509IssuerSerial>MEswN6Q1MDMxCzAJBgNVBAYTAkJFMRMwEQYDVQQDEwpDaXRpemVuIENBMQ8wDQYDVQQFEwYyMDE2MzECEBAAAAAAAJKLPMkehMM6uhk=</ns2:X509IssuerSerial>
+                    <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+                    <DigestValue>T6spAncn5Y5FGO0LauVU0FXwWz2Rl+DRayACjSJ9Gp8=</DigestValue>
+                </ns2:CertID>
+            </ns2:SigningCertificate>
+            <ns2:DataObjectFormat Signed="true">
+                <ns2:ContentType>1.2.840.113549.1.7.1</ns2:ContentType>
+            </ns2:DataObjectFormat>
+            <ns2:MessageDigest Signed="true">
+                <ns2:Digest>SGEPVFOj/zskv8+nlzixt+PbLxWE9SS67rkpd0V5Wi4=</ns2:Digest>
+            </ns2:MessageDigest>
+            <ns2:Name>
+                <ns2:NameElement>Pierrick Vandenbroucke (Signature) 70a3cb70f0f4d6513fb12cf0691965c58c7e7679</ns2:NameElement>
+            </ns2:Name>
+            <ns2:SubFilter>
+                <ns2:SubFilterElement>ETSI.CAdES.detached</ns2:SubFilterElement>
+            </ns2:SubFilter>
+            <ns2:ByteRange>0 5340 43230 342</ns2:ByteRange>
+            <ns2:Filter>
+                <ns2:Filter>Adobe.PPKLite</ns2:Filter>
+            </ns2:Filter>
+        </ns2:SignatureAttributes>
+        <ns2:SignerInformation Pseudonym="false">
+            <ns2:SignerCertificate VOReference="C-4FAB29027727E58E4518ED0B6AE554D055F05B3D9197E0D16B20028D227D1A9F"/>
+            <ns2:Signer>Pierrick Vandenbroucke (Signature)</ns2:Signer>
+        </ns2:SignerInformation>
+        <ns2:SignatureQuality>
+            <ns2:SignatureQualityInformation>urn:cef:dss:signatureQualification:QESig</ns2:SignatureQualityInformation>
+        </ns2:SignatureQuality>
+        <ns2:SignatureValidationProcess>
+            <ns2:SignatureValidationProcessID>urn:etsi:019102:validationprocess:LTA</ns2:SignatureValidationProcessID>
+        </ns2:SignatureValidationProcess>
+        <ns2:SignatureValidationStatus>
+            <ns2:MainIndication>urn:etsi:019102:mainindication:total-passed</ns2:MainIndication>
+            <ns2:AssociatedValidationReportData>
+                <ns2:TrustAnchor VOReference="C-C3FBF37259AF0954EEEA4282DD1C7226A54E7150F7C29A2C495BA34DBFE09CA0"/>
+                <ns2:CertificateChain>
+                    <ns2:SigningCertificate VOReference="C-4FAB29027727E58E4518ED0B6AE554D055F05B3D9197E0D16B20028D227D1A9F"/>
+                    <ns2:IntermediateCertificate VOReference="C-293D0BA3A31E5D82A8E3FAE12709932FFDDA44423E0F733FB01EF123E73EB4DA"/>
+                    <ns2:TrustAnchor VOReference="C-C3FBF37259AF0954EEEA4282DD1C7226A54E7150F7C29A2C495BA34DBFE09CA0"/>
+                </ns2:CertificateChain>
+                <ns2:CryptoInformation>
+                    <ns2:ValidationObjectId VOReference="S-3723FC8ECE93FD281E21E7239EFAFA0E286306CB5F57F777F5E3A0A3426CA6B1"/>
+                    <ns2:Algorithm>http://www.w3.org/2001/04/xmldsig-more#rsa-sha256</ns2:Algorithm>
+                    <ns2:SecureAlgorithm>true</ns2:SecureAlgorithm>
+                    <ns2:NotAfter>2022-12-31T23:00:00Z</ns2:NotAfter>
+                </ns2:CryptoInformation>
+            </ns2:AssociatedValidationReportData>
+        </ns2:SignatureValidationStatus>
+    </ns2:SignatureValidationReport>
+    <ns2:SignatureValidationObjects>
+        <ns2:ValidationObject id="C-293D0BA3A31E5D82A8E3FAE12709932FFDDA44423E0F733FB01EF123E73EB4DA">
+            <ns2:ObjectType>urn:etsi:019102:validationObject:certificate</ns2:ObjectType>
+            <ns2:ValidationObjectRepresentation>
+                <ns2:DigestAlgAndValue>
+                    <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+                    <DigestValue>KT0Lo6MeXYKo4/rhJwmTL/3aREI+D3M/sB7xI+c+tNo=</DigestValue>
+                </ns2:DigestAlgAndValue>
+            </ns2:ValidationObjectRepresentation>
+            <ns2:POE>
+                <ns2:POETime>2020-01-21T06:07:03Z</ns2:POETime>
+                <ns2:TypeOfProof>urn:etsi:019102:poetype:validation</ns2:TypeOfProof>
+            </ns2:POE>
+        </ns2:ValidationObject>
+        <ns2:ValidationObject id="C-4FAB29027727E58E4518ED0B6AE554D055F05B3D9197E0D16B20028D227D1A9F">
+            <ns2:ObjectType>urn:etsi:019102:validationObject:certificate</ns2:ObjectType>
+            <ns2:ValidationObjectRepresentation>
+                <ns2:DigestAlgAndValue>
+                    <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+                    <DigestValue>T6spAncn5Y5FGO0LauVU0FXwWz2Rl+DRayACjSJ9Gp8=</DigestValue>
+                </ns2:DigestAlgAndValue>
+            </ns2:ValidationObjectRepresentation>
+            <ns2:POE>
+                <ns2:POETime>2020-01-21T06:07:03Z</ns2:POETime>
+                <ns2:TypeOfProof>urn:etsi:019102:poetype:validation</ns2:TypeOfProof>
+            </ns2:POE>
+        </ns2:ValidationObject>
+        <ns2:ValidationObject id="C-702DD5C1A093CF0A9D71FADD9BF9A7C5857D89FB73B716E867228B3C2BEB968F">
+            <ns2:ObjectType>urn:etsi:019102:validationObject:certificate</ns2:ObjectType>
+            <ns2:ValidationObjectRepresentation>
+                <ns2:DigestAlgAndValue>
+                    <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+                    <DigestValue>cC3VwaCTzwqdcfrdm/mnxYV9iftztxboZyKLPCvrlo8=</DigestValue>
+                </ns2:DigestAlgAndValue>
+            </ns2:ValidationObjectRepresentation>
+            <ns2:POE>
+                <ns2:POETime>2020-01-21T06:07:03Z</ns2:POETime>
+                <ns2:TypeOfProof>urn:etsi:019102:poetype:validation</ns2:TypeOfProof>
+            </ns2:POE>
+        </ns2:ValidationObject>
+        <ns2:ValidationObject id="C-B336CAA1F3C4930E4EF9C803C12877A004991EE9206C0D4AD3891688C1E478FF">
+            <ns2:ObjectType>urn:etsi:019102:validationObject:certificate</ns2:ObjectType>
+            <ns2:ValidationObjectRepresentation>
+                <ns2:DigestAlgAndValue>
+                    <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+                    <DigestValue>szbKofPEkw5O+cgDwSh3oASZHukgbA1K04kWiMHkeP8=</DigestValue>
+                </ns2:DigestAlgAndValue>
+            </ns2:ValidationObjectRepresentation>
+            <ns2:POE>
+                <ns2:POETime>2020-01-21T06:07:03Z</ns2:POETime>
+                <ns2:TypeOfProof>urn:etsi:019102:poetype:validation</ns2:TypeOfProof>
+            </ns2:POE>
+        </ns2:ValidationObject>
+        <ns2:ValidationObject id="C-C3FBF37259AF0954EEEA4282DD1C7226A54E7150F7C29A2C495BA34DBFE09CA0">
+            <ns2:ObjectType>urn:etsi:019102:validationObject:certificate</ns2:ObjectType>
+            <ns2:ValidationObjectRepresentation>
+                <ns2:DigestAlgAndValue>
+                    <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+                    <DigestValue>w/vzclmvCVTu6kKC3RxyJqVOcVD3wposSVujTb/gnKA=</DigestValue>
+                </ns2:DigestAlgAndValue>
+            </ns2:ValidationObjectRepresentation>
+            <ns2:POE>
+                <ns2:POETime>2020-01-21T06:07:03Z</ns2:POETime>
+                <ns2:TypeOfProof>urn:etsi:019102:poetype:validation</ns2:TypeOfProof>
+            </ns2:POE>
+        </ns2:ValidationObject>
+        <ns2:ValidationObject id="R-4B614C6CFB8CF6B1F9E9C74E07464CE6483EA31E0C3D58A7D4C56D540EDF40FB">
+            <ns2:ObjectType>urn:etsi:019102:validationObject:CRL</ns2:ObjectType>
+            <ns2:ValidationObjectRepresentation>
+                <ns2:DigestAlgAndValue>
+                    <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+                    <DigestValue>S2FMbPuM9rH56cdOB0ZM5kg+ox4MPVin1MVtVA7fQPs=</DigestValue>
+                </ns2:DigestAlgAndValue>
+            </ns2:ValidationObjectRepresentation>
+            <ns2:POE>
+                <ns2:POETime>2020-01-21T06:07:03Z</ns2:POETime>
+                <ns2:TypeOfProof>urn:etsi:019102:poetype:validation</ns2:TypeOfProof>
+            </ns2:POE>
+            <ns2:ValidationReport>
+                <ns2:ValidationConstraintsEvaluationReport>
+                    <ns2:ValidationConstraint>
+                        <ns2:ValidationConstraintIdentifier>urn:cef:dss:bbb:formatChecking</ns2:ValidationConstraintIdentifier>
+                        <ns2:ConstraintStatus>
+                            <ns2:Status>urn:etsi:019102:constraintStatus:disabled</ns2:Status>
+                        </ns2:ConstraintStatus>
+                    </ns2:ValidationConstraint>
+                    ...
+                    <ns2:ValidationConstraint>
+                        <ns2:ValidationConstraintIdentifier>urn:cef:dss:bbb:x509CertificateValidation</ns2:ValidationConstraintIdentifier>
+                        <ns2:ConstraintStatus>
+                            <ns2:Status>urn:etsi:019102:constraintStatus:applied</ns2:Status>
+                        </ns2:ConstraintStatus>
+                        <ns2:ValidationStatus>
+                            <ns2:MainIndication>urn:etsi:019102:mainindication:passed</ns2:MainIndication>
+                        </ns2:ValidationStatus>
+                    </ns2:ValidationConstraint>
+                </ns2:ValidationConstraintsEvaluationReport>
+                <ns2:SignerInformation>
+                    <ns2:SignerCertificate VOReference="C-C3FBF37259AF0954EEEA4282DD1C7226A54E7150F7C29A2C495BA34DBFE09CA0"/>
+                    <ns2:Signer>Belgium Root CA4</ns2:Signer>
+                </ns2:SignerInformation>
+                <ns2:SignatureValidationStatus>
+                    <ns2:MainIndication>urn:etsi:019102:mainindication:passed</ns2:MainIndication>
+                    <ns2:AssociatedValidationReportData>
+                        <ns2:TrustAnchor VOReference="C-C3FBF37259AF0954EEEA4282DD1C7226A54E7150F7C29A2C495BA34DBFE09CA0"/>
+                        <ns2:CertificateChain>
+                            <ns2:SigningCertificate VOReference="C-C3FBF37259AF0954EEEA4282DD1C7226A54E7150F7C29A2C495BA34DBFE09CA0"/>
+                            <ns2:TrustAnchor VOReference="C-C3FBF37259AF0954EEEA4282DD1C7226A54E7150F7C29A2C495BA34DBFE09CA0"/>
+                        </ns2:CertificateChain>
+                        <ns2:CryptoInformation>
+                            <ns2:ValidationObjectId VOReference="R-4B614C6CFB8CF6B1F9E9C74E07464CE6483EA31E0C3D58A7D4C56D540EDF40FB"/>
+                            <ns2:Algorithm>http://www.w3.org/2001/04/xmldsig-more#rsa-sha256</ns2:Algorithm>
+                            <ns2:SecureAlgorithm>true</ns2:SecureAlgorithm>
+                            <ns2:NotAfter>2025-12-31T23:00:00Z</ns2:NotAfter>
+                        </ns2:CryptoInformation>
+                    </ns2:AssociatedValidationReportData>
+                </ns2:SignatureValidationStatus>
+            </ns2:ValidationReport>
+        </ns2:ValidationObject>
+        <ns2:ValidationObject id="R-5E2868FF9EE4FC069B79171D768B0A90AB137847ADD4F5344EB5F153BB1F19C9">
+            <ns2:ObjectType>urn:etsi:019102:validationObject:OCSPResponse</ns2:ObjectType>
+            <ns2:ValidationObjectRepresentation>
+                <ns2:DigestAlgAndValue>
+                    <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+                    <DigestValue>Xiho/57k/AabeRcddosKkKsTeEet1PU0TrXxU7sfGck=</DigestValue>
+                </ns2:DigestAlgAndValue>
+            </ns2:ValidationObjectRepresentation>
+            <ns2:POE>
+                <ns2:POETime>2020-01-21T06:07:03Z</ns2:POETime>
+                <ns2:TypeOfProof>urn:etsi:019102:poetype:validation</ns2:TypeOfProof>
+            </ns2:POE>
+            <ns2:ValidationReport>
+                <ns2:ValidationConstraintsEvaluationReport>
+                    <ns2:ValidationConstraint>
+                        <ns2:ValidationConstraintIdentifier>urn:cef:dss:bbb:formatChecking</ns2:ValidationConstraintIdentifier>
+                        <ns2:ConstraintStatus>
+                            <ns2:Status>urn:etsi:019102:constraintStatus:disabled</ns2:Status>
+                        </ns2:ConstraintStatus>
+                    </ns2:ValidationConstraint>
+                    ...
+                    <ns2:ValidationConstraint>
+                        <ns2:ValidationConstraintIdentifier>urn:cef:dss:bbb:x509CertificateValidation</ns2:ValidationConstraintIdentifier>
+                        <ns2:ConstraintStatus>
+                            <ns2:Status>urn:etsi:019102:constraintStatus:applied</ns2:Status>
+                        </ns2:ConstraintStatus>
+                        <ns2:ValidationStatus>
+                            <ns2:MainIndication>urn:etsi:019102:mainindication:passed</ns2:MainIndication>
+                        </ns2:ValidationStatus>
+                    </ns2:ValidationConstraint>
+                </ns2:ValidationConstraintsEvaluationReport>
+                <ns2:SignerInformation>
+                    <ns2:SignerCertificate VOReference="C-B336CAA1F3C4930E4EF9C803C12877A004991EE9206C0D4AD3891688C1E478FF"/>
+                    <ns2:Signer>Belgium OCSP Responder</ns2:Signer>
+                </ns2:SignerInformation>
+                <ns2:SignatureValidationStatus>
+                    <ns2:MainIndication>urn:etsi:019102:mainindication:passed</ns2:MainIndication>
+                    <ns2:AssociatedValidationReportData>
+                        <ns2:TrustAnchor VOReference="C-C3FBF37259AF0954EEEA4282DD1C7226A54E7150F7C29A2C495BA34DBFE09CA0"/>
+                        <ns2:CertificateChain>
+                            <ns2:SigningCertificate VOReference="C-B336CAA1F3C4930E4EF9C803C12877A004991EE9206C0D4AD3891688C1E478FF"/>
+                            <ns2:IntermediateCertificate VOReference="C-293D0BA3A31E5D82A8E3FAE12709932FFDDA44423E0F733FB01EF123E73EB4DA"/>
+                            <ns2:TrustAnchor VOReference="C-C3FBF37259AF0954EEEA4282DD1C7226A54E7150F7C29A2C495BA34DBFE09CA0"/>
+                        </ns2:CertificateChain>
+                        <ns2:CryptoInformation>
+                            <ns2:ValidationObjectId VOReference="R-5E2868FF9EE4FC069B79171D768B0A90AB137847ADD4F5344EB5F153BB1F19C9"/>
+                            <ns2:Algorithm>http://www.w3.org/2001/04/xmldsig-more#rsa-sha256</ns2:Algorithm>
+                            <ns2:SecureAlgorithm>true</ns2:SecureAlgorithm>
+                            <ns2:NotAfter>2022-12-31T23:00:00Z</ns2:NotAfter>
+                        </ns2:CryptoInformation>
+                    </ns2:AssociatedValidationReportData>
+                </ns2:SignatureValidationStatus>
+            </ns2:ValidationReport>
+        </ns2:ValidationObject>
+        <ns2:ValidationObject id="D-BD598965790CA5673910D64EFEDA798485364C66B6F4E7C49D23E1FF8BAFBBE8">
+            <ns2:ObjectType>urn:etsi:019102:validationObject:signedData</ns2:ObjectType>
+            <ns2:ValidationObjectRepresentation>
+                <ns2:DigestAlgAndValue>
+                    <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+                    <DigestValue>XC6PrKORnL59qX5UJCibBUw/kPLQNtqQx81H+vdlPXw=</DigestValue>
+                </ns2:DigestAlgAndValue>
+            </ns2:ValidationObjectRepresentation>
+            <ns2:POE>
+                <ns2:POETime>2020-01-21T06:07:03Z</ns2:POETime>
+                <ns2:TypeOfProof>urn:etsi:019102:poetype:validation</ns2:TypeOfProof>
+            </ns2:POE>
+        </ns2:ValidationObject>
+    </ns2:SignatureValidationObjects>
+</ns2:ValidationReport>
+----

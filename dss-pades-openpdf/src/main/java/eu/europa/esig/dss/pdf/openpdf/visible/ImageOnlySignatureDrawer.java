@@ -42,7 +42,7 @@ public class ImageOnlySignatureDrawer extends AbstractITextSignatureDrawer {
 
 		Image image = Image.getInstance(DSSUtils.toByteArray(parameters.getImage()));
 
-		float zoom = parameters.getScaleFactor();
+		float zoom = ImageUtils.getScaleFactor(parameters.getZoom());
 		int width = parameters.getWidth();
 		int height = parameters.getHeight();
 		
@@ -82,7 +82,7 @@ public class ImageOnlySignatureDrawer extends AbstractITextSignatureDrawer {
 		PdfPTable table = new PdfPTable(1);
 		table.setWidthPercentage(100);
 		PdfPCell pdfPCell = new PdfPCell(image);
-		pdfPCell.setBorder(PdfPCell.NO_BORDER);
+		pdfPCell.setBorder(Rectangle.NO_BORDER);
 		table.addCell(pdfPCell);
 		
 		ct.addElement(table);

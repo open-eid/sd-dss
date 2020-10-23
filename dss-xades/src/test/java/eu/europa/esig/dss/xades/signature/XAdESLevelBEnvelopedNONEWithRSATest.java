@@ -22,12 +22,13 @@ package eu.europa.esig.dss.xades.signature;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
 
-import org.junit.Before;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.EncryptionAlgorithm;
@@ -43,34 +44,29 @@ import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
+import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 
-@RunWith(Parameterized.class)
+@Tag("slow")
 public class XAdESLevelBEnvelopedNONEWithRSATest extends AbstractXAdESTestSignature {
 
-	private DocumentSignatureService<XAdESSignatureParameters> service;
+	private DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> service;
 	private XAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
-	private final DigestAlgorithm digestAlgo;
-
-	@Parameters(name = "DigestAlgorithm {index} : {0}")
-	public static Collection<DigestAlgorithm> data() {
-		Collection<DigestAlgorithm> rsaCombinations = new ArrayList<DigestAlgorithm>();
+	private static Stream<Arguments> data() {
+		List<Arguments> args = new ArrayList<>();
 		for (DigestAlgorithm digestAlgorithm : DigestAlgorithm.values()) {
 			SignatureAlgorithm algorithm = SignatureAlgorithm.getAlgorithm(EncryptionAlgorithm.RSA, digestAlgorithm);
 			if (algorithm != null && Utils.isStringNotEmpty(algorithm.getUri())) {
-				rsaCombinations.add(digestAlgorithm);
+				args.add(Arguments.of(digestAlgorithm));
 			}
 		}
-		return rsaCombinations;
+		return args.stream();
 	}
 
-	public XAdESLevelBEnvelopedNONEWithRSATest(DigestAlgorithm digestAlgo) {
-		this.digestAlgo = digestAlgo;
-	}
-
-	@Before
-	public void init() throws Exception {
+	@ParameterizedTest(name = "Combination {index} of RSA with digest algorithm {0}")
+	@MethodSource("data")
+	public void init(DigestAlgorithm digestAlgo) {
 		documentToSign = new FileDocument(new File("src/test/resources/sample.xml"));
 
 		signatureParameters = new XAdESSignatureParameters();
@@ -81,6 +77,12 @@ public class XAdESLevelBEnvelopedNONEWithRSATest extends AbstractXAdESTestSignat
 		signatureParameters.setDigestAlgorithm(digestAlgo);
 
 		service = new XAdESService(getOfflineCertificateVerifier());
+
+		super.signAndVerify();
+	}
+
+	@Override
+	public void signAndVerify() {
 	}
 
 	@Override
@@ -102,7 +104,7 @@ public class XAdESLevelBEnvelopedNONEWithRSATest extends AbstractXAdESTestSignat
 	}
 
 	@Override
-	protected DocumentSignatureService<XAdESSignatureParameters> getService() {
+	protected DocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> getService() {
 		return service;
 	}
 

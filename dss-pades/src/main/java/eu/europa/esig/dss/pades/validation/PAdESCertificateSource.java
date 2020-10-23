@@ -26,15 +26,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.SignerInformation;
 
+import eu.europa.esig.dss.cades.validation.CAdESCertificateSource;
+import eu.europa.esig.dss.enumerations.CertificateOrigin;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.pdf.PdfDssDict;
+import eu.europa.esig.dss.pdf.PdfSignatureRevision;
 import eu.europa.esig.dss.pdf.PdfVRIDict;
-import eu.europa.esig.dss.spi.x509.CertificatePool;
+import eu.europa.esig.dss.spi.x509.CertificateRef;
 import eu.europa.esig.dss.utils.Utils;
-import eu.europa.esig.dss.validation.CAdESCertificateSource;
-import eu.europa.esig.dss.validation.CertificateRef;
 
 /**
  * CertificateSource that will retrieve the certificate from a PAdES Signature
@@ -48,25 +49,23 @@ public class PAdESCertificateSource extends CAdESCertificateSource {
 	/**
 	 * The default constructor for PAdESCertificateSource.
 	 *
-	 * @param dssDictionary
-	 *                      the DSS dictionary
-	 * @param cmsSignedData
-	 * @param certPool
-	 *                      The pool of certificates to be used. Can be null.
+	 * @param pdfSignatureRevision the used {@link PdfSignatureRevision}
+	 * @param signerInformation    the current {@link SignerInformation}
 	 */
-	public PAdESCertificateSource(final PdfDssDict dssDictionary, final CMSSignedData cmsSignedData, final CertificatePool certPool) {
-		super(cmsSignedData, certPool);
+	public PAdESCertificateSource(final PdfSignatureRevision pdfSignatureRevision, final SignerInformation signerInformation) {
+		super(pdfSignatureRevision.getCMSSignedData(), signerInformation);
 
-		this.dssDictionary = dssDictionary;
+		this.dssDictionary = pdfSignatureRevision.getDssDictionary();
 
-		// init CertPool
 		extractFromDSSDict();
 	}
 
 	private void extractFromDSSDict() {
-		Map<Long, CertificateToken> certificateMap = getCertificateMap();
-		for (CertificateToken certToken : certificateMap.values()) {
-			addCertificate(certToken);
+		for (CertificateToken certToken : getDSSDictionaryCertValues()) {
+			addCertificate(certToken, CertificateOrigin.DSS_DICTIONARY);
+		}
+		for (CertificateToken certToken : getVRIDictionaryCertValues()) {
+			addCertificate(certToken, CertificateOrigin.VRI_DICTIONARY);
 		}
 	}
 
@@ -76,7 +75,7 @@ public class PAdESCertificateSource extends CAdESCertificateSource {
 			List<PdfVRIDict> vriDicts = dssDictionary.getVRIs();
 			if (Utils.isCollectionNotEmpty(vriDicts)) {
 				for (PdfVRIDict vriDict : vriDicts) {
-					dssCerts.putAll(vriDict.getCertMap());
+					dssCerts.putAll(vriDict.getCERTs());
 				}
 			}
 			return dssCerts;
@@ -106,7 +105,7 @@ public class PAdESCertificateSource extends CAdESCertificateSource {
 	public List<CertificateToken> getDSSDictionaryCertValues() {
 		if (dssDictionary != null) {
 			Map<Long, CertificateToken> dssCerts = dssDictionary.getCERTs();
-			return new ArrayList<CertificateToken>(dssCerts.values());
+			return new ArrayList<>(dssCerts.values());
 		}
 		return Collections.emptyList();
 	}
@@ -114,14 +113,14 @@ public class PAdESCertificateSource extends CAdESCertificateSource {
 	@Override
 	public List<CertificateToken> getVRIDictionaryCertValues() {
 		if (dssDictionary != null) {
-			Map<Long, CertificateToken> vriCerts = new HashMap<Long, CertificateToken>();
+			Map<Long, CertificateToken> vriCerts = new HashMap<>();
 			List<PdfVRIDict> vris = dssDictionary.getVRIs();
 			if (vris != null) {
 				for (PdfVRIDict vri : vris) {
-					vriCerts.putAll(vri.getCertMap());
+					vriCerts.putAll(vri.getCERTs());
 				}
 			}
-			return new ArrayList<CertificateToken>(vriCerts.values());
+			return new ArrayList<>(vriCerts.values());
 		}
 		return Collections.emptyList();
 	}

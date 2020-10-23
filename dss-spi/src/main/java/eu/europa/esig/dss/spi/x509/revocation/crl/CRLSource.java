@@ -20,6 +20,8 @@
  */
 package eu.europa.esig.dss.spi.x509.revocation.crl;
 
+import eu.europa.esig.dss.model.x509.CertificateToken;
+import eu.europa.esig.dss.model.x509.revocation.crl.CRL;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationSource;
 
 /**
@@ -29,6 +31,9 @@ import eu.europa.esig.dss.spi.x509.revocation.RevocationSource;
  * provides an abstraction of a CRL data source.
  *
  */
-public interface CRLSource extends RevocationSource<CRLToken> {
+public interface CRLSource extends RevocationSource<CRL> {
+
+	@Override
+	CRLToken getRevocationToken(CertificateToken certificateToken, CertificateToken issuerCertificateToken);
 
 }
