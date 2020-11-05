@@ -288,24 +288,6 @@ public class CommonsDataLoader implements DataLoader {
 		}
 	}
 
-	private InputStream openKeyStoreInputStream(String path) throws IOException {
-		if (path.startsWith("classpath:")) {
-			path = path.substring("classpath:".length());
-			URL url = getClass().getClassLoader().getResource(path);
-			if (url == null) {
-				throw new FileNotFoundException("Resource not found: " + path);
-			}
-			return url.openStream();
-		} else if (path.startsWith("file:")) {
-			path = path.substring("file:".length());
-		}
-		return new FileInputStream(path);
-	}
-
-	protected synchronized HttpClientBuilder getHttpClientBuilder() {
-		return HttpClients.custom();
-	}
-
 	protected synchronized HttpGet getHttpRequest(String url) throws URISyntaxException {
 		final URI uri = new URI(url.trim());
 		HttpGet httpRequest = new HttpGet(uri);
