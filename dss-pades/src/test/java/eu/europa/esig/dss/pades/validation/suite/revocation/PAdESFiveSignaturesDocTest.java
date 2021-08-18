@@ -20,20 +20,10 @@
  */
 package eu.europa.esig.dss.pades.validation.suite.revocation;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import eu.europa.esig.dss.diagnostic.CertificateRefWrapper;
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.FoundCertificatesProxy;
-import eu.europa.esig.dss.diagnostic.OrphanTokenWrapper;
 import eu.europa.esig.dss.diagnostic.RelatedCertificateWrapper;
 import eu.europa.esig.dss.diagnostic.RevocationWrapper;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
@@ -51,6 +41,16 @@ import eu.europa.esig.dss.validation.SignatureCertificateSource;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 import eu.europa.esig.validationreport.jaxb.SignersDocumentType;
 import eu.europa.esig.xades.jaxb.xades132.DigestAlgAndValueType;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PAdESFiveSignaturesDocTest extends AbstractPAdESTestValidation {
 	
@@ -95,52 +95,42 @@ public class PAdESFiveSignaturesDocTest extends AbstractPAdESTestValidation {
 		TimestampWrapper signatureTimestamp = secondSignatureTimestamps.get(0);
 		assertEquals(4, signatureTimestamp.getTimestampedObjects().size());
 		assertEquals(TimestampType.SIGNATURE_TIMESTAMP, signatureTimestamp.getType());
-        
-        TimestampWrapper archiveTimestamp = null;
-        int archiveTimestamps = 0;
+
+        TimestampWrapper docTimestamp = null;
         for (TimestampWrapper timestamp : timestamps) {
-        	if (TimestampType.ARCHIVE_TIMESTAMP.equals(timestamp.getType())) {
-        		archiveTimestamp = timestamp;
-        		++archiveTimestamps;
+        	if (TimestampType.DOCUMENT_TIMESTAMP.equals(timestamp.getType())) {
+        		assertNull(docTimestamp);
+				docTimestamp = timestamp;
         	}
         }
-        assertNotNull(archiveTimestamp);
-        assertEquals(1, archiveTimestamps);
+        assertNotNull(docTimestamp);
 
         List<String> checkedIds = new ArrayList<>();
+        assertEquals(5, docTimestamp.getTimestampedSignatures().size());
+        checkedIds.add(docTimestamp.getTimestampedSignatures().get(0).getId());
         
-        assertEquals(5, archiveTimestamp.getTimestampedSignatures().size());
-        checkedIds.add(archiveTimestamp.getTimestampedSignatures().get(0).getId());
-        
-        List<SignerDataWrapper> timestampedSignedData = archiveTimestamp.getTimestampedSignedData();
+        List<SignerDataWrapper> timestampedSignedData = docTimestamp.getTimestampedSignedData();
         assertEquals(5, timestampedSignedData.size());
         for (SignerDataWrapper signerDataWrapper : timestampedSignedData) {
             assertFalse(checkedIds.contains(signerDataWrapper.getId()));
             checkedIds.add(signerDataWrapper.getId());
         }
-        
-        List<CertificateWrapper> timestampedCertificates = archiveTimestamp.getTimestampedCertificates();
+
+        List<CertificateWrapper> timestampedCertificates = docTimestamp.getTimestampedCertificates();
         assertEquals(18, timestampedCertificates.size());
         for (CertificateWrapper certificateWrapper : timestampedCertificates) {
             assertFalse(checkedIds.contains(certificateWrapper.getId()));
             checkedIds.add(certificateWrapper.getId());
         }
-        
-        List<RevocationWrapper> timestampedRevocations = archiveTimestamp.getTimestampedRevocations();
-        assertEquals(2, timestampedRevocations.size());
+
+        List<RevocationWrapper> timestampedRevocations = docTimestamp.getTimestampedRevocations();
+        assertEquals(4, timestampedRevocations.size());
         for (RevocationWrapper revocationWrapper : timestampedRevocations) {
             assertFalse(checkedIds.contains(revocationWrapper.getId()));
             checkedIds.add(revocationWrapper.getId());
         }
-        
-        List<OrphanTokenWrapper> timestampedOrphanRevocations = archiveTimestamp.getTimestampedOrphanRevocations();
-        assertEquals(2, timestampedOrphanRevocations.size());
-        for (OrphanTokenWrapper revocationWrapper : timestampedOrphanRevocations) {
-            assertFalse(checkedIds.contains(revocationWrapper.getId()));
-            checkedIds.add(revocationWrapper.getId());
-        }
-        
-        List<TimestampWrapper> timestampedTimestamps = archiveTimestamp.getTimestampedTimestamps();
+
+        List<TimestampWrapper> timestampedTimestamps = docTimestamp.getTimestampedTimestamps();
         assertEquals(2, timestampedTimestamps.size());
         for (TimestampWrapper timestampWrapper : timestampedTimestamps) {
             assertFalse(checkedIds.contains(timestampWrapper.getId()));
@@ -148,14 +138,6 @@ public class PAdESFiveSignaturesDocTest extends AbstractPAdESTestValidation {
         }
         
         assertEquals(30, checkedIds.size());
-	}
-	
-	@Override
-	protected void checkOrphanTokens(DiagnosticData diagnosticData) {
-		assertEquals(0, diagnosticData.getAllOrphanCertificateObjects().size());
-		assertEquals(0, diagnosticData.getAllOrphanCertificateReferences().size());
-		assertEquals(2, diagnosticData.getAllOrphanRevocationObjects().size());
-		assertEquals(0, diagnosticData.getAllOrphanRevocationReferences().size());
 	}
 	
 	@Override

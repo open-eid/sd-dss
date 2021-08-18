@@ -20,19 +20,11 @@
  */
 package eu.europa.esig.dss.asic.cades.extension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.UUID;
-
+import eu.europa.esig.dss.asic.cades.ASiCWithCAdESContainerExtractor;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESSignatureParameters;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESTimestampParameters;
 import eu.europa.esig.dss.asic.cades.signature.ASiCWithCAdESService;
+import eu.europa.esig.dss.asic.common.ASiCExtractResult;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlContainerInfo;
@@ -42,7 +34,7 @@ import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
-import eu.europa.esig.dss.signature.DocumentSignatureService;
+import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
 import eu.europa.esig.dss.test.extension.AbstractTestExtension;
 import eu.europa.esig.dss.utils.Utils;
@@ -50,6 +42,18 @@ import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.validationreport.jaxb.SignatureIdentifierType;
 import eu.europa.esig.validationreport.jaxb.SignatureValidationReportType;
 import eu.europa.esig.validationreport.jaxb.ValidationReportType;
+import org.bouncycastle.cms.CMSSignedData;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class AbstractASiCWithCAdESTestExtension extends AbstractTestExtension<ASiCWithCAdESSignatureParameters, ASiCWithCAdESTimestampParameters> {
 
@@ -77,18 +81,23 @@ public abstract class AbstractASiCWithCAdESTestExtension extends AbstractTestExt
 	@Override
 	protected DSSDocument getSignedDocument(DSSDocument doc) {
 		// Sign
+		ASiCWithCAdESSignatureParameters signatureParameters = getSignatureParameters();
+		ASiCWithCAdESService service = getSignatureServiceToSign();
+
+		ToBeSigned dataToSign = service.getDataToSign(doc, signatureParameters);
+		SignatureValue signatureValue = getToken().sign(dataToSign, signatureParameters.getDigestAlgorithm(),
+				getPrivateKeyEntry());
+		return service.signDocument(doc, signatureParameters, signatureValue);
+	}
+
+	@Override
+	protected ASiCWithCAdESSignatureParameters getSignatureParameters() {
 		ASiCWithCAdESSignatureParameters signatureParameters = new ASiCWithCAdESSignatureParameters();
 		signatureParameters.setSigningCertificate(getSigningCert());
 		signatureParameters.setCertificateChain(getCertificateChain());
 		signatureParameters.setSignatureLevel(getOriginalSignatureLevel());
 		signatureParameters.aSiC().setContainerType(getContainerType());
-
-		ASiCWithCAdESService service = new ASiCWithCAdESService(getCompleteCertificateVerifier());
-		service.setTspSource(getUsedTSPSourceAtSignatureTime());
-
-		ToBeSigned dataToSign = service.getDataToSign(doc, signatureParameters);
-		SignatureValue signatureValue = getToken().sign(dataToSign, signatureParameters.getDigestAlgorithm(), getPrivateKeyEntry());
-		return service.signDocument(doc, signatureParameters, signatureValue);
+		return signatureParameters;
 	}
 
 	@Override
@@ -106,6 +115,35 @@ public abstract class AbstractASiCWithCAdESTestExtension extends AbstractTestExt
 	}
 
 	@Override
+	protected void onDocumentSigned(DSSDocument signedDocument) {
+		super.onDocumentSigned(signedDocument);
+		onCreatedContainer(signedDocument);
+	}
+
+	@Override
+	protected void onDocumentExtended(DSSDocument extendedDocument) {
+		super.onDocumentExtended(extendedDocument);
+		onCreatedContainer(extendedDocument);
+	}
+
+	protected void onCreatedContainer(DSSDocument container) {
+		ASiCWithCAdESContainerExtractor containerExtractor = new ASiCWithCAdESContainerExtractor(container);
+		ASiCExtractResult result = containerExtractor.extract();
+
+		List<DSSDocument> signatureDocuments = result.getSignatureDocuments();
+		assertTrue(Utils.isCollectionNotEmpty(signatureDocuments));
+		for (DSSDocument signatureDocument : signatureDocuments) {
+			checkSignaturePackaging(signatureDocument);
+		}
+	}
+
+	protected void checkSignaturePackaging(DSSDocument signatureDocument) {
+		CMSSignedData cmsSignedData = DSSUtils.toCMSSignedData(signatureDocument);
+		assertTrue(cmsSignedData.isDetachedSignature());
+		assertTrue(cmsSignedData.getSignedContent() == null);
+	}
+
+	@Override
 	protected void verifyDiagnosticData(DiagnosticData diagnosticData) {
 		super.verifyDiagnosticData(diagnosticData);
 
@@ -116,7 +154,14 @@ public abstract class AbstractASiCWithCAdESTestExtension extends AbstractTestExt
 	}
 
 	@Override
-	protected DocumentSignatureService<ASiCWithCAdESSignatureParameters, ASiCWithCAdESTimestampParameters> getSignatureServiceToExtend() {
+	protected ASiCWithCAdESService getSignatureServiceToSign() {
+		ASiCWithCAdESService service = new ASiCWithCAdESService(getCompleteCertificateVerifier());
+		service.setTspSource(getUsedTSPSourceAtSignatureTime());
+		return service;
+	}
+
+	@Override
+	protected ASiCWithCAdESService getSignatureServiceToExtend() {
 		ASiCWithCAdESService service = new ASiCWithCAdESService(getCompleteCertificateVerifier());
 		service.setTspSource(getUsedTSPSourceAtExtensionTime());
 		return service;

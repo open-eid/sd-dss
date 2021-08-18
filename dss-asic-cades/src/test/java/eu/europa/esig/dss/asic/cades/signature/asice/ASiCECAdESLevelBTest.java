@@ -20,17 +20,6 @@
  */
 package eu.europa.esig.dss.asic.cades.signature.asice;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.List;
-
-import org.junit.jupiter.api.BeforeEach;
-
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESContainerExtractor;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESSignatureParameters;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESTimestampParameters;
@@ -41,15 +30,28 @@ import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDigestMatcher;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlManifestFile;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlSignatureScope;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlSignerData;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.DigestMatcherType;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
+import eu.europa.esig.dss.enumerations.SignatureScopeType;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
+import org.junit.jupiter.api.BeforeEach;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class ASiCECAdESLevelBTest extends AbstractASiCECAdESTestSignature {
 
@@ -76,6 +78,8 @@ public class ASiCECAdESLevelBTest extends AbstractASiCECAdESTestSignature {
 
 	@Override
 	protected void onDocumentSigned(byte[] byteArray) {
+		super.onDocumentSigned(byteArray);
+
 		InMemoryDocument doc = new InMemoryDocument(byteArray);
 
 		AbstractASiCContainerExtractor extractor = new ASiCWithCAdESContainerExtractor(doc);
@@ -126,6 +130,28 @@ public class ASiCECAdESLevelBTest extends AbstractASiCECAdESTestSignature {
 		List<String> entries = manifestFiles.get(0).getEntries();
 		assertNotNull(entries);
 		assertEquals(entries.size(), manifestEntriesCounter);
+	}
+
+	@Override
+	protected void checkSignatureScopes(DiagnosticData diagnosticData) {
+		 List<String> signatureIdList = diagnosticData.getSignatureIdList();
+		 assertEquals(1, signatureIdList.size());
+		
+		 SignatureWrapper signature = diagnosticData.getSignatureById(signatureIdList.get(0));
+		 List<XmlSignatureScope> signatureScopes = signature.getSignatureScopes();
+		 assertEquals(2, signatureScopes.size());
+		 for (XmlSignatureScope signatureScope : signatureScopes) {
+			 assertEquals(SignatureScopeType.FULL, signatureScope.getScope());
+			 assertNotNull(signatureScope.getName());
+			 assertNotNull(signatureScope.getDescription());
+			 XmlSignerData signerData = signatureScope.getSignerData();
+			 assertNotNull(signerData);
+			 assertNotNull(signerData.getId());
+			 assertNotNull(signerData.getReferencedName());
+			 assertNotNull(signerData.getDigestAlgoAndValue());
+			 assertNotNull(signerData.getDigestAlgoAndValue().getDigestMethod());
+			 assertNotNull(signerData.getDigestAlgoAndValue().getDigestValue());
+		 }
 	}
 
 	@Override

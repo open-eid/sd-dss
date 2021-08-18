@@ -31,15 +31,12 @@ import java.util.Set;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.FoundCertificatesProxy;
 import eu.europa.esig.dss.diagnostic.RevocationWrapper;
-import eu.europa.esig.dss.diagnostic.TimestampWrapper;
 import eu.europa.esig.dss.enumerations.CertificateRefOrigin;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
-import org.junit.jupiter.api.Disabled;
 
-@Disabled("DD4J-629")
 public class ASiCEWithXAdESNoSignCertFoundForRevocationTest extends AbstractASiCWithXAdESTestValidation {
 
 	@Override
@@ -69,19 +66,5 @@ public class ASiCEWithXAdESNoSignCertFoundForRevocationTest extends AbstractASiC
 		RevocationWrapper revocationWrapper = allRevocationData.iterator().next();
 		assertEquals(1, revocationWrapper.foundCertificates().getOrphanCertificatesByRefOrigin(CertificateRefOrigin.SIGNING_CERTIFICATE).size());
 	}
-	
-	@Override
-	protected void checkSignatureLevel(DiagnosticData diagnosticData) {
-		assertFalse(diagnosticData.isTLevelTechnicallyValid(diagnosticData.getFirstSignatureId()));
-	}
-	
-	@Override
-	protected void checkTimestamps(DiagnosticData diagnosticData) {
-		List<TimestampWrapper> timestampList = diagnosticData.getTimestampList();
-		assertEquals(1, timestampList.size());
-		TimestampWrapper timestampWrapper = timestampList.get(0);
-		assertTrue(timestampWrapper.isMessageImprintDataFound());
-		assertFalse(timestampWrapper.isMessageImprintDataIntact());
-	}
-	
+
 }

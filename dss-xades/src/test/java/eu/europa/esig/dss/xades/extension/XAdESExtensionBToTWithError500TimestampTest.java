@@ -20,7 +20,6 @@
  */
 package eu.europa.esig.dss.xades.extension;
 
-
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -48,7 +47,6 @@ public class XAdESExtensionBToTWithError500TimestampTest extends AbstractXAdESTe
 	}
 
 	@Override
-
 	@Test
 	public void extendAndVerify() throws Exception {
 		Exception exception = assertThrows(DSSException.class, () -> {

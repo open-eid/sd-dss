@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.7.d4j.2</version>
+		<version>5.8.d4j.1</version>
 	</parent>
 	
 	<artifactId>specs-saml-assertion</artifactId>
@@ -77,7 +77,7 @@
 										
 					<disableXmlSecurity>false</disableXmlSecurity>
 					<accessExternalSchema>file</accessExternalSchema>
-					<accessExternalDTD>all</accessExternalDTD>
+					<accessExternalDTD>file</accessExternalDTD>
 				</configuration>
 			</plugin>
 			

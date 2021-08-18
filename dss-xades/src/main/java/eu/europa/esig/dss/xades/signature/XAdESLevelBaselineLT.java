@@ -20,12 +20,6 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Set;
-
-import org.w3c.dom.Element;
-
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.x509.CertificateToken;
@@ -35,15 +29,21 @@ import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.SignatureCryptographicVerification;
 import eu.europa.esig.dss.validation.ValidationContext;
 import eu.europa.esig.dss.validation.ValidationDataForInclusion;
+import org.w3c.dom.Element;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * LT profile of XAdES signature
  *
  */
-public class XAdESLevelBaselineLT extends XAdESLevelBaselineT implements Serializable {
+public class XAdESLevelBaselineLT extends XAdESLevelBaselineT {
 
 	/**
 	 * The default constructor for XAdESLevelBaselineLT.
+	 *
+	 * @param certificateVerifier {@link CertificateVerifier}
 	 */
 	public XAdESLevelBaselineLT(final CertificateVerifier certificateVerifier) {
 		super(certificateVerifier);

@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -163,8 +164,12 @@ public class SignaturePoolTest extends AbstractDocumentTestValidation<Serializab
 	public void testValidate(File fileToTest) {
 		LOG.info("Begin : {}", fileToTest.getAbsolutePath());
 		document = new FileDocument(fileToTest);
-		assertTimeout(ofSeconds(3L), () -> super.validate());
-		LOG.info("End : {}", fileToTest.getAbsolutePath());
+		try {
+			assertTimeout(ofSeconds(3L), () -> super.validate(), "Execution exceeded timeout for file " + fileToTest);
+			LOG.info("End : {}", fileToTest.getAbsolutePath());
+		} catch (Exception e) {
+			fail("Validation of " + fileToTest + " failed", e);
+		}
 	}
 	
 	@Override
@@ -328,8 +333,8 @@ public class SignaturePoolTest extends AbstractDocumentTestValidation<Serializab
 					foundCertificates.getRelatedCertificatesByOrigin(CertificateOrigin.TIMESTAMP_VALIDATION_DATA).size() + 
 					foundCertificates.getOrphanCertificatesByOrigin(CertificateOrigin.TIMESTAMP_VALIDATION_DATA).size());
 			assertEquals(new HashSet<>(certificateSource.getAttrAuthoritiesCertValues()).size(),
-					foundCertificates.getRelatedCertificatesByOrigin(CertificateOrigin.ATTR_AUTORITIES_CERT_VALUES).size() + 
-					foundCertificates.getOrphanCertificatesByOrigin(CertificateOrigin.ATTR_AUTORITIES_CERT_VALUES).size());
+					foundCertificates.getRelatedCertificatesByOrigin(CertificateOrigin.ATTR_AUTHORITIES_CERT_VALUES).size() +
+					foundCertificates.getOrphanCertificatesByOrigin(CertificateOrigin.ATTR_AUTHORITIES_CERT_VALUES).size());
 			assertEquals(new HashSet<>(certificateSource.getSignedDataCertificates()).size(),
 					foundCertificates.getRelatedCertificatesByOrigin(CertificateOrigin.SIGNED_DATA).size() + 
 					foundCertificates.getOrphanCertificatesByOrigin(CertificateOrigin.SIGNED_DATA).size());
@@ -371,8 +376,8 @@ public class SignaturePoolTest extends AbstractDocumentTestValidation<Serializab
 						foundCertificates.getRelatedCertificatesByOrigin(CertificateOrigin.TIMESTAMP_VALIDATION_DATA).size() + 
 						foundCertificates.getOrphanCertificatesByOrigin(CertificateOrigin.TIMESTAMP_VALIDATION_DATA).size());
 				assertEquals(new HashSet<>(certificateSource.getAttrAuthoritiesCertValues()).size(), 
-						foundCertificates.getRelatedCertificatesByOrigin(CertificateOrigin.ATTR_AUTORITIES_CERT_VALUES).size() + 
-						foundCertificates.getOrphanCertificatesByOrigin(CertificateOrigin.ATTR_AUTORITIES_CERT_VALUES).size());
+						foundCertificates.getRelatedCertificatesByOrigin(CertificateOrigin.ATTR_AUTHORITIES_CERT_VALUES).size() +
+						foundCertificates.getOrphanCertificatesByOrigin(CertificateOrigin.ATTR_AUTHORITIES_CERT_VALUES).size());
 				assertEquals(new HashSet<>(certificateSource.getSignedDataCertificates()).size(),
 						foundCertificates.getRelatedCertificatesByOrigin(CertificateOrigin.SIGNED_DATA).size() + 
 						foundCertificates.getOrphanCertificatesByOrigin(CertificateOrigin.SIGNED_DATA).size());
@@ -497,10 +502,17 @@ public class SignaturePoolTest extends AbstractDocumentTestValidation<Serializab
 	}
 	
 	@Override
+	protected void checkStructureValidation(DiagnosticData diagnosticData) {
+		// skip
+	}
+
+	@Override
 	protected void verifyOriginalDocuments(SignedDocumentValidator validator, DiagnosticData diagnosticData) {
 		List<String> signatureIdList = diagnosticData.getSignatureIdList();
 		for (String signatureId : signatureIdList) {
-			if (diagnosticData.isBLevelTechnicallyValid(signatureId) && isNotInvalidManifest(validator) && signsDocuments(diagnosticData)) {
+			SignatureWrapper signatureWrapper = diagnosticData.getSignatureById(signatureId);
+			if (diagnosticData.isBLevelTechnicallyValid(signatureId) && isNotInvalidManifest(validator)
+					&& signsDocuments(diagnosticData) && !signatureWrapper.isCounterSignature()) {
 				List<DSSDocument> retrievedOriginalDocuments = validator.getOriginalDocuments(signatureId);
 				assertTrue(Utils.isCollectionNotEmpty(retrievedOriginalDocuments));
 			}
@@ -526,7 +538,8 @@ public class SignaturePoolTest extends AbstractDocumentTestValidation<Serializab
 			for (XmlDigestMatcher digestMatcher : signatureWrapper.getDigestMatchers()) {
 				DigestMatcherType type = digestMatcher.getType();
 				if (!DigestMatcherType.KEY_INFO.equals(type) && !DigestMatcherType.REFERENCE.equals(type) && 
-						!DigestMatcherType.SIGNED_PROPERTIES.equals(type) && !DigestMatcherType.XPOINTER.equals(type)) {
+						!DigestMatcherType.SIGNED_PROPERTIES.equals(type) && !DigestMatcherType.XPOINTER.equals(type) && 
+						!DigestMatcherType.SIGNATURE_PROPERTIES.equals(type) && !DigestMatcherType.COUNTER_SIGNATURE.equals(type)) {
 					containsDocumentDigestMatcher = true;
 					break;
 				}

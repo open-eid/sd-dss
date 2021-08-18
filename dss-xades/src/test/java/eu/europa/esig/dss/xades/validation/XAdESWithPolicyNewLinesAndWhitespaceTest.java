@@ -21,11 +21,9 @@
 package eu.europa.esig.dss.xades.validation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
-import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
 
@@ -53,7 +51,7 @@ public class XAdESWithPolicyNewLinesAndWhitespaceTest extends AbstractXAdESTestV
 	protected void checkSignatureLevel(DiagnosticData diagnosticData) {
 		// do nothing
 	}
-	
+
 	@Override
 	protected void checkBLevelValid(DiagnosticData diagnosticData) {
 		// do nothing

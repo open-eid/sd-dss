@@ -25,17 +25,40 @@ import org.w3c.dom.Element;
 import eu.europa.esig.dss.DomUtils;
 import eu.europa.esig.dss.xades.definition.XAdESPaths;
 
+/**
+ * Unsigned XAdES signature properties
+ */
 public class XAdESUnsignedSigProperties extends XAdESSigProperties {
 
-	XAdESUnsignedSigProperties(Element signaturePropties, XAdESPaths xadesPaths) {
-		super(signaturePropties, xadesPaths);
+	/**
+	 * Default constructor
+	 *
+	 * @param unsignedSignatureProperties {@link Element} unsigned signature properties
+	 * @param xadesPaths {@link XAdESPaths}
+	 */
+	public XAdESUnsignedSigProperties(Element unsignedSignatureProperties, XAdESPaths xadesPaths) {
+		super(unsignedSignatureProperties, xadesPaths);
 	}
-	
+
+	/**
+	 * Builds {code XAdESUnsignedSigProperties}
+	 *
+	 * @param signatureElement {@link Element} signature element
+	 * @param xadesPaths {@link XAdESPaths}
+	 * @return {@link XAdESUnsignedSigProperties}
+	 */
 	public static XAdESUnsignedSigProperties build(Element signatureElement, XAdESPaths xadesPaths) {
 		Element unsignedSignatureProperties = getUnsignedSignaturePropertiesDom(signatureElement, xadesPaths);
 		return new XAdESUnsignedSigProperties(unsignedSignatureProperties, xadesPaths);
 	}
 
+	/**
+	 * Gets xades:UnsignedSignatureProperties element
+	 *
+	 * @param signatureElement {@link Element} signature element
+	 * @param xadesPaths {@link XAdESPaths}
+	 * @return {@link Element}
+	 */
 	protected static Element getUnsignedSignaturePropertiesDom(Element signatureElement, XAdESPaths xadesPaths) {
 		return DomUtils.getElement(signatureElement, xadesPaths.getUnsignedSignaturePropertiesPath());
 	}

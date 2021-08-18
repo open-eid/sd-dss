@@ -20,40 +20,49 @@
  */
 package eu.europa.esig.dss.xades.validation;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import eu.europa.esig.dss.DomUtils;
+import eu.europa.esig.dss.definition.xmldsig.XMLDSigAttribute;
+import eu.europa.esig.dss.definition.xmldsig.XMLDSigPaths;
+import eu.europa.esig.dss.utils.Utils;
+import eu.europa.esig.dss.validation.SignatureAttribute;
+import eu.europa.esig.dss.validation.timestamp.TimestampInclude;
+import eu.europa.esig.dss.xades.definition.XAdESPaths;
+import eu.europa.esig.dss.xades.definition.xades111.XAdES111Paths;
+import eu.europa.esig.dss.xades.definition.xades132.XAdES132Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import eu.europa.esig.dss.DomUtils;
-import eu.europa.esig.dss.definition.xmldsig.XMLDSigAttribute;
-import eu.europa.esig.dss.definition.xmldsig.XMLDSigPaths;
-import eu.europa.esig.dss.utils.Utils;
-import eu.europa.esig.dss.validation.ISignatureAttribute;
-import eu.europa.esig.dss.validation.timestamp.TimestampInclude;
-import eu.europa.esig.dss.xades.definition.XAdESPaths;
-import eu.europa.esig.dss.xades.definition.xades111.XAdES111Paths;
-import eu.europa.esig.dss.xades.definition.xades132.XAdES132Attribute;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
-import javax.xml.crypto.dsig.CanonicalizationMethod;
-
-public class XAdESAttribute implements ISignatureAttribute {
-
-	/**
-	 * Estonian specific default timestamp validation canonicalization method
-	 */
-	private static final String DEFAULT_TIMESTAMP_VALIDATION_CANONICALIZATION_METHOD = CanonicalizationMethod.INCLUSIVE;
+/**
+ * Represents a XAdES attribute
+ */
+public class XAdESAttribute implements SignatureAttribute {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(XAdESAttribute.class);
-	
+
+	/** The corresponding element */
 	private final Element element;
+
+	/** The XPath list to use */
 	private final XAdESPaths xadesPaths;
-	
+
+	/** The tag name of the element */
 	private String localName;
-	
+
+	/** Identifies the instance */
+	private XAdESAttributeIdentifier identifier;
+
+	/**
+	 * Default constructor
+	 *
+	 * @param element {@link Element}
+	 * @param xadesPaths {@link XAdESPaths}
+	 */
 	XAdESAttribute(Element element, XAdESPaths xadesPaths) {
 		this.element = element;
 		this.xadesPaths = xadesPaths;
@@ -71,7 +80,17 @@ public class XAdESAttribute implements ISignatureAttribute {
 	}
 	
 	/**
-	 * Returns namespae of the element
+	 * Returns the current {@code Element}
+	 * 
+	 * @return {@link Element}
+	 */
+	public final Element getElement() {
+		return element;
+	}
+	
+	/**
+	 * Returns namespace of the element
+	 *
 	 * @return {@link String} namespace
 	 */
 	public String getNamespace() {
@@ -80,7 +99,9 @@ public class XAdESAttribute implements ISignatureAttribute {
 	
 	/**
 	 * Returns an inner {@link Element} found by the given {@code xPathExpression}
+	 *
 	 * @param xPathExpression {@link String} to find an element
+	 * @return {@link Element}
 	 */
 	public final Element findElement(String xPathExpression) {
 		return DomUtils.getElement(element, xPathExpression);
@@ -88,7 +109,9 @@ public class XAdESAttribute implements ISignatureAttribute {
 
 	/**
 	 * Returns a {@link NodeList} found by the given {@code xPathExpression}
+	 *
 	 * @param xPathExpression {@link String} to find an element
+	 * @return {@link NodeList}
 	 */
 	public final NodeList getNodeList(String xPathExpression) {
 		return DomUtils.getNodeList(element, xPathExpression);
@@ -96,6 +119,7 @@ public class XAdESAttribute implements ISignatureAttribute {
 
 	/**
 	 * Returns TimeStamp Canonicalization Method
+	 *
 	 * @return {@link String} timestamp canonicalization method
 	 */
 	public String getTimestampCanonicalizationMethod() {
@@ -107,15 +131,15 @@ public class XAdESAttribute implements ISignatureAttribute {
 				canonicalizationMethod = transform.getAttribute(XMLDSigAttribute.ALGORITHM.getAttributeName());
 			} else {
 				LOG.warn("Unable to retrieve the canonicalization algorithm");
-				return DEFAULT_TIMESTAMP_VALIDATION_CANONICALIZATION_METHOD;
 			}
 		}
 		return canonicalizationMethod;
 	}
 	
 	/**
-	 * Returns a list of {@link TimestampInclude}d refereces in case of IndividualDataObjectsTimestamp,
+	 * Returns a list of {@link TimestampInclude}d references in case of IndividualDataObjectsTimestamp,
 	 * NULL if does not contain any includes
+	 *
 	 * @return list of {@link TimestampInclude}s in case of IndividualDataObjectsTimestamp, NULL otherwise
 	 */
 	public List<TimestampInclude> getTimestampIncludedReferences() {
@@ -135,11 +159,34 @@ public class XAdESAttribute implements ISignatureAttribute {
 		}
 		return null;
 	}
-	
-	public int getElementHashCode() {
-		return element.hashCode();
+
+	/**
+	 * Gets the attribute identifier
+	 *
+	 * @return {@link XAdESAttributeIdentifier}
+	 */
+	public XAdESAttributeIdentifier getIdentifier() {
+		if (identifier == null) {
+			identifier = XAdESAttributeIdentifier.build(element);
+		}
+		return identifier;
 	}
 	
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		XAdESAttribute that = (XAdESAttribute) o;
+
+		return Objects.equals(this.getIdentifier(), that.getIdentifier());
+	}
+
+	@Override
+	public int hashCode() {
+		return identifier != null ? identifier.hashCode() : 0;
+	}
+
 	@Override
 	public String toString() {
 		return getName();

@@ -33,18 +33,36 @@ import java.util.Objects;
  */
 public class MutableTimeDependentValues<T extends TimeDependent> extends TimeDependentValues<T> {
 
+	private static final long serialVersionUID = -7260622365917872977L;
+
+	/**
+	 * Empty constructor
+	 */
 	public MutableTimeDependentValues() {
 		super();
 	}
 
+	/**
+	 * Default constructor
+	 *
+	 * @param srcList list of time dependent values
+	 */
 	public MutableTimeDependentValues(final Iterable<T> srcList) {
 		super(srcList);
 	}
 
+	/**
+	 * Clears the current list
+	 */
 	public synchronized void clear() {
 		list.clear();
 	}
 
+	/**
+	 * Adds the value only of it is the oldest in the current list
+	 *
+	 * @param x the time dependent value to add
+	 */
 	public synchronized void addOldest(final T x) {
 		Objects.requireNonNull(x, "Cannot add null");
 		if (!list.isEmpty()) {
@@ -58,6 +76,11 @@ public class MutableTimeDependentValues<T extends TimeDependent> extends TimeDep
 		list.add(x);
 	}
 
+	/**
+	 * Gets the current list
+	 *
+	 * @return list of time dependent values
+	 */
 	public List<T> getList() {
 		return list;
 	}

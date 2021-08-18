@@ -66,6 +66,7 @@ public class XAdESLevelBEnvelopedWithReferenceTest extends AbstractXAdESTestSign
 	@BeforeEach
 	public void init() throws Exception {
 		SantuarioInitializer.init();
+
 		documentToSign = new FileDocument(new File("src/test/resources/sampleWithPlaceOfSignature.xml"));
 
 		signatureParameters = new XAdESSignatureParameters();

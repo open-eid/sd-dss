@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.7.d4j.2</version>
+		<version>5.8.d4j.1</version>
 	</parent>
 
 	<name>CookBook</name>
@@ -52,12 +52,16 @@
 			<artifactId>dss-pades-pdfbox</artifactId>
 		</dependency>
 <!-- 		<dependency> -->
-<!-- 			<groupId>eu.europa.ec.joinup.sd-dss</groupId> -->
+<!-- 			<groupId>${dss.groupId}</groupId> -->
 <!-- 			<artifactId>dss-pades-openpdf</artifactId> -->
 <!-- 		</dependency> -->
 		<dependency>
       <groupId>${dss.groupId}</groupId>
 			<artifactId>dss-xades</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-jades</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
@@ -84,7 +88,7 @@
 					<plugin>
 						<groupId>org.asciidoctor</groupId>
 						<artifactId>asciidoctor-maven-plugin</artifactId>
-						<version>2.0.0</version>
+						<version>2.1.0</version>
 						<dependencies>
 		                    <dependency>
 		                        <groupId>org.asciidoctor</groupId>

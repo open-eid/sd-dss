@@ -20,11 +20,6 @@
  */
 package eu.europa.esig.dss.validation.process.vpfswatsp.checks.vts;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-
 import eu.europa.esig.dss.detailedreport.jaxb.XmlBasicBuildingBlocks;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlRFC;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlSAV;
@@ -51,20 +46,47 @@ import eu.europa.esig.dss.validation.process.vpfswatsp.POEExtraction;
 import eu.europa.esig.dss.validation.process.vpfswatsp.checks.vts.checks.POEExistsAtOrBeforeControlTimeCheck;
 import eu.europa.esig.dss.validation.process.vpfswatsp.checks.vts.checks.SatisfyingRevocationDataExistsCheck;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+/**
+ * Performs Validation Time Sliding process
+ */
 public class ValidationTimeSliding extends Chain<XmlVTS> {
 
+	/** Token to process */
 	private final TokenProxy token;
+
+	/** Validation time */
 	private final Date currentTime;
-	
+
+	/** Current BBBs */
 	private final XmlBasicBuildingBlocks bbb;
 
+	/** Validation context */
 	private final Context context;
 
+	/** POE container */
 	private final POEExtraction poe;
+
+	/** Validation policy */
 	private final ValidationPolicy policy;
 
+	/** Validation time */
 	private Date controlTime;
 
+	/**
+	 * Default constructor
+	 *
+	 * @param i18nProvider {@link I18nProvider}
+	 * @param token {@link TokenProxy}
+	 * @param currentTime {@link Date}
+	 * @param poe {@link POEExtraction}
+	 * @param bbb {@link XmlBasicBuildingBlocks}
+	 * @param context {@link Context}
+	 * @param policy {@link ValidationPolicy}
+	 */
 	public ValidationTimeSliding(I18nProvider i18nProvider, TokenProxy token, Date currentTime, POEExtraction poe, 
 			XmlBasicBuildingBlocks bbb, Context context, ValidationPolicy policy) {
 		super(i18nProvider, new XmlVTS());
@@ -108,8 +130,7 @@ public class ValidationTimeSliding extends Chain<XmlVTS> {
 			 * 2) For each certificate in the chain starting from the first
 			 * certificate (the certificate issued by the trust anchor):
 			 */
-			Collections.reverse(certificateChain); // trusted_list -> ... ->
-														// signature
+			certificateChain = Utils.reverseList(certificateChain); // trusted_list -> ... -> signature
 
 			ChainItem<XmlVTS> item = null;
 
@@ -203,16 +224,14 @@ public class ValidationTimeSliding extends Chain<XmlVTS> {
                 Date cryptoNotAfterDate = null;
                 
                 XmlSAV certificateSAV = getCertificateCryptographicAcceptanceResult(certificate, controlTime);
-                if (!isValidConclusion(certificateSAV.getConclusion())) {
-                    if (certificateSAV.getCryptographicInfo() != null && certificateSAV.getCryptographicInfo().getNotAfter() != null) {
-                        cryptoNotAfterDate = certificateSAV.getCryptographicInfo().getNotAfter();
-                    }
+				if (!isValidConclusion(certificateSAV.getConclusion())) {
+					cryptoNotAfterDate = getCryptographicAlgorithmExpirationDateOrNull(certificateSAV);
                 }
                 XmlSAV revocationSAV = getRevocationCryptographicAcceptanceResult(latestCompliantRevocation, controlTime);
                 if (!isValidConclusion(revocationSAV.getConclusion())) {
-                    if (revocationSAV.getCryptographicInfo() != null && revocationSAV.getCryptographicInfo().getNotAfter() != null &&
-                            cryptoNotAfterDate == null || revocationSAV.getCryptographicInfo().getNotAfter().before(cryptoNotAfterDate)) {
-                        cryptoNotAfterDate = revocationSAV.getCryptographicInfo().getNotAfter();
+					Date revCryptoNotAfter = getCryptographicAlgorithmExpirationDateOrNull(revocationSAV);
+                    if (cryptoNotAfterDate == null || revCryptoNotAfter.before(cryptoNotAfterDate)) {
+                        cryptoNotAfterDate = revCryptoNotAfter;
                     }
                 }
                 
@@ -247,6 +266,13 @@ public class ValidationTimeSliding extends Chain<XmlVTS> {
 		return execute != null && execute.getConclusion() != null && Indication.PASSED.equals(execute.getConclusion().getIndication());
 	}
 
+	private Date getCryptographicAlgorithmExpirationDateOrNull(XmlSAV sav) {
+		if (sav.getCryptographicInfo() != null) {
+			return sav.getCryptographicInfo().getNotAfter();
+		}
+		return null;
+	}
+
 	private ChainItem<XmlVTS> satisfyingRevocationDataExists(RevocationWrapper revocationData) {
 		return new SatisfyingRevocationDataExistsCheck<>(i18nProvider, result, revocationData, getFailLevelConstraint());
 	}
@@ -256,7 +282,7 @@ public class ValidationTimeSliding extends Chain<XmlVTS> {
 	}
 	
     private XmlSAV getCertificateCryptographicAcceptanceResult(CertificateWrapper certificateWrapper, Date controlTime) {
-        CertificateAcceptanceValidation cav = new CertificateAcceptanceValidation(i18nProvider, controlTime, certificateWrapper, policy);
+		CertificateAcceptanceValidation cav = new CertificateAcceptanceValidation(i18nProvider, controlTime, certificateWrapper, policy);
         return cav.execute();
     }
     

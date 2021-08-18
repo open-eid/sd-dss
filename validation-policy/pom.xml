@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.7.d4j.2</version>
+		<version>5.8.d4j.1</version>
 	</parent>
 	<artifactId>validation-policy</artifactId>
 
@@ -78,9 +78,10 @@
 		    <artifactId>junit-jupiter-params</artifactId>
 			<scope>test</scope>
 		</dependency>
+
 		<!-- Choose your implementation -->
 <!-- 		<dependency> -->
-<!-- 			<groupId>eu.europa.ec.joinup.sd-dss</groupId> -->
+<!-- 			<groupId>${dss.groupId}</groupId> -->
 <!-- 			<artifactId>dss-utils-apache-commons</artifactId> -->
 <!-- 			<scope>test</scope> -->
 <!-- 		</dependency> -->

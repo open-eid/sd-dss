@@ -28,14 +28,12 @@ import eu.europa.esig.dss.xades.SignatureBuilder;
 import eu.europa.esig.dss.xades.SignatureProfile;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 
-import java.io.Serializable;
-
 /**
  * Contains B level baseline profile for XAdES signature.
  *
  *
  */
-public class XAdESLevelBaselineB implements SignatureProfile, Serializable {
+public class XAdESLevelBaselineB implements SignatureProfile {
 
 	static {
 		SantuarioInitializer.init();
@@ -100,4 +98,5 @@ public class XAdESLevelBaselineB implements SignatureProfile, Serializable {
 		parameters.getContext().setBuilder(builder);
 		return dssDocument;
 	}
+
 }

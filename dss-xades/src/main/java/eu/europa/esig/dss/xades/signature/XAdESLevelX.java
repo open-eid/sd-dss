@@ -42,6 +42,8 @@ public class XAdESLevelX extends XAdESLevelC {
 
 	/**
 	 * The default constructor for XAdESLevelX.
+	 *
+	 * @param certificateVerifier {@link CertificateVerifier}
 	 */
 	public XAdESLevelX(CertificateVerifier certificateVerifier) {
 		super(certificateVerifier);
@@ -64,7 +66,7 @@ public class XAdESLevelX extends XAdESLevelC {
 		Element levelCUnsignedProperties = (Element) unsignedSignaturePropertiesDom.cloneNode(true);
 
 		final SignatureLevel signatureLevel = params.getSignatureLevel();
-		// for XAdES_XL the development is not conform with the standard
+		// TODO : for XAdES_XL the development is not conform with the standard ?
 		if (!xadesSignature.hasXProfile() || SignatureLevel.XAdES_X.equals(signatureLevel) || SignatureLevel.XAdES_XL.equals(signatureLevel)) {
 
 			if (SignatureLevel.XAdES_XL.equals(params.getSignatureLevel())) {
@@ -87,4 +89,5 @@ public class XAdESLevelX extends XAdESLevelC {
 			unsignedSignaturePropertiesDom = indentIfPrettyPrint(unsignedSignaturePropertiesDom, levelCUnsignedProperties);
 		}
 	}
+
 }
