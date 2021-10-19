@@ -27,6 +27,7 @@ import eu.europa.esig.dss.detailedreport.jaxb.XmlSubXCV;
 import eu.europa.esig.dss.diagnostic.CertificateRevocationWrapper;
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.enumerations.Context;
+import eu.europa.esig.dss.enumerations.Indication;
 import eu.europa.esig.dss.i18n.I18nProvider;
 import eu.europa.esig.dss.i18n.MessageTag;
 import eu.europa.esig.dss.policy.SubContext;
@@ -272,6 +273,10 @@ public class SubX509CertificateValidation extends Chain<XmlSubXCV> {
 		for (CertificateRevocationWrapper revocationWrapper : certificate.getCertificateRevocationData()) {
 			RevocationAcceptanceChecker rac = new RevocationAcceptanceChecker(i18nProvider, certificate, revocationWrapper, currentTime, validationPolicy);
 			XmlRAC racResult = rac.execute();
+			if (racResult.getConclusion().getIndication() == Indication.INDETERMINATE) {
+				RevocationAcceptanceChecker additionalRac = new RevocationAcceptanceChecker(i18nProvider, certificate, revocationWrapper, revocationWrapper.getProductionDate(), validationPolicy);
+				racResult = additionalRac.execute();
+			}
 			revocationAcceptanceResultMap.put(revocationWrapper, racResult);
 		}
 		
