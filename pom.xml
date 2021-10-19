@@ -515,11 +515,6 @@
 			</dependency>
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
-				<artifactId>specs-asic-manifest</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>${dss.groupId}</groupId>
 				<artifactId>specs-validation-report</artifactId>
 				<version>${project.version}</version>
 			</dependency>
