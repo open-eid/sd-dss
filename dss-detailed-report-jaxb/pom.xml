@@ -138,7 +138,7 @@
 		<profile>
             <id>jdk19-plus</id>
             <activation>
-                <jdk>[9,13)</jdk>
+                <jdk>[9,11)</jdk>
             </activation>
             <properties>
 				<!-- specs-xmldsig\target\generated-sources\xjc\eu\europa\esig\xmldsig\jaxb\package-info.java:8: error: unknown tag: javax.xml.bind.annotation.XmlSchema -->
