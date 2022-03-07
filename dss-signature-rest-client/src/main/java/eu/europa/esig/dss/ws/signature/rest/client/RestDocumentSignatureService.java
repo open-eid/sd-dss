@@ -84,7 +84,7 @@ public interface RestDocumentSignatureService extends Serializable {
 	
 	/**
 	 * Timestamps a toTimestampDocument with the provided parameters.
-	 *
+	 * 
 	 * @param timestampDocument {@link TimestampOneDocumentDTO} a DTO with the
 	 *                          needed information (document, timestamp parameters)
 	 *                          to timestamp a document

@@ -66,5 +66,5 @@ public class ASiCEWithXAdESNoSignCertFoundForRevocationTest extends AbstractASiC
 		RevocationWrapper revocationWrapper = allRevocationData.iterator().next();
 		assertEquals(1, revocationWrapper.foundCertificates().getOrphanCertificatesByRefOrigin(CertificateRefOrigin.SIGNING_CERTIFICATE).size());
 	}
-
+	
 }

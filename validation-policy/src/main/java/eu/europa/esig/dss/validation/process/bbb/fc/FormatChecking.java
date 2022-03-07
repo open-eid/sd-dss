@@ -95,7 +95,7 @@ public class FormatChecking extends Chain<XmlFC> {
 	@Override
 	protected void initChain() {
 		ChainItem<XmlFC> item = firstItem = formatCheck();
-
+		
 		item = item.setNextItem(signatureDuplicateCheck());
 
 		item = item.setNextItem(referenceDuplicateCheck());
@@ -112,7 +112,7 @@ public class FormatChecking extends Chain<XmlFC> {
 			item = item.setNextItem(pdfAnnotationOverlapCheck());
 			
 			item = item.setNextItem(pdfVisualDifferenceCheck());
-
+			
 		}
 
 		if (diagnosticData.isContainerInfoPresent()) {
@@ -132,7 +132,7 @@ public class FormatChecking extends Chain<XmlFC> {
 			item = item.setNextItem(signedFilesPresentCheck());
 			
 			item = item.setNextItem(allFilesSignedCheck());
-
+			
 		}
 		
 	}
@@ -141,7 +141,7 @@ public class FormatChecking extends Chain<XmlFC> {
 		MultiValuesConstraint constraint = policy.getSignatureFormatConstraint(context);
 		return new FormatCheck(i18nProvider, result, signature, constraint);
 	}
-
+	
 	private ChainItem<XmlFC> signatureDuplicateCheck() {
 		LevelConstraint constraint = policy.getSignatureDuplicatedConstraint(context);
 		return new SignatureNotAmbiguousCheck(i18nProvider, result, signature, constraint);

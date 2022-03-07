@@ -196,7 +196,7 @@ public abstract class SignatureCertificateSource extends TokenCertificateSource 
 	
 	/**
 	 * Extracts candidates to be a signing certificate from the source
-	 *
+	 * 
 	 * @param certificateSource {@link CertificateSource} which allows to resolve
 	 *                            the signing certificate from external sources
 	 * @return {@link CandidatesForSigningCertificate}

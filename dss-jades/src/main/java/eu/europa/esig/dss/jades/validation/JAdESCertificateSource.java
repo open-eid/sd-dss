@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 
 import java.security.PublicKey;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -245,12 +244,6 @@ public class JAdESCertificateSource extends SignatureCertificateSource {
 	// ------------- Not supported
 
 	@Override
-	public List<CertificateToken> getTimeStampValidationDataCertValues() {
-		// Not supported
-		return Collections.emptyList();
-	}
-
-	@Override
 	protected CandidatesForSigningCertificate extractCandidatesForSigningCertificate(
 			CertificateSource signingCertificateSource) {
 
@@ -298,6 +291,13 @@ public class JAdESCertificateSource extends SignatureCertificateSource {
 				for (CertificateToken certificateToken : certificatesByDigest) {
 					candidatesForSigningCertificate.add(new CertificateValidity(certificateToken));
 				}
+			}
+		} else if (candidatesForSigningCertificate.isEmpty()) {
+			List<CertificateToken> certificates = signingCertificateSource.getCertificates();
+			LOG.debug("No signing certificate reference found. " +
+					"Resolve all {} certificates from the provided certificate source as signing candidates.", certificates.size());
+			for (CertificateToken certCandidate : certificates) {
+				candidatesForSigningCertificate.add(new CertificateValidity(certCandidate));
 			}
 		}
 	}
@@ -348,11 +348,6 @@ public class JAdESCertificateSource extends SignatureCertificateSource {
 			if (certificateValidity.isValid()) {
 				bestCertificateValidity = certificateValidity;
 			}
-		}
-
-		// none of them match
-		if (bestCertificateValidity == null && !candidates.isEmpty()) {
-			bestCertificateValidity = candidates.getCertificateValidityList().iterator().next();
 		}
 
 		if (bestCertificateValidity != null) {

@@ -20,6 +20,7 @@
  */
 package eu.europa.esig.dss.jades.validation.timestamp;
 
+import eu.europa.esig.dss.crl.CRLBinary;
 import eu.europa.esig.dss.crl.CRLUtils;
 import eu.europa.esig.dss.enumerations.ArchiveTimestampType;
 import eu.europa.esig.dss.enumerations.PKIEncoding;
@@ -187,6 +188,13 @@ public class JAdESTimestampSource extends SignatureTimestampSource<JAdESSignatur
 	}
 
 	@Override
+	protected List<TimestampedReference> getSignatureTimestampReferences() {
+		List<TimestampedReference> timestampedReferences = super.getSignatureTimestampReferences();
+		addReferences(timestampedReferences, getKeyInfoReferences());
+		return timestampedReferences;
+	}
+
+	@Override
 	protected List<CertificateRef> getCertificateRefs(JAdESAttribute unsignedAttribute) {
 		List<CertificateRef> result = new ArrayList<>();
 		List<?> certificateRefsList = (List<?>) unsignedAttribute.getValue();
@@ -242,7 +250,7 @@ public class JAdESTimestampSource extends SignatureTimestampSource<JAdESSignatur
 	@Override
 	@SuppressWarnings("unchecked")
 	protected List<Identifier> getEncapsulatedCertificateIdentifiers(JAdESAttribute unsignedAttribute) {
-		List<Object> xVals = null;
+		List<Object> xVals;
 		if (isTimeStampValidationData(unsignedAttribute)) {
 			Map<String, Object> tstVd = (Map<String, Object>) unsignedAttribute.getValue();
 			xVals = (List<Object>) tstVd.get(JAdESHeaderParameterNames.X_VALS);
@@ -282,24 +290,23 @@ public class JAdESTimestampSource extends SignatureTimestampSource<JAdESSignatur
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected List<Identifier> getEncapsulatedCRLIdentifiers(JAdESAttribute unsignedAttribute) {
-		Map<String, Object> rVals = null;
+	protected List<CRLBinary> getEncapsulatedCRLIdentifiers(JAdESAttribute unsignedAttribute) {
+		Map<?, ?> rVals;
 		if (isTimeStampValidationData(unsignedAttribute)) {
-			Map<String, Object> tstVd = (Map<String, Object>) unsignedAttribute.getValue();
-			rVals = (Map<String, Object>) tstVd.get(JAdESHeaderParameterNames.R_VALS);
+			Map<?, ?> tstVd = (Map<?, ?>) unsignedAttribute.getValue();
+			rVals = (Map<?, ?>) tstVd.get(JAdESHeaderParameterNames.R_VALS);
 		} else {
-			rVals = (Map<String, Object>) unsignedAttribute.getValue();
+			rVals = (Map<?, ?>) unsignedAttribute.getValue();
 		}
 		if (rVals != null) {
-			List<Identifier> crlIdentifiers = new ArrayList<>();
+			List<CRLBinary> crlIdentifiers = new ArrayList<>();
 			
-			List<Object> crlVals = (List<Object>) rVals.get(JAdESHeaderParameterNames.CRL_VALS);
+			List<?> crlVals = (List<?>) rVals.get(JAdESHeaderParameterNames.CRL_VALS);
 			
 			if (Utils.isCollectionNotEmpty(crlVals)) {
 				for (Object encapsulatedCrl : crlVals) {
 					try {
-						Map<String, Object> map = (Map<String, Object>) encapsulatedCrl;
+						Map<?, ?> map = (Map<?, ?>) encapsulatedCrl;
 						String base64Crl = (String) map.get(JAdESHeaderParameterNames.VAL);
 						if (base64Crl != null) {
 							byte[] binaries = Utils.fromBase64(base64Crl);
@@ -317,24 +324,23 @@ public class JAdESTimestampSource extends SignatureTimestampSource<JAdESSignatur
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected List<Identifier> getEncapsulatedOCSPIdentifiers(JAdESAttribute unsignedAttribute) {
-		Map<String, Object> rVals = null;
+	protected List<OCSPResponseBinary> getEncapsulatedOCSPIdentifiers(JAdESAttribute unsignedAttribute) {
+		Map<?, ?> rVals;
 		if (isTimeStampValidationData(unsignedAttribute)) {
-			Map<String, Object> tstVd = (Map<String, Object>) unsignedAttribute.getValue();
-			rVals = (Map<String, Object>) tstVd.get(JAdESHeaderParameterNames.R_VALS);
+			Map<?, ?> tstVd = (Map<?, ?>) unsignedAttribute.getValue();
+			rVals = (Map<?, ?>) tstVd.get(JAdESHeaderParameterNames.R_VALS);
 		} else {
-			rVals = (Map<String, Object>) unsignedAttribute.getValue();
+			rVals = (Map<?, ?>) unsignedAttribute.getValue();
 		}
 		if (rVals != null) {
-			List<Identifier> ocspIdentifiers = new ArrayList<>();
+			List<OCSPResponseBinary> ocspIdentifiers = new ArrayList<>();
 			
-			List<Object> ocspVals = (List<Object>) rVals.get(JAdESHeaderParameterNames.OCSP_VALS);
+			List<?> ocspVals = (List<?>) rVals.get(JAdESHeaderParameterNames.OCSP_VALS);
 			
 			if (Utils.isCollectionNotEmpty(ocspVals)) {
 				for (Object encapsulatedOcsp : ocspVals) {
 					try {
-						Map<String, Object> map = (Map<String, Object>) encapsulatedOcsp;
+						Map<?, ?> map = (Map<?, ?>) encapsulatedOcsp;
 						String base64Ocps = (String) map.get(JAdESHeaderParameterNames.VAL);
 						if (base64Ocps != null) {
 							byte[] binaries = Utils.fromBase64(base64Ocps);

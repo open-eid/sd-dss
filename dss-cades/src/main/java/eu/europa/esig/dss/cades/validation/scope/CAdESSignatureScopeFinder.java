@@ -85,7 +85,7 @@ public class CAdESSignatureScopeFinder extends AbstractSignatureScopeFinder<CAdE
             		digestDocument.getExistingDigest()));
             
         } else {
-			result.add(new FullSignatureScope(fileName != null ? fileName : "Full document",
+			result.add(new FullSignatureScope(fileName != null ? fileName : "Full document", 
 					getDigest(originalDocument)));
         }
         

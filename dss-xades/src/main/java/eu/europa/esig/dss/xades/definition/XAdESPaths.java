@@ -82,18 +82,32 @@ public interface XAdESPaths extends Serializable {
 	String getSigningTimePath();
 
 	/**
-	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:SignedProperties/xades:SignedSignatureProperties/xades:SigningCertificate/xades:Cert"
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:SignedProperties/xades:SignedSignatureProperties/xades:SigningCertificate"
 	 *
 	 * @return {@link String} path
 	 */
 	String getSigningCertificatePath();
 
 	/**
-	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:SignedProperties/xades:SignedSignatureProperties/xades:SigningCertificateV2/xades:Cert"
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:SignedProperties/xades:SignedSignatureProperties/xades:SigningCertificate/xades:Cert"
+	 *
+	 * @return {@link String} path
+	 */
+	String getSigningCertificateChildren();
+
+	/**
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:SignedProperties/xades:SignedSignatureProperties/xades:SigningCertificateV2"
 	 *
 	 * @return {@link String} path
 	 */
 	String getSigningCertificateV2Path();
+
+	/**
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:SignedProperties/xades:SignedSignatureProperties/xades:SigningCertificateV2/xades:Cert"
+	 *
+	 * @return {@link String} path
+	 */
+	String getSigningCertificateV2Children();
 
 	/**
 	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:SignedProperties/xades:SignedSignatureProperties/xades:SignatureProductionPlace"
@@ -114,7 +128,14 @@ public interface XAdESPaths extends Serializable {
 	 *
 	 * @return {@link String} path
 	 */
-	String getSignaturePolicyIdentifier();
+	String getSignaturePolicyIdentifierPath();
+
+	/**
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:SignedProperties/xades:SignedSignatureProperties/xades:SignerRole"
+	 *
+	 * @return {@link String} path
+	 */
+	String getSignerRolePath();
 
 	/**
 	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:SignedProperties/xades:SignedSignatureProperties/xades:SignerRole/xades:ClaimedRoles/xades:ClaimedRole"
@@ -129,6 +150,13 @@ public interface XAdESPaths extends Serializable {
 	 * @return {@link String} path
 	 */
 	String getSignedAssertionPath();
+
+	/**
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:SignedProperties/xades:SignedSignatureProperties/xades:SignerRoleV2"
+	 *
+	 * @return {@link String} path
+	 */
+	String getSignerRoleV2Path();
 
 	/**
 	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:SignedProperties/xades:SignedSignatureProperties/xades:SignerRoleV2/xades:ClaimedRoles/xades:ClaimedRole"
@@ -157,6 +185,13 @@ public interface XAdESPaths extends Serializable {
 	 * @return {@link String} path
 	 */
 	String getSignedDataObjectPropertiesPath();
+
+	/**
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:SignedProperties/xades:SignedDataObjectProperties/xades:DataObjectFormat"
+	 *
+	 * @return {@link String} path
+	 */
+	String getDataObjectFormat();
 
 	/**
 	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:SignedProperties/xades:SignedDataObjectProperties/xades:DataObjectFormat/xades:MimeType"
@@ -229,14 +264,14 @@ public interface XAdESPaths extends Serializable {
 	String getCompleteCertificateRefsCertPath();
 
 	/**
-	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades:CompleteCertificateRefsV2"
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades141:CompleteCertificateRefsV2"
 	 *
 	 * @return {@link String} path
 	 */
 	String getCompleteCertificateRefsV2Path();
 
 	/**
-	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades:CompleteCertificateRefsV2/xades:CertRefs/xades:Cert"
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades141:CompleteCertificateRefsV2/xades141:CertRefs/xades:Cert"
 	 *
 	 * @return {@link String} path
 	 */
@@ -257,14 +292,14 @@ public interface XAdESPaths extends Serializable {
 	String getAttributeCertificateRefsCertPath();
 
 	/**
-	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades:AttributeCertificateRefsV2"
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades141:AttributeCertificateRefsV2"
 	 *
 	 * @return {@link String} path
 	 */
 	String getAttributeCertificateRefsV2Path();
 
 	/**
-	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades:AttributeCertificateRefsV2/xades:CertRefs/xades:Cert"
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades141:AttributeCertificateRefsV2/xades141:CertRefs/xades:Cert"
 	 *
 	 * @return {@link String} path
 	 */
@@ -292,6 +327,34 @@ public interface XAdESPaths extends Serializable {
 	String getAttributeRevocationValuesPath();
 
 	/**
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades141:SigAndRefsTimeStampV2"
+	 *
+	 * @return {@link String} path
+	 */
+	String getEncapsulatedCertificateValuesPath();
+
+	/**
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades:AttrAuthoritiesCertValues"
+	 *
+	 * @return {@link String} path
+	 */
+	String getAttrAuthoritiesCertValuesPath();
+
+	/**
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades:AttrAuthoritiesCertValues/xades:EncapsulatedX509Certificate"
+	 *
+	 * @return {@link String} path
+	 */
+	String getEncapsulatedAttrAuthoritiesCertValuesPath();
+
+	/**
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades:TimeStampValidationData/xades:CertificateValues/xades:EncapsulatedX509Certificate"
+	 *
+	 * @return {@link String} path
+	 */
+	String getEncapsulatedTimeStampValidationDataCertValuesPath();
+
+	/**
 	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades:TimeStampValidationData/xades:RevocationValues"
 	 *
 	 * @return {@link String} path
@@ -303,7 +366,7 @@ public interface XAdESPaths extends Serializable {
 	 *
 	 * @return {@link String} path
 	 */
-	String getSignatureTimestampsPath();
+	String getSignatureTimestampPath();
 
 	/**
 	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades:SigAndRefsTimeStamp"
@@ -320,25 +383,32 @@ public interface XAdESPaths extends Serializable {
 	String getSigAndRefsTimestampV2Path();
 
 	/**
-	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades141:SigAndRefsTimeStampV2"
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades:RefsOnlyTimeStamp"
 	 *
 	 * @return {@link String} path
 	 */
-	String getEncapsulatedCertificateValuesPath();
+	String getRefsOnlyTimestampPath();
 
 	/**
-	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades:AttrAuthoritiesCertValues/xades:EncapsulatedX509Certificate"
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades141:RefsOnlyTimeStampV2"
 	 *
 	 * @return {@link String} path
 	 */
-	String getEncapsulatedAttrAuthoritiesCertValuesPath();
+	String getRefsOnlyTimestampV2Path();
 
 	/**
-	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades:TimeStampValidationData/xades:CertificateValues/xades:EncapsulatedX509Certificate"
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades141:ArchiveTimeStamp"
 	 *
 	 * @return {@link String} path
 	 */
-	String getEncapsulatedTimeStampValidationDataCertValuesPath();
+	String getArchiveTimestampPath();
+
+	/**
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades141:TimeStampValidationData"
+	 *
+	 * @return {@link String} path
+	 */
+	String getTimestampValidationDataPath();
 
 	/**
 	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades:SignaturePolicyStore"
@@ -418,6 +488,13 @@ public interface XAdESPaths extends Serializable {
 	 * @return {@link String} path
 	 */
 	String getCurrentCertRefsCertChildren();
+
+	/**
+	 * Gets path "./xades141:CertRefs/xades:Cert"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentCertRefs141CertChildren();
 
 	/**
 	 * Gets path "./xades:Cert"
@@ -531,6 +608,34 @@ public interface XAdESPaths extends Serializable {
 	 */
 	String getCurrentDocumentationReference();
 
+	/**
+	 * Gets path "./xades:Description"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentDescription();
+
+	/**
+	 * Gets path "./xades:ObjectIdentifier"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentObjectIdentifier();
+
+	/**
+	 * Gets path "./xades:MimeType"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentMimeType();
+
+	/**
+	 * Gets path "./xades:Encoding"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentEncoding();
+
 	// --------------------------- Policy
 
 	/**
@@ -553,6 +658,41 @@ public interface XAdESPaths extends Serializable {
 	 * @return {@link String} path
 	 */
 	String getCurrentSignaturePolicySPURI();
+
+	/**
+	 * Gets path "./xades:SignaturePolicyId/xades:SigPolicyQualifiers/xades:SigPolicyQualifier/xades:SPURI"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentSignaturePolicySPUserNotice();
+
+	/**
+	 * Gets path "./xades:NoticeRef/xades:Organization"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentSPUserNoticeNoticeRefOrganization();
+
+	/**
+	 * Gets path "./xades:NoticeRef/xades:NoticeNumbers"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentSPUserNoticeNoticeRefNoticeNumbers();
+
+	/**
+	 * Gets path "./xades:NoticeRef/xades:NoticeNumbers"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentSPUserNoticeExplicitText();
+
+	/**
+	 * Gets path "./xades:SignaturePolicyId/xades:SigPolicyQualifiers/xades:SigPolicyQualifier/xades141:SPDocSpecification/xades:Identifier"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentSignaturePolicySPDocSpecificationIdentifier();
 
 	/**
 	 * Gets path "./xades:SignaturePolicyId/xades:SigPolicyId/xades:Description"
@@ -581,6 +721,13 @@ public interface XAdESPaths extends Serializable {
 	 * @return {@link String} path
 	 */
 	String getCurrentSignaturePolicyTransforms();
+
+	/**
+	 * Gets path "./xades:SignaturePolicyId/ds:SigPolicyQualifiers"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentSignaturePolicyQualifiers();
 
 	/**
 	 * Gets path "./xades:Include"

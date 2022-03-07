@@ -95,7 +95,7 @@ public class PAdESFiveSignaturesDocTest extends AbstractPAdESTestValidation {
 		TimestampWrapper signatureTimestamp = secondSignatureTimestamps.get(0);
 		assertEquals(4, signatureTimestamp.getTimestampedObjects().size());
 		assertEquals(TimestampType.SIGNATURE_TIMESTAMP, signatureTimestamp.getType());
-
+        
         TimestampWrapper docTimestamp = null;
         for (TimestampWrapper timestamp : timestamps) {
         	if (TimestampType.DOCUMENT_TIMESTAMP.equals(timestamp.getType())) {
@@ -115,21 +115,21 @@ public class PAdESFiveSignaturesDocTest extends AbstractPAdESTestValidation {
             assertFalse(checkedIds.contains(signerDataWrapper.getId()));
             checkedIds.add(signerDataWrapper.getId());
         }
-
+        
         List<CertificateWrapper> timestampedCertificates = docTimestamp.getTimestampedCertificates();
         assertEquals(18, timestampedCertificates.size());
         for (CertificateWrapper certificateWrapper : timestampedCertificates) {
             assertFalse(checkedIds.contains(certificateWrapper.getId()));
             checkedIds.add(certificateWrapper.getId());
         }
-
+        
         List<RevocationWrapper> timestampedRevocations = docTimestamp.getTimestampedRevocations();
         assertEquals(4, timestampedRevocations.size());
         for (RevocationWrapper revocationWrapper : timestampedRevocations) {
             assertFalse(checkedIds.contains(revocationWrapper.getId()));
             checkedIds.add(revocationWrapper.getId());
         }
-
+        
         List<TimestampWrapper> timestampedTimestamps = docTimestamp.getTimestampedTimestamps();
         assertEquals(2, timestampedTimestamps.size());
         for (TimestampWrapper timestampWrapper : timestampedTimestamps) {
@@ -211,12 +211,11 @@ public class PAdESFiveSignaturesDocTest extends AbstractPAdESTestValidation {
 	}
 	
 	@Override
-	protected void validateETSISignerDocuments(List<SignersDocumentType> signersDocuments) {
-		super.validateETSISignerDocuments(signersDocuments);
-		
-		SignersDocumentType signersDocument = signersDocuments.get(0);
+	protected void validateETSISignersDocument(SignersDocumentType signersDocument) {
+		super.validateETSISignersDocument(signersDocument);
+
 		assertNotNull(signersDocument);
-		DigestAlgAndValueType digestAlgAndValue = signersDocument.getDigestAlgAndValue();
+		DigestAlgAndValueType digestAlgAndValue = getDigestAlgoAndValue(signersDocument);
 		assertNotNull(digestAlgAndValue);
 		byte[] digestValue = digestAlgAndValue.getDigestValue();
 		assertTrue(Utils.isArrayNotEmpty(digestValue));

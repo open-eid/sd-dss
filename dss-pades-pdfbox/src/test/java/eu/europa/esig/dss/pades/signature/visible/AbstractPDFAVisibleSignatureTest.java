@@ -107,7 +107,7 @@ public abstract class AbstractPDFAVisibleSignatureTest extends PKIFactoryAccess 
 		fieldParameters.setOriginX(100);
 		fieldParameters.setOriginY(100);
 		imageParameters.setFieldParameters(fieldParameters);
-
+		
 		signatureParameters.setImageParameters(imageParameters);
 
 		signAndValidate(true);
@@ -123,7 +123,7 @@ public abstract class AbstractPDFAVisibleSignatureTest extends PKIFactoryAccess 
 		fieldParameters.setOriginX(100);
 		fieldParameters.setOriginY(100);
 		imageParameters.setFieldParameters(fieldParameters);
-
+		
 		signatureParameters.setImageParameters(imageParameters);
 
 		signAndValidate(false);

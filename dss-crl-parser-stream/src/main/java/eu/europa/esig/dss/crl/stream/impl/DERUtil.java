@@ -61,10 +61,10 @@ final class DERUtil {
 
 	/**
 	 * Adaptation from org.bouncycastle.asn1.ASN1OutputStream.writeLength(int)
-	 *
+	 * 
 	 * @param os     {@link OutputStream}
 	 * @param length the length to add
-	 * @throws IOException
+	 * @throws IOException if an error occurs during the OutputStream creation
 	 */
 	public static void writeLength(OutputStream os, int length) throws IOException {
 		if (length > 127) {

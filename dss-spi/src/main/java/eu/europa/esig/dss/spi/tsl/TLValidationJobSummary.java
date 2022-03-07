@@ -33,7 +33,7 @@ import java.util.List;
 public class TLValidationJobSummary implements Serializable {
 
 	private static final long serialVersionUID = -1035891155378415013L;
-	
+
 	/**
 	 * A list of LOTLs with a relationship between their TLs and pivots
 	 */
@@ -112,7 +112,7 @@ public class TLValidationJobSummary implements Serializable {
 	public TLInfo getTLInfoById(Identifier identifier) {
 		if (Utils.isCollectionNotEmpty(otherTLInfos)) {
 			for (TLInfo tlInfo : otherTLInfos) {
-				if (identifier.equals(tlInfo.getIdentifier())) {
+				if (identifier.equals(tlInfo.getDSSId())) {
 					return tlInfo;
 				}
 			}
@@ -121,7 +121,7 @@ public class TLValidationJobSummary implements Serializable {
 		if (Utils.isCollectionNotEmpty(lotlInfos)) {
 			for (LOTLInfo lotlInfo : lotlInfos) {
 				for (TLInfo tlInfo : lotlInfo.getTLInfos()) {
-					if (identifier.equals(tlInfo.getIdentifier())) {
+					if (identifier.equals(tlInfo.getDSSId())) {
 						return tlInfo;
 					}
 				}
@@ -141,7 +141,7 @@ public class TLValidationJobSummary implements Serializable {
 	public LOTLInfo getLOTLInfoById(Identifier identifier) {
 		if (Utils.isCollectionNotEmpty(lotlInfos)) {
 			for (LOTLInfo lotlInfo : lotlInfos) {
-				if (identifier.equals(lotlInfo.getIdentifier())) {
+				if (identifier.equals(lotlInfo.getDSSId())) {
 					return lotlInfo;
 				}
 			}

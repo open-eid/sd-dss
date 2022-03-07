@@ -25,12 +25,12 @@ import eu.europa.esig.dss.cades.validation.CAdESAttribute;
 import eu.europa.esig.dss.cades.validation.CAdESSignature;
 import eu.europa.esig.dss.cades.validation.CAdESSignedAttributes;
 import eu.europa.esig.dss.cades.validation.CAdESUnsignedAttributes;
+import eu.europa.esig.dss.crl.CRLBinary;
 import eu.europa.esig.dss.crl.CRLUtils;
 import eu.europa.esig.dss.enumerations.ArchiveTimestampType;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.enumerations.TimestampedObjectType;
-import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.identifier.EncapsulatedRevocationTokenIdentifier;
 import eu.europa.esig.dss.model.identifier.Identifier;
 import eu.europa.esig.dss.model.x509.CertificateToken;
@@ -52,8 +52,6 @@ import eu.europa.esig.dss.validation.CMSOCSPSource;
 import eu.europa.esig.dss.validation.SignatureCertificateSource;
 import eu.europa.esig.dss.validation.SignatureProperties;
 import eu.europa.esig.dss.validation.timestamp.SignatureTimestampSource;
-import eu.europa.esig.dss.validation.timestamp.TimestampCRLSource;
-import eu.europa.esig.dss.validation.timestamp.TimestampOCSPSource;
 import eu.europa.esig.dss.validation.timestamp.TimestampSource;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 import eu.europa.esig.dss.validation.timestamp.TimestampedReference;
@@ -276,7 +274,7 @@ public class CAdESTimestampSource extends SignatureTimestampSource<CAdESSignatur
 	@Override
 	protected List<TimestampedReference> getIndividualContentTimestampedReferences(CAdESAttribute signedAttribute) {
 		// not applicable for CAdES, must be not executed
-		throw new DSSException("Not applicable for CAdES!");
+		throw new UnsupportedOperationException("Not applicable for CAdES!");
 	}
 	
 	@Override
@@ -316,31 +314,36 @@ public class CAdESTimestampSource extends SignatureTimestampSource<CAdESSignatur
 		
 		// get CRL references
 		List<DEROctetString> crlsHashList = DSSASN1Utils.getDEROctetStrings(crlsHashIndex);
-		
+		addReferences(references, createReferencesForCRLBinaries(getSignedDataCRLBinaries(crlsHashList, digestAlgorithm)));
+		addReferences(references, createReferencesForOCSPBinaries(getSignedDataOCSPResponseBinaries(crlsHashList, digestAlgorithm), certificateSource));
+		return references;
+	}
+
+	private List<CRLBinary> getSignedDataCRLBinaries(final List<DEROctetString> crlsHashList,
+																final DigestAlgorithm digestAlgorithm) {
+		List<CRLBinary> crlBinaries = new ArrayList<>();
+
 		OfflineCRLSource signatureCRLSource = signature.getCRLSource();
 		if (signatureCRLSource instanceof CMSCRLSource) {
 			CMSCRLSource cmsCRLSource = (CMSCRLSource) signatureCRLSource;
-			for (EncapsulatedRevocationTokenIdentifier<CRL> token : cmsCRLSource.getCMSSignedDataRevocationBinaries()) {
-				if (isDigestValuePresent(token.getDigestValue(digestAlgorithm), crlsHashList)) {
-					addReference(references, token, TimestampedObjectType.REVOCATION);
+			for (EncapsulatedRevocationTokenIdentifier<CRL> crlIdentifier : cmsCRLSource.getCMSSignedDataRevocationBinaries()) {
+				CRLBinary crlBinary = (CRLBinary) crlIdentifier;
+				if (isDigestValuePresent(crlBinary.getDigestValue(digestAlgorithm), crlsHashList)) {
+					crlBinaries.add(crlBinary);
 				} else {
 					LOG.debug("The CRL Token with id [{}] was not included to the message imprint of timestamp "
-							+ "or was added to the CMS SignedData after this ArchiveTimestamp!", 
-							token.asXmlId());
+									+ "or was added to the CMS SignedData after this ArchiveTimestamp!",
+							crlBinary.asXmlId());
 				}
 			}
 		}
 
-		// get OCSP references
-		List<TimestampedReference> ocspReferences = getSignedDataOCSPReferences(crlsHashList, digestAlgorithm);
-		references.addAll(ocspReferences);
-		
-		return references;
+		return crlBinaries;
 	}
 	
-	private List<TimestampedReference> getSignedDataOCSPReferences(List<DEROctetString> crlsHashList,
-			final DigestAlgorithm digestAlgorithm) {
-		List<TimestampedReference> references = new ArrayList<>();
+	private List<OCSPResponseBinary> getSignedDataOCSPResponseBinaries(final List<DEROctetString> crlsHashList,
+																	   final DigestAlgorithm digestAlgorithm) {
+		List<OCSPResponseBinary> ocspBinaries = new ArrayList<>();
 		
 		OfflineOCSPSource signatureOCSPSource = signature.getOCSPSource();
 		if (signatureOCSPSource instanceof CMSOCSPSource) {
@@ -354,7 +357,7 @@ public class CAdESTimestampSource extends SignatureTimestampSource<CAdESSignatur
 				// false value specifies an implicit encoding method
 				DERTaggedObject derTaggedObject = new DERTaggedObject(false, 1, otherRevocationInfoFormat);
 				if (isDigestValuePresent(DSSUtils.digest(digestAlgorithm, DSSASN1Utils.getDEREncoded(derTaggedObject)), crlsHashList)) {
-					addReference(references, binary, TimestampedObjectType.REVOCATION);
+					ocspBinaries.add(binary);
 				} else {
 					LOG.warn("The OCSP Token with id [{}] was not included to the message imprint of timestamp "
 							+ "or was added to the CMS SignedData after this ArchiveTimestamp!", 
@@ -362,7 +365,7 @@ public class CAdESTimestampSource extends SignatureTimestampSource<CAdESSignatur
 				}
 			}
 		}
-		return references;
+		return ocspBinaries;
 	}
 	
 	private List<TimestampedReference> getUnsignedAttributesReferences(final ASN1Sequence unsignedAttrsHashIndex,
@@ -422,13 +425,13 @@ public class CAdESTimestampSource extends SignatureTimestampSource<CAdESSignatur
 		return Collections.emptyList();
 	}
 
-	private List<TimestampedReference> getReferencesFromMatchingTimestamp(CAdESAttribute unsingedAttribute,
+	private List<TimestampedReference> getReferencesFromMatchingTimestamp(CAdESAttribute unsignedAttribute,
 			final List<TimestampToken> previousTimestamps) {
-		ASN1Encodable asn1Object = unsingedAttribute.getASN1Object();
+		ASN1Encodable asn1Object = unsignedAttribute.getASN1Object();
 		byte[] derEncoded = DSSASN1Utils.getDEREncoded(asn1Object);
 		for (TimestampToken timestampToken : previousTimestamps) {
 			if (Arrays.equals(derEncoded, timestampToken.getEncoded())) {
-				return getReferencesFromTimestamp(timestampToken);
+				return getReferencesFromTimestamp(timestampToken, certificateSource, crlSource, ocspSource);
 			}
 		}
 		return Collections.emptyList();
@@ -445,16 +448,12 @@ public class CAdESTimestampSource extends SignatureTimestampSource<CAdESSignatur
 		
 		OfflineCRLSource signatureCRLSource = signature.getCRLSource();
 		if (signatureCRLSource instanceof CMSCRLSource) {
-			for (EncapsulatedRevocationTokenIdentifier<CRL> token : ((CMSCRLSource) signatureCRLSource).getCMSSignedDataRevocationBinaries()) {
-				addReference(references, token, TimestampedObjectType.REVOCATION);
-			}
+			addReferences(references, createReferencesForCRLBinaries(signatureCRLSource.getCMSSignedDataRevocationBinaries()));
 		}
 		
 		OfflineOCSPSource signatureOCSPSource = signature.getOCSPSource();
 		if (signatureOCSPSource instanceof CMSOCSPSource) {
-			for (EncapsulatedRevocationTokenIdentifier<OCSP> token : ((CMSOCSPSource) signatureOCSPSource).getCMSSignedDataRevocationBinaries()) {
-				addReference(references, token, TimestampedObjectType.REVOCATION);
-			}
+			addReferences(references, createReferencesForOCSPBinaries(signatureOCSPSource.getCMSSignedDataRevocationBinaries(), certificateSource));
 		}
 		
 		return references;
@@ -535,12 +534,25 @@ public class CAdESTimestampSource extends SignatureTimestampSource<CAdESSignatur
 	}
 
 	@Override
-	protected List<Identifier> getEncapsulatedCRLIdentifiers(CAdESAttribute unsignedAttribute) {
-		List<Identifier> crlBinaryIdentifiers = new ArrayList<>();
+	protected List<CRLBinary> getEncapsulatedCRLIdentifiers(CAdESAttribute unsignedAttribute) {
 		ASN1Encodable asn1Object = unsignedAttribute.getASN1Object();
 		RevocationValues revocationValues = DSSASN1Utils.getRevocationValues(asn1Object);
 		if (revocationValues != null) {
-			for (final CertificateList revValue : revocationValues.getCrlVals()) {
+			return buildCRLIdentifiers(revocationValues.getCrlVals());
+		}
+		return Collections.emptyList();
+	}
+
+	/**
+	 * Builds a list of CRL identifiers for the given {@code revVals}
+	 *
+	 * @param crlVals instances of {@link CertificateList} representing CRL entries
+	 * @return a list of {@link CRLBinary}
+	 */
+	protected List<CRLBinary> buildCRLIdentifiers(CertificateList... crlVals) {
+		List<CRLBinary> crlBinaryIdentifiers = new ArrayList<>();
+		if (Utils.isArrayNotEmpty(crlVals)) {
+			for (final CertificateList revValue : crlVals) {
 				try {
 					crlBinaryIdentifiers.add(CRLUtils.buildCRLBinary(revValue.getEncoded()));
 				} catch (Exception e) {
@@ -557,14 +569,26 @@ public class CAdESTimestampSource extends SignatureTimestampSource<CAdESSignatur
 	}
 
 	@Override
-	protected List<Identifier> getEncapsulatedOCSPIdentifiers(CAdESAttribute unsignedAttribute) {
-		List<Identifier> ocspIdentifiers = new ArrayList<>();
+	protected List<OCSPResponseBinary> getEncapsulatedOCSPIdentifiers(CAdESAttribute unsignedAttribute) {
 		ASN1Encodable asn1Object = unsignedAttribute.getASN1Object();
 		RevocationValues revocationValues = DSSASN1Utils.getRevocationValues(asn1Object);
 		if (revocationValues != null) {
-			for (final BasicOCSPResponse basicOCSPResponse : revocationValues.getOcspVals()) {
+			return buildOCSPIdentifiers(DSSASN1Utils.toBasicOCSPResps(revocationValues.getOcspVals()));
+		}
+		return Collections.emptyList();
+	}
+
+	/**
+	 * Builds a list of OCSP identifiers for the given {@code ocspVals}
+	 *
+	 * @param ocspVals instances of {@link BasicOCSPResponse} representing OCSP basic responses
+	 * @return a list of {@link OCSPResponseBinary}
+	 */
+	protected List<OCSPResponseBinary> buildOCSPIdentifiers(BasicOCSPResp... ocspVals) {
+		List<OCSPResponseBinary> ocspIdentifiers = new ArrayList<>();
+		if (Utils.isArrayNotEmpty(ocspVals)) {
+			for (final BasicOCSPResp basicOCSPResp : ocspVals) {
 				try {
-					final BasicOCSPResp basicOCSPResp = new BasicOCSPResp(basicOCSPResponse);
 					ocspIdentifiers.add(OCSPResponseBinary.build(basicOCSPResp));
 				} catch (Exception e) {
 					String errorMessage = "Unable to parse OCSP response binaries : {}";
@@ -587,26 +611,6 @@ public class CAdESTimestampSource extends SignatureTimestampSource<CAdESSignatur
 			return ArchiveTimestampType.CAdES_V3;
 		}
 		return ArchiveTimestampType.CAdES;
-	}
-
-	@Override
-	protected List<TimestampedReference> getEncapsulatedValuesFromTimestamp(TimestampToken timestampedTimestamp) {
-		List<TimestampedReference> references = super.getEncapsulatedValuesFromTimestamp(timestampedTimestamp);
-		TimestampCRLSource timeStampCRLSource = timestampedTimestamp.getCRLSource();
-		for (EncapsulatedRevocationTokenIdentifier<CRL> binary : timeStampCRLSource.getAllRevocationBinaries()) {
-			addReference(references, binary, TimestampedObjectType.REVOCATION);
-		}
-		for (EncapsulatedRevocationTokenIdentifier<CRL> binary : timeStampCRLSource.getAllReferencedRevocationBinaries()) {
-			addReference(references, binary, TimestampedObjectType.REVOCATION);
-		}
-		TimestampOCSPSource timeStampOCSPSource = timestampedTimestamp.getOCSPSource();
-		for (EncapsulatedRevocationTokenIdentifier<OCSP> binary : timeStampOCSPSource.getAllReferencedRevocationBinaries()) {
-			addReference(references, binary, TimestampedObjectType.REVOCATION);
-		}
-		for (EncapsulatedRevocationTokenIdentifier<OCSP> binary : timeStampOCSPSource.getAllReferencedRevocationBinaries()) {
-			addReference(references, binary, TimestampedObjectType.REVOCATION);
-		}
-		return references;
 	}
 
 	@Override
@@ -649,7 +653,8 @@ public class CAdESTimestampSource extends SignatureTimestampSource<CAdESSignatur
 		counterSigReferences.add(new TimestampedReference(counterSignature.getId(), TimestampedObjectType.SIGNATURE));
 		
 		List<CertificateRef> signingCertificateRefs = counterSignature.getCertificateSource().getSigningCertificateRefs();
-		addReferences(counterSigReferences, getTimestampedCertificateRefs(signingCertificateRefs, certificateSource));
+		addReferences(counterSigReferences, createReferencesForCertificateRefs(signingCertificateRefs,
+				counterSignature.getCertificateSource(), certificateSource));
 		
 		TimestampSource counterSignatureTimestampSource = counterSignature.getTimestampSource();
 		addReferences(counterSigReferences, counterSignatureTimestampSource.getSignerDataReferences());

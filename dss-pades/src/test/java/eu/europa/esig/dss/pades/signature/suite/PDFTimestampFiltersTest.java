@@ -92,7 +92,7 @@ public class PDFTimestampFiltersTest extends AbstractPAdESTestSignature {
 			if (TimestampType.SIGNATURE_TIMESTAMP == timestampWrapper.getType()) {
 				assertNull(timestampWrapper.getPDFRevision()); // signature timestamp is added to CAdES CMS
 				signatureTimestampFound = true;
-
+				
 			} else if (TimestampType.DOCUMENT_TIMESTAMP == timestampWrapper.getType()) {
 				XmlPDFRevision pdfRevision = timestampWrapper.getPDFRevision();
 				assertNotNull(pdfRevision);

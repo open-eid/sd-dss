@@ -25,7 +25,7 @@ package eu.europa.esig.dss.enumerations;
  *
  */
 public enum TimestampType {
-
+	
 	/** CAdES: id-aa-ets-contentTimestamp */
 	CONTENT_TIMESTAMP(0, false),
 
@@ -93,6 +93,15 @@ public enum TimestampType {
 	 */
 	public boolean isValidationDataTimestamp() {
 		return 2 == order;
+	}
+
+	/**
+	 * Checks if the timestamp type is a document timestamp (used for PAdES)
+	 *
+	 * @return TRUE if the type is a document timestamp, FALSE otherwise
+	 */
+	public boolean isDocumentTimestamp() {
+		return DOCUMENT_TIMESTAMP == this;
 	}
 
 	/**

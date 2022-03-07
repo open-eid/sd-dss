@@ -20,12 +20,15 @@
  */
 package eu.europa.esig.dss.pdf;
 
-import java.util.List;
-import java.util.Objects;
-
+import eu.europa.esig.dss.pades.validation.PdfDssDictCRLSource;
+import eu.europa.esig.dss.pades.validation.PdfDssDictCertificateSource;
+import eu.europa.esig.dss.pades.validation.PdfDssDictOCSPSource;
 import eu.europa.esig.dss.pades.validation.PdfModificationDetection;
 import eu.europa.esig.dss.pades.validation.PdfRevision;
 import eu.europa.esig.dss.pades.validation.PdfSignatureDictionary;
+
+import java.util.List;
+import java.util.Objects;
 
 /**
  * This class represents an LT-level PDF revision containing a DSS dictionary
@@ -33,9 +36,26 @@ import eu.europa.esig.dss.pades.validation.PdfSignatureDictionary;
  */
 public class PdfDocDssRevision implements PdfRevision {
 	
+	private static final long serialVersionUID = -1369264311522424583L;
+
+	/** The DSS dictionary from the revision */
 	private final PdfDssDict dssDictionary;
-	
-	public PdfDocDssRevision(PdfDssDict dssDictionary) {
+
+	/** Cached certificate source */
+	private PdfDssDictCertificateSource certificateSource;
+
+	/** Cached CRL source */
+	private PdfDssDictCRLSource crlSource;
+
+	/** Cached OCSP source */
+	private PdfDssDictOCSPSource ocspSource;
+
+	/**
+	 * Default constructor
+	 *
+	 * @param dssDictionary {@link PdfDssDict}
+	 */
+	public PdfDocDssRevision(final PdfDssDict dssDictionary) {
 		Objects.requireNonNull(dssDictionary, "The dssDictionary cannot be null!");
 		this.dssDictionary = dssDictionary;
 	}
@@ -65,6 +85,42 @@ public class PdfDocDssRevision implements PdfRevision {
 	public PdfModificationDetection getModificationDetection() {
 		// not applicable
 		return null;
+	}
+
+	/**
+	 * Returns a corresponding {@code CertificateSource}
+	 *
+	 * @return {@link PdfDssDictCertificateSource}
+	 */
+	public PdfDssDictCertificateSource getCertificateSource() {
+		if (certificateSource == null) {
+			certificateSource = new PdfDssDictCertificateSource(dssDictionary);
+		}
+		return certificateSource;
+	}
+
+	/**
+	 * Returns a corresponding {@code CRLSource}
+	 *
+	 * @return {@link PdfDssDictCRLSource}
+	 */
+	public PdfDssDictCRLSource getCRLSource() {
+		if (crlSource == null) {
+			crlSource = new PdfDssDictCRLSource(dssDictionary);
+		}
+		return crlSource;
+	}
+
+	/**
+	 * Returns a corresponding {@code OCSPSource}
+	 *
+	 * @return {@link PdfDssDictOCSPSource}
+	 */
+	public PdfDssDictOCSPSource getOCSPSource() {
+		if (ocspSource == null) {
+			ocspSource = new PdfDssDictOCSPSource(dssDictionary);
+		}
+		return ocspSource;
 	}
 
 }

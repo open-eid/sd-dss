@@ -53,7 +53,7 @@ public class BDocTmSupport implements Serializable {
 
   public static boolean hasBDocTmPolicyId(Element signatureElement, XAdESPaths xadesPaths) {
 
-    Element policyIdentifier = DomUtils.getElement(signatureElement, xadesPaths.getSignaturePolicyIdentifier());
+    Element policyIdentifier = DomUtils.getElement(signatureElement, xadesPaths.getSignaturePolicyIdentifierPath());
     if (policyIdentifier != null) {
       final Element policyId = DomUtils.getElement(policyIdentifier, xadesPaths.getCurrentSignaturePolicyId());
       if (policyId != null) {

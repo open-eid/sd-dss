@@ -31,7 +31,7 @@ import eu.europa.esig.dss.pdf.PdfSigDictWrapper;
 import eu.europa.esig.dss.pdf.SingleDssDict;
 import eu.europa.esig.dss.pdf.visible.ImageUtils;
 import eu.europa.esig.dss.utils.Utils;
-import eu.europa.esig.dss.validation.ByteRange;
+import eu.europa.esig.dss.pades.validation.ByteRange;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSObject;
@@ -120,7 +120,7 @@ public class PdfBoxDocumentReader implements PdfDocumentReader {
 
 	/**
 	 * The PDFBox implementation of the Reader
-	 *
+	 * 
 	 * @param binaries           a byte array of a PDF to read
 	 * @param passwordProtection {@link String} a password to open a protected
 	 *                           document

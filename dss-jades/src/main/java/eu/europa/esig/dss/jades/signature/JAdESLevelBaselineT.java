@@ -22,6 +22,7 @@ package eu.europa.esig.dss.jades.signature;
 
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
+import eu.europa.esig.dss.exception.IllegalInputException;
 import eu.europa.esig.dss.jades.DSSJsonUtils;
 import eu.europa.esig.dss.jades.JAdESHeaderParameterNames;
 import eu.europa.esig.dss.jades.JAdESSignatureParameters;
@@ -29,24 +30,28 @@ import eu.europa.esig.dss.jades.JAdESTimestampParameters;
 import eu.europa.esig.dss.jades.JWSJsonSerializationGenerator;
 import eu.europa.esig.dss.jades.JWSJsonSerializationObject;
 import eu.europa.esig.dss.jades.JsonObject;
+import eu.europa.esig.dss.jades.validation.AbstractJWSDocumentValidator;
+import eu.europa.esig.dss.jades.validation.JAdESDocumentValidatorFactory;
 import eu.europa.esig.dss.jades.validation.JAdESEtsiUHeader;
 import eu.europa.esig.dss.jades.validation.JAdESSignature;
-import eu.europa.esig.dss.jades.validation.JWS;
 import eu.europa.esig.dss.model.DSSDocument;
-import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.TimestampBinary;
-import eu.europa.esig.dss.signature.SignatureExtension;
+import eu.europa.esig.dss.signature.SigningOperation;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
+import eu.europa.esig.dss.utils.Utils;
+import eu.europa.esig.dss.validation.AdvancedSignature;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 /**
  * Creates a T-level of a JAdES signature
  */
-public class JAdESLevelBaselineT extends JAdESExtensionBuilder implements SignatureExtension<JAdESSignatureParameters> {
+public class JAdESLevelBaselineT extends JAdESExtensionBuilder implements JAdESLevelBaselineExtension {
 
 	/** The CertificateVerifier to use */
 	protected final CertificateVerifier certificateVerifier;
@@ -56,6 +61,16 @@ public class JAdESLevelBaselineT extends JAdESExtensionBuilder implements Signat
 	 * -T, of the signature
 	 */
 	protected TSPSource tspSource;
+
+	/**
+	 * The cached instance of a document validator
+	 */
+	protected AbstractJWSDocumentValidator documentValidator;
+
+	/**
+	 * Internal variable: defines the current signing procedure (used in signature creation/extension)
+	 */
+	private SigningOperation operationKind;
 
 	/**
 	 * The default constructor
@@ -76,51 +91,69 @@ public class JAdESLevelBaselineT extends JAdESExtensionBuilder implements Signat
 	}
 
 	@Override
+	public void setOperationKind(SigningOperation signingOperation) {
+		this.operationKind = signingOperation;
+	}
+
+	@Override
 	public DSSDocument extendSignatures(DSSDocument document, JAdESSignatureParameters params) {
 		Objects.requireNonNull(document, "The document cannot be null");
 		Objects.requireNonNull(tspSource, "The TSPSource cannot be null");
 
-		JWSJsonSerializationObject jwsJsonSerializationObject = toJWSJsonSerializationObjectToExtend(document);
-		for (JWS signature : jwsJsonSerializationObject.getSignatures()) {
-			assertEtsiUComponentsConsistent(signature, params.isBase64UrlEncodedEtsiUComponents());
+		JAdESDocumentValidatorFactory documentValidatorFactory = new JAdESDocumentValidatorFactory();
+		documentValidator = documentValidatorFactory.create(document);
+		documentValidator.setCertificateVerifier(certificateVerifier);
+		documentValidator.setDetachedContents(params.getDetachedContents());
 
-			JAdESSignature jadesSignature = new JAdESSignature(signature);
-			jadesSignature.setDetachedContents(params.getDetachedContents());
-			jadesSignature.prepareOfflineCertificateVerifier(certificateVerifier);
+		JWSJsonSerializationObject jwsJsonSerializationObject = documentValidator.getJwsJsonSerializationObject();
+		assertJWSJsonSerializationObjectValid(jwsJsonSerializationObject);
 
-			extendSignature(jadesSignature, params);
+		List<AdvancedSignature> signatures = documentValidator.getSignatures();
+		if (Utils.isCollectionEmpty(signatures)) {
+			throw new IllegalInputException("There is no signature to extend!");
 		}
 
-		JWSJsonSerializationGenerator generator = new JWSJsonSerializationGenerator(jwsJsonSerializationObject,
-				params.getJwsSerializationType());
+		List<AdvancedSignature> signaturesToExtend = signatures;
+		// this method allows extension of only the current signature on creation
+		if (SigningOperation.SIGN.equals(operationKind)) {
+			signaturesToExtend = Arrays.asList(signatures.get(signatures.size() - 1));
+		}
+
+		extendSignatures(signaturesToExtend, params);
+
+		JWSJsonSerializationGenerator generator = new JWSJsonSerializationGenerator(
+				jwsJsonSerializationObject, params.getJwsSerializationType());
 		return generator.generate();
 	}
 
 	/**
-	 * Extends the signature
+	 * Extends the signatures
 	 *
-	 * @param jadesSignature {@link JAdESSignature} to be extended
+	 * @param signatures a list of {@link AdvancedSignature}s to be extended
 	 * @param params {@link JAdESSignatureParameters} the extension parameters
 	 */
-	protected void extendSignature(JAdESSignature jadesSignature, JAdESSignatureParameters params) {
+	protected void extendSignatures(List<AdvancedSignature> signatures, JAdESSignatureParameters params) {
+		for (AdvancedSignature signature : signatures) {
+			JAdESSignature jadesSignature = (JAdESSignature) signature;
+			assertEtsiUComponentsConsistent(jadesSignature.getJws(), params.isBase64UrlEncodedEtsiUComponents());
+			assertExtendSignatureToTPossible(jadesSignature, params);
 
-		assertExtendSignatureToTPossible(jadesSignature, params);
+			// The timestamp must be added only if there is no one or the extension -T level is being created
+			if (!jadesSignature.hasTProfile() || SignatureLevel.JAdES_BASELINE_T.equals(params.getSignatureLevel())) {
 
-		// The timestamp must be added only if there is no one or the extension -T level is being created
-		if (!jadesSignature.hasTProfile() || SignatureLevel.JAdES_BASELINE_T.equals(params.getSignatureLevel())) {
+				JAdESTimestampParameters signatureTimestampParameters = params.getSignatureTimestampParameters();
+				DigestAlgorithm digestAlgorithmForTimestampRequest = signatureTimestampParameters.getDigestAlgorithm();
 
-			JAdESTimestampParameters signatureTimestampParameters = params.getSignatureTimestampParameters();
-			DigestAlgorithm digestAlgorithmForTimestampRequest = signatureTimestampParameters.getDigestAlgorithm();
+				byte[] messageImprint = jadesSignature.getTimestampSource().getSignatureTimestampData();
+				byte[] digest = DSSUtils.digest(digestAlgorithmForTimestampRequest, messageImprint);
+				TimestampBinary timeStampResponse = tspSource.getTimeStampResponse(digestAlgorithmForTimestampRequest, digest);
 
-			byte[] messageImprint = jadesSignature.getTimestampSource().getSignatureTimestampData();
-			byte[] digest = DSSUtils.digest(digestAlgorithmForTimestampRequest, messageImprint);
-			TimestampBinary timeStampResponse = tspSource.getTimeStampResponse(digestAlgorithmForTimestampRequest, digest);
-			
-			JsonObject tstContainer = DSSJsonUtils.getTstContainer(Collections.singletonList(timeStampResponse), null);
+				JsonObject tstContainer = DSSJsonUtils.getTstContainer(Collections.singletonList(timeStampResponse), null);
 
-			JAdESEtsiUHeader etsiUHeader = jadesSignature.getEtsiUHeader();
-			etsiUHeader.addComponent(JAdESHeaderParameterNames.SIG_TST, tstContainer,
-					params.isBase64UrlEncodedEtsiUComponents());
+				JAdESEtsiUHeader etsiUHeader = jadesSignature.getEtsiUHeader();
+				etsiUHeader.addComponent(JAdESHeaderParameterNames.SIG_TST, tstContainer,
+						params.isBase64UrlEncodedEtsiUComponents());
+			}
 		}
 	}
 
@@ -132,7 +165,7 @@ public class JAdESLevelBaselineT extends JAdESExtensionBuilder implements Signat
 		if (SignatureLevel.JAdES_BASELINE_T.equals(signatureLevel)
 				&& (jadesSignature.hasLTProfile() || jadesSignature.hasLTAProfile())) {
 			final String exceptionMessage = "Cannot extend signature. The signedData is already extended with [%s].";
-			throw new DSSException(String.format(exceptionMessage, "JAdES LT"));
+			throw new IllegalInputException(String.format(exceptionMessage, "JAdES LT"));
 		}
 	}
 

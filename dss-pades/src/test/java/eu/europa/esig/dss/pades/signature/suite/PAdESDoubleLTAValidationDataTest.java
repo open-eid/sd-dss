@@ -146,7 +146,7 @@ public class PAdESDoubleLTAValidationDataTest extends PKIFactoryAccess {
 		timestamps = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId()).getTimestampList();
 		assertNotNull(timestamps);
 		assertEquals(3, timestamps.size());
-
+		
 		int docTimestampCounter = 0;
 		for (TimestampWrapper timestamp : timestamps) {
 			CertificateWrapper signingCertificate = timestamp.getSigningCertificate();

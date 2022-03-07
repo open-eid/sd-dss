@@ -92,7 +92,7 @@ public class XAdESDoubleManifestTest extends AbstractXAdESTestValidation {
 			List<String> transformations = signatureScope.getTransformations();
 			assertTrue(Utils.isCollectionNotEmpty(transformations));
 		}
-
+		
 		assertEquals(4, diagnosticData.getOriginalSignerDocuments().size());
 	}
 

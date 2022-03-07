@@ -22,18 +22,20 @@ package eu.europa.esig.dss.pades.validation.timestamp;
 
 import eu.europa.esig.dss.cades.validation.CAdESAttribute;
 import eu.europa.esig.dss.cades.validation.timestamp.CAdESTimestampSource;
+import eu.europa.esig.dss.crl.CRLBinary;
 import eu.europa.esig.dss.enumerations.ArchiveTimestampType;
+import eu.europa.esig.dss.pades.PAdESUtils;
 import eu.europa.esig.dss.pades.validation.PAdESSignature;
-import eu.europa.esig.dss.pades.validation.PdfDssDictCRLSource;
-import eu.europa.esig.dss.pades.validation.PdfDssDictCertificateSource;
-import eu.europa.esig.dss.pades.validation.PdfDssDictOCSPSource;
 import eu.europa.esig.dss.pades.validation.PdfRevision;
+import eu.europa.esig.dss.pades.validation.RevocationInfoArchival;
 import eu.europa.esig.dss.pdf.PdfDocDssRevision;
 import eu.europa.esig.dss.pdf.PdfDocTimestampRevision;
-import eu.europa.esig.dss.pdf.PdfDssDict;
 import eu.europa.esig.dss.pdf.PdfSignatureRevision;
+import eu.europa.esig.dss.spi.DSSASN1Utils;
+import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPResponseBinary;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
+import eu.europa.esig.dss.validation.SignatureProperties;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 import eu.europa.esig.dss.validation.timestamp.TimestampedReference;
 
@@ -42,10 +44,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import static eu.europa.esig.dss.spi.OID.adbe_revocationInfoArchival;
+
+/**
+ * Extracts timestamps from a PAdES document
+ *
+ */
 @SuppressWarnings("serial")
 public class PAdESTimestampSource extends CAdESTimestampSource {
 
-    private final transient List<PdfRevision> documentRevisions;
+    /** List of {@link PdfRevision}s */
+    private final List<PdfRevision> documentRevisions;
 
     /**
      * This variable contains the list of embedded document timestamps.
@@ -138,13 +147,14 @@ public class PAdESTimestampSource extends CAdESTimestampSource {
 
             } else if (pdfRevision instanceof PdfDocDssRevision) {
                 PdfDocDssRevision pdfDocDssRevision = (PdfDocDssRevision) pdfRevision;
-                PdfRevisionTimestampSource pdfRevisionTimestampSource = new PdfRevisionTimestampSource(pdfDocDssRevision);
+                PdfRevisionTimestampSource pdfRevisionTimestampSource = new PdfRevisionTimestampSource(
+                        pdfDocDssRevision, certificateSource, crlSource, ocspSource);
                 addReferences(unsignedPropertiesReferences, pdfRevisionTimestampSource.getIncorporatedReferences());
 
-                PdfDssDict dssDictionary = pdfDocDssRevision.getDssDictionary();
-                certificateSource.add(new PdfDssDictCertificateSource(dssDictionary));
-                crlSource.add(new PdfDssDictCRLSource(dssDictionary));
-                ocspSource.add(new PdfDssDictOCSPSource(dssDictionary));
+                certificateSource.add(pdfDocDssRevision.getCertificateSource());
+                crlSource.add(pdfDocDssRevision.getCRLSource());
+                ocspSource.add(pdfDocDssRevision.getOCSPSource());
+
                 dssRevisionReached = true;
 
             } else if (pdfRevision instanceof PdfSignatureRevision) {
@@ -209,6 +219,48 @@ public class PAdESTimestampSource extends CAdESTimestampSource {
     protected boolean isArchiveTimestamp(CAdESAttribute unsignedAttribute) {
         // not applicable for PAdES
         return false;
+    }
+
+    @Override
+    protected List<TimestampedReference> getSignatureTimestampReferences() {
+        List<TimestampedReference> signatureTimestampReferences = super.getSignatureTimestampReferences();
+        addReferences(signatureTimestampReferences, getAdbeRevocationInfoArchivalReferences());
+        return signatureTimestampReferences;
+    }
+
+    /**
+     * Returns a list of revocation data {@code TimestampedReference}s from the adbe-revocationInfoArchival signed attribute
+     *
+     * @return a list of {@link TimestampedReference}s
+     */
+    protected List<TimestampedReference> getAdbeRevocationInfoArchivalReferences() {
+        SignatureProperties<CAdESAttribute> signedSignatureProperties = getSignedSignatureProperties();
+        if (!signedSignatureProperties.isExist()) {
+            return Collections.emptyList();
+        }
+        final List<TimestampedReference> references = new ArrayList<>();
+        for (CAdESAttribute attribute : signedSignatureProperties.getAttributes()) {
+            if (isAdbeRevocationInfoArchival(attribute)) {
+                RevocationInfoArchival revValues = PAdESUtils.getRevocationInfoArchival(attribute.getASN1Object());
+                if (revValues != null) {
+                    List<CRLBinary> crlBinaries = buildCRLIdentifiers(revValues.getCrlVals());
+                    addReferences(references, createReferencesForCRLBinaries(crlBinaries));
+                    List<OCSPResponseBinary> ocspBinaries = buildOCSPIdentifiers(DSSASN1Utils.toBasicOCSPResps(revValues.getOcspVals()));
+                    addReferences(references, createReferencesForOCSPBinaries(ocspBinaries, certificateSource));
+                }
+            }
+        }
+        return references;
+    }
+
+    /**
+     * Checks if the {@code signedAttribute} is an instance of type adbe-revocationInfoArchival
+     *
+     * @param signedAttribute {@link CAdESAttribute} to check
+     * @return TRUE if the attribute is an instance of type adbe-revocationInfoArchival, FALSE otherwise
+     */
+    protected boolean isAdbeRevocationInfoArchival(CAdESAttribute signedAttribute) {
+        return adbe_revocationInfoArchival.equals(signedAttribute.getASN1Oid());
     }
 
     @Override

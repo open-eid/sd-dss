@@ -78,5 +78,5 @@ public class PAdESWithDssVriAndCertRefTest extends AbstractPAdESTestValidation {
 		assertTrue(diagnosticData.isTLevelTechnicallyValid(diagnosticData.getFirstSignatureId()));
 		assertTrue(diagnosticData.isALevelTechnicallyValid(diagnosticData.getFirstSignatureId()));
 	}
-
+	
 }

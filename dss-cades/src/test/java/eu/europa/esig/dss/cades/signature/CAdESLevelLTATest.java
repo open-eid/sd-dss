@@ -60,7 +60,7 @@ public class CAdESLevelLTATest extends AbstractCAdESTestSignature {
 	@Override
 	protected void checkTimestamps(DiagnosticData diagnosticData) {
 		super.checkTimestamps(diagnosticData);
-
+		
 		assertEquals(2, diagnosticData.getTimestampList().size());
 		String timestampId = diagnosticData.getSignatures().get(0).getTimestampList().get(0).getId();
 		for (TimestampWrapper wrapper : diagnosticData.getTimestampList(diagnosticData.getFirstSignatureId())) {

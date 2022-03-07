@@ -71,6 +71,9 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 
 	private static final Logger LOG = LoggerFactory.getLogger(CAdESTimestampDataBuilder.class);
 
+	/** The error message to be thrown in case of a message-imprint build error */
+	private static final String MESSAGE_IMPRINT_ERROR = "Unable to compute message-imprint for TimestampToken with Id '{}'. Reason : {}";
+
 	/** The CMS SignedData */
 	private final CMSSignedData cmsSignedData;
 
@@ -111,6 +114,26 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 
 	@Override
 	public DSSDocument getTimestampX1Data(TimestampToken timestampToken) {
+		try {
+			byte[] timestampX1Data = getTimestampX1DataBytes();
+			return new InMemoryDocument(timestampX1Data);
+
+		} catch (Exception e) {
+			if (LOG.isDebugEnabled()) {
+				LOG.warn(MESSAGE_IMPRINT_ERROR, timestampToken.getDSSIdAsString(), e.getMessage(), e);
+			} else {
+				LOG.warn(MESSAGE_IMPRINT_ERROR, timestampToken.getDSSIdAsString(), e.getMessage());
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * This method computes a message-imprint for escTimeStamp
+	 *
+	 * @return message-imprint octets
+	 */
+	protected byte[] getTimestampX1DataBytes() {
 		try (ByteArrayOutputStream data = new ByteArrayOutputStream()) {
 			data.write(signerInformation.getSignature());
 			// We don't include the outer SEQUENCE, only the attrType and
@@ -122,21 +145,37 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 				data.write(DSSASN1Utils.getDEREncoded(attribute.getAttrValues()));
 			}
 			// Method is common to Type 1 and Type 2
-			data.write(getTimestampX2DataBytes(timestampToken));
+			data.write(getTimestampX2DataBytes());
 			byte[] byteArray = data.toByteArray();
-			return new InMemoryDocument(byteArray);
+			return byteArray;
 		} catch (IOException e) {
-			throw new DSSException(e);
+			throw new DSSException(String.format("An error occurred while generating message-imprint for " +
+					"escTimeStamp token. Reason : %s", e.getMessage()), e);
 		}
 	}
 
 	@Override
-	public DSSDocument getTimestampX2Data(final TimestampToken timestampToken) {
-		byte[] timestampX2DataBytes = getTimestampX2DataBytes(timestampToken);
-		return new InMemoryDocument(timestampX2DataBytes);
+	public DSSDocument getTimestampX2Data(TimestampToken timestampToken) {
+		try {
+			byte[] timestampX1Data = getTimestampX2DataBytes();
+			return new InMemoryDocument(timestampX1Data);
+
+		} catch (Exception e) {
+			if (LOG.isDebugEnabled()) {
+				LOG.warn(MESSAGE_IMPRINT_ERROR, timestampToken.getDSSIdAsString(), e.getMessage(), e);
+			} else {
+				LOG.warn(MESSAGE_IMPRINT_ERROR, timestampToken.getDSSIdAsString(), e.getMessage());
+			}
+		}
+		return null;
 	}
-	
-	private byte[] getTimestampX2DataBytes(final TimestampToken timestampToken) {
+
+	/**
+	 * This method computes a message-imprint for certCRLTimestamp
+	 *
+	 * @return message-imprint octets
+	 */
+	protected byte[] getTimestampX2DataBytes() {
 		try (ByteArrayOutputStream data = new ByteArrayOutputStream()) {
 			// Those are common to Type 1 and Type 2
 			final Attribute certAttribute = CMSUtils.getUnsignedAttribute(signerInformation, id_aa_ets_certificateRefs);
@@ -152,7 +191,8 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 
 			return data.toByteArray();
 		} catch (IOException e) {
-			throw new DSSException(e);
+			throw new DSSException(String.format("An error occurred while generating message-imprint for " +
+					"certCRLTimestamp token. Reason : %s", e.getMessage()), e);
 		}
 	}
 
@@ -193,7 +233,7 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
         final DigestAlgorithm messageImprintDigestAlgorithm = timestampToken.getMessageImprint().getAlgorithm();
         byte[] originalDocumentDigest = getOriginalDocumentDigest(messageImprintDigestAlgorithm);
         if (originalDocumentDigest != null) {
-            byte[] archiveTimestampDataV3 = timestampExtractor.getArchiveTimestampDataV3(signerInformation, atsHashIndexAttribute, originalDocumentDigest);
+            byte[] archiveTimestampDataV3 = timestampExtractor.getArchiveTimestampV3MessageImprint(signerInformation, atsHashIndexAttribute, originalDocumentDigest);
             return new InMemoryDocument(archiveTimestampDataV3);
         }
 		LOG.error("The original document is not found for TimestampToken with Id '{}'! "
@@ -269,10 +309,11 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 			final byte[] result = data.toByteArray();
 			return new InMemoryDocument(result);
 		} catch (IOException e) {
-			throw new DSSException(e);
+			throw new DSSException(String.format("An error occurred while generating message-imprint for " +
+					"archive-time-stamp-v3 token. Reason : %s", e.getMessage()), e);
 		} catch (Exception e) {
 			// When error in computing or in format the algorithm just continues.
-			LOG.error("An error in computing of message impring for a TimestampToken with Id : {}. Reason : {}", 
+			LOG.error("An error in computing of message-imprint for a TimestampToken with Id : {}. Reason : {}",
 					timestampToken.getDSSIdAsString(), e.getMessage(), e);
 			return null;
 		}
@@ -388,7 +429,8 @@ public class CAdESTimestampDataBuilder implements TimestampDataBuilder {
 						continue;
 					}
 				} catch (Exception e) {
-					throw new DSSException(e);
+					throw new DSSException(String.format("Unexpected error occurred on reading unsigned properties : %s",
+							e.getMessage()), e);
 				}
 			}
 			result.add(unauthenticatedAttributes.getObjectAt(ii));

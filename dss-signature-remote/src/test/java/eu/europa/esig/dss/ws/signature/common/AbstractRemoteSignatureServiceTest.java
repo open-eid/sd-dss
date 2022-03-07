@@ -64,13 +64,13 @@ public abstract class AbstractRemoteSignatureServiceTest extends PKIFactoryAcces
 		padesService.setPdfObjFactory(new PdfBoxDefaultObjectFactory());
 		return padesService;
 	}
-
+	
 	protected JAdESService getJAdESService() {
 		JAdESService jadesService = new JAdESService(getCompleteCertificateVerifier());
 		jadesService.setTspSource(getGoodTsa());
 		return jadesService;
 	}
-
+	
 	protected ASiCWithXAdESService getASiCXAdESService() {
 		ASiCWithXAdESService asicWithXadesService = new ASiCWithXAdESService(getCompleteCertificateVerifier());
 		asicWithXadesService.setTspSource(getGoodTsa());
@@ -82,7 +82,7 @@ public abstract class AbstractRemoteSignatureServiceTest extends PKIFactoryAcces
 		asicWithCadesService.setTspSource(getGoodTsa());
 		return asicWithCadesService;
 	}
-
+	
 	protected DiagnosticData validate(DSSDocument doc, List<DSSDocument> detachedContents) {
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(doc);
 		validator.setCertificateVerifier(getCompleteCertificateVerifier());

@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.8.d4j.1</version>
+		<version>5.9.d4j.1</version>
 	</parent>
 
 	<artifactId>dss-cades</artifactId>
@@ -19,7 +19,7 @@
 	
 	<dependencies>
         <dependency>
-					<groupId>${dss.groupId}</groupId>
+            <groupId>${dss.groupId}</groupId>
             <artifactId>dss-document</artifactId>
         </dependency>
         

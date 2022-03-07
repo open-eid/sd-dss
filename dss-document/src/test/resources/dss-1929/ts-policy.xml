@@ -41,7 +41,7 @@
 				<AuthorityInfoAccessPresent Level="WARN"/>
 				<RevocationInfoAccessPresent Level="WARN"/>
 				<RevocationDataAvailable Level="FAIL"/>
-				<RevocationDataNextUpdatePresent Level="WARN"/>
+				<CRLNextUpdatePresent Level="WARN"/>
 				<RevocationDataFreshness Level="FAIL"/>
 				<KeyUsage Level="WARN">
 					<Id>nonRepudiation</Id>
@@ -57,7 +57,7 @@
 				<Signature Level="FAIL"/>
 				<NotExpired Level="FAIL"/>
 				<RevocationDataAvailable Level="FAIL"/>
-				<RevocationDataNextUpdatePresent Level="WARN"/>
+				<CRLNextUpdatePresent Level="WARN"/>
 				<RevocationDataFreshness Level="FAIL"/>
 				<NotRevoked Level="FAIL"/>
 				<NotOnHold Level="FAIL"/>
@@ -89,7 +89,7 @@
 				<AuthorityInfoAccessPresent Level="WARN"/>
 				<RevocationInfoAccessPresent Level="WARN"/>
 				<RevocationDataAvailable Level="FAIL"/>
-				<RevocationDataNextUpdatePresent Level="WARN"/>
+				<CRLNextUpdatePresent Level="WARN"/>
 				<RevocationDataFreshness Level="FAIL"/>
 				<KeyUsage Level="WARN">
 					<Id>nonRepudiation</Id>
@@ -105,7 +105,7 @@
 				<Signature Level="FAIL"/>
 				<NotExpired Level="FAIL"/>
 				<RevocationDataAvailable Level="FAIL"/>
-				<RevocationDataNextUpdatePresent Level="WARN"/>
+				<CRLNextUpdatePresent Level="WARN"/>
 				<RevocationDataFreshness Level="FAIL"/>
 				<NotRevoked Level="FAIL"/>
 				<NotOnHold Level="FAIL"/>
@@ -137,7 +137,7 @@
 				<Signature Level="FAIL"/>
 				<NotExpired Level="FAIL"/>
 				<RevocationDataAvailable Level="FAIL"/>
-				<RevocationDataNextUpdatePresent Level="WARN"/>
+				<CRLNextUpdatePresent Level="WARN"/>
 				<RevocationDataFreshness Level="FAIL"/>
 				<ExtendedKeyUsage Level="WARN">
 					<Id>timeStamping</Id>
@@ -151,7 +151,7 @@
 				<Signature Level="FAIL"/>
 				<NotExpired Level="FAIL"/>
 				<RevocationDataAvailable Level="WARN"/>
-				<RevocationDataNextUpdatePresent Level="WARN"/>
+				<CRLNextUpdatePresent Level="WARN"/>
 				<RevocationDataFreshness Level="FAIL"/>
 				<NotRevoked Level="FAIL"/>
 				<NotOnHold Level="FAIL"/>
@@ -185,10 +185,9 @@
 					<Algo Date="2026">SHA3-512</Algo>
 					<Algo Date="2011">RIPEMD160</Algo>
 					<Algo Date="2015">WHIRLPOOL</Algo>
-					<Algo Size="160" Date="2013">DSA</Algo>
-					<Algo Size="192" Date="2013">DSA</Algo>
-					<Algo Size="224" Date="2023">DSA</Algo>
-					<Algo Size="256" Date="2026">DSA</Algo>
+					<Algo Size="1024" Date="2013">DSA</Algo>
+					<Algo Size="2048" Date="2023">DSA</Algo>
+					<Algo Size="3072" Date="2026">DSA</Algo>
 					<Algo Size="1024" Date="2009">RSA</Algo>
 					<Algo Size="1536" Date="2016">RSA</Algo>
 					<Algo Size="2048" Date="2023">RSA</Algo>
@@ -222,7 +221,7 @@
 				<Signature Level="FAIL"/>
 				<NotExpired Level="FAIL"/>
 				<RevocationDataAvailable Level="FAIL"/>
-				<RevocationDataNextUpdatePresent Level="WARN"/>
+				<CRLNextUpdatePresent Level="WARN"/>
 				<RevocationDataFreshness Level="FAIL"/>
 				<NotRevoked Level="FAIL"/>
 				<NotOnHold Level="FAIL"/>
@@ -232,7 +231,7 @@
 				<Signature Level="FAIL"/>
 				<NotExpired Level="FAIL"/>
 				<RevocationDataAvailable Level="WARN"/>
-				<RevocationDataNextUpdatePresent Level="WARN"/>
+				<CRLNextUpdatePresent Level="WARN"/>
 				<RevocationDataFreshness Level="FAIL"/>
 				<NotRevoked Level="FAIL"/>
 				<NotOnHold Level="FAIL"/>
@@ -249,7 +248,7 @@
 			<Algo>PLAIN-ECDSA</Algo>
 		</AcceptableEncryptionAlgo>
 		<MiniPublicKeySize>
-			<Algo Size="160">DSA</Algo>
+			<Algo Size="1024">DSA</Algo>
 			<Algo Size="1024">RSA</Algo>
 			<Algo Size="160">ECDSA</Algo>
 			<Algo Size="160">PLAIN-ECDSA</Algo>
@@ -283,10 +282,9 @@
 			<Algo Date="2026">SHA3-512</Algo>
 			<Algo Date="2011">RIPEMD160</Algo>
 			<Algo Date="2015">WHIRLPOOL</Algo>
-			<Algo Size="160" Date="2013">DSA</Algo>
-			<Algo Size="192" Date="2013">DSA</Algo>
-			<Algo Size="224" Date="2023">DSA</Algo>
-			<Algo Size="256" Date="2026">DSA</Algo>
+			<Algo Size="1024" Date="2013">DSA</Algo>
+			<Algo Size="2048" Date="2023">DSA</Algo>
+			<Algo Size="3072" Date="2026">DSA</Algo>
 			<Algo Size="1024" Date="2009">RSA</Algo>
 			<Algo Size="1536" Date="2016">RSA</Algo>
 			<Algo Size="2048" Date="2023">RSA</Algo>

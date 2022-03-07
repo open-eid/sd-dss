@@ -21,7 +21,6 @@
 package eu.europa.esig.dss.jades;
 
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
-import eu.europa.esig.dss.enumerations.JWSSerializationType;
 import eu.europa.esig.dss.enumerations.ObjectIdentifier;
 import eu.europa.esig.dss.jades.validation.EtsiUComponent;
 import eu.europa.esig.dss.jades.validation.JAdESDocumentValidatorFactory;
@@ -55,6 +54,9 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -122,6 +124,9 @@ public class DSSJsonUtils {
 
 	/** Format date-time as specified in RFC 3339 5.6 */
 	private static final String DATE_TIME_FORMAT_RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+
+	/** The URN OID prefix (RFC 3061) */
+	public static final String OID_NAMESPACE_PREFIX = "urn:oid:";
 	
 	/**
 	 * Copied from org.jose4j.base64url.internal.apache.commons.codec.binary.Base64
@@ -288,6 +293,23 @@ public class DSSJsonUtils {
 	}
 
 	/**
+	 * Checks if the binaries contain a UTF-8 encoded string
+	 *
+	 * @param binaries byte array to check
+	 * @return TRUE if binaries contain a UTF-8 encoded string, FALSE otherwise
+	 */
+	public static boolean isUtf8(byte[] binaries) {
+		try {
+			CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder();
+			ByteBuffer buf = ByteBuffer.wrap(binaries);
+			decoder.decode(buf);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	/**
 	 * Concatenates the given strings with a '.' (dot) between.
 	 * 
 	 * Example: "xxx", "yyy", "zzz" to "xxx.yyy.zzz"
@@ -309,12 +331,14 @@ public class DSSJsonUtils {
 	}
 
 	/**
-	 * Returns set of critical header exceptions (see RFC 7515)
-	 * 
-	 * @return set of critical header exception strings
+	 * Checks if the given {@code headerName} is a critical header exception
+	 * (shall not be incorporated within 'crit' header). See RFC 7515
+	 *
+	 * @param headerName {@link String} header name to check
+	 * @return TRUE if the header is critical header exception, FALSE otherwise
 	 */
-	public static Set<String> getCriticalHeaderExceptions() {
-		return criticalHeaderExceptions;
+	public static boolean isCriticalHeaderException(String headerName) {
+		return criticalHeaderExceptions.contains(headerName);
 	}
 	
 	/**
@@ -346,8 +370,41 @@ public class DSSJsonUtils {
 	 * @return 'oid' {@link JsonObject}
 	 */
 	public static JsonObject getOidObject(ObjectIdentifier objectIdentifier) {
-		return getOidObject(DSSUtils.getUriOrUrnOid(objectIdentifier), objectIdentifier.getDescription(), 
+		return getOidObject(getUriOrUrnOid(objectIdentifier), objectIdentifier.getDescription(),
 				objectIdentifier.getDocumentationReferences());
+	}
+
+	/**
+	 * Returns URI if present, otherwise URN encoded OID (see RFC 3061)
+	 * Returns NULL if non of them is present
+	 *
+	 * @param objectIdentifier {@link ObjectIdentifier} used to build an object of 'oid' type
+	 * @return {@link String} URI
+	 */
+	public static String getUriOrUrnOid(ObjectIdentifier objectIdentifier) {
+		/*
+		 * TS 119 182-1 : 5.4.1 The oId data type
+		 * If both an OID and a URI exist identifying one object, the URI value should be used in the id member.
+		 */
+		String uri = objectIdentifier.getUri();
+		if (uri == null && objectIdentifier.getOid() != null) {
+			uri = toUrnOid(objectIdentifier.getOid());
+		}
+		return uri;
+	}
+
+	/**
+	 * Returns a URN URI generated from the given OID:
+	 *
+	 * Ex.: OID = 1.2.4.5.6.8 becomes URI = urn:oid:1.2.4.5.6.8
+	 *
+	 * Note: see RFC 3061 "A URN Namespace of Object Identifiers"
+	 *
+	 * @param oid {@link String} to be converted to URN URI
+	 * @return URI based on the algorithm's OID
+	 */
+	public static String toUrnOid(String oid) {
+		return OID_NAMESPACE_PREFIX + oid;
 	}
 
 	/**
@@ -383,7 +440,7 @@ public class DSSJsonUtils {
 	 */
 	public static JsonObject getTstContainer(List<TimestampBinary> timestampBinaries, String canonicalizationMethodUri) {
 		if (Utils.isCollectionEmpty(timestampBinaries)) {
-			throw new DSSException("Impossible to create 'tstContainer'. List of TimestampBinaries cannot be null or empty!");
+			throw new IllegalArgumentException("Impossible to create 'tstContainer'. List of TimestampBinaries cannot be null or empty!");
 		}
 
 		Map<String, Object> tstContainerParams = new LinkedHashMap<>();
@@ -426,7 +483,7 @@ public class DSSJsonUtils {
 	 */
 	public static byte[] concatenateDSSDocuments(List<DSSDocument> documents) {
 		if (Utils.isCollectionEmpty(documents)) {
-			throw new DSSException("Unable to build a JWS Payload. Reason : the detached content is not provided!");
+			throw new IllegalArgumentException("Unable to build a JWS Payload. Reason : the detached content is not provided!");
 		}
 		if (documents.size() == 1) {
 			return DSSUtils.toByteArray(documents.get(0));
@@ -611,8 +668,6 @@ public class DSSJsonUtils {
 					JAdESSignature signature = (JAdESSignature) signatures.iterator().next(); // only one is considered
 					signature.setMasterSignature(masterSignature);
 					signature.setMasterCSigComponent(cSigAttribute);
-					// TODO : temporary fix for 5.8 release
-					signature.getJws().setDetachedPayload(masterSignature.getSignatureValue());
 					signature.setDetachedContents(Arrays.asList(new InMemoryDocument(masterSignature.getSignatureValue())));
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("A JWS counter signature found with Id : '{}'", signature.getId());
@@ -776,40 +831,55 @@ public class DSSJsonUtils {
 	}
 
 	/**
-	 * Converts the {@code DSSDocument} to {@link JWSJsonSerializationObject}, if not possible returns null
+	 * This method computes the signing input bytes for a JWS signature
 	 *
-	 * @param jadesDocument Compact {@link DSSDocument} to convert
-	 * @return {@link JWSJsonSerializationObject} if able to convert, null otherwise
+	 * @param jws {@link JWS} to get signing input for
+	 * @return signing input bytes
 	 */
-	public static JWSJsonSerializationObject toJWSJsonSerializationObject(DSSDocument jadesDocument) {
-		try {
-			JWSCompactSerializationParser jwsCompactSerializationParser = new JWSCompactSerializationParser(jadesDocument);
-			if (jwsCompactSerializationParser.isSupported()) {
-				JWS jws = jwsCompactSerializationParser.parse();
-				JWSJsonSerializationObject jwsJsonSerializationObject = toJWSJsonSerializationObject(jws);
-				jwsJsonSerializationObject.setJWSSerializationType(JWSSerializationType.COMPACT_SERIALIZATION);
-				return jwsJsonSerializationObject;
+	public static byte[] getSigningInputBytes(JWS jws) {
+		/*
+        https://tools.ietf.org/html/rfc7797#section-3
+        +-------+-----------------------------------------------------------+
+        | "b64" | JWS Signing Input Formula                                 |
+        +-------+-----------------------------------------------------------+
+        | true  | ASCII(BASE64URL(UTF8(JWS Protected Header)) || '.' ||     |
+        |       | BASE64URL(JWS Payload))                                   |
+        |       |                                                           |
+        | false | ASCII(BASE64URL(UTF8(JWS Protected Header)) || '.') ||    |
+        |       | JWS Payload                                               |
+        +-------+-----------------------------------------------------------+
+		*/
+		byte[] dataToSign;
+
+		if (!jws.isRfc7797UnencodedPayload()) {
+			String dataToBeSignedString = DSSJsonUtils.concatenate(jws.getEncodedHeader(), jws.getEncodedPayload());
+			dataToSign = DSSJsonUtils.getAsciiBytes(dataToBeSignedString);
+
+		} else {
+			try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+				// NOTE: unencoded payload shall not be converted to a string, it can lead to a data corruption!
+				os.write(DSSJsonUtils.getAsciiBytes(jws.getEncodedHeader()));
+				os.write(0x2e); // ascii for "."
+				byte[] payloadBytes = jws.getUnverifiedPayloadBytes();
+				if (Utils.isArrayNotEmpty(payloadBytes)) {
+					os.write(payloadBytes);
+				}
+				dataToSign = os.toByteArray();
+
+			} catch (IOException e) {
+				throw new DSSException(String.format(
+						"Unable to compute the JWS Signature Input for the unencoded payload! " +
+								"Reason : %s", e.getMessage()), e);
 			}
-		} catch (Exception e) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Unable to parse a compact JWS signature from the document with name '{}'. Reason : {}",
-						jadesDocument.getName(), e.getMessage(), e);
-			}
+
 		}
 
-		try {
-			JWSJsonSerializationParser jwsJsonSerializationParser = new JWSJsonSerializationParser(jadesDocument);
-			if (jwsJsonSerializationParser.isSupported()) {
-				return jwsJsonSerializationParser.parse();
-			}
-		} catch (Exception e) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Unable to parse signatures in the provided document with name '{}'. Reason : {}",
-						jadesDocument.getName(), e.getMessage(), e);
-			}
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("JWS Signature Input: ");
+			LOG.trace(new String(dataToSign));
 		}
 
-		return null;
+		return dataToSign;
 	}
 
 }

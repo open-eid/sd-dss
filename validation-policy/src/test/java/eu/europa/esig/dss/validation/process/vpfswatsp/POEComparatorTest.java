@@ -62,7 +62,7 @@ public class POEComparatorTest {
 		xmlTimestamp2.setProductionTime(currentTime);
 		TimestampWrapper secondTimestamp = new TimestampWrapper(xmlTimestamp2);
 		assertTrue(comparator.before(new POE(firstTimestamp), new POE(secondTimestamp)));
-
+		
 		calendar.add(Calendar.SECOND, 1);
 		xmlTimestamp.setProductionTime(calendar.getTime());
 		assertFalse(comparator.before(new POE(firstTimestamp), new POE(secondTimestamp)));

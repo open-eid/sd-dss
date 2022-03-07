@@ -61,7 +61,7 @@
 				<AuthorityInfoAccessPresent Level="WARN" />
 				<RevocationInfoAccessPresent Level="WARN" />
 				<RevocationDataAvailable Level="FAIL" />
-				<RevocationDataNextUpdatePresent Level="WARN" />
+				<CRLNextUpdatePresent Level="WARN" />
 				<RevocationDataFreshness Level="FAIL" />
 				<KeyUsage Level="WARN">
 					<Id>nonRepudiation</Id>
@@ -69,9 +69,11 @@
 				<SerialNumberPresent Level="WARN" />
 				<NotRevoked Level="FAIL" />
 				<NotOnHold Level="FAIL" />
+				<RevocationIssuerNotExpired Level="FAIL" />
 				<NotSelfSigned Level="WARN" />
 <!-- 				<Qualification Level="WARN" /> -->
 <!-- 				<SupportedByQSCD Level="WARN" /> -->
+<!-- 				<QcLegislationCountryCodes Level="WARN" /> -->
 <!-- 				<IssuedToNaturalPerson Level="INFORM" /> -->
 <!-- 				<IssuedToLegalPerson Level="INFORM" /> -->
 				<UsePseudonym Level="INFORM" />
@@ -81,7 +83,7 @@
 				<Signature Level="FAIL" />
 				<NotExpired Level="FAIL" />
 				<RevocationDataAvailable Level="FAIL" />
-				<RevocationDataNextUpdatePresent Level="WARN" />
+				<CRLNextUpdatePresent Level="WARN" />
 				<RevocationDataFreshness Level="FAIL" />
 				<NotRevoked Level="FAIL" />
 				<NotOnHold Level="FAIL" />
@@ -90,7 +92,7 @@
 			<Cryptographic />
 		</BasicSignatureConstraints>
 		<SignedAttributes>
-			<SigningCertificatePresent Level="FAIL" />
+			<SigningCertificatePresent Level="WARN" />
 			<UnicitySigningCertificate Level="WARN" />
 			<SigningCertificateRefersCertificateChain Level="WARN" />
 			<CertDigestPresent Level="FAIL" />
@@ -137,7 +139,7 @@
 				<AuthorityInfoAccessPresent Level="WARN" />
 				<RevocationInfoAccessPresent Level="WARN" />
 				<RevocationDataAvailable Level="FAIL" />
-				<RevocationDataNextUpdatePresent Level="WARN" />
+				<CRLNextUpdatePresent Level="WARN" />
 				<RevocationDataFreshness Level="FAIL" />
 				<KeyUsage Level="WARN">
 					<Id>nonRepudiation</Id>
@@ -157,7 +159,7 @@
 				<Signature Level="FAIL" />
 				<NotExpired Level="FAIL" />
 				<RevocationDataAvailable Level="FAIL" />
-				<RevocationDataNextUpdatePresent Level="WARN" />
+				<CRLNextUpdatePresent Level="WARN" />
 				<RevocationDataFreshness Level="FAIL" />
 				<NotRevoked Level="FAIL" />
 				<NotOnHold Level="FAIL" />
@@ -166,7 +168,7 @@
 			<Cryptographic />
 		</BasicSignatureConstraints>
 		<SignedAttributes>
-			<SigningCertificatePresent Level="FAIL" />
+			<SigningCertificatePresent Level="WARN" />
 			<CertDigestPresent Level="FAIL" />
 			<CertDigestMatch Level="FAIL" />
 			<IssuerSerialMatch Level="WARN" />
@@ -199,7 +201,7 @@
 				<Signature Level="FAIL" />
 				<NotExpired Level="FAIL" />
 				<RevocationDataAvailable Level="FAIL" />
-				<RevocationDataNextUpdatePresent Level="WARN" />
+				<CRLNextUpdatePresent Level="WARN" />
 				<RevocationDataFreshness Level="FAIL" />
 				<ExtendedKeyUsage Level="WARN">
 					<Id>timeStamping</Id>
@@ -213,7 +215,7 @@
 				<Signature Level="FAIL" />
 				<NotExpired Level="FAIL" />
 				<RevocationDataAvailable Level="WARN" />
-				<RevocationDataNextUpdatePresent Level="WARN" />
+				<CRLNextUpdatePresent Level="WARN" />
 				<RevocationDataFreshness Level="FAIL" />
 				<NotRevoked Level="FAIL" />
 				<NotOnHold Level="FAIL" />
@@ -224,10 +226,11 @@
 		<SignedAttributes>
 			<SigningCertificatePresent Level="WARN" />
 			<!-- <UnicitySigningCertificate Level="WARN" /> RFC 5816 -->
+			<SigningCertificateRefersCertificateChain Level="WARN" />
 			<CertDigestPresent Level="WARN" />
-			<AllCertDigestsMatch Level="WARN" />
 			<IssuerSerialMatch Level="WARN" />
 		</SignedAttributes>
+		<TSAGeneralNameContentMatch Level="WARN" />
 	</Timestamp>
 	<Revocation>
         <RevocationFreshness Level="IGNORE" Unit="DAYS" Value="0" />
@@ -243,7 +246,7 @@
 				<Signature Level="FAIL" />
 				<NotExpired Level="FAIL" />
 				<RevocationDataAvailable Level="FAIL" />
-				<RevocationDataNextUpdatePresent Level="WARN" />
+				<CRLNextUpdatePresent Level="WARN" />
 				<RevocationDataFreshness Level="FAIL" />
 				<NotRevoked Level="FAIL" />
 				<NotOnHold Level="FAIL" />
@@ -253,7 +256,7 @@
 				<Signature Level="FAIL" />
 				<NotExpired Level="FAIL" />
 				<RevocationDataAvailable Level="WARN" />
-				<RevocationDataNextUpdatePresent Level="WARN" />
+				<CRLNextUpdatePresent Level="WARN" />
 				<RevocationDataFreshness Level="FAIL" />
 				<NotRevoked Level="FAIL" />
 				<NotOnHold Level="FAIL" />
@@ -271,7 +274,7 @@
 <!-- 		<Algo>Ed25519</Algo> 				Not referenced in ETSI/SOGIS -->
 		</AcceptableEncryptionAlgo>
 		<MiniPublicKeySize>
-			<Algo Size="160">DSA</Algo>
+			<Algo Size="1024">DSA</Algo>
 			<Algo Size="1024">RSA</Algo>
 			<Algo Size="160">ECDSA</Algo>
 			<Algo Size="160">PLAIN-ECDSA</Algo>
@@ -309,10 +312,9 @@
 			<Algo Date="2015">WHIRLPOOL</Algo> <!-- ETSI 119 312 V1.1.1 -->
 			<!-- end Digest algorithms -->
 			<!-- Encryption algorithms -->
-			<Algo Date="2013" Size="160">DSA</Algo> <!-- ETSI TS 102 176-1 (Historical) V2.1.1 -->
-			<Algo Date="2013" Size="192">DSA</Algo> <!-- ETSI TS 102 176-1 (Historical) V2.1.1 -->
-			<Algo Date="2023" Size="224">DSA</Algo> <!-- ETSI 119 312 V1.3.1 -->
-			<Algo Date="2026" Size="256">DSA</Algo> <!-- ETSI 119 312 V1.3.1 -->
+			<Algo Date="2013" Size="1024">DSA</Algo> <!-- ETSI TS 102 176-1 (Historical) V2.1.1 -->
+			<Algo Date="2023" Size="2048">DSA</Algo> <!-- ETSI 119 312 V1.3.1 -->
+			<Algo Date="2026" Size="3072">DSA</Algo> <!-- ETSI 119 312 V1.3.1 -->
 			<Algo Date="2009" Size="1024">RSA</Algo> <!-- ETSI TS 102 176-1 (Historical) V2.0.0 -->
 			<Algo Date="2016" Size="1536">RSA</Algo> <!-- ETSI 119 312 V1.1.1 -->
 			<Algo Date="2023" Size="1900">RSA</Algo> <!-- ETSI 119 312 V1.3.1 -->

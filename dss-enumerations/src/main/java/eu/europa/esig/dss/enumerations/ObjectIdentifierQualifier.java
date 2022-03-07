@@ -37,7 +37,7 @@ package eu.europa.esig.dss.enumerations;
  *
  */
 public enum ObjectIdentifierQualifier {
-
+	
 	/** Identifies object Identifier encoded as URI (e.g. 'http://test/public') */
 	OID_AS_URI("OIDAsURI"),
 
@@ -45,7 +45,7 @@ public enum ObjectIdentifierQualifier {
 	OID_AS_URN("OIDAsURN");
 	
 	private final String value;
-
+	
 	ObjectIdentifierQualifier(String value) {
 		this.value = value;
 	}

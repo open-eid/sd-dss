@@ -215,7 +215,7 @@ public class CertificateReorderer {
 		if (Utils.isCollectionEmpty(certificates)) {
 			throw new DSSException("No signing certificate found");
 		}
-
+		
 		List<CertificateToken> potentialSigners = new ArrayList<>();
 		for (CertificateToken signer : certificates) {
 			boolean isSigner = false;
