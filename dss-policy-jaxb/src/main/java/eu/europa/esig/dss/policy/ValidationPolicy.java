@@ -92,7 +92,8 @@ public interface ValidationPolicy {
 	 * If SigningCertificateRefersCertificateChain element is absent within the constraint file then null is returned.
 	 *
 	 * @param context {@link Context}
-	 * @return {@code LevelConstraint} if SigningCertificateRefersCertificateChain element is present in the constraint file, null otherwise.
+	 * @return {@code LevelConstraint} if SigningCertificateRefersCertificateChain element is present
+	 *                                 in the constraint file, null otherwise.
 	 */
 	LevelConstraint getSigningCertificateRefersCertificateChainConstraint(Context context);
 
@@ -101,9 +102,20 @@ public interface ValidationPolicy {
 	 * If ReferencesToAllCertificateChainPresent element is absent within the constraint file then null is returned.
 	 *
 	 * @param context {@link Context}
-	 * @return {@code LevelConstraint} if ReferencesToAllCertificateChainPresent element is present in the constraint file, null otherwise.
+	 * @return {@code LevelConstraint} if ReferencesToAllCertificateChainPresent element is present
+	 *                                 in the constraint file, null otherwise.
 	 */
 	LevelConstraint getReferencesToAllCertificateChainPresentConstraint(Context context);
+
+	/**
+	 * Checks if a used DigestAlgorithm in signing-certificate-reference creation matches
+	 * the corresponding cryptographic constraint
+	 *
+	 * @param context {@link Context}
+	 * @return {@code LevelConstraint} if SigningCertificateDigestAlgorithm for a given context element is present
+	 *                                 in the constraint file, null otherwise.
+	 */
+	LevelConstraint getSigningCertificateDigestAlgorithmConstraint(Context context);
 
 	/**
 	 * Indicates if the signed property: signing-time should be checked. If SigningTime element is absent within the
@@ -150,6 +162,14 @@ public interface ValidationPolicy {
 	 * @return {@code LevelConstraint} if message-digests/SignedProperties element is present in the constraint file, null otherwise.
 	 */
 	LevelConstraint getMessageDigestOrSignedPropertiesConstraint(Context context);
+
+	/**
+	 * This constraint checks whether a JWA signature has a valid elliptic curve key size
+	 *
+	 * @param context {@link Context}
+	 * @return {@code LevelConstraint} if EllipticCurveKeySize element is present in the constraint file, null otherwise.
+	 */
+	LevelConstraint getEllipticCurveKeySizeConstraint(Context context);
 
 	/**
 	 * Indicates if the signed property: commitment-type-indication should be checked. If CommitmentTypeIndication
@@ -339,6 +359,16 @@ public interface ValidationPolicy {
 	LevelConstraint getRevocationDataAvailableConstraint(Context context, SubContext subContext);
 
 	/**
+	 * Returns acceptable revocation data available constraint
+	 *
+	 * @param context {@link Context}
+	 * @param subContext {@link SubContext}
+	 * @return {@code LevelConstraint} if AcceptableRevocationDataFound for a given
+	 *         context element is present in the constraint file, null otherwise.
+	 */
+	LevelConstraint getAcceptableRevocationDataFoundConstraint(Context context, SubContext subContext);
+
+	/**
 	 * Returns CRL's nextUpdate present constraint
 	 *
 	 * @param context {@link Context}
@@ -363,10 +393,20 @@ public interface ValidationPolicy {
 	 *
 	 * @param context {@link Context}
 	 * @param subContext {@link SubContext}
-	 * @return {@code LevelConstraint} if RevocationFreshness for a given
+	 * @return {@code TimeConstraint} if RevocationFreshness for a given
 	 *         context element is present in the constraint file, null otherwise.
 	 */
-	LevelConstraint getCertificateRevocationFreshnessConstraint(Context context, SubContext subContext);
+	TimeConstraint getRevocationFreshnessConstraint(Context context, SubContext subContext);
+
+	/**
+	 * Returns revocation data's freshness for nextUpdate check constraint
+	 *
+	 * @param context {@link Context}
+	 * @param subContext {@link SubContext}
+	 * @return {@code LevelConstraint} if RevocationFreshnessNextUpdate for a given
+	 *         context element is present in the constraint file, null otherwise.
+	 */
+	LevelConstraint getRevocationFreshnessNextUpdateConstraint(Context context, SubContext subContext);
 
 	/**
 	 * Returns certificate's not revoked constraint
@@ -572,24 +612,14 @@ public interface ValidationPolicy {
 	LevelConstraint getCertificateIssuedToLegalPersonConstraint(Context context, SubContext subContext);
 
 	/**
-	 * Indicates the certificate's QCStatement contains a semantics identifier for natural person.
+	 * Indicates the certificate's QCStatement contains an acceptable semantics identifier.
 	 *
 	 * @param context {@link Context}
 	 * @param subContext {@link SubContext}
-	 * @return {@code LevelConstraint} if QcSemanticsIdentifierForNaturalPerson for a given context element is present
+	 * @return {@code LevelConstraint} if SemanticsIdentifier for a given context element is present
 	 *         in the constraint file, null otherwise.
 	 */
-	LevelConstraint getCertificateSemanticsIdentifierForNaturalPersonConstraint(Context context, SubContext subContext);
-
-	/**
-	 * Indicates the certificate's QCStatement contains a semantics identifier for legal person.
-	 *
-	 * @param context {@link Context}
-	 * @param subContext {@link SubContext}
-	 * @return {@code LevelConstraint} if QcSemanticsIdentifierForLegalPerson for a given context element is present
-	 *         in the constraint file, null otherwise.
-	 */
-	LevelConstraint getCertificateSemanticsIdentifierForLegalPersonConstraint(Context context, SubContext subContext);
+	MultiValuesConstraint getCertificateSemanticsIdentifierConstraint(Context context, SubContext subContext);
 
 	/**
 	 * Indicates the acceptable QC PS2D roles for the certificate used for a signature.
@@ -619,7 +649,7 @@ public interface ValidationPolicy {
 	MultiValuesConstraint getCertificatePS2DQcCompetentAuthorityIdConstraint(Context context, SubContext subContext);
 
 	/**
-	 * Indicates if the end user certificate used in validating the signature is issued to a natural person.
+	 * Indicates if signing-certificate has been identified.
 	 *
 	 * @param context {@link Context}
 	 * @return {@code LevelConstraint} if Recognition for a given context element is present in the constraint file,
@@ -671,6 +701,25 @@ public interface ValidationPolicy {
 	 *         file, null otherwise.
 	 */
 	LevelConstraint getSigningCertificateIssuerSerialMatchConstraint(Context context);
+
+	/**
+	 * Indicates if the 'kid' (key identifier) header parameter is present within the protected header of the signature
+	 *
+	 * @param context {@link Context}
+	 * @return {@code LevelConstraint} if KeyIdentifierPresent for a given context element is present
+	 *         in the constraint file, null otherwise.
+	 */
+	LevelConstraint getKeyIdentifierPresent(Context context);
+
+	/**
+	 * Indicates if the value of 'kid' (key identifier) header parameter matches the signing-certificate
+	 * used to create the signature
+	 *
+	 * @param context {@link Context}
+	 * @return {@code LevelConstraint} if KeyIdentifierMatch for a given context element is present
+	 *         in the constraint file, null otherwise.
+	 */
+	LevelConstraint getKeyIdentifierMatch(Context context);
 
 	/**
 	 * Indicates if the referenced data is found
@@ -758,6 +807,42 @@ public interface ValidationPolicy {
 	LevelConstraint getPdfVisualDifferenceConstraint(Context context);
 
 	/**
+	 * This constraint checks if a document contains changes after a signature,
+	 * against permission rules identified within a /DocMDP dictionary
+	 *
+	 * @param context {@link Context}
+	 * @return {@code LevelConstraint} if DocMDP element is present in the constraint file, null otherwise.
+	 */
+	LevelConstraint getDocMDPConstraint(Context context);
+
+	/**
+	 * This constraint checks if a document contains changes after a signature,
+	 * against permission rules identified within a /FieldMDP dictionary
+	 *
+	 * @param context {@link Context}
+	 * @return {@code LevelConstraint} if FieldMDP element is present in the constraint file, null otherwise.
+	 */
+	LevelConstraint getFieldMDPConstraint(Context context);
+
+	/**
+	 * This constraint checks if a document contains changes after a signature,
+	 * against permission rules identified within a /SigFieldLock dictionary
+	 *
+	 * @param context {@link Context}
+	 * @return {@code LevelConstraint} if SigFieldLock element is present in the constraint file, null otherwise.
+	 */
+	LevelConstraint getSigFieldLockConstraint(Context context);
+
+	/**
+	 * This constraint checks whether a PDF document contains undefined object modifications
+	 * after the current signature's revisions
+	 *
+	 * @param context {@link Context}
+	 * @return {@code LevelConstraint} if UndefinedChanges element is present in the constraint file, null otherwise.
+	 */
+	LevelConstraint getUndefinedChangesConstraint(Context context);
+
+	/**
 	 * This constraint checks if the certificate is not expired on best-signature-time
 	 *
 	 * @return {@code LevelConstraint} if BestSignatureTimeBeforeExpirationDateOfSigningCertificate element is present
@@ -814,14 +899,6 @@ public interface ValidationPolicy {
 	 *                                 in the constraint file, null otherwise.
 	 */
 	LevelConstraint getRevocationTimeAgainstBestSignatureTimeConstraint();
-
-	/**
-	 * Returns RevocationFreshness constraint if present in the policy, null otherwise
-	 *
-	 * @return {@code TimeConstraint} if RevocationFreshness element is present
-	 *                                 in the constraint file, null otherwise.
-	 */
-	TimeConstraint getRevocationFreshnessConstraint();
 
 	/**
 	 * Returns CounterSignature constraint if present in the policy, null otherwise
@@ -992,14 +1069,6 @@ public interface ValidationPolicy {
 	MultiValuesConstraint getAcceptedMimeTypeContentsConstraint();
 
 	/**
-	 * Returns AllFilesSigned constraint if present in the policy, null otherwise
-	 *
-	 * @return {@code LevelConstraint} if AllFilesSigned element is present
-	 *                                 in the constraint file, null otherwise.
-	 */
-	LevelConstraint getAllFilesSignedConstraint();
-
-	/**
 	 * Returns ManifestFilePresent constraint if present in the policy, null otherwise
 	 *
 	 * @return {@code LevelConstraint} if ManifestFilePresent element is present
@@ -1014,6 +1083,14 @@ public interface ValidationPolicy {
 	 *                                 in the constraint file, null otherwise.
 	 */
 	LevelConstraint getSignedFilesPresentConstraint();
+
+	/**
+	 * Returns AllFilesSigned constraint if present in the policy, null otherwise
+	 *
+	 * @return {@code LevelConstraint} if AllFilesSigned element is present
+	 *                                 in the constraint file, null otherwise.
+	 */
+	LevelConstraint getAllFilesSignedConstraint();
 
 	/**
 	 * Returns FullScope constraint if present in the policy, null otherwise

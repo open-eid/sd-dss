@@ -30,12 +30,26 @@ import eu.europa.esig.dss.policy.jaxb.LevelConstraint;
 import eu.europa.esig.dss.validation.process.ChainItem;
 import eu.europa.esig.dss.validation.process.qualification.trust.consistency.TrustedServiceChecker;
 
+/**
+ * Checks if the Trusted Service is consistent
+ *
+ */
 public class ServiceConsistencyCheck extends ChainItem<XmlValidationCertificateQualification> {
 
+	/** Trusted Service to check */
 	private final TrustedServiceWrapper trustedService;
 
+	/** Internal cached error message, if applicable */
 	private MessageTag errorMessage;
 
+	/**
+	 * Default constructor
+	 *
+	 * @param i18nProvider {@link I18nProvider}
+	 * @param result {@link XmlValidationCertificateQualification}
+	 * @param trustedService {@link TrustedServiceWrapper}
+	 * @param constraint {@link LevelConstraint}
+	 */
 	public ServiceConsistencyCheck(I18nProvider i18nProvider, XmlValidationCertificateQualification result, 
 			TrustedServiceWrapper trustedService, LevelConstraint constraint) {
 		super(i18nProvider, result, constraint);
@@ -78,13 +92,18 @@ public class ServiceConsistencyCheck extends ChainItem<XmlValidationCertificateQ
 				return false;
 			}
 
-			if (!TrustedServiceChecker.isPreEIDASConsistent(trustedService)) {
+			if (!TrustedServiceChecker.isPreEIDASStatusConsistent(trustedService)) {
 				errorMessage = MessageTag.QUAL_TL_SERV_CONS_ANS5;
 				return false;
 			}
 
-			if (!TrustedServiceChecker.isQualifierAndAdditionalServiceInfoConsistent(trustedService)) {
+			if (!TrustedServiceChecker.isPreEIDASQualifierAndAdditionalServiceInfoConsistent(trustedService)) {
 				errorMessage = MessageTag.QUAL_TL_SERV_CONS_ANS6;
+				return false;
+			}
+
+			if (!TrustedServiceChecker.isQualifierAndAdditionalServiceInfoConsistent(trustedService)) {
+				errorMessage = MessageTag.QUAL_TL_SERV_CONS_ANS7;
 				return false;
 			}
 

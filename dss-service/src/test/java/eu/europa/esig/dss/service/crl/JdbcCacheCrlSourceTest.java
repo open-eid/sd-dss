@@ -57,7 +57,7 @@ public class JdbcCacheCrlSourceTest {
 	public void setUp() throws SQLException {		
 		// for testing purposes. DB view available on http://localhost:8082
 		// webServer = Server.createWebServer("-web","-webAllowOthers","-webPort","8082").start();
-		dataSource.setUrl("jdbc:h2:mem:test;create=true;DB_CLOSE_DELAY=-1");
+		dataSource.setUrl("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
 		JdbcCacheConnector jdbcCacheConnector = new JdbcCacheConnector(dataSource);
 		crlSource.setJdbcCacheConnector(jdbcCacheConnector);
 		assertFalse(crlSource.isTableExists());
@@ -75,13 +75,13 @@ public class JdbcCacheCrlSourceTest {
 
 		revocationToken = crlSource.getRevocationToken(certificateToken, caToken);
 		assertNull(revocationToken);
-
+		
 		OnlineCRLSource onlineCRLSource = new OnlineCRLSource();
 		crlSource.setProxySource(onlineCRLSource);
 		revocationToken = crlSource.getRevocationToken(certificateToken, caToken);
 		assertNotNull(revocationToken);
 		assertEquals(RevocationOrigin.EXTERNAL, revocationToken.getExternalOrigin());
-
+		
 		CRLToken savedRevocationToken = crlSource.getRevocationToken(certificateToken, caToken);
 		assertNotNull(savedRevocationToken);
 		compareTokens(revocationToken, savedRevocationToken);
@@ -97,11 +97,12 @@ public class JdbcCacheCrlSourceTest {
 		assertEquals(RevocationOrigin.CACHED, savedRevocationToken.getExternalOrigin());
 
 		crlSource.setMaxNextUpdateDelay(1L);
-
+		
 		// wait one second
 		Calendar nextSecond = Calendar.getInstance();
+		nextSecond.setTime(savedRevocationToken.getThisUpdate());
 		nextSecond.add(Calendar.SECOND, 1);
-		await().atMost(2, TimeUnit.SECONDS).until(() -> Calendar.getInstance().getTime().compareTo(nextSecond.getTime()) > 0);
+		await().atMost(2, TimeUnit.SECONDS).until(() -> Calendar.getInstance().getTime().after(nextSecond.getTime()));
 
 		forceRefresh = crlSource.getRevocationToken(certificateToken, caToken);
 		assertNotNull(forceRefresh);

@@ -38,6 +38,18 @@ public class PAdESVisibleSignatureSnippet {
 	public void demo() {
 
 		// tag::visibleSigParams[]
+		// import eu.europa.esig.dss.enumerations.ImageScaling;
+		// import eu.europa.esig.dss.enumerations.VisualSignatureAlignmentHorizontal;
+		// import eu.europa.esig.dss.enumerations.VisualSignatureAlignmentVertical;
+		// import eu.europa.esig.dss.enumerations.VisualSignatureRotation;
+		// import eu.europa.esig.dss.pades.PAdESSignatureParameters;
+		// import eu.europa.esig.dss.pades.SignatureFieldParameters;
+		// import eu.europa.esig.dss.pades.SignatureImageParameters;
+		// import eu.europa.esig.dss.pades.SignatureImageTextParameters;
+		// import eu.europa.esig.dss.pdf.pdfbox.visible.PdfBoxNativeFont;
+		// import org.apache.pdfbox.pdmodel.font.PDType1Font;
+		// import java.awt.Color;
+
 		// Instantiate PAdES-specific parameters
 		PAdESSignatureParameters padesSignatureParameters = new PAdESSignatureParameters();
 		
@@ -62,7 +74,7 @@ public class PAdESVisibleSignatureSnippet {
 		
 		// Rotates the signature field and changes the coordinates' origin respectively to its values as following:
 		/* _NONE_ (_DEFAULT value._ No rotation is applied. The origin of coordinates begins from the top left corner of a page);
-		   _AUTOMATIC_ (Rotates a signature field respectively to the page's rotation. Rotates the signature field on the same value as a defined in a PDF page);
+		   _AUTOMATIC_ (Rotates a signature field respectively to the page's rotation. Rotates the signature field on the same value as defined in a PDF page);
 		   _ROTATE_90_ (Rotates a signature field for a 90&#176; clockwise. Coordinates' origin begins from top right page corner);
 		   _ROTATE_180_ (Rotates a signature field for a 180&#176; clockwise. Coordinates' origin begins from the bottom right page corner);
 		   _ROTATE_270_ (Rotates a signature field for a 270&#176; clockwise. Coordinates' origin begins from the bottom left page corner). */

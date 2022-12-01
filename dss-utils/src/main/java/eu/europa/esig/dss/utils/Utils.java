@@ -53,6 +53,7 @@ public final class Utils {
 	}
 
 	private Utils() {
+		// empty
 	}
 
 	/**
@@ -206,6 +207,17 @@ public final class Utils {
 	 */
 	public static boolean endsWithIgnoreCase(String text, String expected) {
 		return impl.endsWithIgnoreCase(text, expected);
+	}
+
+	/**
+	 * This method returns an extension for the given filename
+	 * Ex. "file.xml" = "xml"; "document.pdf" = "pdf"
+	 *
+	 * @param filename {@link String} representing a filename extracted from a file
+	 * @return {@link String} extension
+	 */
+	public static String getFileNameExtension(String filename) {
+		return impl.getFileNameExtension(filename);
 	}
 
 	/**
@@ -381,7 +393,7 @@ public final class Utils {
 	 * Checks if the string is base64-encoded
 	 *
 	 * @param base64String {@link String}
-	 * @return TRUE if he string is base64-encoded, FALSE otherwise
+	 * @return TRUE if the string is base64-encoded, FALSE otherwise
 	 */
 	public static boolean isBase64Encoded(String base64String) {
 		return impl.isBase64Encoded(base64String);
@@ -489,8 +501,23 @@ public final class Utils {
 	 * @param <T> the class of list elements
 	 * @return reversed list
 	 */
-	public static <T extends Object> List<T> reverseList(List<T> list) {
+	public static <T> List<T> reverseList(List<T> list) {
 		return impl.reverseList(list);
+	}
+
+	/**
+	 * This method returns boolean result whether the {@code superCollection}
+	 * contains any element of the {@code subCollection}
+	 *
+	 * Ex. {'A', 'B', 'C'}, {'B', 'C', 'D'} = TRUE
+	 *
+	 * @param superCollection first collection
+	 * @param subCollection second collection
+	 * @param <T> object
+	 * @return TRUE if both collection intersect each other, FALSE otherwise
+	 */
+	public static <T> boolean containsAny(Collection<T> superCollection, Collection<T> subCollection) {
+		return impl.containsAny(superCollection, subCollection);
 	}
 
 }

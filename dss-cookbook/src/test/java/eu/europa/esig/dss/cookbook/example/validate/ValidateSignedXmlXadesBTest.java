@@ -35,6 +35,7 @@ import eu.europa.esig.dss.validation.CommonCertificateVerifier;
 import eu.europa.esig.dss.spi.x509.aia.DefaultAIASource;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
+import eu.europa.esig.validationreport.jaxb.ValidationReportType;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -54,6 +55,22 @@ public class ValidateSignedXmlXadesBTest {
 		CertificateSource adjunctCertSource = new KeyStoreCertificateSource(new File("src/test/resources/self-signed-tsa.p12"), "PKCS12", "ks-password");
 
 		// tag::demo[]
+		// import eu.europa.esig.dss.detailedreport.DetailedReport;
+		// import eu.europa.esig.dss.diagnostic.DiagnosticData;
+		// import eu.europa.esig.dss.model.DSSDocument;
+		// import eu.europa.esig.dss.model.FileDocument;
+		// import eu.europa.esig.dss.service.crl.OnlineCRLSource;
+		// import eu.europa.esig.dss.service.ocsp.OnlineOCSPSource;
+		// import eu.europa.esig.dss.simplereport.SimpleReport;
+		// import eu.europa.esig.dss.spi.x509.CertificateSource;
+		// import eu.europa.esig.dss.spi.x509.CommonTrustedCertificateSource;
+		// import eu.europa.esig.dss.validation.CertificateVerifier;
+		// import eu.europa.esig.dss.validation.CommonCertificateVerifier;
+		// import eu.europa.esig.dss.spi.x509.aia.DefaultAIASource;
+		// import eu.europa.esig.dss.validation.SignedDocumentValidator;
+		// import eu.europa.esig.dss.validation.reports.Reports;
+		// import eu.europa.esig.validationreport.jaxb.ValidationReportType;
+		// import java.io.File;
 
 		// First, we need a Certificate verifier
 		CertificateVerifier cv = new CommonCertificateVerifier();
@@ -78,7 +95,7 @@ public class ValidateSignedXmlXadesBTest {
 		// Hint : use method {@code CertificateVerifier.setTrustedCertSources(certSources)} in order to overwrite the existing list
 		cv.addTrustedCertSources(trustedCertSource);
 
-		// Additionally add missing certificates to a list of adjunct certificate sources
+		// Additionally add missing certificates to a list of adjunct certificate sources (not trusted certificates)
 		cv.addAdjunctCertSources(adjunctCertSource);
 
 		// Here is the document to be validated (any kind of signature file)
@@ -95,7 +112,7 @@ public class ValidateSignedXmlXadesBTest {
 		// validation policy)
 		Reports reports = documentValidator.validateDocument();
 
-		// We have 3 reports
+		// We have 4 reports
 		// The diagnostic data which contains all used and static data
 		DiagnosticData diagnosticData = reports.getDiagnosticData();
 
@@ -105,12 +122,16 @@ public class ValidateSignedXmlXadesBTest {
 		// The simple report is a summary of the detailed report (more user-friendly)
 		SimpleReport simpleReport = reports.getSimpleReport();
 
+		// The JAXB representation of the ETSI Validation report (ETSI TS 119 102-2)
+		ValidationReportType estiValidationReport = reports.getEtsiValidationReportJaxb();
+
 		// end::demo[]
 
 		assertNotNull(reports);
 		assertNotNull(diagnosticData);
 		assertNotNull(detailedReport);
 		assertNotNull(simpleReport);
+		assertNotNull(estiValidationReport);
 	}
 
 }

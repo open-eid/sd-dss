@@ -35,6 +35,13 @@ public class XAdES122Paths extends AbstractPaths implements XAdESPaths {
 
 	private static final long serialVersionUID = 5349623288353583493L;
 
+	/**
+	 * Default constructor
+	 */
+	public XAdES122Paths() {
+		// empty
+	}
+
 	@Override
 	public DSSNamespace getNamespace() {
 		return XAdESNamespaces.XADES_122;
@@ -447,6 +454,11 @@ public class XAdES122Paths extends AbstractPaths implements XAdESPaths {
 	}
 
 	@Override
+	public String getCurrentSignaturePolicySPDocSpecification() {
+		return null;
+	}
+
+	@Override
 	public String getCurrentSignaturePolicySPDocSpecificationIdentifier() {
 		return null;
 	}
@@ -512,6 +524,16 @@ public class XAdES122Paths extends AbstractPaths implements XAdESPaths {
 	}
 
 	@Override
+	public String getCurrentCommitmentObjectReferencesPath() {
+		return fromCurrentPosition(XAdES122Element.OBJECT_REFERENCE);
+	}
+
+	@Override
+	public String getCurrentCommitmentAllSignedDataObjectsPath() {
+		return fromCurrentPosition(XAdES122Element.ALL_SIGNED_DATA_OBJECTS);
+	}
+
+	@Override
 	public String getCurrentInclude() {
 		return fromCurrentPosition(XAdES122Element.INCLUDE);
 	}
@@ -572,6 +594,16 @@ public class XAdES122Paths extends AbstractPaths implements XAdESPaths {
 	}
 
 	@Override
+	public String getCurrentSPDocSpecification() {
+		return null;
+	}
+
+	@Override
+	public String getCurrentIdentifier() {
+		return fromCurrentPosition(XAdES122Element.IDENTIFIER);
+	}
+
+	@Override
 	public String getCurrentSPDocSpecificationIdentifier() {
 		return null;
 	}
@@ -582,12 +614,22 @@ public class XAdES122Paths extends AbstractPaths implements XAdESPaths {
 	}
 
 	@Override
-	public String getCurrentSPDocSpecificationDocumentReferenceElements() {
+	public String getCurrentDocumentationReferenceElements() {
+		return null;
+	}
+
+	@Override
+	public String getCurrentSPDocSpecificationDocumentationReferenceElements() {
 		return null;
 	}
 
 	@Override
 	public String getCurrentSignaturePolicyDocument() {
+		return null;
+	}
+
+	@Override
+	public String getCurrentSigPolDocLocalURI() {
 		return null;
 	}
 

@@ -94,6 +94,7 @@ public class SignatureImageTextParameters implements Serializable {
 	/**
 	 * This variable defines the text color to use 
      * (default is BLACK)
+	 * (PAdES visual appearance: allow null as text color, preventing graphic operators)
 	 */
 	private Color textColor = DEFAULT_TEXT_COLOR;
 
@@ -101,6 +102,13 @@ public class SignatureImageTextParameters implements Serializable {
 	 * This variable defines the background of a text bounding box
 	 */
 	private Color backgroundColor = DEFAULT_BACKGROUND_COLOR;
+
+	/**
+	 * Default constructor instantiating object with default configuration
+	 */
+	public SignatureImageTextParameters() {
+		// empty
+	}
 
 	/**
 	 * Returns a signer text position respectively to an image
@@ -234,6 +242,10 @@ public class SignatureImageTextParameters implements Serializable {
 	/**
 	 * Sets color for the text
 	 * 
+	 * NOTE: use NULL for the default text color (if supported by a selected implementation)
+	 * DEFAULT: Color.BLACK
+	 * (PAdES visual appearance: allow null as text color, preventing graphic operators)
+	 *
 	 * @param textColor {@link Color} to set
 	 */
 	public void setTextColor(Color textColor) {
@@ -254,6 +266,7 @@ public class SignatureImageTextParameters implements Serializable {
 	 * 
 	 * NOTE: use NULL for a transparent background (if supported by a selected implementation)
 	 * DEFAULT: Color.WHITE 
+	 * (PAdES visual appearance: allow null as text color, preventing graphic operators)
 	 * 
 	 * @param backgroundColor {@link Color} to set
 	 */

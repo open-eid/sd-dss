@@ -45,6 +45,13 @@ public class XAdES111Paths extends AbstractPaths implements XAdESPaths {
 	/** The path "./xades111:HashDataInfo/xades111:Transforms/xades111:Transform" */
 	public static final String HASH_DATA_INFO_TRANSFORM_PATH = fromCurrentPosition(XAdES111Element.HASH_DATA_INFO, XAdES111Element.TRANSFORMS, XMLDSigElement.TRANSFORM);
 
+	/**
+	 * Default constructor
+	 */
+	public XAdES111Paths() {
+		// empty
+	}
+
 	@Override
 	public DSSNamespace getNamespace() {
 		return XAdESNamespaces.XADES_111;
@@ -454,6 +461,11 @@ public class XAdES111Paths extends AbstractPaths implements XAdESPaths {
 	}
 
 	@Override
+	public String getCurrentSignaturePolicySPDocSpecification() {
+		return null;
+	}
+
+	@Override
 	public String getCurrentSignaturePolicySPDocSpecificationIdentifier() {
 		return null;
 	}
@@ -519,6 +531,16 @@ public class XAdES111Paths extends AbstractPaths implements XAdESPaths {
 	}
 
 	@Override
+	public String getCurrentCommitmentObjectReferencesPath() {
+		return fromCurrentPosition(XAdES111Element.OBJECT_REFERENCE);
+	}
+
+	@Override
+	public String getCurrentCommitmentAllSignedDataObjectsPath() {
+		return fromCurrentPosition(XAdES111Element.ALL_SIGNED_DATA_OBJECTS);
+	}
+
+	@Override
 	public String getCurrentInclude() {
 		return null;
 	}
@@ -581,6 +603,16 @@ public class XAdES111Paths extends AbstractPaths implements XAdESPaths {
 	// --------------------------- Signature Policy Store
 
 	@Override
+	public String getCurrentSPDocSpecification() {
+		return null;
+	}
+
+	@Override
+	public String getCurrentIdentifier() {
+		return fromCurrentPosition(XAdES111Element.IDENTIFIER);
+	}
+
+	@Override
 	public String getCurrentSPDocSpecificationIdentifier() {
 		return null;
 	}
@@ -591,12 +623,22 @@ public class XAdES111Paths extends AbstractPaths implements XAdESPaths {
 	}
 
 	@Override
-	public String getCurrentSPDocSpecificationDocumentReferenceElements() {
+	public String getCurrentDocumentationReferenceElements() {
+		return null;
+	}
+
+	@Override
+	public String getCurrentSPDocSpecificationDocumentationReferenceElements() {
 		return null;
 	}
 
 	@Override
 	public String getCurrentSignaturePolicyDocument() {
+		return null;
+	}
+
+	@Override
+	public String getCurrentSigPolDocLocalURI() {
 		return null;
 	}
 

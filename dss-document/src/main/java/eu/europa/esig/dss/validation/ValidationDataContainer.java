@@ -43,6 +43,13 @@ public class ValidationDataContainer {
     private final Map<TimestampToken, ValidationData> timestampValidationDataMap = new HashMap<>();
 
     /**
+     * Default constructor instantiating empty maps of tokens and validation data relationships
+     */
+    public ValidationDataContainer() {
+        // empty
+    }
+
+    /**
      * Adds validation data to the container
      *
      * @param signature {@link AdvancedSignature}
@@ -105,6 +112,15 @@ public class ValidationDataContainer {
      */
     public Collection<AdvancedSignature> getSignatures() {
         return signatureValidationDataMap.keySet();
+    }
+
+    /**
+     * Returns a collection of {@code TimestampToken}s
+     *
+     * @return a collection of {@link TimestampToken}s
+     */
+    public Collection<TimestampToken> getDetachedTimestamps() {
+        return timestampValidationDataMap.keySet();
     }
 
     /**

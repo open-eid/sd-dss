@@ -31,6 +31,7 @@ import eu.europa.esig.dss.validation.scope.CounterSignatureScope;
 import eu.europa.esig.dss.validation.scope.DigestSignatureScope;
 import eu.europa.esig.dss.validation.scope.FullSignatureScope;
 import eu.europa.esig.dss.validation.scope.SignatureScope;
+import eu.europa.esig.dss.validation.scope.SignatureScopeFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,9 +42,16 @@ import java.util.List;
 /**
  * Finds {@code SignatureScope}s for a CAdES signature
  */
-public class CAdESSignatureScopeFinder extends AbstractSignatureScopeFinder<CAdESSignature> {
+public class CAdESSignatureScopeFinder extends AbstractSignatureScopeFinder implements SignatureScopeFinder<CAdESSignature> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(CAdESSignatureScopeFinder.class);
+
+    /**
+     * Default constructor
+     */
+    public CAdESSignatureScopeFinder() {
+        // empty
+    }
 
     @Override
     public List<SignatureScope> findSignatureScope(final CAdESSignature cadesSignature) {
@@ -76,8 +84,8 @@ public class CAdESSignatureScopeFinder extends AbstractSignatureScopeFinder<CAdE
         
         String fileName = originalDocument.getName();
         if (cadesSignature.isCounterSignature()) {
-    		return Collections.singletonList(new CounterSignatureScope(cadesSignature.getMasterSignature().getId(), 
-    				getDigest(originalDocument) ));
+    		return Collections.singletonList(new CounterSignatureScope(
+                    getTokenIdentifierProvider().getIdAsString(cadesSignature.getMasterSignature()), getDigest(originalDocument) ));
     		
         } else if (originalDocument instanceof DigestDocument) {
         	DigestDocument digestDocument = (DigestDocument) originalDocument;

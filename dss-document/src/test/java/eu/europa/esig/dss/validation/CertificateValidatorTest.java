@@ -26,7 +26,7 @@ import eu.europa.esig.dss.diagnostic.CertificateRevocationWrapper;
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDigestAlgoAndValue;
-import eu.europa.esig.dss.enumerations.QCType;
+import eu.europa.esig.dss.enumerations.QCTypeEnum;
 import eu.europa.esig.dss.enumerations.RevocationType;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.simplecertificatereport.SimpleCertificateReport;
@@ -156,8 +156,8 @@ public class CertificateValidatorTest {
 		CertificateWrapper certificateWrapper = usedCertificates.get(0);
 		assertTrue(certificateWrapper.isQcCompliance());
 		assertFalse(certificateWrapper.isSupportedByQSCD());
-		assertEquals(1, certificateWrapper.getQCTypes().size());
-		assertEquals(QCType.QCT_ESIGN, certificateWrapper.getQCTypes().iterator().next());
+		assertEquals(1, certificateWrapper.getQcTypes().size());
+		assertEquals(QCTypeEnum.QCT_ESIGN, certificateWrapper.getQcTypes().iterator().next());
 		assertEquals(1, certificateWrapper.getQcLegislationCountryCodes().size());
 		assertEquals("TC", certificateWrapper.getQcLegislationCountryCodes().iterator().next());
 	}
@@ -254,12 +254,13 @@ public class CertificateValidatorTest {
 		}
 		assertNotNull(crlSource);
 
-		CertificateValidator cv = CertificateValidator.fromCertificate(certToken);
 		CommonCertificateVerifier certificateVerifier = new CommonCertificateVerifier();
 		certificateVerifier.setCrlSource(crlSource);
 		CommonTrustedCertificateSource trustedCertSources = new CommonTrustedCertificateSource();
 		trustedCertSources.addCertificate(caToken);
 		certificateVerifier.setTrustedCertSources(trustedCertSources);
+
+		CertificateValidator cv = CertificateValidator.fromCertificate(certToken);
 		cv.setCertificateVerifier(certificateVerifier);
 
 		CertificateReports reports = cv.validate();
@@ -282,6 +283,21 @@ public class CertificateValidatorTest {
 
 		assertArrayEquals(DSSUtils.digest(digestAlgoAndValue.getDigestMethod(), Utils.fromBase64(crlBinaries)),
 				digestAlgoAndValue.getDigestValue());
+	}
+
+	@Test
+	public void shortTermCertificateTest() {
+		CertificateToken shortTermCertificate = DSSUtils.loadCertificateFromBase64EncodedString("MIIDJjCCAg6gAwIBAgIIMMSTGSdLPxQwDQYJKoZIhvcNAQENBQAwKDEZMBcGA1UECgwQTm93aW5hIFNvbHV0aW9uczELMAkGA1UEBhMCTFUwHhcNMjEwNzAxMTAwMTI5WhcNMjEwNzAxMTAwNjI5WjA2MQwwCgYDVQQDDANBIGExGTAXBgNVBAoMEE5vd2luYSBTb2x1dGlvbnMxCzAJBgNVBAYTAkxVMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsW0yfJBqh9CtbfOtsZcEAEvzzfPusdhZNv0JSq8frKGMqJwTgjnkMJd9D3sEHUBJP0ryAmK9L5S+lWOGDhdYcE8K00k3hZSHyrOdRblB0SZhtXIgeGD7ESdTU9xPCf4Ze7xSI08zlk9NmTaj5Xqfyako8sxHAQapdXw8kfG0Ol6UhfMg7MjN8/wZrIVUYZzBQP3RFKHFQIms+pxfWxvETsynn/n2rOjuAsV0aTWGUAeWJRFJxKLSTrHQiQULVS1MHIIkdbQZxMA+Jn3dXwVdJLX/JRSvEOBqGRrvGQtYN2vNdrJlNHP0WGcSAddweWs7Ar+Pp7Qm/HEQF5+EOPUQDQIDAQABo0YwRDAOBgNVHQ8BAf8EBAMCBsAwIwYIKwYBBQUHAQMEFzAVMBMGBgQAjkYBBjAJBgcEAI5GAQYBMA0GBwQAi+xJAgEEAgUAMA0GCSqGSIb3DQEBDQUAA4IBAQBAYj8mdKsj/mMoM4HXL/w+xeK0iM55eGyBNprwxECoCH8ZCgVrVTb3eKttTXYrXjk3Yqpg3amkm7aV94iXJ0qLER/2C9lHLv6h1CoxYCdevAUSVOIzF0SJj54dxrwDQ7uTFXRe2etOg+hmEhj3OBpd/5vMfdIViYHtpPoCyZoQyGLztUt1k8/JvBe91UGAEnWx0nvokehkTgueq7dsTjBit4dlCmfmIzQUUWCgNpe1S1nEb0B/BCXaqPRhYx1//2T/5gR1lKe36HHp5rUURKT8NsS76lfxdor9Ag3mVmsw1NcVtDiFo0molO84+B53yqRP2wCU7MtfKfCX9CocgVNF");
+		CertificateValidator cv = CertificateValidator.fromCertificate(shortTermCertificate);
+		cv.setCertificateVerifier(new CommonCertificateVerifier());
+
+		CertificateReports reports = cv.validate();
+		DiagnosticData diagnosticData = reports.getDiagnosticData();
+		List<CertificateWrapper> usedCertificates = diagnosticData.getUsedCertificates();
+		assertEquals(1, usedCertificates.size());
+
+		CertificateWrapper certificateWrapper = usedCertificates.get(0);
+		assertTrue(certificateWrapper.isValAssuredShortTermCertificate());
 	}
 
 }

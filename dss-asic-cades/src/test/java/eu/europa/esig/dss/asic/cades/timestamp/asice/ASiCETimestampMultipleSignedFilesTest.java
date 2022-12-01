@@ -23,7 +23,7 @@ package eu.europa.esig.dss.asic.cades.timestamp.asice;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESSignatureParameters;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESTimestampParameters;
 import eu.europa.esig.dss.asic.cades.signature.ASiCWithCAdESService;
-import eu.europa.esig.dss.asic.cades.signature.AbstractASiCWithCAdESMultipleDocumentsTestSignature;
+import eu.europa.esig.dss.asic.cades.signature.asice.AbstractASiCEWithCAdESMultipleDocumentsTestSignature;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
 import eu.europa.esig.dss.diagnostic.SignerDataWrapper;
@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class ASiCETimestampMultipleSignedFilesTest extends AbstractASiCWithCAdESMultipleDocumentsTestSignature {
+public class ASiCETimestampMultipleSignedFilesTest extends AbstractASiCEWithCAdESMultipleDocumentsTestSignature {
 
     private ASiCWithCAdESService service;
     private ASiCWithCAdESSignatureParameters signatureParameters;
@@ -93,6 +93,13 @@ public class ASiCETimestampMultipleSignedFilesTest extends AbstractASiCWithCAdES
     }
 
     @Override
+    protected void checkSignatureLevel(DiagnosticData diagnosticData) {
+        super.checkSignatureLevel(diagnosticData);
+
+        assertEquals(SignatureLevel.CAdES_BASELINE_B, diagnosticData.getSignatureFormat(diagnosticData.getFirstSignatureId()));
+    }
+
+    @Override
     protected void checkTimestamps(DiagnosticData diagnosticData) {
         super.checkTimestamps(diagnosticData);
 
@@ -111,7 +118,7 @@ public class ASiCETimestampMultipleSignedFilesTest extends AbstractASiCWithCAdES
                     signedDataIds.add(signatureScope.getSignerData().getId());
                 }
             }
-            if ("META-INF/ASiCManifest.xml".equals(signatureScope.getName())) {
+            if ("META-INF/ASiCManifest001.xml".equals(signatureScope.getName())) {
                 signedManifestId = signatureScope.getSignerData().getId();
             }
         }
@@ -130,7 +137,7 @@ public class ASiCETimestampMultipleSignedFilesTest extends AbstractASiCWithCAdES
                     timestampedDataIds.add(signerDataWrapper.getId());
                 }
             }
-            if ("META-INF/ASiCManifest1.xml".equals(signerDataWrapper.getReferencedName())) {
+            if ("META-INF/ASiCManifest002.xml".equals(signerDataWrapper.getReferencedName())) {
                 timestampedManifestId = signerDataWrapper.getId();
             }
         }
@@ -154,21 +161,6 @@ public class ASiCETimestampMultipleSignedFilesTest extends AbstractASiCWithCAdES
     @Override
     protected ASiCWithCAdESSignatureParameters getSignatureParameters() {
         return signatureParameters;
-    }
-
-    @Override
-    protected MimeType getExpectedMime() {
-        return MimeType.ASICE;
-    }
-
-    @Override
-    protected boolean isBaselineT() {
-        return false;
-    }
-
-    @Override
-    protected boolean isBaselineLTA() {
-        return false;
     }
 
     @Override

@@ -20,25 +20,24 @@
  */
 package eu.europa.esig.dss.asic.cades.signature.manifest;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.Validator;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-
 import eu.europa.esig.asic.manifest.ASiCManifestUtils;
+import eu.europa.esig.dss.DomUtils;
+import eu.europa.esig.dss.asic.common.ASiCContent;
+import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.MimeType;
-import eu.europa.esig.dss.signature.SigningOperation;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
+
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.Validator;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ASiCEWithCAdESManifestBuilderTest {
 
@@ -55,10 +54,22 @@ public class ASiCEWithCAdESManifestBuilderTest {
 		List<DSSDocument> documents = new ArrayList<>();
 		documents.add(new InMemoryDocument(new byte[] { 1, 2, 3 }, "test.bin"));
 		documents.add(new InMemoryDocument(new byte[] { 1, 2, 3 }, "test", MimeType.BINARY));
-		ASiCEWithCAdESManifestBuilder builder = new ASiCEWithCAdESManifestBuilder(SigningOperation.SIGN, documents, DigestAlgorithm.SHA256, "signature.p7s");
-		Document build = builder.build();
 
-		validator.validate(new DOMSource(build));
+		ASiCContent asicContent = new ASiCContent();
+		asicContent.setSignedDocuments(documents);
+		asicContent.setContainerType(ASiCContainerType.ASiC_E);
+
+		ASiCEWithCAdESManifestBuilder builder = new ASiCWithCAdESSignatureManifestBuilder(
+				asicContent, DigestAlgorithm.SHA256, "signature.p7s");
+		DSSDocument manifest = builder.build();
+
+		validator.validate(new DOMSource(DomUtils.buildDOM(manifest)));
+
+		builder = new ASiCWithCAdESTimestampManifestBuilder(
+				asicContent, DigestAlgorithm.SHA256, "timestamp.tst");
+		manifest = builder.build();
+
+		validator.validate(new DOMSource(DomUtils.buildDOM(manifest)));
 	}
 
 	@Test
@@ -72,11 +83,18 @@ public class ASiCEWithCAdESManifestBuilderTest {
 		documents.add(new InMemoryDocument(new byte[] { 1, 2, 3 }, "test", MimeType.BINARY));
 		List<DSSDocument> manifests = new ArrayList<>();
 		documents.add(new InMemoryDocument(new byte[] { 1, 2, 3 }, "test.xml", MimeType.XML));
-		ASiCEWithCAdESArchiveManifestBuilder builder = new ASiCEWithCAdESArchiveManifestBuilder(signatures, timestamps, 
-				documents, manifests, null, DigestAlgorithm.SHA256, "timestamp.tst");
-		Document build = builder.build();
 
-		validator.validate(new DOMSource(build));
+		ASiCContent asicContent = new ASiCContent();
+		asicContent.setSignatureDocuments(signatures);
+		asicContent.setTimestampDocuments(timestamps);
+		asicContent.setSignedDocuments(documents);
+		asicContent.setArchiveManifestDocuments(manifests);
+
+		ASiCEWithCAdESArchiveManifestBuilder builder = new ASiCEWithCAdESArchiveManifestBuilder(
+				asicContent, null, DigestAlgorithm.SHA256, "timestamp.tst");
+		DSSDocument manifest = builder.build();
+
+		validator.validate(new DOMSource(DomUtils.buildDOM(manifest)));
 	}
 
 }

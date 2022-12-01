@@ -20,18 +20,26 @@
  */
 package eu.europa.esig.dss.pades;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.pdf.pdfbox.PdfBoxUtils;
+import eu.europa.esig.dss.pdf.visible.ImageUtils;
+import eu.europa.esig.dss.signature.resources.TempFileResourcesHandlerBuilder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PdfBoxUtilsTest {
 
@@ -55,9 +63,9 @@ public class PdfBoxUtilsTest {
 		DSSDocument screenshot = PdfBoxUtils.generateScreenshot(sampleDocument, 1);
 		assertNotNull(screenshot);
 
-		Exception exception = assertThrows(IllegalStateException.class,
+		Exception exception = assertThrows(IndexOutOfBoundsException.class,
 				() -> PdfBoxUtils.generateScreenshot(sampleDocument, 0));
-		assertEquals("1-based index not found: 0", exception.getMessage());
+		assertEquals("Index out of bounds: 0", exception.getMessage());
 
 		exception = assertThrows(IndexOutOfBoundsException.class,
 				() -> PdfBoxUtils.generateScreenshot(sampleDocument, 2));
@@ -74,10 +82,10 @@ public class PdfBoxUtilsTest {
 
 		Exception exception = assertThrows(DSSException.class,
 				() -> PdfBoxUtils.generateScreenshot(protectedDocument, wrongProtectionPhrase, 1));
-		assertEquals("Cannot decrypt PDF, the password is incorrect", exception.getMessage());
+		assertEquals("Encrypted document : Cannot decrypt PDF, the password is incorrect", exception.getMessage());
 
 		exception = assertThrows(DSSException.class, () -> PdfBoxUtils.generateScreenshot(protectedDocument, 1));
-		assertEquals("Cannot decrypt PDF, the password is incorrect", exception.getMessage());
+		assertEquals("Encrypted document : Cannot decrypt PDF, the password is incorrect", exception.getMessage());
 	}
 
 	@Test
@@ -95,6 +103,41 @@ public class PdfBoxUtilsTest {
 		Exception exception = assertThrows(IndexOutOfBoundsException.class,
 				() -> PdfBoxUtils.generateSubtractionImage(sampleDocument, twoPagesDocument, 2));
 		assertEquals("1-based index out of bounds: 2", exception.getMessage());
+	}
+
+	@Test
+	public void generateScreenshotWithTempFileTest() throws IOException  {
+		TempFileResourcesHandlerBuilder tempFileResourcesHandlerBuilder = new TempFileResourcesHandlerBuilder();
+		tempFileResourcesHandlerBuilder.setTempFileDirectory(new File("target"));
+
+		DSSDocument fileScreenshot = PdfBoxUtils.generateScreenshot(sampleDocument, null, 1,
+				tempFileResourcesHandlerBuilder.createResourcesHandler());
+		assertNotNull(fileScreenshot);
+		assertTrue(fileScreenshot instanceof FileDocument);
+
+		DSSDocument inMemoryScreenshot = PdfBoxUtils.generateScreenshot(sampleDocument, 1);
+		assertNotNull(inMemoryScreenshot);
+		assertFalse(inMemoryScreenshot instanceof FileDocument);
+
+		assertVisuallyEqual(fileScreenshot, inMemoryScreenshot);
+
+		DSSDocument fileSubtractionImage = PdfBoxUtils.generateSubtractionImage(sampleDocument, null, 1,
+				twoPagesDocument, null, 1, tempFileResourcesHandlerBuilder.createResourcesHandler());
+		assertNotNull(fileSubtractionImage);
+		assertTrue(fileSubtractionImage instanceof FileDocument);
+
+		DSSDocument inMemorySubtractionImage = PdfBoxUtils.generateSubtractionImage(sampleDocument, twoPagesDocument, 1);
+		assertNotNull(inMemorySubtractionImage);
+		assertFalse(inMemorySubtractionImage instanceof FileDocument);
+
+		assertVisuallyEqual(fileSubtractionImage, inMemorySubtractionImage);
+	}
+
+	private void assertVisuallyEqual(DSSDocument documentOne, DSSDocument documentTwo) throws IOException {
+		BufferedImage bufferedImageOnw = ImageUtils.toBufferedImage(documentOne);
+		BufferedImage bufferedImageTwo = ImageUtils.toBufferedImage(documentTwo);
+		assertEquals(0, ImageUtils.drawSubtractionImage(bufferedImageOnw, bufferedImageTwo,
+				new BufferedImage(bufferedImageOnw.getWidth(), bufferedImageOnw.getHeight(), BufferedImage.TYPE_INT_RGB)));
 	}
 
 }

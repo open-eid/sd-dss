@@ -23,6 +23,7 @@ package eu.europa.esig.dss.asic.xades.validation;
 import eu.europa.esig.dss.DomUtils;
 import eu.europa.esig.dss.asic.xades.definition.ManifestNamespace;
 import eu.europa.esig.dss.asic.xades.definition.ManifestPaths;
+import eu.europa.esig.dss.definition.DSSNamespace;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.utils.Utils;
@@ -34,8 +35,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -56,6 +57,15 @@ public class ASiCEWithXAdESManifestParser {
 	private final DSSDocument manifestDocument;
 
 	/**
+	 * Constructor with a manifest document only (no assigned signature)
+	 *
+	 * @param manifestDocument {@link DSSDocument} to be parsed
+	 */
+	public ASiCEWithXAdESManifestParser(DSSDocument manifestDocument) {
+		this(null, manifestDocument);
+	}
+
+	/**
 	 * The default constructor
 	 *
 	 * @param signatureDocument {@link DSSDocument} the linked signature
@@ -74,36 +84,58 @@ public class ASiCEWithXAdESManifestParser {
 	public ManifestFile getManifest() {
 		ManifestFile manifest = new ManifestFile();
 		manifest.setDocument(manifestDocument);
-		manifest.setSignatureFilename(signatureDocument.getName());
+		if (signatureDocument != null) {
+			manifest.setSignatureFilename(signatureDocument.getName());
+		}
 		manifest.setEntries(getEntries());
 		return manifest;
 	}
 
 	private List<ManifestEntry> getEntries() {
+		if (!DomUtils.isDOM(manifestDocument)) {
+			LOG.warn("Unable to parse manifest file '{}': the document is not a valid XML!", manifestDocument.getName());
+			return Collections.emptyList();
+		}
+
 		List<ManifestEntry> result = new ArrayList<>();
-		try (InputStream is = manifestDocument.openStream()) {
-			Document manifestDom = DomUtils.buildDOM(is);
+		try {
+			Document manifestDom = DomUtils.buildDOM(manifestDocument);
+			DSSNamespace manifestNamespace = getManifestNamespace(manifestDom);
+			DomUtils.registerNamespace(manifestNamespace);
+
 			NodeList nodeList = DomUtils.getNodeList(manifestDom, ManifestPaths.FILE_ENTRY_PATH);
 			if (nodeList != null && nodeList.getLength() > 0) {
 				for (int i = 0; i < nodeList.getLength(); i++) {
 					ManifestEntry manifestEntry = new ManifestEntry();
 					Element fileEntryElement = (Element) nodeList.item(i);
-					String fullpathValue = fileEntryElement.getAttribute(ManifestPaths.FULL_PATH_ATTRIBUTE);
+					String fullpathValue = fileEntryElement.getAttribute(ManifestPaths.getFullPathAttribute(manifestNamespace));
 					if (!isFolder(fullpathValue)) {
 						manifestEntry.setFileName(fullpathValue);
-						manifestEntry.setMimeType(getMimeType(fileEntryElement));
+						manifestEntry.setMimeType(getMimeType(fileEntryElement, manifestNamespace));
 						result.add(manifestEntry);
 					}
 				}
 			}
+
 		} catch (Exception e) {
-			LOG.error("Unable to parse manifest file '{}'", manifestDocument.getName(), e);
+			String errorMessage = "Unable to parse manifest file '{}' : {}";
+			if (LOG.isDebugEnabled()) {
+				LOG.warn(errorMessage, manifestDocument.getName(), e.getMessage(), e);
+			} else {
+				LOG.warn(errorMessage, manifestDocument.getName(), e.getMessage());
+			}
 		}
 		return result;
 	}
 
-	private static MimeType getMimeType(Element fileEntryElement) {
-		String mediaType = fileEntryElement.getAttribute(ManifestPaths.MEDIA_TYPE_ATTRIBUTE);
+	private DSSNamespace getManifestNamespace(Document manifestDom) {
+		DSSNamespace manifestNamespace = DomUtils.browseRecursivelyForNamespaceWithUri(
+				manifestDom.getDocumentElement(), ManifestNamespace.NS.getUri());
+		return manifestNamespace != null ? manifestNamespace : ManifestNamespace.NS;
+	}
+
+	private MimeType getMimeType(Element fileEntryElement, DSSNamespace manifestNamespace) {
+		String mediaType = fileEntryElement.getAttribute(ManifestPaths.getMediaTypeAttribute(manifestNamespace));
 		if (Utils.isStringNotBlank(mediaType)) {
 			return MimeType.fromMimeTypeString(mediaType);
 		}

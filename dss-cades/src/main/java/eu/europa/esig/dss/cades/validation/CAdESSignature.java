@@ -40,6 +40,7 @@ import eu.europa.esig.dss.model.DigestDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.SignaturePolicyStore;
 import eu.europa.esig.dss.model.SpDocSpecification;
+import eu.europa.esig.dss.model.UserNotice;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.OID;
@@ -51,7 +52,6 @@ import eu.europa.esig.dss.spi.x509.revocation.crl.OfflineCRLSource;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OfflineOCSPSource;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
-import eu.europa.esig.dss.validation.BaselineRequirementsChecker;
 import eu.europa.esig.dss.validation.DefaultAdvancedSignature;
 import eu.europa.esig.dss.validation.ManifestEntry;
 import eu.europa.esig.dss.validation.ReferenceValidation;
@@ -64,6 +64,7 @@ import eu.europa.esig.dss.validation.SignatureProductionPlace;
 import eu.europa.esig.dss.validation.SignerRole;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1IA5String;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1OctetString;
@@ -250,16 +251,22 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 					final String policyQualifierInfoValue = policyQualifierInfo.getSigQualifier().toString();
 
 					if (PKCSObjectIdentifiers.id_spq_ets_uri.equals(policyQualifierInfoId)) {
-						signaturePolicy.setUrl(policyQualifierInfoValue);
+						signaturePolicy.setUri(policyQualifierInfoValue);
+
 					} else if (PKCSObjectIdentifiers.id_spq_ets_unotice.equals(policyQualifierInfoId)) {
-						SPUserNotice spUserNotice = SPUserNotice.getInstance(policyQualifierInfo.getSigQualifier());
-						signaturePolicy.setNotice(buildSPUserNoticeString(spUserNotice));
+						final SPUserNotice spUserNotice = SPUserNotice.getInstance(policyQualifierInfo.getSigQualifier());
+						signaturePolicy.setUserNotice(buildSPUserNoticeString(spUserNotice));
+
 					} else if (OID.id_sp_doc_specification.equals(policyQualifierInfoId)) {
-						signaturePolicy.setDocSpecification(policyQualifierInfoValue);
+						final SpDocSpecification spDocSpecification = new SpDocSpecification();
+						spDocSpecification.setId(policyQualifierInfoValue);
+						signaturePolicy.setDocSpecification(spDocSpecification);
+
 					} else {
 						LOG.error("Unknown signature policy qualifier id: {} with value: {}", policyQualifierInfoId,
 								policyQualifierInfoValue);
 					}
+
 				} catch (Exception e) {
 					LOG.error("Unable to read SigPolicyQualifierInfo {} : {}", ii, e.getMessage());
 				}
@@ -269,31 +276,30 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 		return signaturePolicy;
 	}
 
-	private String buildSPUserNoticeString(SPUserNotice spUserNotice) {
-		String organizationString = null;
-		List<Integer> noticeNumbersList = null;
-		String explicitTextString = null;
+	private UserNotice buildSPUserNoticeString(SPUserNotice spUserNotice) {
+		final UserNotice userNotice = new UserNotice();
 
-		NoticeReference noticeRef = spUserNotice.getNoticeRef();
+		final NoticeReference noticeRef = spUserNotice.getNoticeRef();
 		if (noticeRef != null) {
-			DisplayText organization = noticeRef.getOrganization();
+			final DisplayText organization = noticeRef.getOrganization();
 			if (organization != null) {
-				organizationString = organization.getString();
+				userNotice.setOrganization(organization.getString());
 			}
-			ASN1Integer[] noticeNumbers = noticeRef.getNoticeNumbers();
+			final ASN1Integer[] noticeNumbers = noticeRef.getNoticeNumbers();
 			if (noticeNumbers != null && noticeNumbers.length != 0) {
-				noticeNumbersList = new ArrayList<>();
-				for (ASN1Integer integer : noticeNumbers) {
-					noticeNumbersList.add(integer.intValueExact());
+				int[] noticeNumbersArray = new int[noticeNumbers.length];
+				for (int i = 0; i < noticeNumbers.length ; i++) {
+					noticeNumbersArray[i] = noticeNumbers[i].intValueExact();
 				}
+				userNotice.setNoticeNumbers(noticeNumbersArray);
 			}
 		}
-		DisplayText explicitText = spUserNotice.getExplicitText();
+		final DisplayText explicitText = spUserNotice.getExplicitText();
 		if (explicitText != null) {
-			explicitTextString = explicitText.getString();
+			userNotice.setExplicitText(explicitText.getString());
 		}
 
-		return DSSUtils.getSPUserNoticeString(organizationString, noticeNumbersList, explicitTextString);
+		return userNotice;
 	}
 	
 	@Override
@@ -309,18 +315,25 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			if (sequence.size() == 2) {
 				ASN1Encodable spDocSpec = sequence.getObjectAt(0);
 				spDocSpecification.setId(spDocSpec.toString());
-				
-				try {
-					ASN1OctetString spDocument = ASN1OctetString.getInstance(sequence.getObjectAt(1));
-					signaturePolicyStore.setSignaturePolicyContent(new InMemoryDocument(spDocument.getOctets()));
-				} catch (Exception e) {
-					LOG.warn("Unable to extract a SignaturePolicyStore content. 'sigPolicyEncoded OCTET STRING' is expected!");
+
+				ASN1Encodable spDocument = sequence.getObjectAt(1);
+				if (spDocument instanceof ASN1OctetString) {
+					ASN1OctetString sigPolicyEncoded = ASN1OctetString.getInstance(spDocument);
+					signaturePolicyStore.setSignaturePolicyContent(new InMemoryDocument(sigPolicyEncoded.getOctets()));
+
+				} else if (spDocument instanceof ASN1IA5String) {
+					ASN1String sigPolicyLocalURI = ASN1IA5String.getInstance(spDocument);
+					signaturePolicyStore.setSigPolDocLocalURI(sigPolicyLocalURI.getString());
+
+				} else {
+					LOG.warn("Unable to extract a signature-policy-store spDocument. " +
+							"One of 'sigPolicyEncoded' or 'sigPolicyLocalURI' is expected!");
 				}
-				
 				signaturePolicyStore.setSpDocSpecification(spDocSpecification);
 				return signaturePolicyStore;
+
 			} else {
-				LOG.warn("Unable to extract a SignaturePolicyStore. The element shall contain two attributes.");
+				LOG.warn("Unable to extract a signature-policy-store. The element shall contain two attributes.");
 			}
 		}
 		return null;
@@ -480,14 +493,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 				}
 				final org.bouncycastle.asn1.x509.Attribute[] signerAttrValueArray = (org.bouncycastle.asn1.x509.Attribute[]) signerAttrValue;
 				for (final org.bouncycastle.asn1.x509.Attribute claimedRole : signerAttrValueArray) {
-					final ASN1Encodable[] attrValues1 = claimedRole.getAttrValues().toArray();
-					for (final ASN1Encodable asn1Encodable : attrValues1) {
-						if (asn1Encodable instanceof ASN1String) {
-							ASN1String asn1String = (ASN1String) asn1Encodable;
-							final String role = asn1String.getString();
-							claimedRoles.add(new SignerRole(role, EndorsementType.CLAIMED));
-						}
-					}
+					claimedRoles.addAll(getClaimedSignerRoles(claimedRole));
 				}
 			}
 			return claimedRoles;
@@ -495,6 +501,19 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			LOG.error("Error when dealing with claimed signer roles : {}", signerAttrValues, e);
 			return Collections.emptyList();
 		}
+	}
+
+	private List<SignerRole> getClaimedSignerRoles(final org.bouncycastle.asn1.x509.Attribute claimedRole) {
+		final List<SignerRole> claimedRoles = new ArrayList<>();
+		final ASN1Encodable[] attrValues1 = claimedRole.getAttrValues().toArray();
+		for (final ASN1Encodable asn1Encodable : attrValues1) {
+			if (asn1Encodable instanceof ASN1String) {
+				ASN1String asn1String = (ASN1String) asn1Encodable;
+				final String role = asn1String.getString();
+				claimedRoles.add(new SignerRole(role, EndorsementType.CLAIMED));
+			}
+		}
+		return claimedRoles;
 	}
 
 	@Override
@@ -515,27 +534,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			List<SignerRole> roles = new ArrayList<>();
 			for (final Object signerAttrValue : signerAttrValues) {
 				if (signerAttrValue instanceof AttributeCertificate) {
-					final AttributeCertificate attributeCertificate = (AttributeCertificate) signerAttrValue;
-					final AttributeCertificateInfo acInfo = attributeCertificate.getAcinfo();
-					final AttCertValidityPeriod attrCertValidityPeriod = acInfo.getAttrCertValidityPeriod();
-					final ASN1Sequence attributes = acInfo.getAttributes();
-					for (int ii = 0; ii < attributes.size(); ii++) {
-
-						final ASN1Encodable objectAt = attributes.getObjectAt(ii);
-						final org.bouncycastle.asn1.x509.Attribute attribute = org.bouncycastle.asn1.x509.Attribute.getInstance(objectAt);
-						final ASN1Set attrValues1 = attribute.getAttrValues();
-						ASN1Encodable firstItem = attrValues1.getObjectAt(0);
-						if (firstItem instanceof ASN1Sequence) {
-							ASN1Sequence sequence = (ASN1Sequence) firstItem;
-							RoleSyntax roleSyntax = RoleSyntax.getInstance(sequence);
-							SignerRole certifiedRole = new SignerRole(roleSyntax.getRoleNameAsString(), EndorsementType.CERTIFIED);
-							certifiedRole.setNotBefore(DSSASN1Utils.toDate(attrCertValidityPeriod.getNotBeforeTime()));
-							certifiedRole.setNotAfter(DSSASN1Utils.toDate(attrCertValidityPeriod.getNotAfterTime()));
-							roles.add(certifiedRole);
-						} else {
-							LOG.warn("Unsupported type for RoleSyntax : {}", firstItem == null ? null : firstItem.getClass().getSimpleName());
-						}
-					}
+					roles.addAll(getCertifiedSignerRoles((AttributeCertificate) signerAttrValue));
 				}
 			}
 			return roles;
@@ -543,6 +542,31 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			LOG.error("Error when dealing with certified signer roles : {}", signerAttrValues, e);
 			return Collections.emptyList();
 		}
+	}
+
+	private List<SignerRole> getCertifiedSignerRoles(final AttributeCertificate attributeCertificate) {
+		List<SignerRole> roles = new ArrayList<>();
+		final AttributeCertificateInfo acInfo = attributeCertificate.getAcinfo();
+		final AttCertValidityPeriod attrCertValidityPeriod = acInfo.getAttrCertValidityPeriod();
+		final ASN1Sequence attributes = acInfo.getAttributes();
+		for (int ii = 0; ii < attributes.size(); ii++) {
+
+			final ASN1Encodable objectAt = attributes.getObjectAt(ii);
+			final org.bouncycastle.asn1.x509.Attribute attribute = org.bouncycastle.asn1.x509.Attribute.getInstance(objectAt);
+			final ASN1Set attrValues1 = attribute.getAttrValues();
+			ASN1Encodable firstItem = attrValues1.getObjectAt(0);
+			if (firstItem instanceof ASN1Sequence) {
+				ASN1Sequence sequence = (ASN1Sequence) firstItem;
+				RoleSyntax roleSyntax = RoleSyntax.getInstance(sequence);
+				SignerRole certifiedRole = new SignerRole(roleSyntax.getRoleNameAsString(), EndorsementType.CERTIFIED);
+				certifiedRole.setNotBefore(DSSASN1Utils.toDate(attrCertValidityPeriod.getNotBeforeTime()));
+				certifiedRole.setNotAfter(DSSASN1Utils.toDate(attrCertValidityPeriod.getNotAfterTime()));
+				roles.add(certifiedRole);
+			} else {
+				LOG.warn("Unsupported type for RoleSyntax : {}", firstItem == null ? null : firstItem.getClass().getSimpleName());
+			}
+		}
+		return roles;
 	}
 
 	private SignerAttribute getSignerAttributeV1() {
@@ -588,9 +612,15 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			// purposely empty
 		}
 
-		// fallback to identify via signature algorithm
-		final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.forOID(oid);
-		return signatureAlgorithm.getEncryptionAlgorithm();
+		try {
+			// fallback to identify via signature algorithm
+			final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.forOID(oid);
+			return signatureAlgorithm.getEncryptionAlgorithm();
+		} catch (IllegalArgumentException e) {
+			LOG.error("Unable to identify encryption algorithm for OID '{}'. Reason : {}", oid, e.getMessage());
+		}
+
+		return null;
 	}
 
 	@Override
@@ -601,12 +631,13 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 				return getPSSHashAlgorithm();
 			}
 			return signatureAlgorithm.getDigestAlgorithm();
+
 		} else {
+			final String digestAlgOID = signerInformation.getDigestAlgOID();
 			try {
-				final String digestAlgOID = signerInformation.getDigestAlgOID();
 				return DigestAlgorithm.forOID(digestAlgOID);
 			} catch (IllegalArgumentException e) {
-				LOG.warn(e.getMessage());
+				LOG.error("Unable to identify DigestAlgorithm for OID '{}'. Reason : {}", digestAlgOID, e.getMessage());
 				return null;
 			}
 		}
@@ -726,7 +757,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 
 			DSSDocument originalDocument = null;
 			try {
-				originalDocument = getOriginalDocument();
+				originalDocument = getSignerDocumentContent();
 			} catch (DSSException e) {
 				LOG.warn("Original document not found");
 			}
@@ -744,6 +775,17 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 
 		}
 		return referenceValidations;
+	}
+
+	/**
+	 * This method extracts a document content that was signed
+	 *
+	 * NOTE: Some differences are possible with PAdES
+	 *
+	 * @return {@link DSSDocument}
+	 */
+	protected DSSDocument getSignerDocumentContent() {
+		return getOriginalDocument();
 	}
 
 	private boolean verifyDigestAlgorithm(DSSDocument originalDocument, Set<DigestAlgorithm> messageDigestAlgorithms,
@@ -791,6 +833,13 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 		return referenceValidations;
 	}
 	
+	/**
+	 * Verifies a message-digest of a CMSSignedData, when applicable
+	 *
+	 * @param originalDocument {@link DSSDocument} the signed original document
+	 * @param messageDigestValue message-digest byte array content
+	 * @return {@link ReferenceValidation}
+	 */
 	private ReferenceValidation getMessageDigestReferenceValidation(DSSDocument originalDocument, byte[] messageDigestValue) {
 		ReferenceValidation messageDigestValidation = new ReferenceValidation();
 		messageDigestValidation.setType(DigestMatcherType.MESSAGE_DIGEST);
@@ -827,6 +876,13 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 		return messageDigestValidation;
 	}
 	
+	/**
+	 * Verifies a content digest, when applicable
+	 *
+	 * @param originalDocument {@link DSSDocument} the signed original document
+	 * @param signerInformation {@link SignerInformation}
+	 * @return {@link ReferenceValidation}
+	 */
 	private ReferenceValidation getContentReferenceValidation(DSSDocument originalDocument, SignerInformation signerInformation) {
 		ReferenceValidation contentValidation = new ReferenceValidation();
 		contentValidation.setType(DigestMatcherType.CONTENT_DIGEST);
@@ -903,8 +959,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 		}
 
 		final SignerId signerId = getSignerId();
-		final SignerInformation signerInformationToCheck = cmsSignedDataParser.getSignerInfos().get(signerId);
-		return signerInformationToCheck;
+		return cmsSignedDataParser.getSignerInfos().get(signerId);
 	}
 
 	/**
@@ -980,8 +1035,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 		}
 		final ASN1Encodable asn1Encodable = contentIdentifierAttribute.getAttrValues().getObjectAt(0);
 		final ContentIdentifier contentIdentifier = ContentIdentifier.getInstance(asn1Encodable);
-		final String contentIdentifierString = DSSASN1Utils.toString(contentIdentifier.getValue());
-		return contentIdentifierString;
+		return DSSASN1Utils.toString(contentIdentifier.getValue());
 	}
 
 	/**
@@ -1002,8 +1056,8 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 				// content-type is mandatory
 				contentHint = contentHints.getContentType().toString();
 				// content-description is optional
-				if (contentHints.getContentDescription() != null) {
-					contentHint += " [" + contentHints.getContentDescription().toString() + "]";
+				if (contentHints.getContentDescriptionUTF8() != null) {
+					contentHint += " [" + contentHints.getContentDescriptionUTF8().toString() + "]";
 				}
 			}
 		} catch (Exception e) {
@@ -1110,18 +1164,29 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 
 	@Override
 	public SignatureLevel getDataFoundUpToLevel() {
-		if (!hasBProfile()) {
+		if (!hasBESProfile()) {
 			return SignatureLevel.CMS_NOT_ETSI;
 		}
-		if (!hasTProfile()) {
-			return SignatureLevel.CAdES_BASELINE_B;
+
+		boolean baselineProfile = hasBProfile();
+
+		if (!hasExtendedTProfile()) {
+			if (baselineProfile) {
+				return SignatureLevel.CAdES_BASELINE_B;
+			} else if (hasEPESProfile()) {
+				return SignatureLevel.CAdES_EPES;
+			}
+			return SignatureLevel.CAdES_BES;
 		}
 
-		if (hasLTProfile()) {
+		baselineProfile = baselineProfile && hasTProfile();
+
+		if (baselineProfile && hasLTProfile()) {
 			if (hasLTAProfile()) {
 				return SignatureLevel.CAdES_BASELINE_LTA;
 			}
 			return SignatureLevel.CAdES_BASELINE_LT;
+
 		} else if (hasCProfile()) {
 			if (hasXLProfile()) {
 				if (hasAProfile()) {
@@ -1135,9 +1200,15 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 				return SignatureLevel.CAdES_X;
 			}
 			return SignatureLevel.CAdES_C;
-		} else {
-			return SignatureLevel.CAdES_BASELINE_T;
+
+		} else if (hasXLProfile()) {
+			if (hasAProfile()) {
+				return SignatureLevel.CAdES_A; // CAdES-E-A can be built on CAdES-E-T directly
+			}
+			return SignatureLevel.CAdES_LT;
 		}
+
+		return baselineProfile ? SignatureLevel.CAdES_BASELINE_T : SignatureLevel.CAdES_T;
 	}
 
 	@Override
@@ -1146,8 +1217,36 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	@Override
-	protected BaselineRequirementsChecker createBaselineRequirementsChecker() {
+	protected CAdESBaselineRequirementsChecker createBaselineRequirementsChecker() {
 		return new CAdESBaselineRequirementsChecker(this, offlineCertificateVerifier);
+	}
+
+	/**
+	 * Checks the presence of signing certificate covered by the signature, what is the proof -BES profile existence
+	 *
+	 * @return true if BES Profile is detected
+	 */
+	public boolean hasBESProfile() {
+		return getBaselineRequirementsChecker().hasExtendedBESProfile();
+	}
+
+	/**
+	 * Checks the presence of signature-policy-identifier element in the signature,
+	 * what is the proof -EPES profile existence
+	 *
+	 * @return true if EPES Profile is detected
+	 */
+	public boolean hasEPESProfile() {
+		return getBaselineRequirementsChecker().hasExtendedEPESProfile();
+	}
+
+	/**
+	 * Checks the presence of signature-time-stamp element in the signature, what is the proof -T profile existence
+	 *
+	 * @return true if T Profile is detected
+	 */
+	public boolean hasExtendedTProfile() {
+		return getBaselineRequirementsChecker().hasExtendedTProfile();
 	}
 
 	/**

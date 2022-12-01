@@ -278,6 +278,12 @@ public class JdbcCacheConnector {
         private final Map<String, Object> row = new HashMap<>();
 
         /**
+         * Default constructor initializing an empty map
+         */
+        public JdbcResultRecord() {
+        }
+
+        /**
          * The method allows to populate the map
          *
          * @param columnName {@link String} represents the column name
@@ -313,7 +319,7 @@ public class JdbcCacheConnector {
         /**
          * The target class to convert the result into
          */
-        private final Class targetClass;
+        private final Class<?> targetClass;
 
         /**
          * Default constructor
@@ -321,7 +327,7 @@ public class JdbcCacheConnector {
          * @param columnName {@link String} the name of a column to get a value from
          * @param targetClass {@link Class} target class to cast the extracted value to
          */
-        public JdbcResultRequest(final String columnName, final Class targetClass) {
+        public JdbcResultRequest(final String columnName, final Class<?> targetClass) {
             this.columnName = columnName;
             this.targetClass = targetClass;
         }
@@ -340,7 +346,7 @@ public class JdbcCacheConnector {
          *
          * @return {@link Class}
          */
-        public Class getTargetClass() {
+        public Class<?> getTargetClass() {
             return targetClass;
         }
 

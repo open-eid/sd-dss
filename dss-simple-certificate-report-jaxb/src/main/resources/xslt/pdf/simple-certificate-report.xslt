@@ -184,6 +184,7 @@
      								<xsl:apply-templates select="dss:qualificationAtIssuance"/>
      								<xsl:apply-templates select="dss:qualificationAtValidation"/>
 			       					<xsl:apply-templates select="*[not(self::dss:qualificationAtIssuance | self::dss:qualificationAtValidation)]"/>
+     								<xsl:apply-templates select="dss:enactedMRA"/>
 			       					
 								</fo:table-body>
 							</fo:table>
@@ -355,10 +356,33 @@
 		</fo:table-row>
     </xsl:template>
     
+    
+    <xsl:template match="dss:enactedMRA">
+        
+		<fo:table-row>
+			<fo:table-cell>
+				<fo:block>
+					<xsl:attribute name="margin-top">1px</xsl:attribute>
+					<xsl:attribute name="margin-bottom">1px</xsl:attribute>
+					
+				</fo:block>
+			</fo:table-cell>
+			<fo:table-cell>
+				<fo:block>
+					<xsl:attribute name="margin-top">1px</xsl:attribute>
+					<xsl:attribute name="margin-bottom">1px</xsl:attribute>
+					<xsl:attribute name="font-size">7pt</xsl:attribute>
+					<xsl:attribute name="font-weight">bold</xsl:attribute>
+					The qualification level has been determined using an enacted trust service equivalence mapping.
+				</fo:block>
+			</fo:table-cell>
+		</fo:table-row>
+    </xsl:template>
+    
     <xsl:template match="dss:revocation">
     
 	   	<xsl:choose>
-			<xsl:when test="dss:productionDate">
+			<xsl:when test="dss:thisUpdate">
 	    		<fo:table-row>
 					<fo:table-cell>
 						<fo:block>
@@ -366,7 +390,7 @@
 							<xsl:attribute name="margin-bottom">1px</xsl:attribute>
 							
 							<xsl:attribute name="font-weight">bold</xsl:attribute>
-							<xsl:text>Revocation production time :</xsl:text>
+							<xsl:text>Revocation thisUpdate time :</xsl:text>
 						</fo:block>
 					</fo:table-cell>
 					<fo:table-cell>
@@ -374,7 +398,7 @@
 							<xsl:attribute name="margin-top">1px</xsl:attribute>
 							<xsl:attribute name="margin-bottom">1px</xsl:attribute>
 							
-							<xsl:value-of select="dss:productionDate" />
+							<xsl:value-of select="dss:thisUpdate" />
 						</fo:block>
 					</fo:table-cell>
 				</fo:table-row>

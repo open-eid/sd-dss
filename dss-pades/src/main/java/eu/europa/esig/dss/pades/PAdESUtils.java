@@ -20,17 +20,29 @@
  */
 package eu.europa.esig.dss.pades;
 
+import eu.europa.esig.dss.enumerations.CertificationPermission;
+import eu.europa.esig.dss.enumerations.PdfLockAction;
+import eu.europa.esig.dss.exception.IllegalInputException;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.MimeType;
+import eu.europa.esig.dss.pades.validation.ByteRange;
 import eu.europa.esig.dss.pades.validation.PAdESSignature;
 import eu.europa.esig.dss.pades.validation.PdfRevision;
 import eu.europa.esig.dss.pades.validation.RevocationInfoArchival;
+import eu.europa.esig.dss.pdf.PAdESConstants;
+import eu.europa.esig.dss.pdf.PdfArray;
 import eu.europa.esig.dss.pdf.PdfCMSRevision;
+import eu.europa.esig.dss.pdf.PdfDict;
+import eu.europa.esig.dss.pdf.PdfDssDict;
+import eu.europa.esig.dss.pdf.PdfVRIDict;
+import eu.europa.esig.dss.pdf.SigFieldPermissions;
+import eu.europa.esig.dss.signature.resources.DSSResourcesHandler;
+import eu.europa.esig.dss.signature.resources.DSSResourcesHandlerBuilder;
+import eu.europa.esig.dss.signature.resources.InMemoryResourcesHandlerBuilder;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
-import eu.europa.esig.dss.pades.validation.ByteRange;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +52,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Utils for dealing with PAdES
@@ -50,15 +66,23 @@ public final class PAdESUtils {
 
 	private static final Logger LOG = LoggerFactory.getLogger(PAdESUtils.class);
 
-	/**
-	 * Defines a number of a first page in a document
-	 */
+	/** Defines a number of the first page in a document */
 	public static final int DEFAULT_FIRST_PAGE = 1;
 
-	/** The starting bytes of a PDF document */
-	private static final byte[] PDF_PREAMBLE = new byte[]{'%', 'P', 'D', 'F', '-'};
+	/** The default resources handler builder to be used across the code */
+	public static final InMemoryResourcesHandlerBuilder DEFAULT_RESOURCES_HANDLER_BUILDER = new InMemoryResourcesHandlerBuilder();
 
+	/** The starting bytes of a PDF document */
+	private static final byte[] PDF_PREAMBLE = new byte[]{ '%', 'P', 'D', 'F', '-' };
+
+	/** The string used to end a PDF revision */
+	private static final byte[] PDF_EOF_STRING = new byte[] { '%', '%', 'E', 'O', 'F' };
+
+	/**
+	 * Empty constructor (singleton)
+	 */
 	private PAdESUtils() {
+		// empty
 	}
 
 	/**
@@ -112,34 +136,35 @@ public final class PAdESUtils {
 	 * @return {@link InMemoryDocument}
 	 */
 	private static InMemoryDocument retrieveCompletePDFRevision(DSSDocument firstByteRangePart) {
-		final byte[] eof = new byte[] { '%', '%', 'E', 'O', 'F' };
+		ByteArrayOutputStream tempLine = null;
+		ByteArrayOutputStream tempRevision = null;
 		try (InputStream is = firstByteRangePart.openStream();
-				BufferedInputStream bis = new BufferedInputStream(is);
-				ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+			 BufferedInputStream bis = new BufferedInputStream(is);
+			 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
-			ByteArrayOutputStream tempLine = new ByteArrayOutputStream();
-			ByteArrayOutputStream tempRevision = new ByteArrayOutputStream();
+			tempLine = new ByteArrayOutputStream();
+			tempRevision = new ByteArrayOutputStream();
 			int b;
 			while ((b = bis.read()) != -1) {
 
 				tempLine.write(b);
 				byte[] stringBytes = tempLine.toByteArray();
 
-				if (Arrays.equals(stringBytes, eof)) {
+				if (Arrays.equals(PDF_EOF_STRING, stringBytes)) {
 					tempLine.close();
 					tempLine = new ByteArrayOutputStream();
 
 					tempRevision.write(stringBytes);
 					int c = bis.read();
 					// if \n
-					if (c == 0x0a) {
+					if (c == DSSUtils.LINE_FEED) {
 						tempRevision.write(c);
 					}
 					// if \r
-					else if (c == 0x0d) {
+					else if (c == DSSUtils.CARRIAGE_RETURN) {
 						int d = bis.read();
 						// if \r\n
-						if (d == 0x0a) {
+						if (d == DSSUtils.LINE_FEED) {
 							tempRevision.write(c);
 							tempRevision.write(d);
 						} else {
@@ -152,21 +177,28 @@ public final class PAdESUtils {
 					baos.write(tempRevision.toByteArray());
 					tempRevision.close();
 					tempRevision = new ByteArrayOutputStream();
-				} else if (b == 0x0a || stringBytes.length > eof.length) {
+
+				} else if (DSSUtils.isLineBreakByte((byte) b) || stringBytes.length > PDF_EOF_STRING.length) {
 					tempRevision.write(tempLine.toByteArray());
 					tempLine.close();
 					tempLine = new ByteArrayOutputStream();
 				}
 
 			}
-			tempLine.close();
-			tempRevision.close();
 
 			baos.flush();
 			return new InMemoryDocument(baos.toByteArray(), "original.pdf", MimeType.PDF);
 
 		} catch (IOException e) {
 			throw new DSSException("Unable to retrieve the last revision", e);
+
+		} finally {
+			if (tempLine != null) {
+				Utils.closeQuietly(tempLine);
+			}
+			if (tempRevision != null) {
+				Utils.closeQuietly(tempRevision);
+			}
 		}
 	}
 
@@ -230,6 +262,91 @@ public final class PAdESUtils {
 	}
 
 	/**
+	 * This method replaces /Contents field value with a given {@code cmsSignedData} binaries
+	 *
+	 * @param toBeSignedDocument {@link DSSDocument} representing a document to be signed with an empty signature value
+	 *                                              (Ex.: {@code /Contents <00000 ... 000000>})
+	 * @param cmsSignedData byte array representing DER-encoded CMS Signed Data
+	 * @param resourcesHandlerBuilder {@link DSSResourcesHandlerBuilder}. Optional.
+	 *                                If non is provided, a default {@code InMemoryResourcesHandlerBuilder} will be used.
+	 * @return {@link DSSDocument} PDF document containing the inserted CMS signature
+	 */
+	public static DSSDocument replaceSignature(final DSSDocument toBeSignedDocument, final byte[] cmsSignedData,
+											   DSSResourcesHandlerBuilder resourcesHandlerBuilder) {
+		Objects.requireNonNull(toBeSignedDocument, "toBeSignedDocument cannot be null!");
+		Objects.requireNonNull(cmsSignedData, "cmsSignedData cannot be null!");
+		if (resourcesHandlerBuilder == null) {
+			resourcesHandlerBuilder = DEFAULT_RESOURCES_HANDLER_BUILDER;
+		}
+
+		if (Utils.isArrayEmpty(cmsSignedData)) {
+			throw new IllegalArgumentException("cmsSignedData cannot be empty!");
+		}
+		byte[] signature = Utils.toHex(cmsSignedData).getBytes();
+
+		ByteArrayOutputStream temp = null;
+		try (DSSResourcesHandler resourcesHandler = resourcesHandlerBuilder.createResourcesHandler();
+			 OutputStream os = resourcesHandler.createOutputStream();
+			 InputStream is = toBeSignedDocument.openStream();
+			 BufferedInputStream bis = new BufferedInputStream(is)) {
+
+			final byte startSuspicion = '<';
+			final byte continueSuspicion = '0';
+
+			boolean suspicion = false;
+			boolean cmsPasted = false;
+
+			int b;
+			while ((b = bis.read()) != -1) {
+
+				if (suspicion) {
+					if (continueSuspicion == b) {
+						temp.write(b);
+						if (signature.length == temp.size()) {
+							if (cmsPasted) {
+								throw new IllegalInputException("PDF document contains more than one empty signature!");
+							}
+							os.write(signature);
+							temp.close();
+							suspicion = false;
+							cmsPasted = true;
+						}
+						continue;
+
+					} else {
+						os.write(temp.toByteArray());
+						temp.close();
+						suspicion = false;
+					}
+				}
+
+				os.write(b);
+
+				if (startSuspicion == b) {
+					temp = new ByteArrayOutputStream();
+					suspicion = true;
+				}
+
+			}
+
+			if (!cmsPasted) {
+				throw new IllegalInputException("Reserved space to insert a signature was not found!");
+			}
+
+			return resourcesHandler.writeToDSSDocument();
+
+		} catch (IOException e) {
+			throw new DSSException(String.format(
+					"Unable to replace /Contents value within a toBeSigned document. Reason : %s", e.getMessage()), e);
+
+		} finally {
+			if (temp != null) {
+				Utils.closeQuietly(temp);
+			}
+		}
+	}
+
+	/**
 	 * Returns {@link RevocationInfoArchival} from the given encodable
 	 * 
 	 * @param encodable the encoded data to be parsed
@@ -253,7 +370,76 @@ public final class PAdESUtils {
 	 * @return TRUE if the document is a PDF, FALSE otherwise
 	 */
 	public static boolean isPDFDocument(DSSDocument document) {
-		return DSSUtils.compareFirstBytes(document, PDF_PREAMBLE);
+		return DSSUtils.startsWithBytes(document, PDF_PREAMBLE);
+	}
+
+	/**
+	 * This method extracts {@code SigFieldPermissions} (for instance /Lock dictionary) from a wrapping dictionary
+	 *
+	 * @param wrapper {@link PdfDict} wrapping the dictionary having permissions
+	 * @return {@link SigFieldPermissions}
+	 */
+	public static SigFieldPermissions extractPermissionsDictionary(PdfDict wrapper) {
+		final SigFieldPermissions sigFieldPermissions = new SigFieldPermissions();
+
+		String action = wrapper.getNameValue(PAdESConstants.ACTION_NAME);
+		sigFieldPermissions.setAction(PdfLockAction.forName(action));
+
+		List<String> fields = new ArrayList<>();
+		PdfArray fieldsArray = wrapper.getAsArray(PAdESConstants.FIELDS_NAME);
+		if (fieldsArray != null) {
+			for (int j = 0; j < fieldsArray.size(); j++) {
+				String field = fieldsArray.getString(j);
+				if (field != null) {
+					fields.add(field);
+				}
+			}
+		}
+		sigFieldPermissions.setFields(fields);
+
+		if (PAdESConstants.SIG_FIELD_LOCK_NAME.equals(wrapper.getNameValue(PAdESConstants.TYPE_NAME))) {
+			Number permissions = wrapper.getNumberValue(PAdESConstants.PERMISSIONS_NAME);
+			if (permissions != null) {
+				CertificationPermission certificationPermission = CertificationPermission.fromCode(permissions.intValue());
+				sigFieldPermissions.setCertificationPermission(certificationPermission);
+			}
+		}
+
+		return sigFieldPermissions;
+	}
+
+	/**
+	 * Returns a list of VRI dictionaries, corresponding to the given signature (VRI) SHA-1 name
+	 *
+	 * NOTE: {@code vriName} can be null. In this case all /VRI dictionaries are returned
+	 *
+	 * @param pdfDssDict {@link PdfDssDict} to extract /VRI dictionaries from
+	 * @param vriName {@link String} name of the /VRI dictionary to retrieve (optional)
+	 * @return list of {@link PdfVRIDict}s
+	 */
+	public static List<PdfVRIDict> getVRIsWithName(PdfDssDict pdfDssDict, String vriName) {
+		List<PdfVRIDict> vris = pdfDssDict.getVRIs();
+		if (Utils.isCollectionEmpty(vris)) {
+			return Collections.emptyList();
+		}
+		if (vriName == null) {
+			return vris;
+		}
+		for (PdfVRIDict vriDict : vris) {
+			if (vriName.equals(vriDict.getName())) {
+				return Collections.singletonList(vriDict);
+			}
+		}
+		return Collections.emptyList();
+	}
+
+	/**
+	 * This method initializes a new {@code DSSResourcesHandler} object
+	 *
+	 * @return {@link DSSResourcesHandler}
+	 */
+	public static DSSResourcesHandler initializeDSSResourcesHandler() {
+		return DEFAULT_RESOURCES_HANDLER_BUILDER.createResourcesHandler();
 	}
 
 }

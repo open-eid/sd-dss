@@ -84,6 +84,9 @@ public final class DomUtils {
 	/** The default value of the used Transformer */
 	private static final String TRANSFORMER_METHOD_VALUE = "xml";
 
+	/** The hash '#' character */
+	private static final String HASH = "#";
+
 	/** The 'xmlns' opener */
 	private static final String XNS_OPEN = "xmlns(";
 
@@ -103,13 +106,14 @@ public final class DomUtils {
 	private static final byte[] xmlWithBomPreample = new byte[] { -17, -69, -65, '<' }; // UTF-8 with BOM
 
 	private DomUtils() {
+		// empty
 	}
 
 	/** The used XPathFactory */
 	private static final XPathFactory factory = XPathFactory.newInstance();
 
 	/** Map containing the defined namespaces */
-	private static NamespaceContextMap namespacePrefixMapper;
+	private static final NamespaceContextMap namespacePrefixMapper;
 
 	static {
 		namespacePrefixMapper = new NamespaceContextMap();
@@ -163,18 +167,31 @@ public final class DomUtils {
 		transformer.setErrorListener(new DSSXmlErrorListener());
 		return transformer;
 	}
+
+	/**
+	 * Checks if the given {@code byteArray} content starts with an XML Preamble {@code '<'}
+	 * Processes values with or without BOM-encoding
+	 * NOTE: does not check XML-conformity of the whole file
+	 *       call isDOM(byteArray) for a deep check
+	 *
+	 * @param byteArray byte array to verify
+	 * @return TRUE if the provided byte array starts from xmlPreamble, FALSE otherwise
+	 */
+	public static boolean startsWithXmlPreamble(byte[] byteArray) {
+		return DSSUtils.startsWithBytes(byteArray, xmlPreamble) || DSSUtils.startsWithBytes(byteArray, xmlWithBomPreample);
+	}
 	
 	/**
 	 * Checks if the given document starts with an XML Preamble {@code '<'}
 	 * Processes values with or without BOM-encoding
 	 * NOTE: does not check XML-conformity of the whole file
-	 *       call isDOM(bytes) for a deep check
+	 *       call isDOM(DSSDocument) for a deep check
 	 * 
 	 * @param document {@link DSSDocument} to verify
 	 * @return TRUE if the provided document starts from xmlPreamble, FALSE otherwise
 	 */
 	public static boolean startsWithXmlPreamble(DSSDocument document) {
-		return DSSUtils.compareFirstBytes(document, xmlPreamble) || DSSUtils.compareFirstBytes(document, xmlWithBomPreample);
+		return DSSUtils.startsWithBytes(document, xmlPreamble) || DSSUtils.startsWithBytes(document, xmlWithBomPreample);
 	}
 
 	/**
@@ -214,68 +231,7 @@ public final class DomUtils {
 	}
 
 	/**
-	 * This method returns the {@link org.w3c.dom.Document} created based on the {@link eu.europa.esig.dss.model.DSSDocument}.
-	 *
-	 * @param dssDocument
-	 *            The DSS representation of the document from which the dssDocument is created.
-	 * @return a new {@link org.w3c.dom.Document} from {@link eu.europa.esig.dss.model.DSSDocument}
-	 */
-	public static Document buildDOM(final DSSDocument dssDocument) {
-		Objects.requireNonNull(dssDocument, "The document is null");
-		return buildDOM(dssDocument.openStream());
-	}
-
-	/**
-	 * This method returns true if the binaries contains a {@link org.w3c.dom.Document}
-	 * 
-	 * @param bytes
-	 *            the binaries to be tested
-	 * @return true if the binaries is a XML
-	 */
-	public static boolean isDOM(final byte[] bytes) {
-		try {
-			final Document dom = buildDOM(bytes);
-			return dom != null;
-		} catch (DSSException e) {
-			// NOT DOM
-			return false;
-		}
-	}
-
-	/**
-	 * This method returns true if the provided {@code InputStream} is a valid
-	 * {@link org.w3c.dom.Document}
-	 * 
-	 * @param inputStream {@link InputStream} to be tested
-	 * @return true if the document is an XML
-	 */
-	public static boolean isDOM(final InputStream inputStream) {
-		try {
-			final Document dom = buildDOM(inputStream);
-			return dom != null;
-		} catch (Exception e) {
-			return false;
-		}
-	}
-
-	/**
-	 * This method returns true if the provided document is a valid XML
-	 * {@link org.w3c.dom.Document}
-	 * 
-	 * @param dssDocument {@link DSSDocument} to be tested
-	 * @return true if the document is an XML
-	 */
-	public static boolean isDOM(final DSSDocument dssDocument) {
-		try {
-			return startsWithXmlPreamble(dssDocument) && isDOM(dssDocument.openStream());
-		} catch (Exception e) {
-			return false;
-		}
-	}
-
-	/**
-	 * This method returns the {@link org.w3c.dom.Document} created based on the XML
-	 * inputStream.
+	 * This method returns the {@link org.w3c.dom.Document} created based on the XML InputStream.
 	 *
 	 * @param inputStream The inputStream stream representing the dssDocument to be
 	 *                    created.
@@ -292,6 +248,49 @@ public final class DomUtils {
 	}
 
 	/**
+	 * This method returns the {@link org.w3c.dom.Document} created based on the {@link eu.europa.esig.dss.model.DSSDocument}.
+	 *
+	 * @param dssDocument
+	 *            The DSS representation of the document from which the dssDocument is created.
+	 * @return a new {@link org.w3c.dom.Document} from {@link eu.europa.esig.dss.model.DSSDocument}
+	 */
+	public static Document buildDOM(final DSSDocument dssDocument) {
+		Objects.requireNonNull(dssDocument, "The document is null");
+		return buildDOM(dssDocument.openStream());
+	}
+
+	/**
+	 * This method returns true if the binaries contains a {@link org.w3c.dom.Document}
+	 * 
+	 * @param bytes
+	 *            the binaries to be tested
+	 * @return true if the binaries represent an XML
+	 */
+	public static boolean isDOM(final byte[] bytes) {
+		try {
+			return startsWithXmlPreamble(bytes) && buildDOM(bytes) != null;
+		} catch (DSSException e) {
+			// NOT DOM
+			return false;
+		}
+	}
+
+	/**
+	 * This method returns true if the provided document is a valid XML
+	 * {@link org.w3c.dom.Document}
+	 * 
+	 * @param dssDocument {@link DSSDocument} to be tested
+	 * @return true if the document is an XML
+	 */
+	public static boolean isDOM(final DSSDocument dssDocument) {
+		try {
+			return startsWithXmlPreamble(dssDocument) && buildDOM(dssDocument) != null;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	/**
 	 * This method adds an attribute with the namespace and the value
 	 * 
 	 * @param element
@@ -299,7 +298,7 @@ public final class DomUtils {
 	 * @param namespace
 	 *            the used namespace for the attribute
 	 * @param attribute
-	 *            the attribute the be added
+	 *            the attribute to be added
 	 * @param value
 	 *            the value for the given attribute
 	 */
@@ -460,7 +459,8 @@ public final class DomUtils {
 	 *            element text node value
 	 * @return added element
 	 */
-	public static Element addTextElement(final Document document, final Element parentDom, final DSSNamespace namespace, final DSSElement element, final String value) {
+	public static Element addTextElement(final Document document, final Element parentDom, final DSSNamespace namespace,
+										 final DSSElement element, final String value) {
 		final Element dom = createElementNS(document, namespace, element);
 		parentDom.appendChild(dom);
 		final Text valueNode = document.createTextNode(value);
@@ -573,7 +573,7 @@ public final class DomUtils {
 	 * @param document
 	 *            the {@link org.w3c.dom.Document} to store
 	 * @param name
-	 *            the ouput filename
+	 *            the output filename
 	 * @return a new instance of InMemoryDocument with the XML and the given filename
 	 */
 	public static DSSDocument createDssDocumentFromDomDocument(Document document, String name) {
@@ -670,7 +670,7 @@ public final class DomUtils {
 	 * @return TRUE if {@code uri} is starts from "#", FALSE otherwise
 	 */
 	public static boolean startsFromHash(String uri) {
-		return Utils.isStringNotBlank(uri) && uri.startsWith("#");
+		return Utils.isStringNotBlank(uri) && uri.startsWith(HASH);
 	}
 	
 	/**
@@ -681,6 +681,23 @@ public final class DomUtils {
 	 */
 	public static boolean isElementReference(String uri) {
 		return startsFromHash(uri) && !isXPointerQuery(uri);
+	}
+
+	/**
+	 * This method translates the given {@code String} to a local element reference with the given URI.
+	 *
+	 * Ex.: "r-123-id" to "#r-123-id"
+	 *      "sample.xml" to "#sample.xml"
+	 *      "#r-xades-enveloped" to "#r-xades-enveloped"
+	 *
+	 * @param uri {@link String}
+	 * @return {@link String}
+	 */
+	public static String toElementReference(String uri) {
+		if (!startsFromHash(uri)) {
+			uri = HASH + uri;
+		}
+		return uri;
 	}
 
 	/**
@@ -804,6 +821,33 @@ public final class DomUtils {
 				excludeCommentsRecursively(childNode);
 			}
 		}
+	}
+
+	/**
+	 * This method browses through {@code element} looking for a namespace with the target {@code uri}
+	 * and returns {@code DSSNamespace} if found
+	 *
+	 * @param element {@link Element} to search for a namespace in
+	 * @param uri {@link String} URI of the namespace to look for
+	 * @return {@link DSSNamespace} if the target namespace has been found, null otherwise
+	 */
+	public static DSSNamespace browseRecursivelyForNamespaceWithUri(final Element element, String uri) {
+		final String namespaceURI = element.getNamespaceURI();
+		if (uri.equals(namespaceURI)) {
+			final String prefix = element.getPrefix();
+			return new DSSNamespace(namespaceURI, prefix);
+		}
+		for (int ii = 0; ii < element.getChildNodes().getLength(); ii++) {
+			final Node childNode = element.getChildNodes().item(ii);
+			if (childNode.getNodeType() == Node.ELEMENT_NODE) {
+				Element child = (Element) childNode;
+				DSSNamespace namespace = browseRecursivelyForNamespaceWithUri(child, uri);
+				if (namespace != null) {
+					return namespace;
+				}
+			}
+		}
+		return null;
 	}
 
 }

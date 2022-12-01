@@ -43,17 +43,23 @@ public class OCSPSourceSnippet {
 		CertificateToken issuerCertificateToken = null;
 
 		// tag::demo[]
+		// import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPToken;
+
 		OCSPToken ocspToken = ocspSource.getRevocationToken(certificateToken, issuerCertificateToken);
 		// end::demo[]
 
 		DataSource dataSource = null;
 		
 		// tag::demo-online[]
-		
+		// import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+		// import eu.europa.esig.dss.service.SecureRandomNonceSource;
+		// import eu.europa.esig.dss.service.http.commons.OCSPDataLoader;
+		// import eu.europa.esig.dss.service.ocsp.OnlineOCSPSource;
+
 		// Instantiates a new OnlineOCSPSource object
 		OnlineOCSPSource onlineOCSPSource = new OnlineOCSPSource();
 		
-		// Allows setting an implementation of `DataLoader` interface, 
+		// Allows setting an implementation of the `DataLoader` interface,
 		// processing a querying of a remote revocation server. 
 		// `CommonsDataLoader` instance is used by default.
 		onlineOCSPSource.setDataLoader(new OCSPDataLoader());
@@ -71,14 +77,39 @@ public class OCSPSourceSnippet {
 		// end::demo-online[]
 
 		// tag::demo-cached[]
+		// import eu.europa.esig.dss.service.ocsp.JdbcCacheOCSPSource;
+		// import eu.europa.esig.dss.spi.client.jdbc.JdbcCacheConnector;
+		// import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPToken;
+
+		// Creates an instance of JdbcCacheOCSPSource
 		JdbcCacheOCSPSource cacheOCSPSource = new JdbcCacheOCSPSource();
+
+		// Initialize the JdbcCacheConnector
 		JdbcCacheConnector jdbcCacheConnector = new JdbcCacheConnector(dataSource);
+
+		// Set the JdbcCacheConnector
 		cacheOCSPSource.setJdbcCacheConnector(jdbcCacheConnector);
+
+		// Allows definition of an alternative dataLoader to be used to access a revocation
+		// from online sources if a requested revocation is not present in the repository or has been expired (see below).
 		cacheOCSPSource.setProxySource(onlineOCSPSource);
-		Long threeMinutes = (long) (60 * 3);
-		cacheOCSPSource.setDefaultNextUpdateDelay(threeMinutes); // default nextUpdateDelay (if not defined in the revocation data)
+
+		// All setters accept values in seconds
+		Long threeMinutes = (long) (60 * 3); // seconds * minutes
+
+		// If "nextUpdate" field is not defined for a revocation token, the value of "defaultNextUpdateDelay"
+		// will be used in order to determine when a new revocation data should be requested.
+		// If the current time is not beyond the "thisUpdate" time + "defaultNextUpdateDelay",
+		// then a revocation data will be retrieved from the repository source, otherwise a new revocation data
+		// will be requested from a proxiedSource.
+		// Default : null (a new revocation data will be requested of "nestUpdate" field is not defined).
+		cacheOCSPSource.setDefaultNextUpdateDelay(threeMinutes);
+
+		// Creates an SQL table
 		cacheOCSPSource.initTable();
-		OCSPToken ocspRevocationToken = cacheOCSPSource.getRevocationToken(certificateToken, certificateToken);
+
+		// Extract OCSP for a certificate
+		OCSPToken ocspRevocationToken = cacheOCSPSource.getRevocationToken(certificateToken, issuerCertificateToken);
 		// end::demo-cached[]
 
 	}

@@ -20,22 +20,11 @@
  */
 package eu.europa.esig.dss.asic.cades.signature.asice;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.jupiter.api.BeforeEach;
-
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESContainerExtractor;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESSignatureParameters;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESTimestampParameters;
 import eu.europa.esig.dss.asic.cades.signature.ASiCWithCAdESService;
-import eu.europa.esig.dss.asic.cades.signature.AbstractASiCWithCAdESMultipleDocumentsTestSignature;
-import eu.europa.esig.dss.asic.common.ASiCExtractResult;
+import eu.europa.esig.dss.asic.common.ASiCContent;
 import eu.europa.esig.dss.asic.common.AbstractASiCContainerExtractor;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
@@ -45,8 +34,17 @@ import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.signature.MultipleDocumentsSignatureService;
 import eu.europa.esig.dss.spi.DSSUtils;
+import org.junit.jupiter.api.BeforeEach;
 
-public class ASiCECAdESLevelBMultiArchivesTest extends AbstractASiCWithCAdESMultipleDocumentsTestSignature {
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
+public class ASiCECAdESLevelBMultiArchivesTest extends AbstractASiCEWithCAdESMultipleDocumentsTestSignature {
 
 	private MultipleDocumentsSignatureService<ASiCWithCAdESSignatureParameters, ASiCWithCAdESTimestampParameters> service;
 	private ASiCWithCAdESSignatureParameters signatureParameters;
@@ -68,10 +66,12 @@ public class ASiCECAdESLevelBMultiArchivesTest extends AbstractASiCWithCAdESMult
 
 	@Override
 	protected void onDocumentSigned(byte[] byteArray) {
+		super.onDocumentSigned(byteArray);
+
 		InMemoryDocument doc = new InMemoryDocument(byteArray);
 
 		AbstractASiCContainerExtractor extractor = new ASiCWithCAdESContainerExtractor(doc);
-		ASiCExtractResult extract = extractor.extract();
+		ASiCContent extract = extractor.extract();
 
 		assertEquals(0, extract.getUnsupportedDocuments().size());
 
@@ -103,21 +103,6 @@ public class ASiCECAdESLevelBMultiArchivesTest extends AbstractASiCWithCAdESMult
 	@Override
 	protected ASiCWithCAdESSignatureParameters getSignatureParameters() {
 		return signatureParameters;
-	}
-
-	@Override
-	protected MimeType getExpectedMime() {
-		return MimeType.ASICE;
-	}
-
-	@Override
-	protected boolean isBaselineT() {
-		return false;
-	}
-
-	@Override
-	protected boolean isBaselineLTA() {
-		return false;
 	}
 
 	@Override

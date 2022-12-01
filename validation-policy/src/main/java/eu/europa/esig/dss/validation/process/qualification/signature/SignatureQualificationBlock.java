@@ -28,10 +28,7 @@ import eu.europa.esig.dss.detailedreport.jaxb.XmlValidationSignatureQualificatio
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.diagnostic.TrustedServiceWrapper;
 import eu.europa.esig.dss.enumerations.CertificateQualification;
-import eu.europa.esig.dss.enumerations.CertificateQualifiedStatus;
-import eu.europa.esig.dss.enumerations.CertificateType;
 import eu.europa.esig.dss.enumerations.Indication;
-import eu.europa.esig.dss.enumerations.QSCDStatus;
 import eu.europa.esig.dss.enumerations.SignatureQualification;
 import eu.europa.esig.dss.enumerations.ValidationTime;
 import eu.europa.esig.dss.i18n.I18nProvider;
@@ -40,7 +37,7 @@ import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.process.Chain;
 import eu.europa.esig.dss.validation.process.ChainItem;
 import eu.europa.esig.dss.validation.process.qualification.certificate.CertQualificationAtTimeBlock;
-import eu.europa.esig.dss.validation.process.qualification.certificate.CertQualificationMatrix;
+import eu.europa.esig.dss.validation.process.qualification.certificate.FinalCertificateQualificationCalculator;
 import eu.europa.esig.dss.validation.process.qualification.signature.checks.AcceptableListOfTrustedListsCheck;
 import eu.europa.esig.dss.validation.process.qualification.signature.checks.AcceptableTrustedListCheck;
 import eu.europa.esig.dss.validation.process.qualification.signature.checks.AcceptableTrustedListPresenceCheck;
@@ -91,8 +88,6 @@ public class SignatureQualificationBlock extends Chain<XmlValidationSignatureQua
 	 *
 	 * @param i18nProvider
 	 *  				{@link I18nProvider}
-	 * @param signatureId
-	 *  				{@link String} representing the if of a signature to be validated
 	 * @param etsi319102validation {@link XmlConstraintsConclusionWithProofOfExistence}
 	 *  				result of signature validation process as in EN 319 102-1
 	 * @param signingCertificate
@@ -100,7 +95,7 @@ public class SignatureQualificationBlock extends Chain<XmlValidationSignatureQua
 	 * @param tlAnalysis
 	 *  				a list of performed {@link XmlTLAnalysis}
 	 */
-	public SignatureQualificationBlock(I18nProvider i18nProvider, String signatureId,
+	public SignatureQualificationBlock(I18nProvider i18nProvider,
 									   XmlConstraintsConclusionWithProofOfExistence etsi319102validation,
 									   CertificateWrapper signingCertificate, List<XmlTLAnalysis> tlAnalysis) {
 		super(i18nProvider, new XmlValidationSignatureQualification());
@@ -246,8 +241,8 @@ public class SignatureQualificationBlock extends Chain<XmlValidationSignatureQua
 		for (XmlValidationCertificateQualification certQualAtTime : result.getValidationCertificateQualification()) {
 			collectAllMessages(conclusion, certQualAtTime.getConclusion());
 		}
-		for (XmlTLAnalysis tlAnalysis : relatedTLAnalyses) {
-			collectAllMessages(conclusion, tlAnalysis.getConclusion());
+		for (XmlTLAnalysis relatedTLAnalysis : relatedTLAnalyses) {
+			collectAllMessages(conclusion, relatedTLAnalysis.getConclusion());
 		}
 	}
 
@@ -255,37 +250,13 @@ public class SignatureQualificationBlock extends Chain<XmlValidationSignatureQua
 		SignatureQualification sigQualif = SignatureQualification.NA;
 
 		if (etsi319102Conclusion != null && qualificationAtIssuanceTime != null && qualificationAtSigningTime != null) {
-			CertificateQualification finalCertQualification = getFinalCertQualification(qualificationAtIssuanceTime, qualificationAtSigningTime);
+			FinalCertificateQualificationCalculator certificateQualificationCalculator =
+					new FinalCertificateQualificationCalculator(qualificationAtIssuanceTime, qualificationAtSigningTime);
+			CertificateQualification finalCertQualification = certificateQualificationCalculator.getFinalQualification();
 			sigQualif = SigQualificationMatrix.getSignatureQualification(etsi319102Conclusion.getIndication(), finalCertQualification);
 		}
 
 		result.setSignatureQualification(sigQualif);
-	}
-
-	private CertificateQualification getFinalCertQualification(
-			CertificateQualification certQualAtIssuanceTime, CertificateQualification certQualAtSigningTime) {
-		CertificateQualifiedStatus qualStatus = getFinalCertQualStatus(certQualAtIssuanceTime, certQualAtSigningTime);
-		CertificateType type = getFinalCertificateType(certQualAtIssuanceTime, certQualAtSigningTime);
-		QSCDStatus qscd = getFinalQSCDStatus(certQualAtSigningTime);
-		return CertQualificationMatrix.getCertQualification(qualStatus, type, qscd);
-	}
-
-	private CertificateQualifiedStatus getFinalCertQualStatus(
-			CertificateQualification certQualAtIssuanceTime, CertificateQualification certQualAtSigningTime) {
-		return certQualAtIssuanceTime.isQc() && certQualAtSigningTime.isQc() ?
-				CertificateQualifiedStatus.QC : CertificateQualifiedStatus.NOT_QC;
-	}
-
-	private CertificateType getFinalCertificateType(
-			CertificateQualification certQualAtIssuanceTime, CertificateQualification certQualAtSigningTime) {
-		if (certQualAtIssuanceTime.getType() == certQualAtSigningTime.getType()) {
-			return certQualAtSigningTime.getType();
-		}
-		return CertificateType.UNKNOWN;
-	}
-
-	private QSCDStatus getFinalQSCDStatus(CertificateQualification certQualAtSigningTime) {
-		return certQualAtSigningTime.isQscd() ? QSCDStatus.QSCD : QSCDStatus.NOT_QSCD;
 	}
 
 	private void setIndication() {

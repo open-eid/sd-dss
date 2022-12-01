@@ -270,12 +270,6 @@ public class CAdESTimestampSource extends SignatureTimestampSource<CAdESSignatur
 		}
 		timestampToken.getTimestampedReferences().addAll(timestampedReferences);
 	}
-
-	@Override
-	protected List<TimestampedReference> getIndividualContentTimestampedReferences(CAdESAttribute signedAttribute) {
-		// not applicable for CAdES, must be not executed
-		throw new UnsupportedOperationException("Not applicable for CAdES!");
-	}
 	
 	@Override
 	protected List<TimestampedReference> getArchiveTimestampOtherReferences(TimestampToken timestampToken) {
@@ -299,9 +293,11 @@ public class CAdESTimestampSource extends SignatureTimestampSource<CAdESSignatur
 				if (isDigestValuePresent(certificate.getDigest(digestAlgorithm), certsHashList)) {
 					addReference(references, certificate.getDSSId(), TimestampedObjectType.CERTIFICATE);
 				} else {
-					LOG.debug("The certificate with id [{}] was not included to the message imprint of timestamp "
-							+ "or was added to the CMS SignedData after this ArchiveTimestamp has been incorporated!",
-							certificate.getDSSIdAsString());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("The certificate with id [{}] was not included to the message imprint of timestamp "
+										+ "or was added to the CMS SignedData after this ArchiveTimestamp has been incorporated!",
+								certificate.getDSSIdAsString());
+					}
 				}
 			}
 		}
@@ -331,9 +327,11 @@ public class CAdESTimestampSource extends SignatureTimestampSource<CAdESSignatur
 				if (isDigestValuePresent(crlBinary.getDigestValue(digestAlgorithm), crlsHashList)) {
 					crlBinaries.add(crlBinary);
 				} else {
-					LOG.debug("The CRL Token with id [{}] was not included to the message imprint of timestamp "
-									+ "or was added to the CMS SignedData after this ArchiveTimestamp!",
-							crlBinary.asXmlId());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("The CRL Token with id [{}] was not included to the message imprint of timestamp "
+										+ "or was added to the CMS SignedData after this ArchiveTimestamp!",
+								crlBinary.asXmlId());
+					}
 				}
 			}
 		}

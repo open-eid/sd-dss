@@ -23,12 +23,11 @@ package eu.europa.esig.dss.validation;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDiagnosticData;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.enumerations.TimestampedObjectType;
 import eu.europa.esig.dss.enumerations.TokenExtractionStrategy;
 import eu.europa.esig.dss.exception.IllegalInputException;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
-import eu.europa.esig.dss.model.Digest;
-import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.policy.EtsiValidationPolicy;
 import eu.europa.esig.dss.policy.ValidationPolicy;
 import eu.europa.esig.dss.policy.ValidationPolicyFacade;
@@ -37,7 +36,6 @@ import eu.europa.esig.dss.spi.DSSSecurityProvider;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.client.http.NativeHTTPDataLoader;
 import eu.europa.esig.dss.spi.x509.CertificateSource;
-import eu.europa.esig.dss.spi.x509.CommonCertificateSource;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.executor.DocumentProcessExecutor;
 import eu.europa.esig.dss.validation.executor.ValidationLevel;
@@ -45,8 +43,13 @@ import eu.europa.esig.dss.validation.executor.signature.DefaultSignatureProcessE
 import eu.europa.esig.dss.validation.policy.DefaultSignaturePolicyValidatorLoader;
 import eu.europa.esig.dss.validation.policy.SignaturePolicyValidatorLoader;
 import eu.europa.esig.dss.validation.reports.Reports;
+import eu.europa.esig.dss.validation.scope.DetachedTimestampScopeFinder;
+import eu.europa.esig.dss.validation.scope.EncapsulatedTimestampScopeFinder;
+import eu.europa.esig.dss.validation.scope.SignatureScope;
 import eu.europa.esig.dss.validation.scope.SignatureScopeFinder;
+import eu.europa.esig.dss.validation.scope.TimestampScopeFinder;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
+import eu.europa.esig.dss.validation.timestamp.TimestampedReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,7 +135,7 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 	/**
 	 * The implementation to be used for identifiers generation
 	 */
-	private TokenIdentifierProvider identifierProvider = new OriginalIdentifierProvider();
+	private TokenIdentifierProvider tokenIdentifierProvider = new OriginalIdentifierProvider();
 
 	/**
 	 * This variable allows to include the semantics for Indication / SubIndication
@@ -142,7 +145,7 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 	/**
 	 * The class to extract a list of {@code SignatureScope}s from a signature
 	 */
-	protected final SignatureScopeFinder signatureScopeFinder;
+	protected final SignatureScopeFinder<?> signatureScopeFinder;
 
 	/**
 	 * Provides methods to extract a policy content by its identifier
@@ -178,6 +181,16 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 	protected boolean skipValidationContextExecution = false;
 
 	/**
+	 * Cached list of signatures extracted from the document
+	 */
+	private List<AdvancedSignature> signatures;
+
+	/**
+	 * Cached list of detached timestamps extracted from the document
+	 */
+	private List<TimestampToken> detachedTimestamps;
+
+	/**
 	 * The constructor with a null {@code signatureScopeFinder}
 	 */
 	protected SignedDocumentValidator() {
@@ -189,20 +202,8 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 	 *
 	 * @param signatureScopeFinder {@link SignatureScopeFinder}
 	 */
-	protected SignedDocumentValidator(SignatureScopeFinder signatureScopeFinder) {
+	protected SignedDocumentValidator(SignatureScopeFinder<?> signatureScopeFinder) {
 		this.signatureScopeFinder = signatureScopeFinder;
-	}
-
-	/**
-	 * Sets the default algorithm to use for a {@code SignatureScopeFinder}
-	 *
-	 * @param digestAlgorithm {@link DigestAlgorithm}
-	 */
-	protected void setSignedScopeFinderDefaultDigestAlgorithm(DigestAlgorithm digestAlgorithm) {
-		// Null in the ASiC Container validator
-		if (signatureScopeFinder != null) {
-			signatureScopeFinder.setDefaultDigestAlgorithm(digestAlgorithm);
-		}
 	}
 
 	/**
@@ -234,15 +235,6 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 	public abstract boolean isSupported(DSSDocument dssDocument);
 
 	@Override
-	@Deprecated
-	public void defineSigningCertificate(final CertificateToken token) {
-		Objects.requireNonNull(token, "Token is not defined");
-		CertificateSource signingCertificateResolver = new CommonCertificateSource();
-		signingCertificateResolver.addCertificate(token);
-		setSigningCertificateSource(signingCertificateResolver);
-	}
-
-	@Override
 	public void setSigningCertificateSource(CertificateSource signingCertificateSource) {
 		this.signingCertificateSource = signingCertificateSource;
 	}
@@ -268,10 +260,19 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 		this.tokenExtractionStrategy = tokenExtractionStrategy;
 	}
 
+	/**
+	 * Gets {@code TokenIdentifierProvider}
+	 *
+	 * @return {@link TokenIdentifierProvider}
+	 */
+	protected TokenIdentifierProvider getTokenIdentifierProvider() {
+		return tokenIdentifierProvider;
+	}
+
 	@Override
-	public void setTokenIdentifierProvider(TokenIdentifierProvider identifierProvider) {
-		Objects.requireNonNull(identifierProvider);
-		this.identifierProvider = identifierProvider;
+	public void setTokenIdentifierProvider(TokenIdentifierProvider tokenIdentifierProvider) {
+		Objects.requireNonNull(tokenIdentifierProvider);
+		this.tokenIdentifierProvider = tokenIdentifierProvider;
 	}
 
 	@Override
@@ -432,7 +433,7 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 		LOG.info("Document validation...");
 		assertConfigurationValid();
 
-		final XmlDiagnosticData diagnosticData = prepareDiagnosticDataBuilder().build();
+		final XmlDiagnosticData diagnosticData = getDiagnosticData();
 
 		return processValidationPolicy(diagnosticData, validationPolicy);
 	}
@@ -446,6 +447,17 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 	}
 
 	/**
+	 * This method retrieves {@code XmlDiagnosticData} containing all information relevant
+	 * for the validation process, including the certificate and revocation tokens obtained
+	 * from online resources, e.g. AIA, CRL, OCSP (when applicable).
+	 *
+	 * @return {@link XmlDiagnosticData}
+	 */
+	public final XmlDiagnosticData getDiagnosticData() {
+		return prepareDiagnosticDataBuilder().build();
+	}
+
+	/**
 	 * Creates a {@code DiagnosticDataBuilder}
 	 * 
 	 * @return {@link DiagnosticDataBuilder}
@@ -455,7 +467,10 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 		List<AdvancedSignature> allSignatures = getAllSignatures();
         List<TimestampToken> detachedTimestamps = getDetachedTimestamps();
 
-		ValidationContext validationContext = prepareValidationContext(allSignatures, detachedTimestamps);
+		final CertificateVerifier certificateVerifierForValidation =
+				new CertificateVerifierBuilder(certificateVerifier).buildCompleteCopyForValidation();
+		final ValidationContext validationContext = prepareValidationContext(
+				allSignatures, detachedTimestamps, certificateVerifierForValidation);
 
 		if (!skipValidationContextExecution) {
 			validateContext(validationContext);
@@ -469,10 +484,12 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 	 * @param <T> {@link AdvancedSignature} implementation
 	 * @param signatures a collection of {@link AdvancedSignature}s
 	 * @param detachedTimestamps a collection of detached {@link TimestampToken}s
+	 * @param certificateVerifier {@link CertificateVerifier} to be used for the validation
 	 * @return {@link ValidationContext}
 	 */
 	protected <T extends AdvancedSignature> ValidationContext prepareValidationContext(
-			final Collection<T> signatures, final Collection<TimestampToken> detachedTimestamps) {
+			final Collection<T> signatures, final Collection<TimestampToken> detachedTimestamps,
+			final CertificateVerifier certificateVerifier) {
 		ValidationContext validationContext = new SignatureValidationContext();
 		validationContext.initialize(certificateVerifier);
 		prepareSignatureValidationContext(validationContext, signatures);
@@ -502,12 +519,12 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 			throw new DSSException("At least one signature or a timestamp shall be provided to extract the validation data!");
 		}
 
-		ValidationContext validationContext = prepareValidationContext(signatures, detachedTimestamps);
+		ValidationContext validationContext = prepareValidationContext(signatures, detachedTimestamps, certificateVerifier);
 		validateContext(validationContext);
 
 		assertSignaturesValid(signatures, validationContext);
 
-		ValidationDataContainer validationDataContainer = new ValidationDataContainer();
+		ValidationDataContainer validationDataContainer = instantiateValidationDataContainer();
 		for (AdvancedSignature signature : signatures) {
 			ValidationData signatureValidationData = validationContext.getValidationData(signature);
 			validationDataContainer.addValidationData(signature, signatureValidationData);
@@ -528,6 +545,15 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 		return validationDataContainer;
 	}
 
+	/**
+	 * Creates a new instance of {@code ValidationDataContainer}
+	 *
+	 * @return {@link ValidationDataContainer}
+	 */
+	protected ValidationDataContainer instantiateValidationDataContainer() {
+		return new ValidationDataContainer();
+	}
+
 	private <T extends AdvancedSignature> void assertSignaturesValid(Collection<T> signatures,
 																	 ValidationContext validationContext) {
 		validationContext.checkAllTimestampsValid();
@@ -536,8 +562,8 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 		validationContext.checkAllCertificatesValid();
 
 		for (final AdvancedSignature signature : signatures) {
-			validationContext.checkAtLeastOneRevocationDataPresentAfterBestSignatureTime(signature);
 			validationContext.checkSignatureNotExpired(signature);
+			validationContext.checkAtLeastOneRevocationDataPresentAfterBestSignatureTime(signature);
 		}
 	}
 
@@ -564,7 +590,7 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 				.usedRevocations(validationContext.getProcessedRevocations())
 				.defaultDigestAlgorithm(certificateVerifier.getDefaultDigestAlgorithm())
 				.tokenExtractionStrategy(tokenExtractionStrategy)
-				.tokenIdentifierProvider(identifierProvider)
+				.tokenIdentifierProvider(tokenIdentifierProvider)
 				.validationDate(getValidationTime());
 	}
 
@@ -678,7 +704,7 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 	}
 
 	/**
-	 * Executes the validation regarding to the given {@code validationPolicy}
+	 * Executes the validation regarding the given {@code validationPolicy}
 	 * 
 	 * @param diagnosticData   {@link DiagnosticData} contained a data to be
 	 *                         validated
@@ -703,9 +729,6 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 	 * @return a list of {@link AdvancedSignature}s
 	 */
 	protected List<AdvancedSignature> getAllSignatures() {
-
-		setSignedScopeFinderDefaultDigestAlgorithm(certificateVerifier.getDefaultDigestAlgorithm());
-
 		final List<AdvancedSignature> allSignatureList = new ArrayList<>();
 		for (final AdvancedSignature signature : getSignatures()) {
 			allSignatureList.add(signature);
@@ -737,19 +760,42 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 	
 	@Override
 	public List<AdvancedSignature> getSignatures() {
+		if (signatures == null) {
+			signatures = buildSignatures();
+		}
 		// delegated in CommonSignatureValidator
+		return signatures;
+	}
+
+	/**
+	 * This method build a list of signatures to be extracted from a document
+	 *
+	 * @return a list of {@link AdvancedSignature}s
+	 */
+	protected List<AdvancedSignature> buildSignatures() {
+		// not implemented by default
 		return Collections.emptyList();
 	}
 
 	@Override
 	public List<TimestampToken> getDetachedTimestamps() {
-		// not implemented by default
-		// requires an implementation of {@code SignatureValidator}
+		if (detachedTimestamps == null) {
+			detachedTimestamps = buildDetachedTimestamps();
+		}
+		return detachedTimestamps;
+	}
+
+	/**
+	 * Builds a list of detached {@code TimestampToken}s extracted from the document
+	 *
+	 * @return a list of {@code TimestampToken}s
+	 */
+	protected List<TimestampToken> buildDetachedTimestamps() {
 		return Collections.emptyList();
 	}
 
 	@Override
-	public <T extends AdvancedSignature>  void processSignaturesValidation(Collection<T> allSignatureList) {
+	public <T extends AdvancedSignature> void processSignaturesValidation(Collection<T> allSignatureList) {
 		for (final AdvancedSignature signature : allSignatureList) {
 			signature.checkSignatureIntegrity();
 		}
@@ -764,8 +810,98 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 	 */
 	@Override
 	public <T extends AdvancedSignature> void findSignatureScopes(Collection<T> allSignatures) {
+		prepareSignatureScopeFinder(signatureScopeFinder);
 		for (final AdvancedSignature signature : allSignatures) {
 			signature.findSignatureScope(signatureScopeFinder);
+
+			TimestampScopeFinder timestampScopeFinder = getTimestampScopeFinder();
+			prepareTimestampScopeFinder(timestampScopeFinder, signature);
+			for (TimestampToken timestampToken : signature.getContentTimestamps()) {
+				findTimestampScopes(timestampToken, timestampScopeFinder);
+			}
+			for (TimestampToken timestampToken : signature.getArchiveTimestamps()) {
+				findTimestampScopes(timestampToken, timestampScopeFinder);
+			}
+		}
+	}
+
+	/**
+	 * Sets the provided configuration for a {@code SignatureScopeFinder}
+	 *
+	 * @param signatureScopeFinder {@link SignatureScopeFinder} to configure
+	 */
+	protected void prepareSignatureScopeFinder(SignatureScopeFinder<?> signatureScopeFinder) {
+		if (signatureScopeFinder != null) {
+			signatureScopeFinder.setDefaultDigestAlgorithm(certificateVerifier.getDefaultDigestAlgorithm());
+			signatureScopeFinder.setTokenIdentifierProvider(tokenIdentifierProvider);
+		}
+	}
+
+	/**
+	 * Finds timestamp scope for the {@code TimestampToken}
+	 *
+	 * @param timestampToken {@link TimestampToken} to find timestamp scope for
+	 * @param timestampScopeFinder {@link TimestampScopeFinder} to use
+	 */
+	protected void findTimestampScopes(TimestampToken timestampToken, TimestampScopeFinder timestampScopeFinder) {
+		List<SignatureScope> timestampScopes = timestampScopeFinder.findTimestampScope(timestampToken);
+		timestampToken.setTimestampScopes(timestampScopes);
+		timestampToken.getTimestampedReferences().addAll(getTimestampedReferences(timestampScopes));
+	}
+
+	/**
+	 * Returns a list of timestamped references from the given list of {@code SignatureScope}s
+	 *
+	 * @param signatureScopes a list of {@link SignatureScope}s
+	 * @return a list of {@link TimestampedReference}s
+	 */
+	protected List<TimestampedReference> getTimestampedReferences(List<SignatureScope> signatureScopes) {
+		List<TimestampedReference> timestampedReferences = new ArrayList<>();
+		if (Utils.isCollectionNotEmpty(signatureScopes)) {
+			for (SignatureScope signatureScope : signatureScopes) {
+				if (addReference(signatureScope)) {
+					timestampedReferences.add(new TimestampedReference(
+							signatureScope.getDSSIdAsString(), TimestampedObjectType.SIGNED_DATA));
+				}
+			}
+		}
+		return timestampedReferences;
+	}
+
+	/**
+	 * Checks if the signature scope shall be added as a timestamped reference
+	 *
+	 * NOTE: used to avoid duplicates in ASiC with CAdES validator, due to covered signature/timestamp files
+	 *
+	 * @param signatureScope {@link SignatureScope} to check
+	 * @return TRUE if the timestamped reference shall be created for the given {@link SignatureScope}, FALSE otherwise
+	 */
+	protected boolean addReference(SignatureScope signatureScope) {
+		// accept all by default
+		return true;
+	}
+
+	/**
+	 * This method returns a timestamp scope finder
+	 *
+	 * @return {@link TimestampScopeFinder}
+	 */
+	protected TimestampScopeFinder getTimestampScopeFinder() {
+		// signature encapsulated timestamp scope finder is used by default
+		return new EncapsulatedTimestampScopeFinder();
+	}
+
+	/**
+	 * This method is used to prepare a {@code DetachedTimestampScopeFinder} for execution
+	 *
+	 * @param timestampScopeFinder {@link DetachedTimestampScopeFinder}
+	 * @param signature {@link AdvancedSignature} used for encapsulated timestamps
+	 */
+	protected void prepareTimestampScopeFinder(TimestampScopeFinder timestampScopeFinder, AdvancedSignature signature) {
+		timestampScopeFinder.setDefaultDigestAlgorithm(getDefaultDigestAlgorithm());
+		if (timestampScopeFinder instanceof EncapsulatedTimestampScopeFinder) {
+			EncapsulatedTimestampScopeFinder encapsulatedTimestampScopeFinder = (EncapsulatedTimestampScopeFinder) timestampScopeFinder;
+			encapsulatedTimestampScopeFinder.setSignature(signature);
 		}
 	}
 
@@ -829,17 +965,7 @@ public abstract class SignedDocumentValidator implements DocumentValidator {
 
 	private boolean doesIdMatch(AdvancedSignature signature, String signatureId) {
 		return signatureId.equals(signature.getId()) || signatureId.equals(signature.getDAIdentifier()) ||
-				signatureId.equals(identifierProvider.getIdAsString(signature));
-	}
-
-	/**
-	 * Gets digest of a document
-	 *
-	 * @param document {@link DSSDocument}
-	 * @return {@link Digest}
-	 */
-	protected Digest getDigest(DSSDocument document) {
-		return new Digest(getDefaultDigestAlgorithm(), Utils.fromBase64(document.getDigest(getDefaultDigestAlgorithm())));
+				signatureId.equals(tokenIdentifierProvider.getIdAsString(signature));
 	}
 
 }

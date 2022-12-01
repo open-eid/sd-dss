@@ -22,7 +22,7 @@ package eu.europa.esig.dss.tsl.cache;
 
 import eu.europa.esig.dss.tsl.cache.state.CacheStateEnum;
 import eu.europa.esig.dss.tsl.cache.state.CachedEntry;
-import eu.europa.esig.dss.tsl.cache.state.CachedException;
+import eu.europa.esig.dss.tsl.cache.state.CachedExceptionWrapper;
 import eu.europa.esig.dss.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +47,12 @@ public abstract class AbstractCache<R extends CachedResult> {
 	 * Map between {@code CacheKey} and the related result wrapper {@code CachedEntry<CachedResult>}
 	 */
 	private Map<CacheKey, CachedEntry<R>> cachedEntriesMap = new ConcurrentHashMap<>();
+
+	/**
+	 * Default constructor instantiating cache with empty map
+	 */
+	protected AbstractCache() {
+	}
 	
 	/**
 	 * Returns all current keys
@@ -171,7 +177,7 @@ public abstract class AbstractCache<R extends CachedResult> {
 	public void error(CacheKey cacheKey, Exception e) {
 		LOG.trace("Updating state to ERROR for an entry with the key [{}]...", cacheKey);
 		CachedEntry<R> cacheWrapper = get(cacheKey);
-		CachedException wrappedException = new CachedException(e);
+		CachedExceptionWrapper wrappedException = new CachedExceptionWrapper(e);
 		cacheWrapper.error(wrappedException);
 	}
 

@@ -47,7 +47,6 @@ import eu.europa.esig.xmldsig.XSDAbstractUtils;
 import org.apache.xml.security.c14n.CanonicalizationException;
 import org.apache.xml.security.c14n.Canonicalizer;
 import org.apache.xml.security.exceptions.XMLSecurityException;
-import org.apache.xml.security.exceptions.XMLSecurityRuntimeException;
 import org.apache.xml.security.keys.KeyInfo;
 import org.apache.xml.security.signature.Manifest;
 import org.apache.xml.security.signature.Reference;
@@ -181,6 +180,7 @@ public final class DSSXMLUtils {
 	 * This class is an utility class and cannot be instantiated.
 	 */
 	private DSSXMLUtils() {
+		// empty
 	}
 
 	/**
@@ -191,8 +191,7 @@ public final class DSSXMLUtils {
 	 * @return true if this set did not already contain the specified element
 	 */
 	public static boolean registerTransform(final String transformURI) {
-		final boolean added = transforms.add(transformURI);
-		return added;
+		return transforms.add(transformURI);
 	}
 
 	/**
@@ -203,8 +202,7 @@ public final class DSSXMLUtils {
 	 * @return true if this set did not already contain the specified element
 	 */
 	public static boolean registerCanonicalizer(final String c14nAlgorithmURI) {
-		final boolean added = canonicalizers.add(c14nAlgorithmURI);
-		return added;
+		return canonicalizers.add(c14nAlgorithmURI);
 	}
 
 	/**
@@ -216,8 +214,7 @@ public final class DSSXMLUtils {
 	 * @return true if this set did not already contain the specified element
 	 */
 	public static boolean registerTransformWithNodeSetOutput(final String transformURI) {
-		final boolean added = transformsWithNodeSetOutput.add(transformURI);
-		return added;
+		return transformsWithNodeSetOutput.add(transformURI);
 	}
 	
 	/**
@@ -593,10 +590,8 @@ public final class DSSXMLUtils {
 		for (int jj = 0; jj < attributes.getLength(); jj++) {
 			final Node item = attributes.item(jj);
 			final String localName = item.getLocalName() != null ? item.getLocalName() : item.getNodeName();
-			if (localName != null) {
-				if (Utils.areStringsEqualIgnoreCase(attributeName, localName)) {
-					return item.getTextContent();
-				}
+			if (Utils.areStringsEqualIgnoreCase(attributeName, localName)) {
+				return item.getTextContent();
 			}
 		}
 		return null;
@@ -616,11 +611,9 @@ public final class DSSXMLUtils {
 			final Node item = attributes.item(jj);
 			final String localName = item.getLocalName();
 			final String nodeName = item.getNodeName();
-			if (localName != null) {
-				if (Utils.areStringsEqualIgnoreCase(XMLDSigAttribute.ID.getAttributeName(), localName)) {
-					childElement.setIdAttribute(nodeName, true);
-					break;
-				}
+			if (localName != null && Utils.areStringsEqualIgnoreCase(XMLDSigAttribute.ID.getAttributeName(), localName)) {
+				childElement.setIdAttribute(nodeName, true);
+				break;
 			}
 		}
 	}
@@ -723,7 +716,7 @@ public final class DSSXMLUtils {
 				}
 			}
 			
-		} catch (XMLSecurityException | XMLSecurityRuntimeException e) {
+		} catch (XMLSecurityException e) {
 			// if exception occurs during the transformations
 			LOG.warn("Signature reference with id [{}] is corrupted or has an invalid format. "
 					+ "Original data cannot be obtained. Reason: [{}]", reference.getId(), e.getMessage());
@@ -791,9 +784,10 @@ public final class DSSXMLUtils {
 		final DigestAlgorithm digestAlgorithm = getDigestAlgorithm(digestAlgorithmUri);
 		final byte[] digestValue = getDigestValue(digestValueBase64);
 
-		if (digestAlgorithm == null || digestValue == null) {
+		if (digestAlgorithm == null || Utils.isArrayEmpty(digestValue)) {
 			LOG.warn("Unable to read object DigestAlgAndValueType (XMLDSig or XAdES 1.1.1)");
 			return null;
+
 		} else {
 			return new Digest(digestAlgorithm, digestValue);
 		}
@@ -802,7 +796,13 @@ public final class DSSXMLUtils {
 
 	private static byte[] getDigestValue(String digestValueBase64) {
 		byte[] result = null;
-		if (Utils.isStringNotEmpty(digestValueBase64)) {
+		if (Utils.isStringEmpty(digestValueBase64)) {
+			LOG.error("An empty DigestValue obtained!");
+
+		} else if (!Utils.isBase64Encoded(digestValueBase64)) {
+			LOG.error("The DigestValue is not base64 encoded! Obtained string : {}", digestValueBase64);
+
+		} else {
 			result = Utils.fromBase64(digestValueBase64);
 		}
 		return result;
@@ -1198,6 +1198,24 @@ public final class DSSXMLUtils {
 					reference.getId(), e.getMessage(), e);
 			return null;
 		}
+	}
+
+	/**
+	 * This method retrieves a URI attribute value of the given reference, when applicable
+	 *
+	 * NOTE: Method is used due to Apache Santuario Signature returning an empty string instead of null result.
+	 *
+	 * @param reference {@link Reference} to get value of URI attribute
+	 * @return {@link String} URI attribute value if available, NULL otherwise
+	 */
+	public static String getReferenceURI(Reference reference) {
+		if (reference != null) {
+			Element element = reference.getElement();
+			if (element != null) {
+				return DSSXMLUtils.getAttribute(element, XMLDSigAttribute.URI.getAttributeName());
+			}
+		}
+		return null;
 	}
 
 	/**

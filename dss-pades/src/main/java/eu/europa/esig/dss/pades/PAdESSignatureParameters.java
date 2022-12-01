@@ -22,9 +22,11 @@ package eu.europa.esig.dss.pades;
 
 import eu.europa.esig.dss.cades.CAdESSignatureParameters;
 import eu.europa.esig.dss.cades.signature.CAdESTimestampParameters;
+import eu.europa.esig.dss.enumerations.CertificationPermission;
 import eu.europa.esig.dss.enumerations.SignatureForm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.pdf.PAdESConstants;
+import eu.europa.esig.dss.pdf.PdfSignatureCache;
 
 import java.util.Date;
 import java.util.TimeZone;
@@ -36,14 +38,26 @@ public class PAdESSignatureParameters extends CAdESSignatureParameters implement
 
 	private static final long serialVersionUID = -1632557456487796227L;
 
-	/** The signature creation reason */
+	/**
+	 * The signature creation reason
+	 */
 	private String reason;
 
-	/** The contact info */
+	/**
+	 * The contact info
+	 */
 	private String contactInfo;
 
-	/** The signer's location */
+	/**
+	 * The signer's location
+	 */
 	private String location;
+
+	/**
+	 * This attribute allows to explicitly specify the SignerName (name for the Signature).
+	 * The person or authority signing the document.
+	 */
+	private String signerName;
 
 	/**
 	 * Defines the preserved space for a signature context
@@ -67,10 +81,9 @@ public class PAdESSignatureParameters extends CAdESSignatureParameters implement
 	private String signatureSubFilter = PAdESConstants.SIGNATURE_DEFAULT_SUBFILTER;
 
 	/**
-	 * This attribute allows to explicitly specify the SignerName (name for the Signature).
-	 * The person or authority signing the document.
+	 * The signing app name
 	 */
-	private String signerName;
+	private String appName;
 
 	/**
 	 * This attribute is used to create visible signature in PAdES form
@@ -94,6 +107,13 @@ public class PAdESSignatureParameters extends CAdESSignatureParameters implement
 	 * Default: TimeZone.getDefault()
 	 */
 	private TimeZone signingTimeZone = TimeZone.getDefault();
+
+	/**
+	 * Default constructor instantiating object with default parameters
+	 */
+	public PAdESSignatureParameters() {
+		// empty
+	}
 
 	@Override
 	public void setSignatureLevel(SignatureLevel signatureLevel) {
@@ -141,6 +161,42 @@ public class PAdESSignatureParameters extends CAdESSignatureParameters implement
 		this.contactInfo = contactInfo;
 	}
 
+	/**
+	 * Gets location
+	 *
+	 * @return {@link String}
+	 */
+	public String getLocation() {
+		return this.location;
+	}
+
+	/**
+	 * Sets location (The CPU host name or physical location of the signing)
+	 *
+	 * @param location {@link String}
+	 */
+	public void setLocation(String location) {
+		this.location = location;
+	}
+
+	/**
+	 * Returns the Signer Name
+	 *
+	 * @return {@link String}
+	 */
+	public String getSignerName() {
+		return signerName;
+	}
+
+	/**
+	 * Sets the name of the signed
+	 *
+	 * @param signerName {@link String}
+	 */
+	public void setSignerName(final String signerName) {
+		this.signerName = signerName;
+	}
+
 	@Override
 	public String getFilter() {
 		return signatureFilter;
@@ -169,22 +225,26 @@ public class PAdESSignatureParameters extends CAdESSignatureParameters implement
 		this.signatureSubFilter = signatureSubFilter;
 	}
 
-	/**
-	 * Returns the Signer Name
-	 *
-	 * @return {@link String}
-	 */
-	public String getSignerName() {
-		return signerName;
+	@Override
+	public String getAppName() {
+		return appName;
 	}
 
 	/**
-	 * Sets the name of the signed
+	 * Sets signing application name
 	 *
-	 * @param signerName {@link String}
+	 * @param appName {@link String}
 	 */
-	public void setSignerName(final String signerName) {
-		this.signerName = signerName;
+	public void setAppName(String appName) {
+		this.appName = appName;
+	}
+
+	@Override
+	public PAdESProfileParameters getContext() {
+		if (context == null) {
+			context = new PAdESProfileParameters();
+		}
+		return (PAdESProfileParameters) context;
 	}
 
 	@Override
@@ -204,43 +264,15 @@ public class PAdESSignatureParameters extends CAdESSignatureParameters implement
 		this.signatureImageParameters = signatureImageParameters;
 	}
 
-	/**
-	 * Gets location
-	 * 
-	 * @return {@link String}
-	 */
-	public String getLocation() {
-		return this.location;
-	}
-
-	/**
-	 * Sets location (The CPU host name or physical location of the signing)
-	 * 
-	 * @param location {@link String}
-	 */
-	public void setLocation(String location) {
-		this.location = location;
-	}
-
-	/**
-	 * The id/name of the signature field which should be signed
-	 * 
-	 * Deprecated. Use {@code getImageParameters().getFieldParameters().setFieldId(signatureFieldId)}
-	 * 
-	 * @param signatureFieldId {@link String} id of a signature field to be used
-	 */
-	@Deprecated
-	public void setSignatureFieldId(String signatureFieldId) {
-		getImageParameters().getFieldParameters().setFieldId(signatureFieldId);
-	}
-
 	@Override
 	public int getContentSize() {
 		return this.signatureSize;
 	}
 
 	/**
-	 * This setter allows to reserve more than the default size for a signature (9472bytes)
+	 * This setter defines an amount of bytes to be reserved for a CMS signature contents encapsulation
+	 *
+	 * Default : 9472 bytes
 	 *
 	 * @param signatureSize /Contents parameter reserved space
 	 */
@@ -355,6 +387,11 @@ public class PAdESSignatureParameters extends CAdESSignatureParameters implement
 		} else {
 			this.archiveTimestampParameters = new PAdESTimestampParameters(archiveTimestampParameters);
 		}
+	}
+
+	@Override
+	public PdfSignatureCache getPdfSignatureCache() {
+		return getContext().getPdfToBeSignedCache();
 	}
 
 }

@@ -24,8 +24,11 @@ import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.pades.PAdESCommonParameters;
 import eu.europa.esig.dss.pades.SignatureFieldParameters;
 import eu.europa.esig.dss.pades.validation.PdfRevision;
+import eu.europa.esig.dss.pades.validation.PdfValidationDataContainer;
+import eu.europa.esig.dss.pdf.modifications.PdfDifferencesFinder;
+import eu.europa.esig.dss.pdf.modifications.PdfObjectModificationsFinder;
+import eu.europa.esig.dss.signature.resources.DSSResourcesHandlerBuilder;
 import eu.europa.esig.dss.validation.AdvancedSignature;
-import eu.europa.esig.dss.validation.ValidationDataContainer;
 
 import java.util.List;
 
@@ -36,7 +39,7 @@ import java.util.List;
 public interface PDFSignatureService {
 	
 	/**
-	 * Returns the digest value of a PDF document
+	 * Returns the digest value of a PDF document.
 	 *
 	 * @param toSignDocument
 	 *            the document to be signed
@@ -49,15 +52,16 @@ public interface PDFSignatureService {
 	/**
 	 * Signs a PDF document
 	 *
-	 * @param pdfData
-	 *            the pdf document
-	 * @param signatureValue
-	 *            the signature value
+	 * @param toSignDocument
+	 *            the pdf document to be signed
+	 * @param cmsSignedData
+	 *            the encoded CMS Signed data
 	 * @param parameters
 	 *            the signature/timestamp parameters
 	 * @return {@link DSSDocument}
 	 */
-	DSSDocument sign(final DSSDocument pdfData, final byte[] signatureValue, final PAdESCommonParameters parameters);
+	DSSDocument sign(final DSSDocument toSignDocument, final byte[] cmsSignedData,
+					 final PAdESCommonParameters parameters);
 
 	/**
 	 * Retrieves revisions from a PDF document
@@ -77,23 +81,24 @@ public interface PDFSignatureService {
 	 * @param document
 	 *            the document to be extended
 	 * @param validationDataForInclusion
-	 *            {@link ValidationDataContainer}
+	 *            {@link PdfValidationDataContainer}
 	 * @return the pdf document with the added dss dictionary
 	 */
-	DSSDocument addDssDictionary(DSSDocument document, ValidationDataContainer validationDataForInclusion);
+	DSSDocument addDssDictionary(final DSSDocument document, final PdfValidationDataContainer validationDataForInclusion);
 
 	/**
-	 * This method adds the DSS dictionary (Baseline-LT)
+	 * This method adds the DSS dictionary (Baseline-LT) to a password-protected document
 	 * 
 	 * @param document
 	 *            the document to be extended
 	 * @param validationDataForInclusion
-	 *            {@link ValidationDataContainer}
+	 *            {@link PdfValidationDataContainer}
 	 * @param pwd
-	 *            the password protection used to create the encrypted document
+	 *            the password protection used to create the encrypted document (optional)
 	 * @return the pdf document with the added dss dictionary
 	 */
-	DSSDocument addDssDictionary(DSSDocument document, ValidationDataContainer validationDataForInclusion, final String pwd);
+	DSSDocument addDssDictionary(final DSSDocument document, final PdfValidationDataContainer validationDataForInclusion,
+								 final String pwd);
 
 	/**
 	 * This method returns not signed signature-fields
@@ -124,7 +129,7 @@ public interface PDFSignatureService {
 	 *            the parameters with the coordinates,... of the signature field
 	 * @return the pdf document with the new added signature field
 	 */
-	DSSDocument addNewSignatureField(DSSDocument document, SignatureFieldParameters parameters);
+	DSSDocument addNewSignatureField(final DSSDocument document, final SignatureFieldParameters parameters);
 
 	/**
 	 * This method allows to add a new signature field to an existing encrypted pdf document
@@ -134,10 +139,11 @@ public interface PDFSignatureService {
 	 * @param parameters
 	 *            the parameters with the coordinates,... of the signature field
 	 * @param pwd
-	 *            the password protection used to create the encrypted document
+	 *            the password protection used to create the encrypted document (optional)
 	 * @return the pdf document with the new added signature field
 	 */
-	DSSDocument addNewSignatureField(DSSDocument document, SignatureFieldParameters parameters, final String pwd);
+	DSSDocument addNewSignatureField(final DSSDocument document, final SignatureFieldParameters parameters,
+									 final String pwd);
 
 	/**
 	 * Analyze the PDF revision and try to detect any modification (shadow attacks)
@@ -147,5 +153,57 @@ public interface PDFSignatureService {
 	 * @param pwd                 {@link String} password protection
 	 */
 	void analyzePdfModifications(DSSDocument document, List<AdvancedSignature> signatures, String pwd);
+
+	/**
+	 * Returns a page preview with the visual signature
+	 *
+	 * @param toSignDocument
+	 *            the document to be signed
+	 * @param parameters
+	 *            the signature/timestamp parameters
+	 * @return a DSSDocument with the PNG picture
+	 */
+	DSSDocument previewPageWithVisualSignature(final DSSDocument toSignDocument, final PAdESCommonParameters parameters);
+
+	/**
+	 * Returns a preview of the signature field
+	 *
+	 * @param toSignDocument
+	 *            the document to be signed
+	 * @param parameters
+	 *            the signature/timestamp parameters
+	 * @return a DSSDocument with the PNG picture
+	 */
+	DSSDocument previewSignatureField(final DSSDocument toSignDocument, final PAdESCommonParameters parameters);
+
+	/**
+	 * Sets {@code DSSResourcesFactoryBuilder} to be used for a {@code DSSResourcesHandler}
+	 * creation in internal methods. {@code DSSResourcesHandler} defines a way to operate with OutputStreams and
+	 * create {@code DSSDocument}s.
+	 *
+	 * Default : {@code eu.europa.esig.dss.signature.resources.InMemoryResourcesHandler}. Works with data in memory.
+	 *
+	 * @param resourcesHandlerBuilder {@link DSSResourcesHandlerBuilder}
+	 */
+	void setResourcesHandlerBuilder(DSSResourcesHandlerBuilder resourcesHandlerBuilder);
+
+	/**
+	 * Sets the {@code PdfDifferencesFinder} used to find the differences on pages between given PDF revisions.
+	 *
+	 * Default : {@code eu.europa.esig.dss.pdf.modifications.DefaultPdfDifferencesFinder}
+	 *
+	 * @param pdfDifferencesFinder {@link PdfDifferencesFinder}
+	 */
+	void setPdfDifferencesFinder(PdfDifferencesFinder pdfDifferencesFinder);
+
+	/**
+	 * Sets the {@code PdfObjectModificationsFinder} used to find the differences between internal PDF objects occurred
+	 * between given PDF revisions.
+	 *
+	 * Default : {@code eu.europa.esig.dss.pdf.modifications.DefaultPdfObjectModificationsFinder}
+	 *
+	 * @param pdfObjectModificationsFinder {@link PdfObjectModificationsFinder}
+	 */
+	void setPdfObjectModificationsFinder(PdfObjectModificationsFinder pdfObjectModificationsFinder);
 
 }

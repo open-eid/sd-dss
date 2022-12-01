@@ -20,13 +20,12 @@
  */
 package eu.europa.esig.dss.asic.common.signature;
 
-import eu.europa.esig.dss.model.DSSDocument;
-
-import java.util.List;
-
 /**
  * The interface defining a helper to create a {@code ToBeSigned} data
+ *
+ * @deprecated since DSS 5.11
  */
+@Deprecated
 public interface GetDataToSignHelper {
 
 	/**
@@ -34,6 +33,7 @@ public interface GetDataToSignHelper {
 	 *
 	 * @return {@link String} signature filename
 	 */
+	@Deprecated
 	String getSignatureFilename();
 
 	/**
@@ -41,27 +41,7 @@ public interface GetDataToSignHelper {
 	 *
 	 * @return {@link String} timestamp filename
 	 */
+	@Deprecated
 	String getTimestampFilename();
-
-	/**
-	 * Returns a list of signed documents
-	 *
-	 * @return a list of {@link DSSDocument} that has been signed
-	 */
-	List<DSSDocument> getSignedDocuments();
-
-	/**
-	 * Returns a list of signature documents
-	 *
-	 * @return a list of {@link DSSDocument} signatures
-	 */
-	List<DSSDocument> getSignatures();
-
-	/**
-	 * Returns a list of manifest documents
-	 *
-	 * @return a list of {@link DSSDocument} manifests
-	 */
-	List<DSSDocument> getManifestFiles();
 
 }

@@ -50,6 +50,12 @@ public class RemoteDocumentValidationService {
 	private CertificateVerifier verifier;
 
 	/**
+	 * Default construction instantiating object with null certificate verifier
+	 */
+	public RemoteDocumentValidationService() {
+	}
+
+	/**
 	 * Sets the certificate verifier
 	 *
 	 * @param verifier {@link CertificateVerifier}
@@ -95,7 +101,7 @@ public class RemoteDocumentValidationService {
 		String signatureId = dataToValidate.getSignatureId();
 		if (signatureId == null) {
 			List<AdvancedSignature> signatures = validator.getSignatures();
-			if (signatures.size() > 0) {
+			if (!signatures.isEmpty()) {
 				LOG.debug("SignatureId is not defined, the first signature is used");
 				signatureId = signatures.get(0).getId();
 			}

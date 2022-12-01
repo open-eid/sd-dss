@@ -105,6 +105,12 @@ public abstract class RevocationToken<R extends Revocation> extends Token {
 	 * The reason of the revocation.
 	 */
 	protected RevocationReason reason;
+
+	/**
+	 * Default constructor instantiating object with null values
+	 */
+	protected RevocationToken() {
+	}
 	
 	/**
 	 * Returns the Revocation Token type (CRL or OCSP)
@@ -112,6 +118,15 @@ public abstract class RevocationToken<R extends Revocation> extends Token {
 	 * @return {@link RevocationType} of the token
 	 */
 	public abstract RevocationType getRevocationType();
+
+	/**
+	 * Returns a certificate token the current revocation data has been issued for
+	 *
+	 * @return {@link CertificateToken}
+	 */
+	public CertificateToken getRelatedCertificate() {
+		return relatedCertificate;
+	}
 
 	/**
 	 * Gets DSS String Id of the related certificate
@@ -317,18 +332,13 @@ public abstract class RevocationToken<R extends Revocation> extends Token {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		RevocationToken other = (RevocationToken) obj;
+		RevocationToken<?> other = (RevocationToken<?>) obj;
 		if (!getDSSId().equals(other.getDSSId())) {
 			return false;
 		}
 		if (relatedCertificate == null) {
-			if (other.relatedCertificate != null) {
-				return false;
-			}
-		} else if (!relatedCertificate.equals(other.relatedCertificate)) {
-			return false;
-		}
-		return true;
+			return other.relatedCertificate == null;
+		} else return relatedCertificate.equals(other.relatedCertificate);
 	}
 
 }

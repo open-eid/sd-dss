@@ -41,6 +41,13 @@ public class XAdES132Paths extends AbstractPaths implements XAdESPaths {
 	public static final String ALL_SIGNATURE_WITH_NO_COUNTERSIGNATURE_AS_PARENT_PATH = allNotParent(XMLDSigElement.SIGNATURE,
 			XAdES132Element.COUNTER_SIGNATURE);
 
+	/**
+	 * Default constructor
+	 */
+	public XAdES132Paths() {
+		// empty
+	}
+
 	@Override
 	public DSSNamespace getNamespace() {
 		return XAdESNamespaces.XADES_132;
@@ -478,9 +485,15 @@ public class XAdES132Paths extends AbstractPaths implements XAdESPaths {
 	}
 
 	@Override
+	public String getCurrentSignaturePolicySPDocSpecification() {
+		return fromCurrentPosition(XAdES132Element.SIGNATURE_POLICY_ID, XAdES132Element.SIG_POLICY_QUALIFIERS,
+				XAdES132Element.SIG_POLICY_QUALIFIER, XAdES141Element.SP_DOC_SPECIFICATION);
+	}
+
+	@Override
 	public String getCurrentSignaturePolicySPDocSpecificationIdentifier() {
-		return fromCurrentPosition(XAdES132Element.SIGNATURE_POLICY_ID, XAdES132Element.SIG_POLICY_QUALIFIERS, XAdES132Element.SIG_POLICY_QUALIFIER,
-				XAdES141Element.SP_DOC_SPECIFICATION, XAdES132Element.IDENTIFIER);
+		return fromCurrentPosition(XAdES132Element.SIGNATURE_POLICY_ID, XAdES132Element.SIG_POLICY_QUALIFIERS,
+				XAdES132Element.SIG_POLICY_QUALIFIER, XAdES141Element.SP_DOC_SPECIFICATION, XAdES132Element.IDENTIFIER);
 	}
 
 	@Override
@@ -541,6 +554,16 @@ public class XAdES132Paths extends AbstractPaths implements XAdESPaths {
 	@Override
 	public String getCurrentDocumentationReference() {
 		return fromCurrentPosition(XAdES132Element.DOCUMENTATION_REFERENCE);
+	}
+
+	@Override
+	public String getCurrentCommitmentObjectReferencesPath() {
+		return fromCurrentPosition(XAdES132Element.OBJECT_REFERENCE);
+	}
+
+	@Override
+	public String getCurrentCommitmentAllSignedDataObjectsPath() {
+		return fromCurrentPosition(XAdES132Element.ALL_SIGNED_DATA_OBJECTS);
 	}
 
 	@Override
@@ -606,6 +629,16 @@ public class XAdES132Paths extends AbstractPaths implements XAdESPaths {
 	// --------------------------- Signature Policy Store
 
 	@Override
+	public String getCurrentSPDocSpecification() {
+		return fromCurrentPosition(XAdES141Element.SP_DOC_SPECIFICATION);
+	}
+
+	@Override
+	public String getCurrentIdentifier() {
+		return fromCurrentPosition(XAdES132Element.IDENTIFIER);
+	}
+
+	@Override
 	public String getCurrentSPDocSpecificationIdentifier() {
 		return fromCurrentPosition(XAdES141Element.SP_DOC_SPECIFICATION, XAdES132Element.IDENTIFIER);
 	}
@@ -616,8 +649,15 @@ public class XAdES132Paths extends AbstractPaths implements XAdESPaths {
 	}
 
 	@Override
-	public String getCurrentSPDocSpecificationDocumentReferenceElements() {
-		return fromCurrentPosition(XAdES141Element.SP_DOC_SPECIFICATION, XAdES132Element.DOCUMENTATION_REFERENCES, XAdES132Element.DOCUMENTATION_REFERENCE);
+	public String getCurrentDocumentationReferenceElements() {
+		return fromCurrentPosition(XAdES132Element.DOCUMENTATION_REFERENCES,
+				XAdES132Element.DOCUMENTATION_REFERENCE);
+	}
+
+	@Override
+	public String getCurrentSPDocSpecificationDocumentationReferenceElements() {
+		return fromCurrentPosition(XAdES141Element.SP_DOC_SPECIFICATION, XAdES132Element.DOCUMENTATION_REFERENCES,
+				XAdES132Element.DOCUMENTATION_REFERENCE);
 	}
 
 	@Override
@@ -626,9 +666,13 @@ public class XAdES132Paths extends AbstractPaths implements XAdESPaths {
 	}
 
 	@Override
+	public String getCurrentSigPolDocLocalURI() {
+		return fromCurrentPosition(XAdES141Element.SIG_POL_DOC_LOCAL_URI);
+	}
+
+	@Override
 	public XSDAbstractUtils getXSDUtils() {
 		return XAdES319132Utils.getInstance();
 	}
-
 
 }

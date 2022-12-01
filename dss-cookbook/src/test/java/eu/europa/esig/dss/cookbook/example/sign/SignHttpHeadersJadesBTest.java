@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.cookbook.example.sign;
 
 import eu.europa.esig.dss.cookbook.example.CookbookTools;
@@ -44,14 +64,19 @@ public class SignHttpHeadersJadesBTest extends CookbookTools {
 
             DSSPrivateKeyEntry privateKey = signingToken.getKeys().get(0);
 
-            JAdESSignatureParameters parameters = new JAdESSignatureParameters();
-            parameters.setSigningCertificate(privateKey.getCertificate());
-            parameters.setCertificateChain(privateKey.getCertificateChain());
-            parameters.setDigestAlgorithm(DigestAlgorithm.SHA256);
-            parameters.setSignatureLevel(SignatureLevel.JAdES_BASELINE_B);
-            parameters.setJwsSerializationType(JWSSerializationType.FLATTENED_JSON_SERIALIZATION);
 
             // tag::demo[]
+            // import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+            // import eu.europa.esig.dss.enumerations.SigDMechanism;
+            // import eu.europa.esig.dss.enumerations.SignaturePackaging;
+            // import eu.europa.esig.dss.jades.HTTPHeader;
+            // import eu.europa.esig.dss.jades.HTTPHeaderDigest;
+            // import eu.europa.esig.dss.jades.JAdESSignatureParameters;
+            // import eu.europa.esig.dss.model.DSSDocument;
+            // import java.util.ArrayList;
+            // import java.util.List;
+
+            JAdESSignatureParameters parameters = new JAdESSignatureParameters();
 
             // Set Detached packaging
             parameters.setSignaturePackaging(SignaturePackaging.DETACHED);
@@ -71,6 +96,12 @@ public class SignHttpHeadersJadesBTest extends CookbookTools {
             documentsToSign.add(new HTTPHeaderDigest(toSignDocument, DigestAlgorithm.SHA1));
 
             // end::demo[]
+
+            parameters.setSigningCertificate(privateKey.getCertificate());
+            parameters.setCertificateChain(privateKey.getCertificateChain());
+            parameters.setDigestAlgorithm(DigestAlgorithm.SHA256);
+            parameters.setSignatureLevel(SignatureLevel.JAdES_BASELINE_B);
+            parameters.setJwsSerializationType(JWSSerializationType.FLATTENED_JSON_SERIALIZATION);
 
             CommonCertificateVerifier commonCertificateVerifier = new CommonCertificateVerifier();
             JAdESService service = new JAdESService(commonCertificateVerifier);

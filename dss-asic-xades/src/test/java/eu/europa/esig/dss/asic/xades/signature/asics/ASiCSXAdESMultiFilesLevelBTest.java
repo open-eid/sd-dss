@@ -20,24 +20,12 @@
  */
 package eu.europa.esig.dss.asic.xades.signature.asics;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-
-import org.junit.jupiter.api.BeforeEach;
-
-import eu.europa.esig.dss.asic.common.ASiCExtractResult;
+import eu.europa.esig.dss.asic.common.ASiCContent;
+import eu.europa.esig.dss.asic.common.ASiCUtils;
 import eu.europa.esig.dss.asic.common.AbstractASiCContainerExtractor;
 import eu.europa.esig.dss.asic.xades.ASiCWithXAdESContainerExtractor;
 import eu.europa.esig.dss.asic.xades.ASiCWithXAdESSignatureParameters;
 import eu.europa.esig.dss.asic.xades.signature.ASiCWithXAdESService;
-import eu.europa.esig.dss.asic.xades.signature.AbstractASiCWithXAdESMultipleDocumentsTestSignature;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlSignatureScope;
@@ -51,10 +39,23 @@ import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.signature.MultipleDocumentsSignatureService;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
+import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 import eu.europa.esig.dss.xades.XAdESTimestampParameters;
+import org.junit.jupiter.api.BeforeEach;
 
-public class ASiCSXAdESMultiFilesLevelBTest extends AbstractASiCWithXAdESMultipleDocumentsTestSignature {
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
+public class ASiCSXAdESMultiFilesLevelBTest extends AbstractASiCSWithXAdESMultipleDocumentsTestSignature {
 
 	private ASiCWithXAdESService service;
 	private ASiCWithXAdESSignatureParameters signatureParameters;
@@ -88,10 +89,12 @@ public class ASiCSXAdESMultiFilesLevelBTest extends AbstractASiCWithXAdESMultipl
 
 	@Override
 	protected void onDocumentSigned(byte[] byteArray) {
+		super.onDocumentSigned(byteArray);
+
 		InMemoryDocument doc = new InMemoryDocument(byteArray);
 
 		AbstractASiCContainerExtractor extractor = new ASiCWithXAdESContainerExtractor(doc);
-		ASiCExtractResult extract = extractor.extract();
+		ASiCContent extract = extractor.extract();
 
 		assertEquals(0, extract.getUnsupportedDocuments().size());
 
@@ -105,7 +108,11 @@ public class ASiCSXAdESMultiFilesLevelBTest extends AbstractASiCWithXAdESMultipl
 		assertEquals(0, manifestDocuments.size());
 
 		List<DSSDocument> signedDocuments = extract.getSignedDocuments();
-		assertEquals(1, signedDocuments.size()); // package.zip
+		assertEquals(1, signedDocuments.size());
+
+		DSSDocument packageDocument = signedDocuments.get(0); // package.zip
+		assertEquals("package.zip", packageDocument.getName());
+		assertNull(ASiCUtils.getZipComment(signedDocuments.get(0)));
 
 		DSSDocument mimeTypeDocument = extract.getMimeTypeDocument();
 
@@ -119,6 +126,8 @@ public class ASiCSXAdESMultiFilesLevelBTest extends AbstractASiCWithXAdESMultipl
 
 	@Override
 	protected void checkSignatureScopes(DiagnosticData diagnosticData) {
+		super.checkSignatureScopes(diagnosticData);
+
 		SignatureWrapper signature = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId());
 		List<XmlSignatureScope> signatureScopes = signature.getSignatureScopes();
 		assertEquals(4, Utils.collectionSize(signatureScopes)); // package.zip + two signed files
@@ -137,23 +146,22 @@ public class ASiCSXAdESMultiFilesLevelBTest extends AbstractASiCWithXAdESMultipl
 	}
 
 	@Override
+	protected void verifyOriginalDocuments(SignedDocumentValidator validator, DiagnosticData diagnosticData) {
+		List<DSSDocument> retrievedDocuments = validator.getOriginalDocuments(diagnosticData.getFirstSignatureId());
+		for (DSSDocument document : documentToSigns) {
+			boolean found = false;
+			for (DSSDocument retrievedDoc : retrievedDocuments) {
+				if (Arrays.equals(DSSUtils.toByteArray(document), DSSUtils.toByteArray(retrievedDoc))) {
+					found = true;
+				}
+			}
+			assertTrue(found);
+		}
+	}
+
+	@Override
 	protected ASiCWithXAdESSignatureParameters getSignatureParameters() {
 		return signatureParameters;
-	}
-
-	@Override
-	protected MimeType getExpectedMime() {
-		return MimeType.ASICS;
-	}
-
-	@Override
-	protected boolean isBaselineT() {
-		return false;
-	}
-
-	@Override
-	protected boolean isBaselineLTA() {
-		return false;
 	}
 
 	@Override

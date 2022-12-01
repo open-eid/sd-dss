@@ -29,6 +29,7 @@ import eu.europa.esig.dss.detailedreport.jaxb.XmlConstraint;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlConstraintsConclusion;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlCryptographicAlgorithm;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlCryptographicValidation;
+import eu.europa.esig.dss.detailedreport.jaxb.XmlMessage;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlProofOfExistence;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlRevocationInformation;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlSAV;
@@ -63,22 +64,25 @@ import eu.europa.esig.dss.enumerations.CertificateRefOrigin;
 import eu.europa.esig.dss.enumerations.CertificateSourceType;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.Indication;
+import eu.europa.esig.dss.enumerations.MessageType;
 import eu.europa.esig.dss.enumerations.RevocationOrigin;
 import eu.europa.esig.dss.enumerations.RevocationRefOrigin;
 import eu.europa.esig.dss.enumerations.RevocationType;
 import eu.europa.esig.dss.enumerations.SignaturePolicyType;
 import eu.europa.esig.dss.enumerations.SignatureQualification;
-import eu.europa.esig.dss.enumerations.SubIndication;
 import eu.europa.esig.dss.enumerations.TimestampQualification;
 import eu.europa.esig.dss.enumerations.TimestampType;
+import eu.europa.esig.dss.jaxb.object.Message;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.process.BasicBuildingBlockDefinition;
+import eu.europa.esig.dss.validation.process.ValidationProcessUtils;
 import eu.europa.esig.dss.validation.process.vpfswatsp.POE;
 import eu.europa.esig.dss.validation.process.vpfswatsp.POEExtraction;
 import eu.europa.esig.validationreport.enums.ConstraintStatus;
 import eu.europa.esig.validationreport.enums.ObjectType;
 import eu.europa.esig.validationreport.enums.SignatureValidationProcessID;
 import eu.europa.esig.validationreport.enums.TypeOfProof;
+import eu.europa.esig.validationreport.jaxb.AdditionalValidationReportDataType;
 import eu.europa.esig.validationreport.jaxb.AttributeBaseType;
 import eu.europa.esig.validationreport.jaxb.CertificateChainType;
 import eu.europa.esig.validationreport.jaxb.ConstraintStatusType;
@@ -118,6 +122,7 @@ import eu.europa.esig.validationreport.jaxb.SignatureValidationProcessType;
 import eu.europa.esig.validationreport.jaxb.SignatureValidationReportType;
 import eu.europa.esig.validationreport.jaxb.SignerInformationType;
 import eu.europa.esig.validationreport.jaxb.SignersDocumentType;
+import eu.europa.esig.validationreport.jaxb.TypedDataType;
 import eu.europa.esig.validationreport.jaxb.VOReferenceType;
 import eu.europa.esig.validationreport.jaxb.ValidationConstraintsEvaluationReportType;
 import eu.europa.esig.validationreport.jaxb.ValidationObjectListType;
@@ -135,7 +140,7 @@ import javax.xml.bind.JAXBElement;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -161,10 +166,10 @@ public class ETSIValidationReportBuilder {
 	private final DetailedReport detailedReport;
 
 	/** Map between signature Ids and the respective {@code SignatureIdentifierType}s */
-	private Map<String, SignatureIdentifierType> signatureIdentifierMap = new HashMap<>();
+	private final Map<String, SignatureIdentifierType> signatureIdentifierMap = new HashMap<>();
 
 	/** Map between token Ids and the respective {@code ValidationObjectType}s */
-	private Map<String, ValidationObjectType> validationObjectMap = new HashMap<>();
+	private final Map<String, ValidationObjectType> validationObjectMap = new HashMap<>();
 
 	/**
 	 * Default constructor
@@ -215,7 +220,7 @@ public class ETSIValidationReportBuilder {
 		signatureValidationReport.setSignerInformation(getSignerInformation(sigWrapper));
 		signatureValidationReport.setSignatureQuality(getSignatureQuality(sigWrapper));
 		signatureValidationReport.setSignatureValidationProcess(getSignatureValidationProcess(sigWrapper));
-		signatureValidationReport.setSignatureValidationStatus(getSignatureValidationStatus(sigWrapper));
+		signatureValidationReport.setSignatureValidationStatus(getValidationStatus(sigWrapper));
 		signatureValidationReport.setValidationTimeInfo(getValidationTimeInfo(sigWrapper));
 		signatureValidationReport.setValidationConstraintsEvaluationReport(getValidationConstraintsEvaluationReport(sigWrapper));
 		return signatureValidationReport;
@@ -347,8 +352,7 @@ public class ETSIValidationReportBuilder {
 			List<XmlConstraint> constraints = signingCertificateXCV.getConstraint();
 			for (XmlConstraint xmlConstraint : constraints) {
 				if ("BBB_XCV_PSEUDO_USE".equals(xmlConstraint.getName().getKey())) {
-					XmlStatus status = xmlConstraint.getStatus();
-					return status;
+					return xmlConstraint.getStatus();
 				}
 			}
 		}
@@ -376,7 +380,7 @@ public class ETSIValidationReportBuilder {
 	}
 
 	private VOReferenceType getVOReference(ValidationObjectType validationObject) {
-		return getVOReference(Arrays.asList(validationObject));
+		return getVOReference(Collections.singletonList(validationObject));
 	}
 
 	private VOReferenceType getVOReference(List<ValidationObjectType> validationObjects) {
@@ -441,7 +445,7 @@ public class ETSIValidationReportBuilder {
 			validationObjectListType.getValidationObject().add(orphanRevocationValidationObject);
 		}
 
-		for (SignerDataWrapper signedData : diagnosticData.getOriginalSignerDocuments()) {
+		for (SignerDataWrapper signedData : diagnosticData.getAllSignerDocuments()) {
 			ValidationObjectType signerDataValidationObject = getSignerDataValidationObject(signedData);
 			signerDataValidationObject.setPOE(getPOE(signedData.getId(), poeExtraction));
 			validationObjectListType.getValidationObject().add(signerDataValidationObject);
@@ -476,10 +480,18 @@ public class ETSIValidationReportBuilder {
 	private DigestAlgAndValueType getDigestAlgAndValueType(DigestAlgorithm digestAlgo, byte[] digestValue) {
 		DigestAlgAndValueType digestAlgAndValueType = new DigestAlgAndValueType();
 		DigestMethodType digestMethodType = new DigestMethodType();
-		digestMethodType.setAlgorithm(digestAlgo.getUri());
+		digestMethodType.setAlgorithm(getUrn(digestAlgo));
 		digestAlgAndValueType.setDigestMethod(digestMethodType);
 		digestAlgAndValueType.setDigestValue(digestValue);
 		return digestAlgAndValueType;
+	}
+
+	private String getUrn(DigestAlgorithm digestAlgorithm) {
+		String urn = digestAlgorithm.getUri();
+		if (Utils.isStringEmpty(urn)) {
+			urn = ValidationProcessUtils.toUrnOid(digestAlgorithm.getOid());
+		}
+		return urn;
 	}
 	
 	private POEType getPOE(String tokenId, POEExtraction poeExtraction) {
@@ -626,7 +638,7 @@ public class ETSIValidationReportBuilder {
 		return createOrphanToken(orphanRevocation, objectType);
 	}
 	
-	private ValidationObjectType createOrphanToken(OrphanTokenWrapper orphanToken, ObjectType objectType) {
+	private ValidationObjectType createOrphanToken(OrphanTokenWrapper<?> orphanToken, ObjectType objectType) {
 		ValidationObjectType validationObject = validationObjectMap.get(orphanToken.getId());
 		if (validationObject == null) {
 			validationObject = objectFactory.createValidationObjectType();
@@ -645,43 +657,84 @@ public class ETSIValidationReportBuilder {
 		return validationObject;
 	}
 
-	private ValidationStatusType getSignatureValidationStatus(SignatureWrapper signature) {
-		ValidationStatusType validationStatus = objectFactory.createValidationStatusType();
-
-		Indication indication = detailedReport.getFinalIndication(signature.getId());
-		if (indication != null) {
-			validationStatus.setMainIndication(indication);
-			SubIndication subIndication = detailedReport.getFinalSubIndication(signature.getId());
-			if (subIndication != null) {
-				validationStatus.getSubIndication().add(subIndication);
-			}
-		}
-
-		addValidationReportData(validationStatus, signature);
-		return validationStatus;
-	}
-
 	private ValidationStatusType getValidationStatus(AbstractTokenProxy token) {
 		ValidationStatusType validationStatus = objectFactory.createValidationStatusType();
-		fillIndicationSubIndication(validationStatus, detailedReport.getBasicBuildingBlocksIndication(token.getId()),
-				detailedReport.getBasicBuildingBlocksSubIndication(token.getId()));
+		fillIndicationSubIndication(validationStatus, token);
+		fillMessages(validationStatus, token);
 		addValidationReportData(validationStatus, token);
 		return validationStatus;
 	}
 
+	private void fillIndicationSubIndication(ValidationStatusType validationStatus, AbstractTokenProxy token) {
+		validationStatus.setMainIndication(detailedReport.getFinalIndication(token.getId()));
+		validationStatus.getSubIndication().add(detailedReport.getFinalSubIndication(token.getId()));
+	}
+
+	private void fillMessages(ValidationStatusType validationStatus, AbstractTokenProxy token) {
+		fillMessagesOfType(validationStatus, detailedReport.getAdESValidationErrors(token.getId()).stream()
+				.map(Message::getValue).collect(Collectors.toList()), MessageType.ERROR);
+		fillMessagesOfType(validationStatus, detailedReport.getAdESValidationWarnings(token.getId()).stream()
+				.map(Message::getValue).collect(Collectors.toList()), MessageType.WARN);
+		fillMessagesOfType(validationStatus, detailedReport.getAdESValidationInfos(token.getId()).stream()
+				.map(Message::getValue).collect(Collectors.toList()), MessageType.INFO);
+	}
+
 	private ValidationStatusType getValidationStatus(XmlConclusion conclusion) {
 		ValidationStatusType validationStatus = objectFactory.createValidationStatusType();
-		fillIndicationSubIndication(validationStatus, conclusion.getIndication(), conclusion.getSubIndication());
+		fillIndicationSubIndication(validationStatus, conclusion);
+		fillMessages(validationStatus, conclusion);
 		return validationStatus;
 	}
 
-	private void fillIndicationSubIndication(ValidationStatusType validationStatus, Indication indication, SubIndication subIndication) {
-		if (indication != null) {
-			validationStatus.setMainIndication(indication);
+	private void fillIndicationSubIndication(ValidationStatusType validationStatus, XmlConclusion conclusion) {
+		if (conclusion.getIndication() != null) {
+			validationStatus.setMainIndication(conclusion.getIndication());
 		}
-		if (subIndication != null) {
-			validationStatus.getSubIndication().add(subIndication);
+		if (conclusion.getSubIndication() != null) {
+			validationStatus.getSubIndication().add(conclusion.getSubIndication());
 		}
+	}
+
+	private void fillMessages(ValidationStatusType validationStatus, XmlConclusion conclusion) {
+		fillMessagesOfType(validationStatus, conclusion.getErrors().stream()
+				.map(XmlMessage::getValue).collect(Collectors.toList()), MessageType.ERROR);
+		fillMessagesOfType(validationStatus, conclusion.getWarnings().stream()
+				.map(XmlMessage::getValue).collect(Collectors.toList()), MessageType.WARN);
+		fillMessagesOfType(validationStatus, conclusion.getInfos().stream()
+				.map(XmlMessage::getValue).collect(Collectors.toList()), MessageType.INFO);
+	}
+
+	private void fillMessagesOfType(ValidationStatusType validationStatus, List<String> messages, MessageType level) {
+		if (Utils.isCollectionNotEmpty(messages)) {
+			final ValidationReportDataType validationReportData = getAssociatedValidationReportData(validationStatus);
+			AdditionalValidationReportDataType additionalValidationReportData = getAdditionalValidationReportData(validationReportData);
+			for (String message : messages) {
+				TypedDataType reportData = objectFactory.createTypedDataType();
+				reportData.setType(level.getUri());
+				reportData.setValue(message);
+				additionalValidationReportData.getReportData().add(reportData);
+			}
+		}
+	}
+
+	private ValidationReportDataType getAssociatedValidationReportData(ValidationStatusType validationStatus) {
+		List<ValidationReportDataType> associatedValidationReportData = validationStatus.getAssociatedValidationReportData();
+		if (Utils.isCollectionNotEmpty(associatedValidationReportData)) {
+			// only one is used
+			return associatedValidationReportData.get(0);
+		}
+		ValidationReportDataType validationReportData = objectFactory.createValidationReportDataType();
+		associatedValidationReportData.add(validationReportData);
+		return validationReportData;
+	}
+	
+	private AdditionalValidationReportDataType getAdditionalValidationReportData(ValidationReportDataType validationReportData) {
+		AdditionalValidationReportDataType additionalValidationReportData = validationReportData.getAdditionalValidationReportData();
+		if (additionalValidationReportData == null) {
+			additionalValidationReportData = objectFactory.createAdditionalValidationReportDataType();
+			validationReportData.setAdditionalValidationReportData(additionalValidationReportData);
+		}
+		return additionalValidationReportData;
 	}
 
 	private void addValidationReportData(ValidationStatusType validationStatus, AbstractTokenProxy token) {
@@ -689,24 +742,20 @@ public class ETSIValidationReportBuilder {
 		XmlSubXCV signingCertificate = detailedReport.getSigningCertificate(token.getId());
 
 		if (basicBuildingBlock != null || signingCertificate != null) {
-			ValidationReportDataType validationReportData = objectFactory.createValidationReportDataType();
+			final ValidationReportDataType validationReportData = getAssociatedValidationReportData(validationStatus);
 			if (basicBuildingBlock != null) {
 				XmlCertificateChain certificateChain = basicBuildingBlock.getCertificateChain();
 				if (certificateChain != null) {
 					fillCertificateChainAndTrustAnchor(validationReportData, certificateChain);
 				}
-
 				XmlSAV sav = basicBuildingBlock.getSAV();
 				if (sav != null && sav.getCryptographicValidation() != null) {
 					fillCryptographicInfo(validationReportData, token, sav.getCryptographicValidation());
 				}
 			}
-
 			if (signingCertificate != null && signingCertificate.getRevocationInfo() != null) {
 				fillRevocationInfo(validationReportData, signingCertificate.getRevocationInfo());
 			}
-
-			validationStatus.getAssociatedValidationReportData().add(validationReportData);
 		}
 	}
 
@@ -822,9 +871,7 @@ public class ETSIValidationReportBuilder {
 		if (Utils.collectionSize(signerDocuments) == 1) {
 			SignerDataWrapper signerDocument = signerDocuments.get(0);
 			DigestAlgAndValueType digestAlgAndValueType = getDigestAlgAndValueType(signerDocument.getDigestAlgoAndValue());
-			if (digestAlgAndValueType != null) {
-				signersDocumentType.getContent().add(objectFactory.createSignersDocumentTypeDigestAlgAndValue(digestAlgAndValueType));
-			}
+			signersDocumentType.getContent().add(objectFactory.createSignersDocumentTypeDigestAlgAndValue(digestAlgAndValueType));
 		}
 
 		final List<ValidationObjectType> validationObjectList = new ArrayList<>();
@@ -963,22 +1010,6 @@ public class ETSIValidationReportBuilder {
 			sigAttributes.getSigningTimeOrSigningCertificateOrDataObjectFormat()
 					.add(objectFactory.createSignatureAttributesTypeCertificateValues(buildTokenList(validationObjectTypes)));
 		}
-	}
-	
-	private List<String> getRelatedCertsIds(List<RelatedCertificateWrapper> certs) {
-		return certs.stream().map(RelatedCertificateWrapper::getId).collect(Collectors.toList());
-	}
-	
-	private List<String> getOrphanCertsIds(List<OrphanCertificateWrapper> certs) {
-		return certs.stream().map(OrphanCertificateWrapper::getId).collect(Collectors.toList());
-	}
-	
-	private List<String> getRelatedRevocationIds(List<RelatedRevocationWrapper> revocations) {
-		return revocations.stream().map(RelatedRevocationWrapper::getId).collect(Collectors.toList());
-	}
-	
-	private List<String> getOrphanRevocationIds(List<OrphanRevocationWrapper> revocations) {
-		return revocations.stream().map(OrphanRevocationWrapper::getId).collect(Collectors.toList());
 	}
 
 	private void addAttributeCertificateRefs(SignatureAttributesType sigAttributes, FoundCertificatesProxy foundCertificates) {
@@ -1312,7 +1343,7 @@ public class ETSIValidationReportBuilder {
 	private void addProductionPlace(SignatureAttributesType sigAttributes, SignatureWrapper sigWrapper) {
 		SASignatureProductionPlaceType sigProductionPlace = objectFactory.createSASignatureProductionPlaceType();
 
-		/**
+		/*
 		 * A.9.5 PAdES
 		 * 
 		 * For PAdES signatures as specified in ETSI EN 319 142-1 [i.3] and ETSI EN 319
@@ -1326,7 +1357,7 @@ public class ETSIValidationReportBuilder {
 			} else {
 				return;
 			}
-			/**
+			/*
 			 * XAdES, CAdES, JAdES
 			 */
 		} else if (sigWrapper.isSignatureProductionPlacePresent()) {

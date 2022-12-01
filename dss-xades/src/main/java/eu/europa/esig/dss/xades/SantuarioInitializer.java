@@ -20,6 +20,7 @@
  */
 package eu.europa.esig.dss.xades;
 
+import eu.europa.esig.dss.spi.DSSSecurityProvider;
 import org.apache.xml.security.Init;
 import org.apache.xml.security.algorithms.JCEMapper;
 import org.apache.xml.security.algorithms.SignatureAlgorithm;
@@ -47,6 +48,13 @@ public class SantuarioInitializer {
 
 	/** Field alreadyInitialized */
 	private static boolean alreadyInitialized = false;
+
+	/**
+	 * Empty constructor
+	 */
+	private SantuarioInitializer() {
+		// empty
+	}
 
 	/**
 	 * Method isInitialized
@@ -112,6 +120,7 @@ public class SantuarioInitializer {
 		//
 		// Set the default JCE algorithms
 		//
+		JCEMapper.setProviderId(DSSSecurityProvider.getSecurityProviderName());
 		JCEMapper.registerDefaultAlgorithms();
 
 		//

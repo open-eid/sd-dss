@@ -27,14 +27,14 @@ import eu.europa.esig.dss.xades.DSSXMLUtils;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 
 /**
- * Parameters for a XAdES counter signature creation
+ * Parameters for a XAdES counter-signature creation
  */
 public class XAdESCounterSignatureParameters extends XAdESSignatureParameters implements SerializableCounterSignatureParameters {
 	
 	private static final long serialVersionUID = -1443369404631708953L;
 
 	/**
-	 * Signature Id to be counter signed
+	 * Signature Id to be counter-signed
 	 * 
 	 * Can be a DSS Id or XMLDSIG Signature Id
 	 */
@@ -45,6 +45,12 @@ public class XAdESCounterSignatureParameters extends XAdESSignatureParameters im
 	 * The EXCLUSIVE canonicalization is used by default
 	 */
 	private String counterSignatureCanonicalizationMethod = DSSXMLUtils.DEFAULT_DSS_C14N_METHOD;
+
+	/**
+	 * Default constructor instantiating object with null values
+	 */
+	public XAdESCounterSignatureParameters() {
+	}
 
 	@Override
 	public String getSignatureIdToCounterSign() {
@@ -76,9 +82,11 @@ public class XAdESCounterSignatureParameters extends XAdESSignatureParameters im
 
 	@Override
 	public String getDeterministicId() {
+		String deterministicId = getContext().getDeterministicId();
 		if (deterministicId == null) {
 			final TokenIdentifier identifier = (getSigningCertificate() == null ? null : getSigningCertificate().getDSSId());
 			deterministicId = DSSUtils.getCounterSignatureDeterministicId(bLevel().getSigningDate(), identifier, signatureIdToCounterSign);
+			getContext().setDeterministicId(deterministicId);
 		}
 		return deterministicId;
 	}

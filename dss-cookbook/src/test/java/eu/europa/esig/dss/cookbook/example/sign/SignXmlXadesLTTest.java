@@ -20,10 +20,6 @@
  */
 package eu.europa.esig.dss.cookbook.example.sign;
 
-import java.io.File;
-
-import org.junit.jupiter.api.Test;
-
 import eu.europa.esig.dss.cookbook.example.CookbookTools;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
@@ -46,6 +42,9 @@ import eu.europa.esig.dss.tsl.source.LOTLSource;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 import eu.europa.esig.dss.xades.signature.XAdESService;
+import org.junit.jupiter.api.Test;
+
+import java.io.File;
 
 /**
  * How to sign with XAdES-BASELINE-LT
@@ -70,6 +69,26 @@ public class SignXmlXadesLTTest extends CookbookTools {
 			DSSPrivateKeyEntry privateKey = signingToken.getKeys().get(0);
 
 			// tag::demo[]
+			// import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+			// import eu.europa.esig.dss.enumerations.SignatureLevel;
+			// import eu.europa.esig.dss.enumerations.SignaturePackaging;
+			// import eu.europa.esig.dss.model.DSSDocument;
+			// import eu.europa.esig.dss.model.SignatureValue;
+			// import eu.europa.esig.dss.model.ToBeSigned;
+			// import eu.europa.esig.dss.service.crl.OnlineCRLSource;
+			// import eu.europa.esig.dss.service.http.commons.CommonsDataLoader;
+			// import eu.europa.esig.dss.service.http.commons.FileCacheDataLoader;
+			// import eu.europa.esig.dss.service.http.commons.OCSPDataLoader;
+			// import eu.europa.esig.dss.service.ocsp.OnlineOCSPSource;
+			// import eu.europa.esig.dss.spi.tsl.TrustedListsCertificateSource;
+			// import eu.europa.esig.dss.spi.x509.KeyStoreCertificateSource;
+			// import eu.europa.esig.dss.tsl.cache.CacheCleaner;
+			// import eu.europa.esig.dss.tsl.job.TLValidationJob;
+			// import eu.europa.esig.dss.tsl.source.LOTLSource;
+			// import eu.europa.esig.dss.validation.CommonCertificateVerifier;
+			// import eu.europa.esig.dss.xades.XAdESSignatureParameters;
+			// import eu.europa.esig.dss.xades.signature.XAdESService;
+			// import java.io.File;
 
 			// Preparing parameters for the XAdES signature
 			XAdESSignatureParameters parameters = new XAdESSignatureParameters();
@@ -85,9 +104,6 @@ public class SignXmlXadesLTTest extends CookbookTools {
 			parameters.setSigningCertificate(privateKey.getCertificate());
 			// We set the certificate chain
 			parameters.setCertificateChain(privateKey.getCertificateChain());
-
-			// Create common certificate verifier
-			CommonCertificateVerifier commonCertificateVerifier = new CommonCertificateVerifier();
 
 			CommonsDataLoader commonsHttpDataLoader = new CommonsDataLoader();
 			OCSPDataLoader ocspDataLoader = new OCSPDataLoader();
@@ -115,22 +131,31 @@ public class SignXmlXadesLTTest extends CookbookTools {
 			validationJob.setListOfTrustedListSources(lotlSource);
 			validationJob.onlineRefresh();
 
+			// tag::certificate-verifier[]
+
+			// Create common certificate verifier
+			CommonCertificateVerifier commonCertificateVerifier = new CommonCertificateVerifier();
+
+			// Provide trust anchors
 			commonCertificateVerifier.setTrustedCertSources(tslCertificateSource);
 
+			// Instantiate CRL source
 			OnlineCRLSource onlineCRLSource = new OnlineCRLSource();
 			onlineCRLSource.setDataLoader(commonsHttpDataLoader);
 			commonCertificateVerifier.setCrlSource(onlineCRLSource);
 
+			// Instantiate OCSP source
 			OnlineOCSPSource onlineOCSPSource = new OnlineOCSPSource();
 			onlineOCSPSource.setDataLoader(ocspDataLoader);
 			commonCertificateVerifier.setOcspSource(onlineOCSPSource);
 
-			// For test purpose
+			// For test purpose (not recommended for use in production)
 			// Will request unknown OCSP responder / download untrusted CRL
 			commonCertificateVerifier.setCheckRevocationForUntrustedChains(true);
 
 			// Create XAdES service for signature
 			XAdESService service = new XAdESService(commonCertificateVerifier);
+			// end::certificate-verifier[]
 			service.setTspSource(getOnlineTSPSource());
 
 			// Get the SignedInfo XML segment that need to be signed.

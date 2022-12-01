@@ -62,7 +62,7 @@ public class JdbcCacheOcspSourceTest {
 	
 	@BeforeEach
 	public void setUp() throws SQLException {
-		dataSource.setUrl("jdbc:h2:mem:test;create=true;DB_CLOSE_DELAY=-1");
+		dataSource.setUrl("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
 		JdbcCacheConnector jdbcCacheConnector = new JdbcCacheConnector(dataSource);
 		ocspSource.setJdbcCacheConnector(jdbcCacheConnector);
 		assertFalse(ocspSource.isTableExists());
@@ -123,8 +123,9 @@ public class JdbcCacheOcspSourceTest {
 
 		// wait one second
 		Calendar nextSecond = Calendar.getInstance();
+		nextSecond.setTime(refreshedRevocationToken.getThisUpdate());
 		nextSecond.add(Calendar.SECOND, 1);
-		await().atMost(2, TimeUnit.SECONDS).until(() -> Calendar.getInstance().getTime().compareTo(nextSecond.getTime()) > 0);
+		await().atMost(2, TimeUnit.SECONDS).until(() -> Calendar.getInstance().getTime().after(nextSecond.getTime()));
 
 		// check the dummy token with forcing one second refresh
 		refreshedRevocationToken = ocspSource.getRevocationToken(certificateToken, rootToken);

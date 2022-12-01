@@ -20,9 +20,12 @@
  */
 package eu.europa.esig.dss.jades.signature;
 
+import eu.europa.esig.dss.AbstractSignatureParameters;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.enumerations.EncryptionAlgorithm;
 import eu.europa.esig.dss.enumerations.JWSSerializationType;
 import eu.europa.esig.dss.enumerations.SigDMechanism;
+import eu.europa.esig.dss.enumerations.SignatureAlgorithm;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.exception.IllegalInputException;
@@ -34,19 +37,22 @@ import eu.europa.esig.dss.jades.validation.AbstractJWSDocumentValidator;
 import eu.europa.esig.dss.jades.validation.JAdESDocumentValidatorFactory;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.model.DigestDocument;
 import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.model.SignaturePolicyStore;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.TimestampBinary;
 import eu.europa.esig.dss.model.ToBeSigned;
+import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.signature.AbstractSignatureService;
 import eu.europa.esig.dss.signature.CounterSignatureService;
 import eu.europa.esig.dss.signature.MultipleDocumentsSignatureService;
-import eu.europa.esig.dss.signature.SignatureExtension;
 import eu.europa.esig.dss.signature.SigningOperation;
+import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CertificateVerifier;
+import eu.europa.esig.dss.validation.DSSPKUtils;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.tsp.TSPException;
@@ -99,19 +105,14 @@ public class JAdESService extends AbstractSignatureService<JAdESSignatureParamet
 	@Override
 	public TimestampToken getContentTimestamp(List<DSSDocument> toSignDocuments, JAdESSignatureParameters parameters) {
 		Objects.requireNonNull(tspSource, "A TSPSource is required!");
-		if (Utils.isCollectionEmpty(toSignDocuments)) {
-			throw new IllegalArgumentException("Original documents must be provided to generate a content timestamp!");
-		}
+		assertContentTimestampCreationPossible(toSignDocuments);
 		
 		byte[] messageImprint;
 		if (SigDMechanism.HTTP_HEADERS.equals(parameters.getSigDMechanism())) {
 			HttpHeadersPayloadBuilder httpHeadersPayloadBuilder = new HttpHeadersPayloadBuilder(toSignDocuments, true);
 			messageImprint = httpHeadersPayloadBuilder.build();
 		} else {
-			messageImprint = DSSJsonUtils.concatenateDSSDocuments(toSignDocuments);
-			if (parameters.isBase64UrlEncodedPayload()) {
-				messageImprint = DSSJsonUtils.toBase64Url(messageImprint).getBytes();
-			}
+			messageImprint = DSSJsonUtils.concatenateDSSDocuments(toSignDocuments, parameters.isBase64UrlEncodedPayload());
 		}
 
 		DigestAlgorithm digestAlgorithm = parameters.getContentTimestampParameters().getDigestAlgorithm();
@@ -124,12 +125,23 @@ public class JAdESService extends AbstractSignatureService<JAdESSignatureParamet
 		}
 	}
 
+	private void assertContentTimestampCreationPossible(List<DSSDocument> documents) {
+		if (Utils.isCollectionEmpty(documents)) {
+			throw new IllegalArgumentException("Original documents must be provided to generate a content timestamp!");
+		}
+		for (DSSDocument document : documents) {
+			if (document instanceof DigestDocument) {
+				throw new IllegalArgumentException("Content timestamp creation is not possible with DigestDocument!");
+			}
+		}
+	}
+
 	@Override
 	public ToBeSigned getDataToSign(DSSDocument toSignDocument, JAdESSignatureParameters parameters) {
 		Objects.requireNonNull(toSignDocument, "toSignDocument cannot be null!");
 		Objects.requireNonNull(parameters, "SignatureParameters cannot be null!");
 		
-		assertSigningDateInCertificateValidityRange(parameters);
+		assertSigningCertificateValid(parameters);
 		
 		JAdESBuilder jadesBuilder = getJAdESBuilder(parameters, Collections.singletonList(toSignDocument));
 		return jadesBuilder.buildDataToBeSigned();
@@ -137,10 +149,11 @@ public class JAdESService extends AbstractSignatureService<JAdESSignatureParamet
 
 	@Override
 	public ToBeSigned getDataToSign(List<DSSDocument> toSignDocuments, JAdESSignatureParameters parameters) {
+		Objects.requireNonNull(toSignDocuments, "toSignDocuments cannot be null!");
 		Objects.requireNonNull(parameters, "SignatureParameters cannot be null!");
 		
 		assertMultiDocumentsAllowed(toSignDocuments, parameters);
-		assertSigningDateInCertificateValidityRange(parameters);
+		assertSigningCertificateValid(parameters);
 
 		JAdESBuilder jadesBuilder = getJAdESBuilder(parameters, toSignDocuments);
 		return jadesBuilder.buildDataToBeSigned();
@@ -153,6 +166,8 @@ public class JAdESService extends AbstractSignatureService<JAdESSignatureParamet
 	 * @param parameters {@link JAdESSignatureParameters}
 	 */
 	private void assertMultiDocumentsAllowed(List<DSSDocument> toSignDocuments, JAdESSignatureParameters parameters) {
+		Objects.requireNonNull(parameters.getSignaturePackaging(), "SignaturePackaging shall be defined!");
+
 		if (Utils.isCollectionEmpty(toSignDocuments)) {
 			throw new IllegalArgumentException("The documents to sign must be provided!");
 		}
@@ -169,12 +184,19 @@ public class JAdESService extends AbstractSignatureService<JAdESSignatureParamet
 	@Override
 	public DSSDocument signDocument(DSSDocument toSignDocument, JAdESSignatureParameters parameters,
 			SignatureValue signatureValue) {
+		Objects.requireNonNull(toSignDocument, "toSignDocument cannot be null!");
 		return signDocument(Collections.singletonList(toSignDocument), parameters, signatureValue);
 	}
 
 	@Override
 	public DSSDocument signDocument(List<DSSDocument> toSignDocuments, JAdESSignatureParameters parameters,
 			SignatureValue signatureValue) {
+		Objects.requireNonNull(toSignDocuments, "toSignDocuments cannot be null!");
+		Objects.requireNonNull(parameters, "SignatureParameters cannot be null!");
+		Objects.requireNonNull(signatureValue, "SignatureValue cannot be null!");
+		assertMultiDocumentsAllowed(toSignDocuments, parameters);
+		assertSigningCertificateValid(parameters);
+
 		JAdESBuilder jadesBuilder = getJAdESBuilder(parameters, toSignDocuments);
 		DSSDocument signedDocument = jadesBuilder.build(signatureValue);
 
@@ -182,11 +204,13 @@ public class JAdESService extends AbstractSignatureService<JAdESSignatureParamet
 		if (signatureExtension != null) {
 			if (SignaturePackaging.DETACHED.equals(parameters.getSignaturePackaging()) &&
 					Utils.isCollectionEmpty(parameters.getDetachedContents())) {
-				parameters.setDetachedContents(toSignDocuments);
+				parameters.getContext().setDetachedContents(toSignDocuments);
 			}
 			signatureExtension.setOperationKind(SigningOperation.SIGN);
 			signedDocument = signatureExtension.extendSignatures(signedDocument, parameters);
 		}
+
+		parameters.reinit();
 		signedDocument.setName(getFinalFileName(toSignDocuments.iterator().next(), SigningOperation.SIGN,
 				parameters.getSignatureLevel()));
 		signedDocument.setMimeType(jadesBuilder.getMimeType());
@@ -243,7 +267,7 @@ public class JAdESService extends AbstractSignatureService<JAdESSignatureParamet
 
 	@Override
 	public DSSDocument extendDocument(DSSDocument toExtendDocument, JAdESSignatureParameters parameters) {
-		Objects.requireNonNull(toExtendDocument, "toExtendDocument is not defined!");
+		Objects.requireNonNull(toExtendDocument, "toExtendDocument cannot be null!");
 		Objects.requireNonNull(parameters, "Cannot extend the signature. SignatureParameters are not defined!");
 		Objects.requireNonNull(parameters.getSignatureLevel(), "SignatureLevel must be defined!");
 		assertExtensionPossible(parameters);
@@ -257,7 +281,8 @@ public class JAdESService extends AbstractSignatureService<JAdESSignatureParamet
 			dssDocument.setMimeType(MimeType.JOSE_JSON);
 			return dssDocument;
 		}
-		throw new DSSException("Cannot extend to " + parameters.getSignatureLevel());
+		throw new UnsupportedOperationException(
+				String.format("Unsupported signature format '%s' for extension.", parameters.getSignatureLevel()));
 	}
 
 	private void assertExtensionPossible(JAdESSignatureParameters parameters) {
@@ -285,7 +310,8 @@ public class JAdESService extends AbstractSignatureService<JAdESSignatureParamet
 			extensionLTA.setTspSource(tspSource);
 			return extensionLTA;
 		default:
-			throw new DSSException("Unsupported signature format " + parameters.getSignatureLevel());
+			throw new UnsupportedOperationException(
+					String.format("Unsupported signature format '%s' for extension.", parameters.getSignatureLevel()));
 		}
 	}
 
@@ -330,6 +356,7 @@ public class JAdESService extends AbstractSignatureService<JAdESSignatureParamet
 	public ToBeSigned getDataToBeCounterSigned(DSSDocument signatureDocument, JAdESCounterSignatureParameters parameters) {
 		Objects.requireNonNull(signatureDocument, "signatureDocument cannot be null!");
 		verifyAndSetCounterSignatureParameters(parameters);
+		assertSigningCertificateValid(parameters);
 		
 		JAdESCounterSignatureBuilder counterSignatureBuilder = new JAdESCounterSignatureBuilder();
 		DSSDocument signatureValueToSign = counterSignatureBuilder.getSignatureValueToBeSigned(signatureDocument, parameters);
@@ -344,6 +371,7 @@ public class JAdESService extends AbstractSignatureService<JAdESSignatureParamet
 		Objects.requireNonNull(parameters, "SignatureParameters cannot be null!");
 		Objects.requireNonNull(signatureValue, "signatureValue cannot be null!");
 		verifyAndSetCounterSignatureParameters(parameters);
+		assertSigningCertificateValid(parameters);
 
 		JAdESCounterSignatureBuilder counterSignatureBuilder = new JAdESCounterSignatureBuilder();
 		DSSDocument signatureValueToSign = counterSignatureBuilder.getSignatureValueToBeSigned(signatureDocument, parameters);
@@ -352,6 +380,7 @@ public class JAdESService extends AbstractSignatureService<JAdESSignatureParamet
 		
 		DSSDocument counterSigned = counterSignatureBuilder.buildEmbeddedCounterSignature(signatureDocument, counterSignature, parameters);
 		
+		parameters.reinit();
 		counterSigned.setName(getFinalFileName(signatureDocument, SigningOperation.COUNTER_SIGN,
 				parameters.getSignatureLevel()));
 		counterSigned.setMimeType(signatureDocument.getMimeType());
@@ -386,6 +415,85 @@ public class JAdESService extends AbstractSignatureService<JAdESSignatureParamet
 		if (JWSSerializationType.JSON_SERIALIZATION.equals(parameters.getJwsSerializationType())) {
 			throw new IllegalArgumentException("The JWSSerializationType.JSON_SERIALIZATION parameter " +
 					"is not supported for a JAdES Counter Signature!");
+		}
+	}
+
+	@Override
+	public boolean isValidSignatureValue(ToBeSigned toBeSigned, SignatureValue signatureValue, CertificateToken signingCertificate) {
+		if (!super.isValidSignatureValue(toBeSigned, signatureValue, signingCertificate)) {
+			return false;
+		}
+
+		try {
+			assertSigningCertificateValid(signatureValue.getAlgorithm(), signingCertificate);
+			assertSignatureValueValid(signatureValue.getAlgorithm(), signatureValue);
+			return true;
+		} catch (Exception e) {
+			LOG.error("Invalid signature value : {}", e.getMessage());
+			return false;
+		}
+	}
+
+	@Override
+	protected void assertSigningCertificateValid(AbstractSignatureParameters<?> parameters) {
+		super.assertSigningCertificateValid(parameters);
+		assertSigningCertificateValid(parameters.getSignatureAlgorithm(), parameters.getSigningCertificate());
+	}
+
+	private void assertSigningCertificateValid(SignatureAlgorithm signatureAlgorithm, CertificateToken signingCertificate) {
+		if (signatureAlgorithm.getEncryptionAlgorithm() != null && signatureAlgorithm.getDigestAlgorithm() != null &&
+				signatureAlgorithm.getEncryptionAlgorithm().isEquivalent(EncryptionAlgorithm.ECDSA) &&
+				signingCertificate != null) {
+			String errorMessage = "For ECDSA with %s a key with P-%s curve shall be used for a JWS! See RFC 7518.";
+			int keySize = DSSPKUtils.getPublicKeySize(signingCertificate.getPublicKey());
+			switch (signatureAlgorithm.getDigestAlgorithm()) {
+				case SHA256:
+					if (256 != keySize) {
+						throw new IllegalArgumentException(String.format(errorMessage, signatureAlgorithm.getDigestAlgorithm(), 256));
+					}
+					break;
+				case SHA384:
+					if (384 != keySize) {
+						throw new IllegalArgumentException(String.format(errorMessage, signatureAlgorithm.getDigestAlgorithm(), 384));
+					}
+					break;
+				case SHA512:
+					if (521 != keySize) {
+						throw new IllegalArgumentException(String.format(errorMessage, signatureAlgorithm.getDigestAlgorithm(), 521));
+					}
+					break;
+				default:
+					throw new UnsupportedOperationException(String.format(
+							"ECDSA with %s is not supported for JWS!", signatureAlgorithm.getDigestAlgorithm()));
+			}
+		}
+	}
+
+	private void assertSignatureValueValid(SignatureAlgorithm targetSignatureAlgorithm, SignatureValue signatureValue) {
+		if (targetSignatureAlgorithm.getEncryptionAlgorithm().isEquivalent(EncryptionAlgorithm.ECDSA)) {
+			String errorMessage = "Invalid SignatureValue obtained! " +
+					"For ECDSA with %s a key with P-%s curve shall be used for a JWS. See RFC 7518.";
+			int bitLength = DSSASN1Utils.getSignatureValueBitLength(signatureValue.getValue());
+			switch (targetSignatureAlgorithm.getDigestAlgorithm()) {
+				case SHA256:
+					if (bitLength != 256) {
+						throw new IllegalInputException(String.format(errorMessage, targetSignatureAlgorithm.getDigestAlgorithm(), 256));
+					}
+					break;
+				case SHA384:
+					if (bitLength != 384) {
+						throw new IllegalArgumentException(String.format(errorMessage, targetSignatureAlgorithm.getDigestAlgorithm(), 384));
+					}
+					break;
+				case SHA512:
+					if (bitLength != 520 && bitLength != 528) {
+						throw new IllegalArgumentException(String.format(errorMessage, targetSignatureAlgorithm.getDigestAlgorithm(), 521));
+					}
+					break;
+				default:
+					throw new UnsupportedOperationException(String.format(
+							"ECDSA with %s is not supported for JWS!", targetSignatureAlgorithm.getDigestAlgorithm()));
+			}
 		}
 	}
 

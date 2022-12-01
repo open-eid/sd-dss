@@ -46,6 +46,7 @@ public final class DSSPKUtils {
 	private static final String UNKNOWN_KEY_SIZE = "?";
 
 	private DSSPKUtils() {
+		// empty
 	}
 
 	/**
@@ -102,7 +103,7 @@ public final class DSSPKUtils {
 			publicKeySize = rsaPublicKey.getModulus().bitLength();
 		} else if (publicKey instanceof JCEECPublicKey) {
 
-			/**
+			/*
 			 * The security of EC systems relies on the size of q, and the size of an EC key refers to the bit-length of
 			 * the subgroup size q.
 			 */

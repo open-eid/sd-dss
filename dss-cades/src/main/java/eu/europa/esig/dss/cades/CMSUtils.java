@@ -48,6 +48,7 @@ import org.bouncycastle.asn1.ess.ESSCertID;
 import org.bouncycastle.asn1.ess.ESSCertIDv2;
 import org.bouncycastle.asn1.ess.SigningCertificate;
 import org.bouncycastle.asn1.ess.SigningCertificateV2;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.IssuerSerial;
 import org.bouncycastle.cms.CMSAbsentContent;
 import org.bouncycastle.cms.CMSException;
@@ -90,7 +91,11 @@ public final class CMSUtils {
 	/** 01-01-2050 date, see RFC 3852 (month param is zero-based (i.e. 0 for January)) */
 	private static final Date JANUARY_2050 = DSSUtils.getUtcDate(2050, 0, 1);
 
+	/**
+	 * Utils class
+	 */
 	private CMSUtils() {
+		// empty
 	}
 
 	/**
@@ -140,6 +145,40 @@ public final class CMSUtils {
 	}
 
 	/**
+	 * This method is used to ensure the presence of all items from SignedData.digestAlgorithm set
+	 * from {@code oldCmsSignedData} within {@code newCmsSignedData}
+	 *
+	 * @param newCmsSignedData {@link CMSSignedData} to be extended with digest algorithms, if required
+ 	 * @param oldCmsSignedData {@link CMSSignedData} to copy digest algorithms set from
+	 * @return extended {@link CMSSignedData}
+	 */
+	public static CMSSignedData populateDigestAlgorithmSet(CMSSignedData newCmsSignedData,
+														   CMSSignedData oldCmsSignedData) {
+		if (oldCmsSignedData != null) {
+			for (AlgorithmIdentifier algorithmIdentifier : oldCmsSignedData.getDigestAlgorithmIDs()) {
+				newCmsSignedData = addDigestAlgorithm(newCmsSignedData, algorithmIdentifier);
+			}
+		}
+		return newCmsSignedData;
+	}
+
+	/**
+	 * This method adds a DigestAlgorithm used by an Archive TimeStamp to
+	 * the SignedData.digestAlgorithms set, when required.
+	 *
+	 * See ETSI EN 319 122-1, ch. "5.5.3 The archive-time-stamp-v3 attribute"
+	 *
+	 * @param cmsSignedData {@link CMSSignedData} to extend
+	 * @param algorithmIdentifier {@link AlgorithmIdentifier} to add
+	 * @return {@link CMSSignedData}
+	 */
+	public static CMSSignedData addDigestAlgorithm(CMSSignedData cmsSignedData, AlgorithmIdentifier algorithmIdentifier) {
+		return CMSSignedData.addDigestAlgorithm(cmsSignedData, algorithmIdentifier);
+	}
+
+	/**
+	 * Gets the DER SignedAttributes table from the given {@code SignerInformation}
+	 *
 	 * @param signerInformation
 	 *            {@code SignerInformation}
 	 * @return {@code DERTaggedObject} representing the signed attributes
@@ -399,15 +438,13 @@ public final class CMSUtils {
 				 * dates with year values before 1950 or after 2049 MUST be encoded
 				 * as GeneralizedTime".
 				 */
-				if (signingDate.compareTo(JANUARY_1950) >= 0 && signingDate.before(JANUARY_2050)) {
-					// must be ASN1UTCTime
-					if (!(attrValue.toASN1Primitive() instanceof ASN1UTCTime)) {
-						LOG.error("RFC 3852 states that dates between January 1, 1950 and December 31, 2049 (inclusive) " +
-								"MUST be encoded as UTCTime. Any dates with year values before 1950 or after 2049 " +
-								"MUST be encoded as GeneralizedTime. Date found is {} encoded as {}",
-								signingDate, attrValue.getClass());
-						return null;
-					}
+				if (signingDate.compareTo(JANUARY_1950) >= 0 && signingDate.before(JANUARY_2050)
+						&& !(attrValue.toASN1Primitive() instanceof ASN1UTCTime)) { // must be ASN1UTCTime
+					LOG.error("RFC 3852 states that dates between January 1, 1950 and December 31, 2049 (inclusive) " +
+							"MUST be encoded as UTCTime. Any dates with year values before 1950 or after 2049 " +
+							"MUST be encoded as GeneralizedTime. Date found is {} encoded as {}",
+							signingDate, attrValue.getClass());
+					return null;
 				}
 				return signingDate;
 			}

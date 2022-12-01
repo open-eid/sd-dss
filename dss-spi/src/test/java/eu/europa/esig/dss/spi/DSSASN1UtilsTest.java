@@ -31,6 +31,8 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERSet;
+import org.bouncycastle.asn1.DERUTCTime;
+import org.bouncycastle.asn1.DERUTF8String;
 import org.bouncycastle.asn1.cms.Attribute;
 import org.bouncycastle.asn1.cms.AttributeTable;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
@@ -49,6 +51,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -210,6 +213,13 @@ public class DSSASN1UtilsTest {
 	public void hasIdPkixOcspNoCheckExtension() {
 		assertTrue(DSSASN1Utils.hasIdPkixOcspNoCheckExtension(certificateOCSP));
 		assertFalse(DSSASN1Utils.hasIdPkixOcspNoCheckExtension(certificateWithAIA));
+	}
+
+	@Test
+	public void hasValAssuredShortTermCertsExtension() {
+		CertificateToken shortTermCertificate = DSSUtils.loadCertificateFromBase64EncodedString("MIIDJjCCAg6gAwIBAgIIMMSTGSdLPxQwDQYJKoZIhvcNAQENBQAwKDEZMBcGA1UECgwQTm93aW5hIFNvbHV0aW9uczELMAkGA1UEBhMCTFUwHhcNMjEwNzAxMTAwMTI5WhcNMjEwNzAxMTAwNjI5WjA2MQwwCgYDVQQDDANBIGExGTAXBgNVBAoMEE5vd2luYSBTb2x1dGlvbnMxCzAJBgNVBAYTAkxVMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsW0yfJBqh9CtbfOtsZcEAEvzzfPusdhZNv0JSq8frKGMqJwTgjnkMJd9D3sEHUBJP0ryAmK9L5S+lWOGDhdYcE8K00k3hZSHyrOdRblB0SZhtXIgeGD7ESdTU9xPCf4Ze7xSI08zlk9NmTaj5Xqfyako8sxHAQapdXw8kfG0Ol6UhfMg7MjN8/wZrIVUYZzBQP3RFKHFQIms+pxfWxvETsynn/n2rOjuAsV0aTWGUAeWJRFJxKLSTrHQiQULVS1MHIIkdbQZxMA+Jn3dXwVdJLX/JRSvEOBqGRrvGQtYN2vNdrJlNHP0WGcSAddweWs7Ar+Pp7Qm/HEQF5+EOPUQDQIDAQABo0YwRDAOBgNVHQ8BAf8EBAMCBsAwIwYIKwYBBQUHAQMEFzAVMBMGBgQAjkYBBjAJBgcEAI5GAQYBMA0GBwQAi+xJAgEEAgUAMA0GCSqGSIb3DQEBDQUAA4IBAQBAYj8mdKsj/mMoM4HXL/w+xeK0iM55eGyBNprwxECoCH8ZCgVrVTb3eKttTXYrXjk3Yqpg3amkm7aV94iXJ0qLER/2C9lHLv6h1CoxYCdevAUSVOIzF0SJj54dxrwDQ7uTFXRe2etOg+hmEhj3OBpd/5vMfdIViYHtpPoCyZoQyGLztUt1k8/JvBe91UGAEnWx0nvokehkTgueq7dsTjBit4dlCmfmIzQUUWCgNpe1S1nEb0B/BCXaqPRhYx1//2T/5gR1lKe36HHp5rUURKT8NsS76lfxdor9Ag3mVmsw1NcVtDiFo0molO84+B53yqRP2wCU7MtfKfCX9CocgVNF");
+		assertTrue(DSSASN1Utils.hasValAssuredShortTermCertsExtension(shortTermCertificate));
+		assertFalse(DSSASN1Utils.hasValAssuredShortTermCertsExtension(certificateOCSP));
 	}
 
 	@Test
@@ -411,7 +421,7 @@ public class DSSASN1UtilsTest {
 	}
 
 	private void assertSignatureValueValid(byte[] signatureValue, boolean asn1Encoded) {
-		assertEquals(asn1Encoded, DSSASN1Utils.isAsn1Encoded(signatureValue));
+		assertEquals(asn1Encoded, DSSASN1Utils.isAsn1EncodedSignatureValue(signatureValue));
 
 		byte[] encodedSignatureValue;
 		if (asn1Encoded) {
@@ -419,7 +429,7 @@ public class DSSASN1UtilsTest {
 		} else {
 			encodedSignatureValue = DSSASN1Utils.toStandardDSASignatureValue(signatureValue);
 		}
-		assertEquals(!asn1Encoded, DSSASN1Utils.isAsn1Encoded(encodedSignatureValue));
+		assertEquals(!asn1Encoded, DSSASN1Utils.isAsn1EncodedSignatureValue(encodedSignatureValue));
 
 		byte[] decodedSignatureValue;
 		if (asn1Encoded) {
@@ -428,6 +438,24 @@ public class DSSASN1UtilsTest {
 			decodedSignatureValue = DSSASN1Utils.toPlainDSASignatureValue(encodedSignatureValue);
 		}
 		assertArrayEquals(signatureValue, decodedSignatureValue);
+	}
+
+	@Test
+	public void isAsn1EncodedTest() throws Exception {
+		assertTrue(DSSASN1Utils.isAsn1Encoded(new DERUTCTime(new Date()).getEncoded()));
+		assertTrue(DSSASN1Utils.isAsn1Encoded(DSSASN1Utils.getDEREncoded(new DERUTCTime(new Date()))));
+		assertTrue(DSSASN1Utils.isAsn1Encoded(new DERUTF8String("Hello World!").getEncoded()));
+
+		ASN1EncodableVector asn1EncodableVector = new ASN1EncodableVector();
+		asn1EncodableVector.add(new DERUTF8String("Hello World!"));
+		assertTrue(DSSASN1Utils.isAsn1Encoded(new DERSet(asn1EncodableVector).getEncoded()));
+		assertTrue(DSSASN1Utils.isAsn1Encoded(new DERSequence(asn1EncodableVector).getEncoded()));
+
+		assertFalse(DSSASN1Utils.isAsn1Encoded("Hello World!".getBytes()));
+		assertFalse(DSSASN1Utils.isAsn1Encoded(new byte[] { '1', 'A', 'B' }));
+		assertFalse(DSSASN1Utils.isAsn1Encoded(new Date().toString().getBytes()));
+		assertFalse(DSSASN1Utils.isAsn1Encoded(DSSUtils.EMPTY_BYTE_ARRAY));
+		assertFalse(DSSASN1Utils.isAsn1Encoded(null));
 	}
 
 }

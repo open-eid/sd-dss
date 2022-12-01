@@ -20,13 +20,16 @@
  */
 package eu.europa.esig.dss.pdf;
 
-import eu.europa.esig.dss.pades.validation.PdfDssDictCRLSource;
-import eu.europa.esig.dss.pades.validation.PdfDssDictCertificateSource;
-import eu.europa.esig.dss.pades.validation.PdfDssDictOCSPSource;
-import eu.europa.esig.dss.pades.validation.PdfModificationDetection;
+import eu.europa.esig.dss.pades.validation.dss.PdfCompositeDssDictionary;
+import eu.europa.esig.dss.pades.validation.dss.PdfDssDictCRLSource;
+import eu.europa.esig.dss.pades.validation.dss.PdfDssDictCertificateSource;
+import eu.europa.esig.dss.pades.validation.dss.PdfDssDictOCSPSource;
+import eu.europa.esig.dss.pdf.modifications.PdfModificationDetection;
 import eu.europa.esig.dss.pades.validation.PdfRevision;
 import eu.europa.esig.dss.pades.validation.PdfSignatureDictionary;
+import eu.europa.esig.dss.pades.validation.PdfSignatureField;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,92 +38,98 @@ import java.util.Objects;
  *
  */
 public class PdfDocDssRevision implements PdfRevision {
-	
-	private static final long serialVersionUID = -1369264311522424583L;
 
-	/** The DSS dictionary from the revision */
-	private final PdfDssDict dssDictionary;
+    private static final long serialVersionUID = -1369264311522424583L;
 
-	/** Cached certificate source */
-	private PdfDssDictCertificateSource certificateSource;
+    /** The composite DSS dictionary combined from all /DSS revisions' content */
+    private final PdfCompositeDssDictionary compositeDssDictionary;
 
-	/** Cached CRL source */
-	private PdfDssDictCRLSource crlSource;
+    /** The DSS dictionary from the revision */
+    private final PdfDssDict dssDictionary;
 
-	/** Cached OCSP source */
-	private PdfDssDictOCSPSource ocspSource;
+    /** Cached certificate source */
+    private PdfDssDictCertificateSource certificateSource;
 
-	/**
-	 * Default constructor
-	 *
-	 * @param dssDictionary {@link PdfDssDict}
-	 */
-	public PdfDocDssRevision(final PdfDssDict dssDictionary) {
-		Objects.requireNonNull(dssDictionary, "The dssDictionary cannot be null!");
-		this.dssDictionary = dssDictionary;
-	}
+    /** Cached CRL source */
+    private PdfDssDictCRLSource crlSource;
 
-	/**
-	 * Returns DSS dictionary
-	 * 
-	 * @return {@link PdfDssDict}
-	 */
-	public PdfDssDict getDssDictionary() {
-		return dssDictionary;
-	}
+    /** Cached OCSP source */
+    private PdfDssDictOCSPSource ocspSource;
 
-	@Override
-	public PdfSignatureDictionary getPdfSigDictInfo() {
-		// not applicable for DSS revision
-		return null;
-	}
+    /**
+     * Default constructor
+     *
+     * @param compositeDssDictionary {@link PdfCompositeDssDictionary}
+     * @param dssDictionary {@link PdfDssDict}
+     */
+    public PdfDocDssRevision(final PdfCompositeDssDictionary compositeDssDictionary, final PdfDssDict dssDictionary) {
+        Objects.requireNonNull(compositeDssDictionary, "Composite DSS dictionary cannot be null!");
+        Objects.requireNonNull(dssDictionary, "The dssDictionary cannot be null!");
+        this.compositeDssDictionary = compositeDssDictionary;
+        this.dssDictionary = dssDictionary;
+    }
 
-	@Override
-	public List<String> getFieldNames() {
-		// not applicable for DSS revision
-		return null;
-	}
+    /**
+     * Returns DSS dictionary
+     *
+     * @return {@link PdfDssDict}
+     */
+    public PdfDssDict getDssDictionary() {
+        return dssDictionary;
+    }
 
-	@Override
-	public PdfModificationDetection getModificationDetection() {
-		// not applicable
-		return null;
-	}
+    @Override
+    public PdfSignatureDictionary getPdfSigDictInfo() {
+        // not applicable for DSS revision
+        return null;
+    }
 
-	/**
-	 * Returns a corresponding {@code CertificateSource}
-	 *
-	 * @return {@link PdfDssDictCertificateSource}
-	 */
-	public PdfDssDictCertificateSource getCertificateSource() {
-		if (certificateSource == null) {
-			certificateSource = new PdfDssDictCertificateSource(dssDictionary);
-		}
-		return certificateSource;
-	}
+    @Override
+    public List<PdfSignatureField> getFields() {
+        // not applicable for DSS revision
+        return Collections.emptyList();
+    }
 
-	/**
-	 * Returns a corresponding {@code CRLSource}
-	 *
-	 * @return {@link PdfDssDictCRLSource}
-	 */
-	public PdfDssDictCRLSource getCRLSource() {
-		if (crlSource == null) {
-			crlSource = new PdfDssDictCRLSource(dssDictionary);
-		}
-		return crlSource;
-	}
+    @Override
+    public PdfModificationDetection getModificationDetection() {
+        // not applicable
+        return null;
+    }
 
-	/**
-	 * Returns a corresponding {@code OCSPSource}
-	 *
-	 * @return {@link PdfDssDictOCSPSource}
-	 */
-	public PdfDssDictOCSPSource getOCSPSource() {
-		if (ocspSource == null) {
-			ocspSource = new PdfDssDictOCSPSource(dssDictionary);
-		}
-		return ocspSource;
-	}
+    /**
+     * Returns a corresponding {@code CertificateSource}
+     *
+     * @return {@link PdfDssDictCertificateSource}
+     */
+    public PdfDssDictCertificateSource getCertificateSource() {
+        if (certificateSource == null) {
+            certificateSource = new PdfDssDictCertificateSource(compositeDssDictionary.getCertificateSource(), dssDictionary);
+        }
+        return certificateSource;
+    }
+
+    /**
+     * Returns a corresponding {@code CRLSource}
+     *
+     * @return {@link PdfDssDictCRLSource}
+     */
+    public PdfDssDictCRLSource getCRLSource() {
+        if (crlSource == null) {
+            crlSource = new PdfDssDictCRLSource(compositeDssDictionary.getCrlSource(), dssDictionary);
+        }
+        return crlSource;
+    }
+
+    /**
+     * Returns a corresponding {@code OCSPSource}
+     *
+     * @return {@link PdfDssDictOCSPSource}
+     */
+    public PdfDssDictOCSPSource getOCSPSource() {
+        if (ocspSource == null) {
+            ocspSource = new PdfDssDictOCSPSource(compositeDssDictionary.getOcspSource(), dssDictionary);
+        }
+        return ocspSource;
+    }
 
 }

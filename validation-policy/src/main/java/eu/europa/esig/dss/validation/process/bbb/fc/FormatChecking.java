@@ -24,17 +24,23 @@ import eu.europa.esig.dss.detailedreport.jaxb.XmlFC;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
 import eu.europa.esig.dss.enumerations.Context;
+import eu.europa.esig.dss.enumerations.EncryptionAlgorithm;
+import eu.europa.esig.dss.enumerations.SignatureForm;
 import eu.europa.esig.dss.i18n.I18nProvider;
 import eu.europa.esig.dss.i18n.MessageTag;
 import eu.europa.esig.dss.policy.ValidationPolicy;
 import eu.europa.esig.dss.policy.jaxb.LevelConstraint;
 import eu.europa.esig.dss.policy.jaxb.MultiValuesConstraint;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.process.Chain;
 import eu.europa.esig.dss.validation.process.ChainItem;
 import eu.europa.esig.dss.validation.process.bbb.fc.checks.AcceptableMimetypeFileContentCheck;
 import eu.europa.esig.dss.validation.process.bbb.fc.checks.AcceptableZipCommentCheck;
 import eu.europa.esig.dss.validation.process.bbb.fc.checks.AllFilesSignedCheck;
 import eu.europa.esig.dss.validation.process.bbb.fc.checks.ContainerTypeCheck;
+import eu.europa.esig.dss.validation.process.bbb.fc.checks.DocMDPCheck;
+import eu.europa.esig.dss.validation.process.bbb.fc.checks.EllipticCurveKeySizeCheck;
+import eu.europa.esig.dss.validation.process.bbb.fc.checks.FieldMDPCheck;
 import eu.europa.esig.dss.validation.process.bbb.fc.checks.FormatCheck;
 import eu.europa.esig.dss.validation.process.bbb.fc.checks.FullScopeCheck;
 import eu.europa.esig.dss.validation.process.bbb.fc.checks.ManifestFilePresentCheck;
@@ -43,9 +49,11 @@ import eu.europa.esig.dss.validation.process.bbb.fc.checks.PdfAnnotationOverlapC
 import eu.europa.esig.dss.validation.process.bbb.fc.checks.PdfPageDifferenceCheck;
 import eu.europa.esig.dss.validation.process.bbb.fc.checks.PdfVisualDifferenceCheck;
 import eu.europa.esig.dss.validation.process.bbb.fc.checks.ReferencesNotAmbiguousCheck;
+import eu.europa.esig.dss.validation.process.bbb.fc.checks.SigFieldLockCheck;
 import eu.europa.esig.dss.validation.process.bbb.fc.checks.SignatureNotAmbiguousCheck;
 import eu.europa.esig.dss.validation.process.bbb.fc.checks.SignedFilesPresentCheck;
 import eu.europa.esig.dss.validation.process.bbb.fc.checks.SignerInformationStoreCheck;
+import eu.europa.esig.dss.validation.process.bbb.fc.checks.UndefinedChangesCheck;
 import eu.europa.esig.dss.validation.process.bbb.fc.checks.ZipCommentPresentCheck;
 
 /**
@@ -112,7 +120,30 @@ public class FormatChecking extends Chain<XmlFC> {
 			item = item.setNextItem(pdfAnnotationOverlapCheck());
 			
 			item = item.setNextItem(pdfVisualDifferenceCheck());
+
+			// /DocMDP check
+			if (signature.getDocMDPPermissions() != null) {
+				item = item.setNextItem(docMDPCheck());
+			}
+			// /FieldMDP
+			if (signature.getFieldMDP() != null) {
+				item = item.setNextItem(fieldMDPCheck());
+			}
+			// /SigFieldLock
+			if (signature.getSigFieldLock() != null) {
+				item = item.setNextItem(sigFieldLockCheck());
+			}
+
+			item = item.setNextItem(undefinedChangesCheck());
 			
+		}
+
+		if (SignatureForm.JAdES.equals(signature.getSignatureFormat().getSignatureForm())) {
+
+			if (signature.getEncryptionAlgorithm() != null && signature.getEncryptionAlgorithm().isEquivalent(EncryptionAlgorithm.ECDSA)) {
+				item = item.setNextItem(ellipticCurveKeySizeCheck());
+			}
+
 		}
 
 		if (diagnosticData.isContainerInfoPresent()) {
@@ -121,11 +152,19 @@ public class FormatChecking extends Chain<XmlFC> {
 
 			item = item.setNextItem(zipCommentPresentCheck());
 
-			item = item.setNextItem(acceptableZipCommentCheck());
+			if (Utils.isStringNotBlank(diagnosticData.getZipComment())) {
+
+				item = item.setNextItem(acceptableZipCommentCheck());
+
+			}
 
 			item = item.setNextItem(mimetypeFilePresentCheck());
 
-			item = item.setNextItem(mimetypeFileContentCheck());
+			if (diagnosticData.isMimetypeFilePresent()) {
+
+				item = item.setNextItem(mimetypeFileContentCheck());
+
+			}
 
 			item = item.setNextItem(manifestFilePresentCheck());
 
@@ -174,6 +213,31 @@ public class FormatChecking extends Chain<XmlFC> {
 	private ChainItem<XmlFC> pdfVisualDifferenceCheck() {
 		LevelConstraint constraint = policy.getPdfVisualDifferenceConstraint(context);
 		return new PdfVisualDifferenceCheck(i18nProvider, result, signature, constraint);
+	}
+
+	private ChainItem<XmlFC> docMDPCheck() {
+		LevelConstraint constraint = policy.getDocMDPConstraint(context);
+		return new DocMDPCheck(i18nProvider, result, signature, constraint);
+	}
+
+	private ChainItem<XmlFC> fieldMDPCheck() {
+		LevelConstraint constraint = policy.getFieldMDPConstraint(context);
+		return new FieldMDPCheck(i18nProvider, result, signature, constraint);
+	}
+
+	private ChainItem<XmlFC> sigFieldLockCheck() {
+		LevelConstraint constraint = policy.getSigFieldLockConstraint(context);
+		return new SigFieldLockCheck(i18nProvider, result, signature, constraint);
+	}
+
+	private ChainItem<XmlFC> undefinedChangesCheck() {
+		LevelConstraint constraint = policy.getUndefinedChangesConstraint(context);
+		return new UndefinedChangesCheck(i18nProvider, result, signature, constraint);
+	}
+
+	private ChainItem<XmlFC> ellipticCurveKeySizeCheck() {
+		LevelConstraint constraint = policy.getEllipticCurveKeySizeConstraint(context);
+		return new EllipticCurveKeySizeCheck(i18nProvider, result, signature, constraint);
 	}
 
 	private ChainItem<XmlFC> containerTypeCheck() {

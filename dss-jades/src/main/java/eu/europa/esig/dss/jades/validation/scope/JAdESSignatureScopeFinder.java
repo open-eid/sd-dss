@@ -40,6 +40,7 @@ import eu.europa.esig.dss.validation.scope.CounterSignatureScope;
 import eu.europa.esig.dss.validation.scope.DigestSignatureScope;
 import eu.europa.esig.dss.validation.scope.FullSignatureScope;
 import eu.europa.esig.dss.validation.scope.SignatureScope;
+import eu.europa.esig.dss.validation.scope.SignatureScopeFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,9 +51,16 @@ import java.util.List;
 /**
  * Finds a SignatureScope for a JAdES signature
  */
-public class JAdESSignatureScopeFinder extends AbstractSignatureScopeFinder<JAdESSignature> {
+public class JAdESSignatureScopeFinder extends AbstractSignatureScopeFinder implements SignatureScopeFinder<JAdESSignature> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(JAdESSignatureScopeFinder.class);
+
+	/**
+	 * Default constructor
+	 */
+	public JAdESSignatureScopeFinder() {
+		// empty
+	}
 
 	@Override
 	public List<SignatureScope> findSignatureScope(final JAdESSignature jadesSignature) {
@@ -73,8 +81,8 @@ public class JAdESSignatureScopeFinder extends AbstractSignatureScopeFinder<JAdE
 				} else if (originalDocuments.size() == 1) {
 					if (jadesSignature.isCounterSignature()) {
 						// only one document shall be present
-						return Collections.singletonList(new CounterSignatureScope(jadesSignature.getMasterSignature().getId(), 
-								getDigest(originalDocuments.get(0)) ));
+						return Collections.singletonList(new CounterSignatureScope(
+								getTokenIdentifierProvider().getIdAsString(jadesSignature.getMasterSignature()), getDigest(originalDocuments.get(0)) ));
 					} else {
 						return Collections.singletonList(getSignatureScopeFromOriginalDocument(originalDocuments.get(0)));
 					}
@@ -133,6 +141,7 @@ public class JAdESSignatureScopeFinder extends AbstractSignatureScopeFinder<JAdE
 	 * @return {@link DSSDocument}
 	 */
 	private DSSDocument getDocumentByName(List<DSSDocument> documents, String documentName) {
+		documentName = DSSUtils.decodeURI(documentName);
 		for (DSSDocument document : documents) {
 			if (documentName.equals(document.getName())) {
 				return document;

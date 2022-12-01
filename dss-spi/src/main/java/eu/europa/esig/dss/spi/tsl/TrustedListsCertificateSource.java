@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This class allows to inject trusted certificates from Trusted Lists
+ * This class allows injection of trusted certificates from Trusted Lists
  */
 @SuppressWarnings("serial")
 public class TrustedListsCertificateSource extends CommonTrustedCertificateSource {
@@ -98,7 +98,7 @@ public class TrustedListsCertificateSource extends CommonTrustedCertificateSourc
 	public synchronized void setTrustPropertiesByCertificates(final Map<CertificateToken, List<TrustProperties>> trustPropertiesByCerts) {
 		this.trustPropertiesByEntity = new HashMap<>(); // reinit the map
 		super.reset();
-		trustPropertiesByCerts.forEach((certificateToken, trustPropertiesList) -> addCertificate(certificateToken, trustPropertiesList));
+		trustPropertiesByCerts.forEach(this::addCertificate);
 	}
 	
 	public synchronized void addCertificate(CertificateToken certificateToken, List<TrustProperties> trustPropertiesList) {

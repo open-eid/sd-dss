@@ -24,7 +24,17 @@ import eu.europa.esig.dss.diagnostic.TrustedServiceWrapper;
 import eu.europa.esig.dss.validation.process.qualification.EIDASUtils;
 import eu.europa.esig.dss.validation.process.qualification.trust.TrustedServiceStatus;
 
+/**
+ * Filters TrustedServices by 'granted' status (before and after eIDAS)
+ *
+ */
 public class GrantedServiceFilter extends AbstractTrustedServiceFilter {
+
+	/**
+	 * Default constructor
+	 */
+	public GrantedServiceFilter() {
+	}
 
 	@Override
 	public boolean isAcceptable(TrustedServiceWrapper service) {

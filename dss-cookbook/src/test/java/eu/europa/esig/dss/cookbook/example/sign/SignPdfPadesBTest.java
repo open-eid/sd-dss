@@ -20,10 +20,6 @@
  */
 package eu.europa.esig.dss.cookbook.example.sign;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import org.junit.jupiter.api.Test;
-
 import eu.europa.esig.dss.cookbook.example.CookbookTools;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.ObjectIdentifierQualifier;
@@ -37,6 +33,9 @@ import eu.europa.esig.dss.pades.signature.PAdESService;
 import eu.europa.esig.dss.token.DSSPrivateKeyEntry;
 import eu.europa.esig.dss.token.SignatureTokenConnection;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * How to sign PDF Document with PAdES-BASELINE-B
@@ -62,6 +61,14 @@ public class SignPdfPadesBTest extends CookbookTools {
 			DSSPrivateKeyEntry privateKey = signingToken.getKeys().get(0);
 
 			// tag::demo[]
+			// import eu.europa.esig.dss.pades.PAdESSignatureParameters;
+			// import eu.europa.esig.dss.enumerations.SignatureLevel;
+			// import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+			// import eu.europa.esig.dss.validation.CommonCertificateVerifier;
+			// import eu.europa.esig.dss.pades.signature.PAdESService;
+			// import eu.europa.esig.dss.model.ToBeSigned;
+			// import eu.europa.esig.dss.model.SignatureValue;
+			// import eu.europa.esig.dss.model.DSSDocument;
 
 			// Preparing parameters for the PAdES signature
 			PAdESSignatureParameters parameters = new PAdESSignatureParameters();
@@ -94,13 +101,17 @@ public class SignPdfPadesBTest extends CookbookTools {
 			// Validate the signature value against the original dataToSign
 			assertTrue(service.isValidSignatureValue(dataToSign, signatureValue, privateKey.getCertificate()));
 
-			// We invoke the xadesService to sign the document with the signature value obtained in
+			// We invoke the padesService to sign the document with the signature value obtained in
 			// the previous step.
 			DSSDocument signedDocument = service.signDocument(toSignDocument, parameters, signatureValue);
 
 			// end::demo[]
 
 			// tag::policy[]
+			// import eu.europa.esig.dss.model.Policy;
+			// import eu.europa.esig.dss.enumerations.ObjectIdentifierQualifier;
+			// import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+
 			// Instantiate a Policy object
 			Policy signaturePolicy = new Policy();
 			// The string representation of the OID of the signature policy to use when signing.

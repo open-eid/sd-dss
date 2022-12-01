@@ -26,6 +26,7 @@ import eu.europa.esig.dss.detailedreport.jaxb.XmlChainItem;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlConclusion;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlConstraintsConclusion;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlDetailedReport;
+import eu.europa.esig.dss.detailedreport.jaxb.XmlPSV;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlProofOfExistence;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlSignature;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlSubXCV;
@@ -204,7 +205,7 @@ public class DetailedReport {
 	 */
 	public String getFirstSignatureId() {
 		List<String> result = getSignatureIds();
-		if (result.size() > 0) {
+		if (!result.isEmpty()) {
 			return result.get(0);
 		}
 		return null;
@@ -616,7 +617,7 @@ public class DetailedReport {
 	 */
 	public XmlConclusion getCertificateXCVConclusion(String certificateId) {
 		List<XmlCertificate> certificates = getCertificates();
-		if (certificates == null || certificates.size() == 0) {
+		if (certificates == null || certificates.isEmpty()) {
 			throw new UnsupportedOperationException("Only supported in report for certificate");
 		}
 		List<XmlBasicBuildingBlocks> basicBuildingBlocks = jaxbDetailedReport.getBasicBuildingBlocks();
@@ -638,23 +639,61 @@ public class DetailedReport {
 	}
 
 	/**
-	 * Gets the validation indication to a signature with id corresponding to the highest validation level
+	 * Returns the final validation conclusion for a token with a given Id
 	 *
-	 * @param signatureId {@link String}
-	 * @return {@link Indication}
+	 * @param tokenId {@link String} of a token to get the final validation conclusion result for
+	 * @return {@link XmlConclusion}
 	 */
-	public Indication getFinalIndication(String signatureId) {
-		return getXmlSignatureById(signatureId).getConclusion().getIndication();
+	public XmlConclusion getFinalConclusion(String tokenId) {
+		XmlSignature signatureById = getXmlSignatureById(tokenId);
+		if (signatureById != null) {
+			return signatureById.getConclusion();
+		}
+		XmlTimestamp timestampById = getXmlTimestampById(tokenId);
+		if (timestampById != null) {
+			XmlBasicBuildingBlocks tstBBB = getBasicBuildingBlockById(tokenId);
+			XmlPSV psv = tstBBB.getPSV();
+			if (psv != null) {
+				return psv.getConclusion();
+			} else {
+				return timestampById.getValidationProcessTimestamp().getConclusion();
+			}
+		}
+		XmlBasicBuildingBlocks bbb = getBasicBuildingBlockById(tokenId);
+		if (bbb != null) {
+			return bbb.getConclusion();
+		}
+		return null;
 	}
 
 	/**
-	 * Gets the validation subIndication to a signature with id corresponding to the highest validation level
+	 * Gets the validation indication to a token with id
+	 * corresponding to the highest validation level
 	 *
-	 * @param signatureId {@link String}
+	 * @param tokenId {@link String}
 	 * @return {@link Indication}
 	 */
-	public SubIndication getFinalSubIndication(String signatureId) {
-		return getXmlSignatureById(signatureId).getConclusion().getSubIndication();
+	public Indication getFinalIndication(String tokenId) {
+		XmlConclusion finalConclusion = getFinalConclusion(tokenId);
+		if (finalConclusion != null) {
+			return finalConclusion.getIndication();
+		}
+		return null;
+	}
+
+	/**
+	 * Gets the validation subIndication to a token with id
+	 * corresponding to the highest validation level
+	 *
+	 * @param tokenId {@link String}
+	 * @return {@link Indication}
+	 */
+	public SubIndication getFinalSubIndication(String tokenId) {
+		XmlConclusion finalConclusion = getFinalConclusion(tokenId);
+		if (finalConclusion != null) {
+			return finalConclusion.getSubIndication();
+		}
+		return null;
 	}
 
 	/**
@@ -686,7 +725,7 @@ public class DetailedReport {
 			XmlXCV xcv = basicBuildingBlocks.getXCV();
 			if (xcv != null) {
 				List<XmlSubXCV> subXCVs = xcv.getSubXCV();
-				if (subXCVs != null && subXCVs.size() > 0) {
+				if (subXCVs != null && !subXCVs.isEmpty()) {
 					return subXCVs.get(0);
 				}
 			}

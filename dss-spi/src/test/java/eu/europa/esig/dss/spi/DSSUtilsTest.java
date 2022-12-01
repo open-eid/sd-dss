@@ -79,7 +79,44 @@ public class DSSUtilsTest {
 	}
 
 	@Test
-	public void digest() {
+	public void formatDateTest() {
+		Calendar calendar = Calendar.getInstance(DSSUtils.UTC_TIMEZONE);
+		calendar.set(2021, 0, 01, 0, 0, 0);
+		assertEquals("2021-01-01T00:00:00Z", DSSUtils.formatDateToRFC(calendar.getTime()));
+		assertEquals("2021-01-01T00:00:00Z", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), DSSUtils.RFC3339_TIME_FORMAT));
+		assertEquals("2021-01-01T03:00:00Z", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), DSSUtils.RFC3339_TIME_FORMAT, "GMT+3"));
+		assertEquals("2021-01-01T03:00:00Z", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), DSSUtils.RFC3339_TIME_FORMAT, TimeZone.getTimeZone("GMT+3")));
+		assertEquals("2020-12-31T21:00:00Z", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), DSSUtils.RFC3339_TIME_FORMAT, "GMT-3"));
+
+		final String customDateFormat = "yyyy-MM-dd HH:mm";
+		assertEquals("2021-01-01 00:00", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), customDateFormat));
+		assertEquals("2021-01-01 03:00", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), customDateFormat, "GMT+3"));
+		assertEquals("2021-01-01 03:00", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), customDateFormat, TimeZone.getTimeZone("GMT+3")));
+		assertEquals("2020-12-31 21:00", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), customDateFormat, "GMT-3"));
+
+		calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+3"));
+		calendar.set(2021, 0, 01, 0, 0, 0);
+		assertEquals("2020-12-31T21:00:00Z", DSSUtils.formatDateToRFC(calendar.getTime()));
+		assertEquals("2020-12-31T21:00:00Z", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), DSSUtils.RFC3339_TIME_FORMAT));
+		assertEquals("2021-01-01T00:00:00Z", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), DSSUtils.RFC3339_TIME_FORMAT, "GMT+3"));
+		assertEquals("2021-01-01T00:00:00Z", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), DSSUtils.RFC3339_TIME_FORMAT, TimeZone.getTimeZone("GMT+3")));
+		assertEquals("2020-12-31T18:00:00Z", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), DSSUtils.RFC3339_TIME_FORMAT, "GMT-3"));
+
+		assertEquals("2020-12-31 21:00", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), customDateFormat));
+		assertEquals("2021-01-01 00:00", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), customDateFormat, "GMT+3"));
+		assertEquals("2021-01-01 00:00", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), customDateFormat, TimeZone.getTimeZone("GMT+3")));
+		assertEquals("2020-12-31 18:00", DSSUtils.formatDateWithCustomFormat(calendar.getTime(), customDateFormat, "GMT-3"));
+
+		calendar = Calendar.getInstance();
+		calendar.set(2021, 0, 01, 0, 0, 0);
+		assertEquals(DSSUtils.formatDateWithCustomFormat(calendar.getTime(), customDateFormat, Calendar.getInstance().getTimeZone()),
+				DSSUtils.formatDateWithCustomFormat(calendar.getTime(), customDateFormat, ""));
+		assertEquals(DSSUtils.formatDateWithCustomFormat(calendar.getTime(), customDateFormat, Calendar.getInstance().getTimeZone()),
+				DSSUtils.formatDateWithCustomFormat(calendar.getTime(), customDateFormat, (TimeZone) null));
+	}
+
+	@Test
+	public void digestTest() {
 		Security.addProvider(DSSSecurityProvider.getSecurityProvider());
 
 		byte[] data = "Hello world!".getBytes(StandardCharsets.UTF_8);
@@ -327,6 +364,8 @@ public class DSSUtilsTest {
 	
 	@Test
 	public void removeControlCharactersTest() {
+		assertNull(DSSUtils.removeControlCharacters(null));
+		assertEquals("", DSSUtils.removeControlCharacters(""));
 		assertEquals(" ", DSSUtils.removeControlCharacters(" "));
 		assertEquals("Nowina Solutions", DSSUtils.removeControlCharacters("Nowina Solutions"));
 		assertEquals("Новина", DSSUtils.removeControlCharacters("Новина"));
@@ -508,23 +547,36 @@ public class DSSUtilsTest {
 
 		SignatureAlgorithm targetAlgorithm;
 		if (EncryptionAlgorithm.ECDSA.equals(currentAlgorithm.getEncryptionAlgorithm())) {
-			assertTrue(DSSASN1Utils.isAsn1Encoded(originalBinaries));
+			assertTrue(DSSASN1Utils.isAsn1EncodedSignatureValue(originalBinaries));
 			targetAlgorithm = SignatureAlgorithm.getAlgorithm(EncryptionAlgorithm.PLAIN_ECDSA, currentAlgorithm.getDigestAlgorithm());
 		} else {
-			assertFalse(DSSASN1Utils.isAsn1Encoded(originalBinaries));
+			assertFalse(DSSASN1Utils.isAsn1EncodedSignatureValue(originalBinaries));
 			targetAlgorithm = SignatureAlgorithm.getAlgorithm(EncryptionAlgorithm.ECDSA, currentAlgorithm.getDigestAlgorithm());
 		}
 
 		SignatureValue convertedSignatureValue = DSSUtils.convertECSignatureValue(targetAlgorithm, signatureValue);
 
 		if (EncryptionAlgorithm.ECDSA.equals(targetAlgorithm.getEncryptionAlgorithm())) {
-			assertTrue(DSSASN1Utils.isAsn1Encoded(convertedSignatureValue.getValue()));
+			assertTrue(DSSASN1Utils.isAsn1EncodedSignatureValue(convertedSignatureValue.getValue()));
 		} else {
-			assertFalse(DSSASN1Utils.isAsn1Encoded(convertedSignatureValue.getValue()));
+			assertFalse(DSSASN1Utils.isAsn1EncodedSignatureValue(convertedSignatureValue.getValue()));
 		}
 
 		convertedSignatureValue = DSSUtils.convertECSignatureValue(currentAlgorithm, convertedSignatureValue);
 		assertArrayEquals(originalBinaries, convertedSignatureValue.getValue());
+	}
+
+	@Test
+	public void isLineBreakByteTest() {
+		assertTrue(DSSUtils.isLineBreakByte((byte) '\n'));
+		assertTrue(DSSUtils.isLineBreakByte((byte) '\r'));
+		assertTrue(DSSUtils.isLineBreakByte((byte) 0x0D));
+		assertTrue(DSSUtils.isLineBreakByte((byte) 0x0A));
+		assertFalse(DSSUtils.isLineBreakByte((byte) 'n'));
+		assertFalse(DSSUtils.isLineBreakByte((byte) 'r'));
+		assertFalse(DSSUtils.isLineBreakByte((byte) 0x20));
+		assertFalse(DSSUtils.isLineBreakByte((byte) 0x6E));
+		assertFalse(DSSUtils.isLineBreakByte((byte) 0x72));
 	}
 
 }

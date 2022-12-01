@@ -43,6 +43,13 @@ public abstract class AbstractCRLUtils {
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractCRLUtils.class);
 
 	/**
+	 * Default constructor
+	 */
+	protected AbstractCRLUtils() {
+		// empty
+	}
+
+	/**
 	 * Builds the {@code CRLBinary} object
 	 *
 	 * @param binaries byte array representing the CRL (DER or PEM encoded)
@@ -100,7 +107,7 @@ public abstract class AbstractCRLUtils {
 	 * Parses and sets the issuing distribution point binaries
 	 *
 	 * @param validity {@link CRLValidity} to set the value to
-	 * @param issuingDistributionPointBinary the the issuing distribution point binaries
+	 * @param issuingDistributionPointBinary the issuing distribution point binaries
 	 */
 	protected void extractIssuingDistributionPointBinary(CRLValidity validity, byte[] issuingDistributionPointBinary) {
 		if (issuingDistributionPointBinary != null) {
@@ -123,7 +130,7 @@ public abstract class AbstractCRLUtils {
 			if ((generalNames != null) && (generalNames.getNames() != null && generalNames.getNames().length > 0)) {
 				for (GeneralName generalName : generalNames.getNames()) {
 					if (GeneralName.uniformResourceIdentifier == generalName.getTagNo()) {
-						ASN1String str = (ASN1String) ((DERTaggedObject) generalName.toASN1Primitive()).getObject();
+						ASN1String str = (ASN1String) ((DERTaggedObject) generalName.toASN1Primitive()).getBaseObject();
 						return str.getString();
 					}
 				}

@@ -29,8 +29,10 @@ import eu.europa.esig.dss.jaxb.object.Message;
 import eu.europa.esig.dss.simplereport.jaxb.XmlCertificateChain;
 import eu.europa.esig.dss.simplereport.jaxb.XmlMessage;
 import eu.europa.esig.dss.simplereport.jaxb.XmlSignature;
+import eu.europa.esig.dss.simplereport.jaxb.XmlSignatureScope;
 import eu.europa.esig.dss.simplereport.jaxb.XmlSimpleReport;
 import eu.europa.esig.dss.simplereport.jaxb.XmlTimestamp;
+import eu.europa.esig.dss.simplereport.jaxb.XmlTimestamps;
 import eu.europa.esig.dss.simplereport.jaxb.XmlToken;
 
 import java.util.ArrayList;
@@ -153,7 +155,7 @@ public class SimpleReport {
 	 */
 	public String getFirstSignatureId() {
 		final List<String> signatureIdList = getSignatureIdList();
-		if (signatureIdList.size() > 0) {
+		if (!signatureIdList.isEmpty()) {
 			return signatureIdList.get(0);
 		}
 		return null;
@@ -166,7 +168,7 @@ public class SimpleReport {
 	 */
 	public String getFirstTimestampId() {
 		final List<String> timestampIdList = getTimestampIdList();
-		if (timestampIdList.size() > 0) {
+		if (!timestampIdList.isEmpty()) {
 			return timestampIdList.get(0);
 		}
 		return null;
@@ -310,7 +312,7 @@ public class SimpleReport {
 
 	private List<Message> convert(Collection<XmlMessage> messages) {
 		if (messages != null) {
-			return messages.stream().map(m -> convert(m)).collect(Collectors.toList());
+			return messages.stream().map(this::convert).collect(Collectors.toList());
 		}
 		return Collections.emptyList();
 	}
@@ -378,8 +380,7 @@ public class SimpleReport {
 
 	/**
 	 * If the signature validation is TOTAL_PASSED, the result date is the date from
-	 * when a signature extension is useful (all certificates can be covered by an
-	 * usable revocation data).
+	 * when a signature extension is useful (all certificates can be covered by a usable revocation data).
 	 * 
 	 * @param signatureId the signature id
 	 * @return the minimal useful date for a signature extension (or null)
@@ -499,6 +500,15 @@ public class SimpleReport {
 			for (XmlToken token : tokens) {
 				if (tokenId.equals(token.getId())) {
 					return token;
+				} else if (token instanceof XmlSignature) {
+					XmlTimestamps timestamps = ((XmlSignature) token).getTimestamps();
+					if (timestamps != null) {
+						for (XmlTimestamp timestamp : timestamps.getTimestamp()) {
+							if (tokenId.equals(timestamp.getId())) {
+								return timestamp;
+							}
+						}
+					}
 				}
 			}
 		}
@@ -551,7 +561,28 @@ public class SimpleReport {
 	}
 
 	/**
-	 * This methods returns the jaxb model of the simple report
+	 * This method returns a list of {@code XmlSignatureScope}s for the token (signature or timestamp) with a given Id
+	 *
+	 * @param tokenId {@link String} id of a token to get {@code XmlSignatureScope}s for
+	 * @return a list of {@link XmlSignatureScope}s
+	 */
+	public List<XmlSignatureScope> getSignatureScopes(String tokenId) {
+		XmlToken tokenById = getTokenById(tokenId);
+		if (tokenById != null) {
+			if (tokenById instanceof XmlSignature) {
+				return ((XmlSignature) tokenById).getSignatureScope();
+			} else if (tokenById instanceof XmlTimestamp) {
+				return ((XmlTimestamp) tokenById).getTimestampScope();
+			} else {
+				throw new UnsupportedOperationException(String.format(
+						"Signature scope extraction is not supported for an object of class '%s'", tokenById.getClass()));
+			}
+		}
+		return Collections.emptyList();
+	}
+
+	/**
+	 * This method returns the jaxb model of the simple report
 	 * 
 	 * @return the jaxb model
 	 */

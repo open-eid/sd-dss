@@ -144,6 +144,15 @@ public interface IUtils {
 	boolean endsWithIgnoreCase(String text, String expected);
 
 	/**
+	 * This method returns an extension for the given filename
+	 * Ex. "file.xml" = "xml"; "document.pdf" = "pdf"
+	 *
+	 * @param filename {@link String} representing a filename extracted from a file
+	 * @return {@link String} extension
+	 */
+	String getFileNameExtension(String filename);
+
+	/**
 	 * Converts a string to its lower case representation
 	 * Ex. "Nowina" = "nowina"
 	 *
@@ -372,6 +381,19 @@ public interface IUtils {
 	 * @param <T> the class of list elements
 	 * @return reversed list
 	 */
-	<T extends Object> List<T> reverseList(List<T> list);
+	<T> List<T> reverseList(List<T> list);
+
+	/**
+	 * This method returns boolean result whether the {@code superCollection}
+	 * contains any element of the {@code subCollection}
+	 *
+	 * Ex. {'A', 'B', 'C'}, {'B', 'C', 'D'} = TRUE
+	 *
+	 * @param superCollection first collection
+	 * @param subCollection second collection
+	 * @param <T> object
+	 * @return TRUE if both collection intersect each other, FALSE otherwise
+	 */
+	<T> boolean containsAny(Collection<T> superCollection, Collection<T> subCollection);
 
 }

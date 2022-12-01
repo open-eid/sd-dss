@@ -24,6 +24,8 @@ import eu.europa.esig.dss.AbstractSignatureParameters;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.JWSSerializationType;
 import eu.europa.esig.dss.enumerations.SigDMechanism;
+import eu.europa.esig.dss.enumerations.SignatureForm;
+import eu.europa.esig.dss.enumerations.SignatureLevel;
 
 import java.util.Objects;
 
@@ -36,13 +38,27 @@ public class JAdESSignatureParameters extends AbstractSignatureParameters<JAdEST
 
 	/**
 	 * Defines if certificate chain binaries must be included into the signed header ('x5c' attribute)
+	 *
+	 * DEFAULT: TRUE (the certificate chain header will be included into the signed header)
 	 */
-	private boolean includeCertificateChainBinaries = true;
+	private boolean includeCertificateChain = true;
 	
 	/**
 	 * Defines if the signature must incorporate its MimeType definition in the signed header ('typ' attribute)
+	 *
+	 * DEFAULT: TRUE (the signature MimeType will be included into the signed header)
 	 */
 	private boolean includeSignatureType = true;
+
+	/**
+	 * This property defines whether a 'kid' (key identifier) header parameter should be added to a protected header.
+	 *
+	 * NOTE: a signing certificate shall be provided to embed the 'kid' header
+	 *
+	 * DEFAULT : TRUE ('kid' header parameter is included into the signed header, provided that
+	 *           the signing-certificate is defined within the signature parameters).
+	 */
+	private boolean includeKeyIdentifier = true;
 	
 	/**
 	 * Defines if the payload has to be base64url encoded
@@ -86,6 +102,21 @@ public class JAdESSignatureParameters extends AbstractSignatureParameters<JAdEST
 	 */
 	private SigDMechanism sigDMechanism;
 
+	/**
+	 * Default constructor instantiating object with default parameters
+	 */
+	public JAdESSignatureParameters() {
+		// empty
+	}
+
+	@Override
+	public void setSignatureLevel(SignatureLevel signatureLevel) {
+		if (signatureLevel == null || SignatureForm.JAdES != signatureLevel.getSignatureForm()) {
+			throw new IllegalArgumentException("Only JAdES form is allowed !");
+		}
+		super.setSignatureLevel(signatureLevel);
+	}
+
 	@Override
 	public JAdESTimestampParameters getContentTimestampParameters() {
 		if (contentTimestampParameters == null) {
@@ -116,7 +147,7 @@ public class JAdESSignatureParameters extends AbstractSignatureParameters<JAdEST
 	 * @return TRUE if the certificate chain must be included, FALSE otherwise
 	 */
 	public boolean isIncludeCertificateChain() {
-		return includeCertificateChainBinaries;
+		return includeCertificateChain;
 	}
 
 	/**
@@ -126,7 +157,7 @@ public class JAdESSignatureParameters extends AbstractSignatureParameters<JAdEST
 	 * @param includeCertificateChain if the certificate chain binaries must be included into the signed header
 	 */
 	public void setIncludeCertificateChain(boolean includeCertificateChain) {
-		this.includeCertificateChainBinaries = includeCertificateChain;
+		this.includeCertificateChain = includeCertificateChain;
 	}
 
 	/**
@@ -140,12 +171,34 @@ public class JAdESSignatureParameters extends AbstractSignatureParameters<JAdEST
 
 	/**
 	 * Sets if the signature MimeType string must be included into the signed header ('typ' attribute)
+	 *
 	 * Default: TRUE (the signature MimeType will be included into the signed header)
 	 *
 	 * @param includeSignatureType if the signature MimeType be included into the signed header
 	 */
 	public void setIncludeSignatureType(boolean includeSignatureType) {
 		this.includeSignatureType = includeSignatureType;
+	}
+
+	/**
+	 * Returns whether a 'kid' (key identifier) header parameter should be created
+	 *
+	 * @return TRUE if the 'kid' should be created, FALSE otherwise
+	 */
+	public boolean isIncludeKeyIdentifier() {
+		return includeKeyIdentifier;
+	}
+
+	/**
+	 * Sets whether a 'kid' (key identifier) header parameter should be created within a protected header,
+	 * provided that a signing-certificate is defined within the signature parameters.
+	 *
+	 * DEFAULT : TRUE (the 'kid' header parameter is created)
+	 *
+	 * @param includeKeyIdentifier identifies whether 'kid' should be created (when a signing-certificate is provided)
+	 */
+	public void setIncludeKeyIdentifier(boolean includeKeyIdentifier) {
+		this.includeKeyIdentifier = includeKeyIdentifier;
 	}
 
 	/**

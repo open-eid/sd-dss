@@ -23,7 +23,17 @@ package eu.europa.esig.dss.validation.process.qualification.trust.filter;
 import eu.europa.esig.dss.diagnostic.TrustedServiceWrapper;
 import eu.europa.esig.dss.validation.process.qualification.trust.ServiceTypeIdentifier;
 
+/**
+ * Filters TrustedServices by TSA/QTST type
+ *
+ */
 public class QTSTServiceFilter extends AbstractTrustedServiceFilter {
+
+	/**
+	 * Default constructor
+	 */
+	public QTSTServiceFilter() {
+	}
 
 	@Override
 	boolean isAcceptable(TrustedServiceWrapper service) {

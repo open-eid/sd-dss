@@ -20,14 +20,6 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.FoundCertificatesProxy;
 import eu.europa.esig.dss.diagnostic.RevocationWrapper;
@@ -35,11 +27,13 @@ import eu.europa.esig.dss.diagnostic.SignatureWrapper;
 import eu.europa.esig.dss.diagnostic.TimestampWrapper;
 import eu.europa.esig.dss.enumerations.CertificateOrigin;
 import eu.europa.esig.dss.enumerations.CertificateRefOrigin;
+import eu.europa.esig.dss.enumerations.EncryptionAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.model.x509.revocation.ocsp.OCSP;
+import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.x509.revocation.OfflineRevocationSource;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationCertificateSource;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationToken;
@@ -51,6 +45,14 @@ import eu.europa.esig.dss.xades.DSSXMLUtils;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 import eu.europa.esig.validationreport.jaxb.SAMessageDigestType;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public abstract class AbstractXAdESTestSignature extends AbstractPkiFactoryTestDocumentSignatureService<XAdESSignatureParameters, XAdESTimestampParameters> {
 
@@ -75,15 +77,27 @@ public abstract class AbstractXAdESTestSignature extends AbstractPkiFactoryTestD
 	protected boolean isBaselineT() {
 		SignatureLevel signatureLevel = getSignatureParameters().getSignatureLevel();
 		return SignatureLevel.XAdES_BASELINE_LTA.equals(signatureLevel) || SignatureLevel.XAdES_BASELINE_LT.equals(signatureLevel)
-				|| SignatureLevel.XAdES_BASELINE_T.equals(signatureLevel) || SignatureLevel.XAdES_A.equals(signatureLevel)
+				|| SignatureLevel.XAdES_BASELINE_T.equals(signatureLevel) || SignatureLevel.XAdES_T.equals(signatureLevel)
 				|| SignatureLevel.XAdES_C.equals(signatureLevel) || SignatureLevel.XAdES_X.equals(signatureLevel)
-				|| SignatureLevel.XAdES_XL.equals(signatureLevel);
+				|| SignatureLevel.XAdES_XL.equals(signatureLevel) || SignatureLevel.XAdES_A.equals(signatureLevel);
 	}
 
 	@Override
 	protected boolean isBaselineLTA() {
 		SignatureLevel signatureLevel = getSignatureParameters().getSignatureLevel();
 		return SignatureLevel.XAdES_BASELINE_LTA.equals(signatureLevel) || SignatureLevel.XAdES_A.equals(signatureLevel);
+	}
+
+	@Override
+	protected void checkSignatureValue(DiagnosticData diagnosticData) {
+		super.checkSignatureValue(diagnosticData);
+
+		for (SignatureWrapper signatureWrapper : diagnosticData.getSignatures()) {
+			if (signatureWrapper.getEncryptionAlgorithm() != null && signatureWrapper.getDigestAlgorithm() != null &&
+					signatureWrapper.getEncryptionAlgorithm().isEquivalent(EncryptionAlgorithm.ECDSA)) {
+				assertFalse(DSSASN1Utils.isAsn1EncodedSignatureValue(signatureWrapper.getSignatureValue()), "PLAIN-ECDSA is expected!");
+			}
+		}
 	}
 
 	@Override

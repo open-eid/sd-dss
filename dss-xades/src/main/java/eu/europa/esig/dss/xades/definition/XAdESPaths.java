@@ -411,7 +411,7 @@ public interface XAdESPaths extends Serializable {
 	String getTimestampValidationDataPath();
 
 	/**
-	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades:SignaturePolicyStore"
+	 * Gets path "./ds:Object/xades:QualifyingProperties/xades:UnsignedProperties/xades:UnsignedSignatureProperties/xades141:SignaturePolicyStore"
 	 *
 	 * @return {@link String} path
 	 */
@@ -623,6 +623,20 @@ public interface XAdESPaths extends Serializable {
 	String getCurrentObjectIdentifier();
 
 	/**
+	 * Gets path "./xades:ObjectReference"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentCommitmentObjectReferencesPath();
+
+	/**
+	 * Gets path "./xades:AllSignedDataObjects"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentCommitmentAllSignedDataObjectsPath();
+
+	/**
 	 * Gets path "./xades:MimeType"
 	 *
 	 * @return {@link String} path
@@ -660,7 +674,7 @@ public interface XAdESPaths extends Serializable {
 	String getCurrentSignaturePolicySPURI();
 
 	/**
-	 * Gets path "./xades:SignaturePolicyId/xades:SigPolicyQualifiers/xades:SigPolicyQualifier/xades:SPURI"
+	 * Gets path "./xades:SignaturePolicyId/xades:SigPolicyQualifiers/xades:SigPolicyQualifier/xades:SPUserNotice"
 	 *
 	 * @return {@link String} path
 	 */
@@ -686,6 +700,13 @@ public interface XAdESPaths extends Serializable {
 	 * @return {@link String} path
 	 */
 	String getCurrentSPUserNoticeExplicitText();
+
+	/**
+	 * Gets path "./xades:SignaturePolicyId/xades:SigPolicyQualifiers/xades:SigPolicyQualifier/xades141:SPDocSpecification"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentSignaturePolicySPDocSpecification();
 
 	/**
 	 * Gets path "./xades:SignaturePolicyId/xades:SigPolicyQualifiers/xades:SigPolicyQualifier/xades141:SPDocSpecification/xades:Identifier"
@@ -745,6 +766,19 @@ public interface XAdESPaths extends Serializable {
 
 	// --------------------------- Signature Policy Store
 
+	/**
+	 * Gets path "./xades141:SPDocSpecification"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentSPDocSpecification();
+
+	/**
+	 * Gets path "./xades:Identifier"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentIdentifier();
 
 	/**
 	 * Gets path "./xades141:SPDocSpecification/xades:Identifier"
@@ -761,11 +795,18 @@ public interface XAdESPaths extends Serializable {
 	String getCurrentSPDocSpecificationDescription();
 
 	/**
+	 * Gets path ".xades:DocumentationReferences/xades:DocumentationReference"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentDocumentationReferenceElements();
+
+	/**
 	 * Gets path "./xades141:SPDocSpecification/xades:DocumentationReferences/xades:DocumentationReference"
 	 *
 	 * @return {@link String} path
 	 */
-	String getCurrentSPDocSpecificationDocumentReferenceElements();
+	String getCurrentSPDocSpecificationDocumentationReferenceElements();
 
 	/**
 	 * Gets path "./xades141:SignaturePolicyDocument"
@@ -773,6 +814,13 @@ public interface XAdESPaths extends Serializable {
 	 * @return {@link String} path
 	 */
 	String getCurrentSignaturePolicyDocument();
+
+	/**
+	 * Gets path "./xades141:SigPolDocLocalURI"
+	 *
+	 * @return {@link String} path
+	 */
+	String getCurrentSigPolDocLocalURI();
 
 	/**
 	 * Gets the XSD Utils

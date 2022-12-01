@@ -20,7 +20,6 @@
  */
 package eu.europa.esig.dss.pdf.pdfbox.visible.defaultdrawer;
 
-import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.pades.DSSFont;
 import eu.europa.esig.dss.pades.SignatureImageTextParameters;
 import eu.europa.esig.dss.pdf.pdfbox.visible.AbstractPdfBoxSignatureDrawer;
@@ -39,6 +38,12 @@ import java.io.IOException;
  * Creates an image for a text content of the signature.
  */
 public class DefaultPdfBoxVisibleSignatureDrawer extends AbstractPdfBoxSignatureDrawer {
+
+	/**
+	 * Default constructor
+	 */
+	public DefaultPdfBoxVisibleSignatureDrawer() {
+	}
 
 	@Override
 	protected JavaDSSFontMetrics getDSSFontMetrics() {
@@ -88,7 +93,7 @@ public class DefaultPdfBoxVisibleSignatureDrawer extends AbstractPdfBoxSignature
 	}
 
 	@Override
-	protected String getColorSpaceName(DSSDocument image) throws IOException {
+	protected String getExpectedColorSpaceName() throws IOException {
 		return COSName.DEVICERGB.getName();
 	}
 

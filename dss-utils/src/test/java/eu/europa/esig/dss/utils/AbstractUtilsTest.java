@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -193,6 +194,20 @@ public abstract class AbstractUtilsTest {
 		assertFalse(Utils.endsWithIgnoreCase("hello", null));
 		assertFalse(Utils.endsWithIgnoreCase(null, "lo"));
 		assertFalse(Utils.endsWithIgnoreCase("hello", "la"));
+	}
+
+	@Test
+	public void getFileNameExtension() {
+		assertEquals("xml", Utils.getFileNameExtension("file.xml"));
+		assertEquals("pdf", Utils.getFileNameExtension("document.pdf"));
+		assertEquals("pdf", Utils.getFileNameExtension("document..pdf"));
+		assertEquals("pdf", Utils.getFileNameExtension("document.one.pdf"));
+		assertEquals("java", Utils.getFileNameExtension("C:/root/demo.java"));
+		assertEquals("java", Utils.getFileNameExtension("http://nowina.lu/demo.java"));
+		assertEquals("", Utils.getFileNameExtension("document"));
+		assertEquals("", Utils.getFileNameExtension("    "));
+		assertEquals("", Utils.getFileNameExtension(""));
+		assertNull(Utils.getFileNameExtension(null));
 	}
 
 	@Test
@@ -437,7 +452,11 @@ public abstract class AbstractUtilsTest {
 		FileOutputStream sampleFos = new FileOutputStream("target/sample3.txt");
 		Utils.closeQuietly(sampleFos);
 		Utils.closeQuietly(sampleFos); // must handle closed
-		assertTrue(new File("target/sample3.txt").exists());
+
+		File sample = new File("target/sample3.txt");
+		assertTrue(sample.exists());
+		assertTrue(sample.delete(), "Cannot delete the file");
+		assertFalse(sample.exists());
 	}
 
 	@Test
@@ -483,6 +502,8 @@ public abstract class AbstractUtilsTest {
 		Utils.cleanDirectory(dir);
 		assertTrue(dir.exists());
 		assertEquals(0, dir.list().length);
+		assertTrue(dir.delete(), "Cannot delete the directory");
+		assertFalse(dir.exists());
 	}
 
 	@Test
@@ -502,6 +523,39 @@ public abstract class AbstractUtilsTest {
 		assertEquals(0, Utils.reverseList(emptyList).size());
 
 		assertThrows(Exception.class, () -> Utils.reverseList(null));
+	}
+
+	@Test
+	public void containsAnyTest() {
+		assertTrue(Utils.containsAny(Arrays.asList("c", "b", "a"), Arrays.asList("c", "b", "a")));
+		assertTrue(Utils.containsAny(Arrays.asList("c", "b", "a"), Arrays.asList("a")));
+		assertTrue(Utils.containsAny(Arrays.asList("c", "b", "a"), Arrays.asList("d", "c", "b", "a")));
+		assertTrue(Utils.containsAny(Arrays.asList("c", "b", "a"), Arrays.asList("d", "a")));
+		assertTrue(Utils.containsAny(Arrays.asList("c", "b", "a", "a"), Arrays.asList("d", "a")));
+		assertTrue(Utils.containsAny(Arrays.asList("c", "b", "a"), Arrays.asList("d", "a", "a")));
+		assertTrue(Utils.containsAny(Arrays.asList("c", "b", "a"), Arrays.asList("d", "d", "a")));
+		assertTrue(Utils.containsAny(Arrays.asList("c", "b", "a", 10), Arrays.asList("a")));
+		assertTrue(Utils.containsAny(Arrays.asList("c", "b", "a"), Arrays.asList("a", 10)));
+		assertTrue(Utils.containsAny(new HashSet<>(Arrays.asList("c", "b", "a")), new HashSet<>(Arrays.asList("c", "b", "a"))));
+		assertTrue(Utils.containsAny(new HashSet<>(Arrays.asList("c", "b", "a")), new HashSet<>(Arrays.asList("a"))));
+		assertTrue(Utils.containsAny(new HashSet<>(Arrays.asList("c", "b", "a")), new HashSet<>(Arrays.asList("d", "c", "b", "a"))));
+		assertTrue(Utils.containsAny(new HashSet<>(Arrays.asList("c", "b", "a")), new HashSet<>(Arrays.asList("d", "a"))));
+		assertTrue(Utils.containsAny(Arrays.asList("c", "b", "a"), new HashSet<>(Arrays.asList("c", "b", "a"))));
+		assertTrue(Utils.containsAny(Arrays.asList("c", "b", "a"), Arrays.asList("a")));
+		assertTrue(Utils.containsAny(new HashSet<>(Arrays.asList("c", "b", "a")), Arrays.asList("d", "c", "b", "a")));
+		assertTrue(Utils.containsAny(new HashSet<>(Arrays.asList("c", "b", "a")), Arrays.asList("d", "a")));
+		assertTrue(Utils.containsAny(new HashSet<>(Arrays.asList("c", "b", "a", 1)), Arrays.asList("d", 1)));
+
+		assertFalse(Utils.containsAny(Arrays.asList("c", "b", "a"), Arrays.asList("d", "e", "f")));
+		assertFalse(Utils.containsAny(new HashSet<>(Arrays.asList("c", "b", "a")), new HashSet<>(Arrays.asList("d", "e", "f"))));
+		assertFalse(Utils.containsAny(Arrays.asList("c", "b", "a"), new HashSet<>(Arrays.asList("d", "e", "f"))));
+		assertFalse(Utils.containsAny(new HashSet<>(Arrays.asList("c", "b", "a")), Arrays.asList("d", "e", "f")));
+		assertFalse(Utils.containsAny(Arrays.asList(), Arrays.asList("d", "e", "f")));
+		assertFalse(Utils.containsAny(Arrays.asList("c", "b", "a"), Arrays.asList()));
+
+		assertThrows(Exception.class, () -> Utils.containsAny(null, Arrays.asList("c", "b", "a")));
+		assertThrows(Exception.class, () -> Utils.containsAny(Arrays.asList("c", "b", "a"), null));
+		assertThrows(Exception.class, () -> Utils.containsAny(null, null));
 	}
 
 }

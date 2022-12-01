@@ -78,6 +78,12 @@ import java.util.stream.Collectors;
 public abstract class AbstractRemoteSignatureServiceImpl {
 
 	/**
+	 * Default constructor
+	 */
+	protected AbstractRemoteSignatureServiceImpl() {
+	}
+
+	/**
 	 * Gets the ASiC Signature Parameters
 	 *
 	 * @param asicContainerType {@link ASiCContainerType}
@@ -116,7 +122,7 @@ public abstract class AbstractRemoteSignatureServiceImpl {
 		} else {
 			switch (signatureForm) {
 			case XAdES:
-				parameters = new XAdESSignatureParameters();
+				parameters = getXAdESSignatureParameters(remoteParameters);
 				break;
 			case CAdES:
 				parameters = new CAdESSignatureParameters();
@@ -139,6 +145,19 @@ public abstract class AbstractRemoteSignatureServiceImpl {
 		}
 
 		return parameters;
+	}
+
+	/**
+	 * Gets XAdES signature parameters
+	 *
+	 * @param remoteParameters {@link RemoteSignatureParameters}
+	 * @return {@link SerializableSignatureParameters}
+	 */
+	protected SerializableSignatureParameters getXAdESSignatureParameters(RemoteSignatureParameters remoteParameters) {
+		XAdESSignatureParameters xadesParams = new XAdESSignatureParameters();
+		xadesParams.setEmbedXML(remoteParameters.isEmbedXML());
+		xadesParams.setManifestSignature(remoteParameters.isManifestSignature());
+		return xadesParams;
 	}
 
 	/**
@@ -210,8 +229,14 @@ public abstract class AbstractRemoteSignatureServiceImpl {
 			parameters.setCertificateChain(RemoteCertificateConverter.toCertificateTokens(remoteCertificateChain));
 		}
 	}
-	
-	private BLevelParameters toBLevelParameters(RemoteBLevelParameters remoteBLevelParameters) {
+
+	/**
+	 * Converts {@code RemoteBLevelParameters} to {@code BLevelParameters}
+	 *
+	 * @param remoteBLevelParameters {@link RemoteBLevelParameters}
+	 * @return {@link BLevelParameters}
+	 */
+	protected BLevelParameters toBLevelParameters(RemoteBLevelParameters remoteBLevelParameters) {
 		BLevelParameters bLevelParameters = new BLevelParameters();
 		bLevelParameters.setClaimedSignerRoles(remoteBLevelParameters.getClaimedSignerRoles());
 		if (remoteBLevelParameters.getCommitmentTypeIndications() != null) {
@@ -332,7 +357,7 @@ public abstract class AbstractRemoteSignatureServiceImpl {
 	 */
 	protected List<CommitmentType> toCommitmentTypeList(List<CommitmentTypeEnum> commitmentTypeEnums) {
 		if (Utils.isCollectionNotEmpty(commitmentTypeEnums)) {
-			return commitmentTypeEnums.stream().map(obj -> (CommitmentType) obj).collect(Collectors.toList());
+			return commitmentTypeEnums.stream().map(CommitmentType.class::cast).collect(Collectors.toList());
 		}
 		return Collections.emptyList();
 	}

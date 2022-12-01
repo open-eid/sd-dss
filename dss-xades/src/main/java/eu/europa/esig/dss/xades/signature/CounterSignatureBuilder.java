@@ -60,7 +60,7 @@ public class CounterSignatureBuilder extends ExtensionBuilder {
 	private static final Logger LOG = LoggerFactory.getLogger(CounterSignatureBuilder.class);
 
 	/** The default prefix for a counter signature id */
-	private final static String COUNTER_SIGNATURE_PREFIX = "CS-";
+	private static final String COUNTER_SIGNATURE_PREFIX = "CS-";
 
 	/**
 	 * Default constructor
@@ -120,7 +120,7 @@ public class CounterSignatureBuilder extends ExtensionBuilder {
 
 		String signatureValueId = xadesSignature.getSignatureValueId();
 		if (Utils.isStringNotEmpty(signatureValueId)) {
-			reference.setUri("#" + signatureValueId);
+			reference.setUri(DomUtils.toElementReference(signatureValueId));
 			DSSTransform transform = new CanonicalizationTransform(parameters.getCounterSignatureCanonicalizationMethod());
 			reference.setTransforms(Collections.singletonList(transform));
 			

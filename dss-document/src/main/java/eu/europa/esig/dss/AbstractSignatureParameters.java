@@ -24,11 +24,11 @@ import eu.europa.esig.dss.enumerations.EncryptionAlgorithm;
 import eu.europa.esig.dss.model.AbstractSerializableSignatureParameters;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.SerializableTimestampParameters;
-import eu.europa.esig.dss.model.identifier.TokenIdentifier;
 import eu.europa.esig.dss.model.x509.CertificateToken;
-import eu.europa.esig.dss.spi.DSSUtils;
+import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -39,9 +39,9 @@ import java.util.List;
 public abstract class AbstractSignatureParameters<TP extends SerializableTimestampParameters> extends AbstractSerializableSignatureParameters<TP> {
 
 	/**
-	 * The id created in a deterministic way based on the filled parameters to use in the signature file
+	 * The internal signature processing variable
 	 */
-	protected String deterministicId;
+	protected ProfileParameters context;
 
 	/**
 	 * The documents to be signed
@@ -72,6 +72,13 @@ public abstract class AbstractSignatureParameters<TP extends SerializableTimesta
 	private List<TimestampToken> contentTimestamps;
 
 	/**
+	 * Default constructor instantiating object with null values
+	 */
+	protected AbstractSignatureParameters() {
+		// empty
+	}
+
+	/**
 	 * Returns the list of the {@code TimestampToken} to be incorporated within the signature and representing the
 	 * content-timestamp.
 	 *
@@ -91,27 +98,19 @@ public abstract class AbstractSignatureParameters<TP extends SerializableTimesta
 	}
 
 	/**
-	 * The ID of xades:SignedProperties is contained in the signed content of the
-	 * xades Signature. We must create this ID in a deterministic way.
-	 *
-	 * @return the unique ID for the current signature
-	 */
-	public String getDeterministicId() {
-		if (deterministicId == null) {
-			final TokenIdentifier identifier = (signingCertificate == null ? null : signingCertificate.getDSSId());
-			deterministicId = DSSUtils.getDeterministicId(bLevel().getSigningDate(), identifier);
-		}
-		return deterministicId;
-	}
-
-	/**
-	 * This method returns the documents to sign. In the case of the DETACHED
-	 * signature this is the detached document.
+	 * This method returns the documents to sign.
+	 * In the case of the DETACHED signature this is the detached document.
 	 *
 	 * @return the list of detached documents
 	 */
 	public List<DSSDocument> getDetachedContents() {
-		return detachedContents;
+		if (Utils.isCollectionNotEmpty(detachedContents)) {
+			return detachedContents;
+		}
+		if (context != null) {
+			return context.getDetachedContents();
+		}
+		return Collections.emptyList();
 	}
 
 	/**
@@ -202,13 +201,22 @@ public abstract class AbstractSignatureParameters<TP extends SerializableTimesta
 	}
 
 	/**
-	 * This methods reinits the deterministicId to force to recompute it
+	 * Gets the signature creation context (internal variable)
+	 *
+	 * @return {@link ProfileParameters}
 	 */
-	public void reinitDeterministicId() {
-		deterministicId = null;
+	public ProfileParameters getContext() {
+		if (context == null) {
+			context = new ProfileParameters();
+		}
+		return context;
 	}
 
-	public void setDeterministicId(String deterministicId) {
-		this.deterministicId = deterministicId;
+	/**
+	 * This methods re-inits signature parameters to clean temporary settings
+	 */
+	public void reinit() {
+		context = null;
 	}
+
 }

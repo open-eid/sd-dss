@@ -79,24 +79,54 @@ public class TimestampToken extends Token {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TimestampToken.class);
 
+	/**
+	 * BouncyCastle representation of a TimeStamp Token
+	 */
 	private final TimeStampToken timeStamp;
 
+	/**
+	 * Type of the timestamp relatively to the signature
+	 */
 	private final TimestampType timeStampType;
 
+	/**
+	 * Certificate source extracted from the timestamp
+	 */
 	private final TimestampCertificateSource certificateSource;
 
+	/**
+	 * CRL source extracted from the timestamp
+	 */
 	private final TimestampCRLSource crlSource;
 
+	/**
+	 * OCSP source extracted from the timestamp
+	 */
 	private final TimestampOCSPSource ocspSource;
 
+	/**
+	 * List of references to tokens covered (protected) by the timestamp
+	 */
 	private final List<TimestampedReference> timestampedReferences;
 
+	/**
+	 * Internal variables defining whether the timestamp has been validated
+	 */
 	private boolean processed = false;
 
+	/**
+	 * Computed message-imprint
+	 */
 	private Digest messageImprint;
 
+	/**
+	 * Defines whether the message-imprint has been found
+	 */
 	private boolean messageImprintData;
 
+	/**
+	 * Defines whether the computed message-imprint is intact
+	 */
 	private Boolean messageImprintIntact = null;
 	
 	/**
@@ -109,7 +139,9 @@ public class TimestampToken extends Token {
 	 */
 	private List<SignatureScope> timestampScopes;
 
-	/* In case of ASiC with CAdES */
+	/**
+	 * The timestamped manifest file, when applicable (ASiC with CAdES)
+	 */
 	private ManifestFile manifestFile;
 
 	/**
@@ -216,7 +248,7 @@ public class TimestampToken extends Token {
 
 	@Override
 	public String getAbbreviation() {
-		return timeStampType.name() + ": " + getDSSIdAsString() + ": " + DSSUtils.formatInternal(timeStamp.getTimeStampInfo().getGenTime());
+		return timeStampType.name() + ": " + getDSSIdAsString() + ": " + DSSUtils.formatDateToRFC(timeStamp.getTimeStampInfo().getGenTime());
 	}
 	
 	/**
@@ -274,14 +306,14 @@ public class TimestampToken extends Token {
 	}
 
 	/**
-	 * Checks if the OCSP token is signed by the given publicKey
+	 * Checks if the timestamp token is signed by the given publicKey
 	 * 
 	 * @param certificateToken
 	 *              the candidate to be tested
 	 * @return true if this token is signed by the given public key
 	 */
 	@Override
-	public boolean isSignedBy(final CertificateToken certificateToken) {
+	public synchronized boolean isSignedBy(final CertificateToken certificateToken) {
 		if (publicKeyOfTheSigner != null) {
 			return publicKeyOfTheSigner.equals(certificateToken.getPublicKey());
 		} else if (SignatureValidity.VALID == checkIsSignedBy(certificateToken)) {
@@ -294,7 +326,7 @@ public class TimestampToken extends Token {
 	}
 	
 	@Override
-	public boolean isSignedBy(final PublicKey publicKey) {
+	public synchronized boolean isSignedBy(final PublicKey publicKey) {
 		throw new UnsupportedOperationException("Use method isSignedBy(certificateToken) for a TimestampToken validation!");
 	}
 
@@ -514,10 +546,12 @@ public class TimestampToken extends Token {
 	}
 
 	/**
+	 * Checks if the data for message-imprint computation has been found
+	 *
 	 * @return true if the message imprint data was found, false otherwise
 	 */
-	public Boolean isMessageImprintDataFound() {
-		return messageImprintData;
+	public boolean isMessageImprintDataFound() {
+		return Utils.isTrue(messageImprintData);
 	}
 
 	/**
@@ -525,11 +559,11 @@ public class TimestampToken extends Token {
 	 *
 	 * @return true if the message imprint data is intact, false otherwise
 	 */
-	public Boolean isMessageImprintDataIntact() {
+	public boolean isMessageImprintDataIntact() {
 		if (!processed) {
 			throw new IllegalStateException("Invoke matchData(byte[] data) method before!");
 		}
-		return messageImprintIntact;
+		return Utils.isTrue(messageImprintIntact);
 	}
 	
 	/**
@@ -573,6 +607,8 @@ public class TimestampToken extends Token {
 	}
 
 	/**
+	 * Gets list of {@code TimestampedReference}s covered by the current timestamp
+	 *
 	 * @return {@code List} of {@code TimestampReference}s
 	 */
 	public List<TimestampedReference> getTimestampedReferences() {
@@ -580,6 +616,8 @@ public class TimestampToken extends Token {
 	}
 
 	/**
+	 * Gets the {@code ArchiveTimestampType}, when applicable
+	 *
 	 * @return {@code ArchiveTimestampType} in the case of an archive timestamp, {@code null} otherwise
 	 */
 	public ArchiveTimestampType getArchiveTimestampType() {
@@ -733,7 +771,7 @@ public class TimestampToken extends Token {
 		try {
 			final StringBuilder out = new StringBuilder();
 			out.append(indentStr).append("TimestampToken[signedBy=").append(getIssuerX500Principal());
-			out.append(", generated: ").append(DSSUtils.formatInternal(timeStamp.getTimeStampInfo().getGenTime()));
+			out.append(", generated: ").append(DSSUtils.formatDateToRFC(timeStamp.getTimeStampInfo().getGenTime()));
 			out.append(" / ").append(timeStampType).append('\n');
 			if (isSignatureIntact()) {
 

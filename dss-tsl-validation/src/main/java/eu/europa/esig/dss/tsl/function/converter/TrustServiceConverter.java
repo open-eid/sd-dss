@@ -22,6 +22,7 @@ package eu.europa.esig.dss.tsl.function.converter;
 
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.x509.CertificateToken;
+import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.tsl.Condition;
 import eu.europa.esig.dss.spi.tsl.ConditionForQualifiers;
 import eu.europa.esig.dss.spi.tsl.TrustService;
@@ -73,6 +74,12 @@ import java.util.function.Function;
  *
  */
 public class TrustServiceConverter implements Function<TSPServiceType, TrustService> {
+
+	/**
+	 * Default constructor
+	 */
+	public TrustServiceConverter() {
+	}
 
 	@Override
 	public TrustService apply(TSPServiceType original) {
@@ -138,7 +145,7 @@ public class TrustServiceConverter implements Function<TSPServiceType, TrustServ
 
 	@SuppressWarnings("rawtypes")
 	private List<ConditionForQualifiers> extractConditionsForQualifiers(List<ExtensionType> extensions) {
-		List<ConditionForQualifiers> conditionsForQualifiers = new ArrayList<>();
+		List<ConditionForQualifiers> conditionsForQualifiersList = new ArrayList<>();
 		for (ExtensionType extensionType : extensions) {
 			List<Object> content = extensionType.getContent();
 			if (Utils.isCollectionNotEmpty(content)) {
@@ -147,22 +154,39 @@ public class TrustServiceConverter implements Function<TSPServiceType, TrustServ
 						JAXBElement jaxbElement = (JAXBElement) object;
 						Object objectValue = jaxbElement.getValue();
 						if (objectValue instanceof QualificationsType) {
-							QualificationsType qt = (QualificationsType) jaxbElement.getValue();
-							if ((qt != null) && Utils.isCollectionNotEmpty(qt.getQualificationElement())) {
-								for (QualificationElementType qualificationElement : qt.getQualificationElement()) {
-									List<String> qualifiers = extractQualifiers(qualificationElement);
-									Condition condition = getCondition(qualificationElement.getCriteriaList());
-									if (Utils.isCollectionNotEmpty(qualifiers) && (condition != null)) {
-										conditionsForQualifiers.add(new ConditionForQualifiers(condition, Collections.unmodifiableList(qualifiers)));
-									}
-								}
+							List<ConditionForQualifiers> conditionForQualifiers =
+									toConditionForQualificationsType((QualificationsType) jaxbElement.getValue());
+							if (Utils.isCollectionNotEmpty(conditionForQualifiers)) {
+								conditionsForQualifiersList.addAll(conditionForQualifiers);
 							}
 						}
 					}
 				}
 			}
 		}
-		return conditionsForQualifiers;
+		return conditionsForQualifiersList;
+	}
+
+	private List<ConditionForQualifiers> toConditionForQualificationsType(QualificationsType qt) {
+		List<ConditionForQualifiers> conditionForQualifiers = new ArrayList<>();
+		if ((qt != null) && Utils.isCollectionNotEmpty(qt.getQualificationElement())) {
+			for (QualificationElementType qualificationElement : qt.getQualificationElement()) {
+				ConditionForQualifiers condition = toConditionForQualifiers(qualificationElement);
+				if (condition != null) {
+					conditionForQualifiers.add(condition);
+				}
+			}
+		}
+		return conditionForQualifiers;
+	}
+
+	private ConditionForQualifiers toConditionForQualifiers(QualificationElementType qualificationElement) {
+		List<String> qualifiers = extractQualifiers(qualificationElement);
+		if (Utils.isCollectionNotEmpty(qualifiers)) {
+			Condition condition = getCondition(qualificationElement.getCriteriaList());
+			return new ConditionForQualifiers(condition, Collections.unmodifiableList(qualifiers));
+		}
+		return null;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -268,7 +292,7 @@ public class TrustServiceConverter implements Function<TSPServiceType, TrustServ
 		List<String> oids = new ArrayList<>();
 		if (Utils.isCollectionNotEmpty(oits)) {
 			for (ObjectIdentifierType objectIdentifierType : oits) {
-				oids.add(objectIdentifierType.getIdentifier().getValue());
+				oids.add(getOID(objectIdentifierType.getIdentifier()));
 			}
 		}
 		return oids;
@@ -280,19 +304,22 @@ public class TrustServiceConverter implements Function<TSPServiceType, TrustServ
 				CompositeCondition condition = new CompositeCondition();
 				for (ObjectIdentifierType oidType : policiesListType.getPolicyIdentifier()) {
 					IdentifierType identifier = oidType.getIdentifier();
-					String id = identifier.getValue();
-
-					// ES TSL : <ns4:Identifier
-					// Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.36035.1.3.1</ns4:Identifier>
-					if (id.indexOf(':') >= 0) {
-						id = id.substring(id.lastIndexOf(':') + 1);
-					}
-
+					String id = getOID(identifier);
 					condition.addChild(new PolicyIdCondition(id));
 				}
 				criteriaCondition.addChild(condition);
 			}
 		}
+	}
+
+	private String getOID(IdentifierType identifier) {
+		String id = identifier.getValue();
+		// ES TSL : <ns4:Identifier
+		// Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.36035.1.3.1</ns4:Identifier>
+		if (DSSUtils.isUrnOid(id)) {
+			id = DSSUtils.getOidCode(id);
+		}
+		return id;
 	}
 
 	private void addKeyUsageConditionsIfPresent(List<KeyUsageType> keyUsages, CompositeCondition criteriaCondition) {

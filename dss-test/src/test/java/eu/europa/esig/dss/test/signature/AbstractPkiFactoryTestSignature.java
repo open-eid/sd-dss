@@ -50,6 +50,7 @@ import eu.europa.esig.dss.enumerations.SignatureAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureForm;
 import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.model.AbstractSerializableSignatureParameters;
+import eu.europa.esig.dss.model.CommonCommitmentType;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.InMemoryDocument;
@@ -58,6 +59,8 @@ import eu.europa.esig.dss.model.Policy;
 import eu.europa.esig.dss.model.SerializableSignatureParameters;
 import eu.europa.esig.dss.model.SerializableTimestampParameters;
 import eu.europa.esig.dss.model.SignerLocation;
+import eu.europa.esig.dss.model.SpDocSpecification;
+import eu.europa.esig.dss.model.UserNotice;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.simplereport.SimpleReport;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
@@ -84,7 +87,6 @@ import javax.xml.crypto.dsig.CanonicalizationMethod;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -235,9 +237,7 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends SerializableSig
 		Date originalSigningDate = getSignatureParameters().bLevel().getSigningDate();
 
 		// Date in signed documents is truncated
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MMM-dd HH:mm:ss");
-
-		assertEquals(dateFormat.format(originalSigningDate), dateFormat.format(signatureDate));
+		assertEquals(DSSUtils.formatDateToRFC(originalSigningDate), DSSUtils.formatDateToRFC(signatureDate));
 	}
 	
 	@Override
@@ -285,7 +285,7 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends SerializableSig
 					switch (signatureForm) {
 						case XAdES:
 						case JAdES:
-							uriMatch = indication.equals(commitmentTypeIndication.getUri()) || indication.equals("urn:oid:" + commitmentTypeIndication.getOid());
+							uriMatch = indication.equals(commitmentTypeIndication.getUri()) || indication.equals(DSSUtils.getOidCode(commitmentTypeIndication.getOid()));
 							break;
 						case CAdES:
 						case PAdES:
@@ -302,6 +302,15 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends SerializableSig
 						}
 						if (SignatureForm.XAdES.equals(signatureForm) && Utils.isArrayNotEmpty(commitmentTypeIndication.getDocumentationReferences())) {
 							assertEquals(Arrays.asList(commitmentTypeIndication.getDocumentationReferences()), xmlCommitmentTypeIndication.getDocumentationReferences());
+						}
+						if (SignatureForm.XAdES.equals(signatureForm) && commitmentTypeIndication instanceof CommonCommitmentType) {
+							CommonCommitmentType commonCommitmentType = (CommonCommitmentType) commitmentTypeIndication;
+							if (Utils.isArrayNotEmpty(commonCommitmentType.getSignedDataObjects())) {
+								assertEquals(Arrays.asList(commonCommitmentType.getSignedDataObjects()), xmlCommitmentTypeIndication.getObjectReferences());
+							} else {
+								assertTrue(xmlCommitmentTypeIndication.isAllDataSignedObjects() != null
+										&& xmlCommitmentTypeIndication.isAllDataSignedObjects());
+							}
 						}
 					}
 				}
@@ -414,27 +423,53 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends SerializableSig
 		if (signaturePolicy != null) {
 			SignatureWrapper signature = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId());
 			assertTrue(signature.isPolicyPresent());
+
 			if (Utils.isStringNotEmpty(signaturePolicy.getId())) {
 				assertTrue(signaturePolicy.getId().contains(diagnosticData.getFirstPolicyId())); // initial Id can contain "urn:oid:"
 				// or IMPLICIT_POLICY by default if it is not specified
 			}
+
 			if (Utils.isStringNotEmpty(signaturePolicy.getDescription())) {
 				assertEquals(signaturePolicy.getDescription(), diagnosticData.getPolicyDescription(signature.getId()));
 			} else {
 				assertTrue(Utils.isStringEmpty(signature.getPolicyDescription()));
 			}
+
 			if (Utils.isArrayNotEmpty(signaturePolicy.getDocumentationReferences())) {
 				assertEquals(Arrays.asList(signaturePolicy.getDocumentationReferences()), diagnosticData.
 						getPolicyDocumentationReferences(signature.getId()));
 			} else {
 				assertTrue(Utils.isCollectionEmpty(signature.getPolicyDocumentationReferences()));
 			}
+
 			if (Utils.isStringNotEmpty(signaturePolicy.getSpuri())) {
 				assertEquals(signaturePolicy.getSpuri(), signature.getPolicyUrl());
 			} else if (Utils.isStringNotEmpty(signaturePolicy.getId())) {
 				assertEquals(signaturePolicy.getId(), signature.getPolicyUrl());
 			} else {
 				assertTrue(Utils.isStringEmpty(signature.getPolicyUrl()));
+			}
+
+			UserNotice userNotice = signaturePolicy.getUserNotice();
+			if (userNotice != null) {
+				assertNotNull(signature.getPolicyUserNotice());
+				if (Utils.isStringNotEmpty(userNotice.getOrganization())) {
+					assertEquals(userNotice.getOrganization(), signature.getPolicyUserNotice().getOrganization());
+				}
+				if (userNotice.getNoticeNumbers() != null && userNotice.getNoticeNumbers().length > 0) {
+					assertEquals(DSSUtils.toBigIntegerList(userNotice.getNoticeNumbers()), signature.getPolicyUserNotice().getNoticeNumbers());
+				}
+				if (Utils.isStringNotEmpty(userNotice.getExplicitText())) {
+					assertEquals(userNotice.getExplicitText(), signature.getPolicyUserNotice().getExplicitText());
+				}
+			}
+
+			SpDocSpecification spDocSpecification = signaturePolicy.getSpDocSpecification();
+			if (spDocSpecification != null) {
+				assertNotNull(signature.getPolicyDocSpecification());
+				if (Utils.isStringNotEmpty(spDocSpecification.getId())) {
+					assertEquals(DSSUtils.getObjectIdentifier(spDocSpecification.getId()), signature.getPolicyDocSpecification().getId());
+				}
 			}
 		}
 	}
@@ -545,7 +580,7 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends SerializableSig
 	protected void validateETSICommitment(SACommitmentTypeIndicationType commitment, SerializableSignatureParameters parameters) {
 		List<CommitmentType> commitmentTypeIndications = parameters.bLevel().getCommitmentTypeIndications();
 		List<String> uriList = commitmentTypeIndications.stream().map(CommitmentType::getUri).collect(Collectors.toList());
-		List<String> oidList = commitmentTypeIndications.stream().map(CommitmentType::getOid).collect(Collectors.toList());
+		List<String> oidList = commitmentTypeIndications.stream().map(c -> DSSUtils.getOidCode(c.getOid())).collect(Collectors.toList());
 		assertTrue(uriList.contains(commitment.getCommitmentTypeIdentifier()) || oidList.contains(commitment.getCommitmentTypeIdentifier()));
 	}
 
@@ -718,15 +753,7 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends SerializableSig
 			
 			List<DSSDocument> originalDocuments = getOriginalDocuments();
 			for (DSSDocument original : originalDocuments) {
-				boolean found = false;
-				boolean toBeCanonicalized = MimeType.XML.equals(original.getMimeType()) || MimeType.HTML.equals(original.getMimeType());
-				String originalDigest = getDigest(original, toBeCanonicalized);
-				for (DSSDocument retrieved : retrievedOriginalDocuments) {
-					String retrievedDigest = getDigest(retrieved, toBeCanonicalized);
-					if (Utils.areStringsEqual(originalDigest, retrievedDigest)) {
-						found = true;
-					}
-				}
+				boolean found = documentPresent(original, retrievedOriginalDocuments);
 
 				if (!MimeType.PDF.equals(original.getMimeType())) {
 					assertTrue(found, "Unable to retrieve the original document " + original.getName());
@@ -748,9 +775,23 @@ public abstract class AbstractPkiFactoryTestSignature<SP extends SerializableSig
 		}
 	}
 
+	protected boolean documentPresent(DSSDocument original, List<DSSDocument> retrievedDocuments) {
+		boolean found = false;
+		boolean toBeCanonicalized = MimeType.XML.equals(original.getMimeType()) || MimeType.HTML.equals(original.getMimeType());
+		String originalDigest = getDigest(original, toBeCanonicalized);
+		for (DSSDocument retrieved : retrievedDocuments) {
+			String retrievedDigest = getDigest(retrieved, toBeCanonicalized);
+			if (Utils.areStringsEqual(originalDigest, retrievedDigest)) {
+				found = true;
+				break;
+			}
+		}
+		return found;
+	}
+
 	protected String getDigest(DSSDocument doc, boolean toBeCanonicalized) {
 		byte[] byteArray = DSSUtils.toByteArray(doc);
-		if (toBeCanonicalized) {
+		if (toBeCanonicalized && DomUtils.isDOM(doc)) {
 			try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 				// we canonicalize to ignore the header (which is not covered by the signature)
 				Canonicalizer c14n = Canonicalizer.getInstance(getCanonicalizationMethod());

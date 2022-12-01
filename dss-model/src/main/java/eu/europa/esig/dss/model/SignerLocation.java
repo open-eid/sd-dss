@@ -81,6 +81,7 @@ public class SignerLocation implements Serializable {
 	 * The default constructor
 	 */
 	public SignerLocation() {
+		// empty
 	}
 
 	/**
@@ -215,16 +216,6 @@ public class SignerLocation implements Serializable {
 	 */
 	public String getStreetAddress() {
 		return streetAddress;
-	}
-
-	/**
-	 * Deprecated since DSS 5.8. Use {@code setStreetAddress(streetAddress)}
-	 *
-	 * @param street {@link String}
-	 */
-	@Deprecated
-	public void setStreet(String street) {
-		this.streetAddress = street;
 	}
 
 	/**

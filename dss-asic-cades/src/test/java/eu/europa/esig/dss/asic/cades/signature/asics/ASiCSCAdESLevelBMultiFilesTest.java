@@ -23,7 +23,6 @@ package eu.europa.esig.dss.asic.cades.signature.asics;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESSignatureParameters;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESTimestampParameters;
 import eu.europa.esig.dss.asic.cades.signature.ASiCWithCAdESService;
-import eu.europa.esig.dss.asic.cades.signature.AbstractASiCWithCAdESMultipleDocumentsTestSignature;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlSignatureScope;
@@ -36,6 +35,7 @@ import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.signature.MultipleDocumentsSignatureService;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
+import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 import eu.europa.esig.validationreport.jaxb.SignersDocumentType;
 import eu.europa.esig.validationreport.jaxb.ValidationObjectType;
@@ -48,8 +48,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ASiCSCAdESLevelBMultiFilesTest extends AbstractASiCWithCAdESMultipleDocumentsTestSignature {
+public class ASiCSCAdESLevelBMultiFilesTest extends AbstractASiCSWithCAdESMultipleDocumentsTestSignature {
 
 	private ASiCWithCAdESService service;
 	private ASiCWithCAdESSignatureParameters signatureParameters;
@@ -76,6 +77,8 @@ public class ASiCSCAdESLevelBMultiFilesTest extends AbstractASiCWithCAdESMultipl
 
 	@Override
 	protected void checkSignatureScopes(DiagnosticData diagnosticData) {
+		super.checkSignatureScopes(diagnosticData);
+
 		SignatureWrapper signature = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId());
 		List<XmlSignatureScope> signatureScopes = signature.getSignatureScopes();
 		assertEquals(4, Utils.collectionSize(signatureScopes)); // package.zip + three signed files
@@ -107,23 +110,31 @@ public class ASiCSCAdESLevelBMultiFilesTest extends AbstractASiCWithCAdESMultipl
 	}
 
 	@Override
+	protected void checkMimeType(DiagnosticData diagnosticData) {
+		super.checkMimeType(diagnosticData);
+
+		for (SignatureWrapper signatureWrapper : diagnosticData.getSignatures()) {
+			assertEquals(MimeType.ZIP, MimeType.fromMimeTypeString(signatureWrapper.getMimeType())); // package.zip signed
+		}
+	}
+
+	@Override
+	protected void verifyOriginalDocuments(SignedDocumentValidator validator, DiagnosticData diagnosticData) {
+		List<DSSDocument> retrievedDocuments = validator.getOriginalDocuments(diagnosticData.getFirstSignatureId());
+		for (DSSDocument document : documentsToSign) {
+			boolean found = false;
+			for (DSSDocument retrievedDoc : retrievedDocuments) {
+				if (Arrays.equals(DSSUtils.toByteArray(document), DSSUtils.toByteArray(retrievedDoc))) {
+					found = true;
+				}
+			}
+			assertTrue(found);
+		}
+	}
+
+	@Override
 	protected ASiCWithCAdESSignatureParameters getSignatureParameters() {
 		return signatureParameters;
-	}
-
-	@Override
-	protected MimeType getExpectedMime() {
-		return MimeType.ASICS;
-	}
-
-	@Override
-	protected boolean isBaselineT() {
-		return false;
-	}
-
-	@Override
-	protected boolean isBaselineLTA() {
-		return false;
 	}
 
 	@Override

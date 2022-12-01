@@ -24,6 +24,7 @@ import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.pades.PAdESSignatureParameters;
 import eu.europa.esig.dss.pdf.IPdfObjFactory;
+import eu.europa.esig.dss.pdf.PDFSignatureService;
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 
@@ -45,11 +46,21 @@ class PAdESLevelBaselineLTA extends PAdESLevelBaselineLT {
 
 	@Override
 	public DSSDocument extendSignatures(DSSDocument document, PAdESSignatureParameters parameters) throws DSSException {
-		// check if needed to extends with PAdESLevelBaselineLT
+		// check if needed to extend with PAdESLevelBaselineLT
 		document = super.extendSignatures(document, parameters);
 		
 		// Will add a Document TimeStamp (not CMS)
-		return timestampDocument(document, parameters.getArchiveTimestampParameters(), parameters.getPasswordProtection());
+		return timestampDocument(document, parameters.getArchiveTimestampParameters(),
+				parameters.getPasswordProtection(), getArchiveTimestampService());
+	}
+
+	/**
+	 * This method returns a {@code PDFSignatureService} to be used for an archive timestamp creation
+	 *
+	 * @return {@link PDFSignatureService}
+	 */
+	private PDFSignatureService getArchiveTimestampService() {
+		return pdfObjectFactory.newArchiveTimestampService();
 	}
 
 }

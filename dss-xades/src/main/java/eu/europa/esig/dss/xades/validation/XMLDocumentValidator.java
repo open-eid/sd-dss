@@ -27,6 +27,7 @@ import eu.europa.esig.dss.validation.AdvancedSignature;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.policy.DefaultSignaturePolicyValidatorLoader;
 import eu.europa.esig.dss.validation.policy.SignaturePolicyValidatorLoader;
+import eu.europa.esig.dss.validation.scope.EncapsulatedTimestampScopeFinder;
 import eu.europa.esig.dss.xades.DSSXMLUtils;
 import eu.europa.esig.dss.xades.XAdESSignatureUtils;
 import eu.europa.esig.dss.xades.definition.SAMLAssertionNamespace;
@@ -37,6 +38,7 @@ import eu.europa.esig.dss.xades.definition.xades122.XAdES122Paths;
 import eu.europa.esig.dss.xades.definition.xades132.XAdES132Paths;
 import eu.europa.esig.dss.xades.validation.policy.XMLSignaturePolicyValidator;
 import eu.europa.esig.dss.xades.validation.scope.XAdESSignatureScopeFinder;
+import eu.europa.esig.dss.xades.validation.scope.XAdESTimestampScopeFinder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -63,9 +65,6 @@ public class XMLDocumentValidator extends SignedDocumentValidator {
 
 	/** Defines if the XSW protection shall be disabled (false by default) */
 	private boolean disableXSWProtection = false;
-
-	/** Cached list of found signatures */
-	private List<AdvancedSignature> signatures;
 
 	static {
 		XAdESNamespaces.registerNamespaces();
@@ -113,7 +112,7 @@ public class XMLDocumentValidator extends SignedDocumentValidator {
 	}
 
 	/**
-	 * NOT RECOMMENDED : This parameter allows to disable protection against XML
+	 * NOT RECOMMENDED : This parameter allows disabling protection against XML
 	 * Signature wrapping attacks (XSW). It disables the research by XPath
 	 * expression for defined Type attributes.
 	 * 
@@ -125,12 +124,8 @@ public class XMLDocumentValidator extends SignedDocumentValidator {
 	}
 
 	@Override
-	public List<AdvancedSignature> getSignatures() {
-		if (signatures != null) {
-			return signatures;
-		}
-
-		signatures = new ArrayList<>();
+	protected List<AdvancedSignature> buildSignatures() {
+		List<AdvancedSignature> signatures = new ArrayList<>();
 		final NodeList signatureNodeList = DSSXMLUtils.getAllSignaturesExceptCounterSignatures(rootElement);
 		for (int ii = 0; ii < signatureNodeList.getLength(); ii++) {
 
@@ -201,6 +196,11 @@ public class XMLDocumentValidator extends SignedDocumentValidator {
 		DefaultSignaturePolicyValidatorLoader signaturePolicyValidatorLoader = new DefaultSignaturePolicyValidatorLoader();
 		signaturePolicyValidatorLoader.setDefaultSignaturePolicyValidator(new XMLSignaturePolicyValidator());
 		return signaturePolicyValidatorLoader;
+	}
+
+	@Override
+	protected EncapsulatedTimestampScopeFinder getTimestampScopeFinder() {
+		return new XAdESTimestampScopeFinder();
 	}
 
 }

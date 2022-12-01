@@ -20,33 +20,30 @@
  */
 package eu.europa.esig.dss.asic.cades.signature.asics;
 
-import eu.europa.esig.dss.asic.cades.ASiCWithCAdESContainerExtractor;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESSignatureParameters;
-import eu.europa.esig.dss.asic.cades.ASiCWithCAdESTimestampParameters;
+import eu.europa.esig.dss.asic.cades.SimpleASiCWithCAdESFilenameFactory;
 import eu.europa.esig.dss.asic.cades.signature.ASiCWithCAdESService;
-import eu.europa.esig.dss.asic.common.ASiCExtractResult;
-import eu.europa.esig.dss.asic.common.AbstractASiCContainerExtractor;
+import eu.europa.esig.dss.asic.common.ASiCContent;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.MimeType;
-import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
 import org.junit.jupiter.api.BeforeEach;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 public class ASiCSCAdESLevelBWithSignatureNameTest extends AbstractASiCSCAdESTestSignature {
 
 	private static final String SIGNATURE_FILENAME = "signature-toto.p7s";
-	private DocumentSignatureService<ASiCWithCAdESSignatureParameters, ASiCWithCAdESTimestampParameters> service;
+	private ASiCWithCAdESService service;
 	private ASiCWithCAdESSignatureParameters signatureParameters;
 	private DSSDocument documentToSign;
 
@@ -59,48 +56,50 @@ public class ASiCSCAdESLevelBWithSignatureNameTest extends AbstractASiCSCAdESTes
 		signatureParameters.setCertificateChain(getCertificateChain());
 		signatureParameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_B);
 		signatureParameters.aSiC().setContainerType(ASiCContainerType.ASiC_S);
-		signatureParameters.aSiC().setSignatureFileName(SIGNATURE_FILENAME);
 
 		service = new ASiCWithCAdESService(getOfflineCertificateVerifier());
 	}
 
 	@Override
-	protected void onDocumentSigned(byte[] byteArray) {
-		super.onDocumentSigned(byteArray);
+	protected DSSDocument sign() {
+		SimpleASiCWithCAdESFilenameFactory asicFilenameFactory = new SimpleASiCWithCAdESFilenameFactory();
+		asicFilenameFactory.setSignatureFilename(SIGNATURE_FILENAME);
+		getService().setAsicFilenameFactory(asicFilenameFactory);
 
-		InMemoryDocument doc = new InMemoryDocument(byteArray);
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> super.sign());
+		assertEquals("A signature file within ASiC-S with CAdES container shall have name " +
+				"'META-INF/signature.p7s'!", exception.getMessage());
 
-		AbstractASiCContainerExtractor extractor = new ASiCWithCAdESContainerExtractor(doc);
-		ASiCExtractResult extract = extractor.extract();
+		asicFilenameFactory.setSignatureFilename("META-INF/signature.p7s");
+		return super.sign();
+	}
 
-		assertEquals(0, extract.getUnsupportedDocuments().size());
+	@Override
+	protected void checkExtractedContent(ASiCContent asicContent) {
+		assertEquals(0, asicContent.getUnsupportedDocuments().size());
 
-		List<DSSDocument> signatureDocuments = extract.getSignatureDocuments();
+		List<DSSDocument> signatureDocuments = asicContent.getSignatureDocuments();
 		assertEquals(1, signatureDocuments.size());
-		assertEquals("META-INF/" + SIGNATURE_FILENAME, signatureDocuments.get(0).getName());
+		assertEquals("META-INF/signature.p7s", signatureDocuments.get(0).getName());
 
-		List<DSSDocument> manifestDocuments = extract.getManifestDocuments();
+		List<DSSDocument> manifestDocuments = asicContent.getManifestDocuments();
 		assertEquals(0, manifestDocuments.size());
 
-		List<DSSDocument> signedDocuments = extract.getSignedDocuments();
+		List<DSSDocument> signedDocuments = asicContent.getSignedDocuments();
 		assertEquals(1, signedDocuments.size());
 		assertEquals("test.text", signedDocuments.get(0).getName());
 
-		DSSDocument mimeTypeDocument = extract.getMimeTypeDocument();
+		DSSDocument mimeTypeDocument = asicContent.getMimeTypeDocument();
 
 		byte[] mimeTypeContent = DSSUtils.toByteArray(mimeTypeDocument);
-		try {
-			assertEquals(MimeType.ASICS.getMimeTypeString(), new String(mimeTypeContent, "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			fail(e.getMessage());
-		}
+		assertEquals(MimeType.ASICS.getMimeTypeString(), new String(mimeTypeContent, StandardCharsets.UTF_8));
 
-		assertTrue(Utils.isStringEmpty(extract.getZipComment()));
+		assertTrue(Utils.isStringEmpty(asicContent.getZipComment()));
 
 	}
 
 	@Override
-	protected DocumentSignatureService<ASiCWithCAdESSignatureParameters, ASiCWithCAdESTimestampParameters> getService() {
+	protected ASiCWithCAdESService getService() {
 		return service;
 	}
 

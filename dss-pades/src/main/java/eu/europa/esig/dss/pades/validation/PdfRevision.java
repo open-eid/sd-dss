@@ -20,6 +20,8 @@
  */
 package eu.europa.esig.dss.pades.validation;
 
+import eu.europa.esig.dss.pdf.modifications.PdfModificationDetection;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -36,11 +38,11 @@ public interface PdfRevision extends Serializable {
 	PdfSignatureDictionary getPdfSigDictInfo();
 	
 	/**
-	 * Returns a list of signature field names that refer the current object
+	 * Returns a list of signature fields that refer the current object
 	 * 
-	 * @return list of {@link String} field names
+	 * @return list of {@link PdfSignatureField}s
 	 */
-	List<String> getFieldNames();
+	List<PdfSignatureField> getFields();
 	
 	/**
 	 * Returns an information about changes made in the document

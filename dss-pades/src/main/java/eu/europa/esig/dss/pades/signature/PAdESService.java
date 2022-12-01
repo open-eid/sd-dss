@@ -29,6 +29,7 @@ import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.model.DigestDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.TimestampBinary;
 import eu.europa.esig.dss.model.ToBeSigned;
@@ -104,19 +105,24 @@ public class PAdESService extends AbstractSignatureService<PAdESSignatureParamet
 			case PAdES_BASELINE_B:
 				return null;
 			case PAdES_BASELINE_T:
-				return new PAdESLevelBaselineT(tspSource, pdfObjFactory);
+				return new PAdESLevelBaselineT(tspSource, certificateVerifier, pdfObjFactory);
 			case PAdES_BASELINE_LT:
 				return new PAdESLevelBaselineLT(tspSource, certificateVerifier, pdfObjFactory);
 			case PAdES_BASELINE_LTA:
 				return new PAdESLevelBaselineLTA(tspSource, certificateVerifier, pdfObjFactory);
 			default:
-				throw new IllegalArgumentException("Signature format '" + signatureLevel + "' not supported");
+				throw new UnsupportedOperationException(
+						String.format("Unsupported signature format '%s' for extension.", signatureLevel));
 		}
 	}
 
 	@Override
 	public TimestampToken getContentTimestamp(DSSDocument toSignDocument, PAdESSignatureParameters parameters) {
-		final PDFSignatureService pdfSignatureService = pdfObjFactory.newContentTimestampService();
+		Objects.requireNonNull(toSignDocument, "toSignDocument cannot be null!");
+		Objects.requireNonNull(parameters, "SignatureParameters cannot be null!");
+		assertSignaturePossible(toSignDocument);
+
+		final PDFSignatureService pdfSignatureService = getContentTimestampService();
 		final DigestAlgorithm digestAlgorithm = parameters.getContentTimestampParameters().getDigestAlgorithm();
 		final byte[] messageDigest = pdfSignatureService.digest(toSignDocument, parameters);
 		TimestampBinary timeStampResponse = tspSource.getTimeStampResponse(digestAlgorithm, messageDigest);
@@ -126,13 +132,44 @@ public class PAdESService extends AbstractSignatureService<PAdESSignatureParamet
 			throw new DSSException("Cannot obtain the content timestamp", e);
 		}
 	}
+	
+	/**
+	 * Returns a page preview with the visual signature
+	 * @param toSignDocument the document to be signed
+	 * @param parameters
+	 *            the signature/timestamp parameters
+	 * @return a DSSDocument with the PNG picture
+	 */
+	public DSSDocument previewPageWithVisualSignature(final DSSDocument toSignDocument, final PAdESSignatureParameters parameters) {
+		Objects.requireNonNull(toSignDocument, "toSignDocument cannot be null!");
+		Objects.requireNonNull(parameters, "SignatureParameters cannot be null!");
+
+		final PDFSignatureService pdfSignatureService = getPAdESSignatureService();
+		return pdfSignatureService.previewPageWithVisualSignature(toSignDocument, parameters);
+	}
+
+	/**
+	 * Returns a preview of the signature field
+	 * @param toSignDocument the document to be signed
+	 * @param parameters
+	 *            the signature/timestamp parameters
+	 * @return a DSSDocument with the PNG picture
+	 */
+	public DSSDocument previewSignatureField(final DSSDocument toSignDocument, final PAdESSignatureParameters parameters) {
+		Objects.requireNonNull(toSignDocument, "toSignDocument cannot be null!");
+		Objects.requireNonNull(parameters, "SignatureParameters cannot be null!");
+
+		final PDFSignatureService pdfSignatureService = getPAdESSignatureService();
+		return pdfSignatureService.previewSignatureField(toSignDocument, parameters);
+	}
 
 	@Override
 	public ToBeSigned getDataToSign(final DSSDocument toSignDocument, final PAdESSignatureParameters parameters) throws DSSException {
 		Objects.requireNonNull(toSignDocument, "toSignDocument cannot be null!");
 		Objects.requireNonNull(parameters, "SignatureParameters cannot be null!");
 
-		assertSigningDateInCertificateValidityRange(parameters);
+		assertSignaturePossible(toSignDocument);
+		assertSigningCertificateValid(parameters);
 
 		final SignatureAlgorithm signatureAlgorithm = parameters.getSignatureAlgorithm();
 		final CustomContentSigner customContentSigner = new CustomContentSigner(signatureAlgorithm.getJCEId());
@@ -160,33 +197,40 @@ public class PAdESService extends AbstractSignatureService<PAdESSignatureParamet
 	 * @return bytes to be signed
 	 */
 	protected byte[] computeDocumentDigest(final DSSDocument toSignDocument, final PAdESSignatureParameters parameters) {
-		final PDFSignatureService pdfSignatureService = pdfObjFactory.newPAdESSignatureService();
+		final PDFSignatureService pdfSignatureService = getPAdESSignatureService();
 		return pdfSignatureService.digest(toSignDocument, parameters);
 	}
 
 	@Override
-	public DSSDocument signDocument(final DSSDocument toSignDocument, final PAdESSignatureParameters parameters, SignatureValue signatureValue)
-			throws DSSException {
+	public DSSDocument signDocument(final DSSDocument toSignDocument, final PAdESSignatureParameters parameters,
+									SignatureValue signatureValue) {
 		Objects.requireNonNull(toSignDocument, "toSignDocument cannot be null!");
 		Objects.requireNonNull(parameters, "SignatureParameters cannot be null!");
 
-		assertSigningDateInCertificateValidityRange(parameters);
+		assertSignaturePossible(toSignDocument);
+		assertSigningCertificateValid(parameters);
 		signatureValue = ensureSignatureValue(parameters.getSignatureAlgorithm(), signatureValue);
 
 		final SignatureLevel signatureLevel = parameters.getSignatureLevel();
-		final byte[] encodedData = generateCMSSignedData(toSignDocument, parameters, signatureValue);
+		final byte[] cmsSignedData = generateCMSSignedData(toSignDocument, parameters, signatureValue);
 
-		final PDFSignatureService pdfSignatureService = pdfObjFactory.newPAdESSignatureService();
-		DSSDocument signature = pdfSignatureService.sign(toSignDocument, encodedData, parameters);
+		final PDFSignatureService pdfSignatureService = getPAdESSignatureService();
+		DSSDocument signature = pdfSignatureService.sign(toSignDocument, cmsSignedData, parameters);
 
 		final SignatureExtension<PAdESSignatureParameters> extension = getExtensionProfile(signatureLevel);
 		if ((signatureLevel != SignatureLevel.PAdES_BASELINE_B) && (signatureLevel != SignatureLevel.PAdES_BASELINE_T) && (extension != null)) {
 			signature = extension.extendSignatures(signature, parameters);
 		}
 
-		parameters.reinitDeterministicId();
+		parameters.reinit();
 		signature.setName(getFinalFileName(toSignDocument, SigningOperation.SIGN, parameters.getSignatureLevel()));
 		return signature;
+	}
+
+	private void assertSignaturePossible(DSSDocument toSignDocument) {
+		if (toSignDocument instanceof DigestDocument) {
+			throw new IllegalArgumentException("DigestDocument cannot be used for PAdES!");
+		}
 	}
 
 	/**
@@ -217,7 +261,7 @@ public class PAdESService extends AbstractSignatureService<PAdESSignatureParamet
 
 		if (signatureLevel != SignatureLevel.PAdES_BASELINE_B) {
 			// use an embedded timestamp
-			CAdESLevelBaselineT cadesLevelBaselineT = new CAdESLevelBaselineT(tspSource);
+			CAdESLevelBaselineT cadesLevelBaselineT = new CAdESLevelBaselineT(tspSource, certificateVerifier);
 			data = cadesLevelBaselineT.extendCMSSignatures(data, parameters);
 		}
 
@@ -229,7 +273,8 @@ public class PAdESService extends AbstractSignatureService<PAdESSignatureParamet
 		Objects.requireNonNull(toExtendDocument, "toExtendDocument is not defined!");
 		Objects.requireNonNull(parameters, "Cannot extend the signature. SignatureParameters are not defined!");
 		if (SignatureLevel.PAdES_BASELINE_B.equals(parameters.getSignatureLevel())) {
-			throw new IllegalArgumentException("Cannot extend to PAdES_BASELINE_B");
+			throw new UnsupportedOperationException(
+					String.format("Unsupported signature format '%s' for extension.", parameters.getSignatureLevel()));
 		}
 		
 		final SignatureExtension<PAdESSignatureParameters> extension = getExtensionProfile(parameters.getSignatureLevel());
@@ -262,7 +307,7 @@ public class PAdESService extends AbstractSignatureService<PAdESSignatureParamet
 	 * @return the list of empty signature fields
 	 */
 	public List<String> getAvailableSignatureFields(DSSDocument document, String passwordProtection) {
-		PDFSignatureService pdfSignatureService = pdfObjFactory.newPAdESSignatureService();
+		PDFSignatureService pdfSignatureService = getPAdESSignatureService();
 		return pdfSignatureService.getAvailableSignatureFields(document, passwordProtection);
 	}
 
@@ -291,16 +336,46 @@ public class PAdESService extends AbstractSignatureService<PAdESSignatureParamet
 	 * @return the pdf document with the new added signature field
 	 */
 	public DSSDocument addNewSignatureField(DSSDocument document, SignatureFieldParameters parameters, String passwordProtection) {
-		PDFSignatureService pdfSignatureService = pdfObjFactory.newPAdESSignatureService();
+		PDFSignatureService pdfSignatureService = getPAdESSignatureService();
 		return pdfSignatureService.addNewSignatureField(document, parameters, passwordProtection);
 	}
 
 	@Override
 	public DSSDocument timestamp(DSSDocument toTimestampDocument, PAdESTimestampParameters parameters) {
-		PAdESTimestampService timestampService = new PAdESTimestampService(tspSource, pdfObjFactory.newSignatureTimestampService());
-		DSSDocument timestampedDocument = timestampService.timestampDocument(toTimestampDocument, parameters);
+		PAdESExtensionService extensionService = new PAdESExtensionService(certificateVerifier, pdfObjFactory);
+		DSSDocument extendedDocument = extensionService.incorporateValidationData(toTimestampDocument, parameters.getPasswordProtection());
+
+		PAdESTimestampService timestampService = new PAdESTimestampService(tspSource, getSignatureTimestampService());
+		DSSDocument timestampedDocument = timestampService.timestampDocument(extendedDocument, parameters);
 		timestampedDocument.setName(getFinalFileName(toTimestampDocument, SigningOperation.TIMESTAMP, null));
 		return timestampedDocument;
+	}
+
+	/**
+	 * This method is used to return a new {@code PDFSignatureService} for a signature creation
+	 *
+	 * @return {@link PDFSignatureService}
+	 */
+	protected PDFSignatureService getPAdESSignatureService() {
+		return pdfObjFactory.newPAdESSignatureService();
+	}
+
+	/**
+	 * This method is used to return a new {@code PDFSignatureService} for a content timestamp creation
+	 * 
+	 * @return {@link PDFSignatureService}
+	 */
+	protected PDFSignatureService getContentTimestampService() {
+		return pdfObjFactory.newContentTimestampService();
+	}
+
+	/**
+	 * This method is used to return a new {@code PDFSignatureService} for a timestamp creation
+	 *
+	 * @return {@link PDFSignatureService}
+	 */
+	protected PDFSignatureService getSignatureTimestampService() {
+		return pdfObjFactory.newSignatureTimestampService();
 	}
 
 }

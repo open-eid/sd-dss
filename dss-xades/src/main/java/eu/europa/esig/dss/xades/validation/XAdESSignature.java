@@ -40,6 +40,7 @@ import eu.europa.esig.dss.model.Digest;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.SignaturePolicyStore;
 import eu.europa.esig.dss.model.SpDocSpecification;
+import eu.europa.esig.dss.model.UserNotice;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.x509.CandidatesForSigningCertificate;
 import eu.europa.esig.dss.spi.x509.CertificateValidity;
@@ -344,7 +345,11 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	public SignatureAlgorithm getSignatureAlgorithm() {
 		final String xmlName = DomUtils.getElement(signatureElement, XMLDSigPaths.SIGNATURE_METHOD_PATH)
 				.getAttribute(XMLDSigAttribute.ALGORITHM.getAttributeName());
-		return SignatureAlgorithm.forXML(xmlName, null);
+		SignatureAlgorithm signatureAlgorithm =  SignatureAlgorithm.forXML(xmlName, null);
+		if (signatureAlgorithm == null) {
+			LOG.error("SignatureAlgorithm '{}' is not supported!", xmlName);
+		}
+		return signatureAlgorithm;
 	}
 
 	@Override
@@ -422,17 +427,19 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 					policyUrlString = policyUrl.getTextContent();
 					policyUrlString = Utils.trim(policyUrlString);
 				}
-				xadesSignaturePolicy.setUrl(policyUrlString);
+				xadesSignaturePolicy.setUri(policyUrlString);
 
 				final Element spUserNotice = DomUtils.getElement(policyIdentifier, xadesPaths.getCurrentSignaturePolicySPUserNotice());
 				if (spUserNotice != null) {
-					xadesSignaturePolicy.setNotice(buildSPUserNoticeString(spUserNotice));
+					xadesSignaturePolicy.setUserNotice(buildSPUserNotice(spUserNotice));
 				}
 
-				final Element spDocSpecification = DomUtils.getElement(policyIdentifier, xadesPaths.getCurrentSignaturePolicySPDocSpecificationIdentifier());
-				if (spDocSpecification != null) {
-					String spDocSpecificationString = spDocSpecification.getTextContent();
-					xadesSignaturePolicy.setDocSpecification(DSSUtils.getObjectIdentifier(spDocSpecificationString));
+				String currentSignaturePolicySPDocSpecificationPath = xadesPaths.getCurrentSignaturePolicySPDocSpecification();
+				if (Utils.isStringNotEmpty(currentSignaturePolicySPDocSpecificationPath)) {
+					final Element spDocSpecification = DomUtils.getElement(policyIdentifier, currentSignaturePolicySPDocSpecificationPath);
+					if (spDocSpecification != null) {
+						xadesSignaturePolicy.setDocSpecification(buildSpDocSpecification(spDocSpecification));
+					}
 				}
 
 				final Element policyDescription = DomUtils.getElement(policyIdentifier, xadesPaths.getCurrentSignaturePolicyDescription());
@@ -463,19 +470,17 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 		return xadesSignaturePolicy;
 	}
 
-	private String buildSPUserNoticeString(Element spUserNoticeElement) {
+	private UserNotice buildSPUserNotice(Element spUserNoticeElement) {
 		try {
-			String organizationString = null;
-			List<Integer> noticeNumbersList = null;
-			String explicitTextString = null;
+			final UserNotice userNotice = new UserNotice();
 
 			final Element organization = DomUtils.getElement(spUserNoticeElement, xadesPaths.getCurrentSPUserNoticeNoticeRefOrganization());
 			if (organization != null) {
-				organizationString = organization.getTextContent();
+				userNotice.setOrganization(organization.getTextContent());
 			}
 			final Element noticeNumbers = DomUtils.getElement(spUserNoticeElement, xadesPaths.getCurrentSPUserNoticeNoticeRefNoticeNumbers());
 			if (noticeNumbers != null && noticeNumbers.hasChildNodes()) {
-				noticeNumbersList = new ArrayList<>();
+				final List<Integer> noticeNumbersList = new ArrayList<>();
 				NodeList childNodes = noticeNumbers.getChildNodes();
 				for (int ii = 0; ii < childNodes.getLength(); ii++) {
 					Node child = childNodes.item(ii);
@@ -483,13 +488,14 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 						noticeNumbersList.add(Integer.valueOf(child.getTextContent()));
 					}
 				}
+				userNotice.setNoticeNumbers(noticeNumbersList.stream().mapToInt(i -> i).toArray());
 			}
 			final Element explicitText = DomUtils.getElement(spUserNoticeElement, xadesPaths.getCurrentSPUserNoticeExplicitText());
 			if (explicitText != null) {
-				explicitTextString = explicitText.getTextContent();
+				userNotice.setExplicitText(explicitText.getTextContent());
 			}
 
-			return DSSUtils.getSPUserNoticeString(organizationString, noticeNumbersList, explicitTextString);
+			return userNotice;
 
 		} catch (Exception e) {
 			LOG.error("Unable to build SPUserNotice qualifier. Reason : {}", e.getMessage(), e);
@@ -553,57 +559,84 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 			NodeList nodeList = DomUtils.getNodeList(signatureElement, signaturePolicyStorePath);
 			if (nodeList.getLength() > 0) {
 				SignaturePolicyStore sps = new SignaturePolicyStore();
-				SpDocSpecification spDocSpec = new SpDocSpecification();
 				
 				Element signaturePolicyStoreElement = (Element) nodeList.item(0);
 				String id = signaturePolicyStoreElement.getAttribute(XMLDSigAttribute.ID.getAttributeName());
 				if (Utils.isStringNotEmpty(id)) {
 					sps.setId(id);
 				}
-								
-				Element identifierElement = DomUtils.getElement(signaturePolicyStoreElement, xadesPaths.getCurrentSPDocSpecificationIdentifier());
-				if (identifierElement != null) {
-					String spDocSpecId = identifierElement.getTextContent();
-					spDocSpec.setId(DSSUtils.getObjectIdentifier(spDocSpecId));
-					
-					String qualifierString = identifierElement.getAttribute(XAdES132Attribute.QUALIFIER.getAttributeName());
-					if (Utils.isStringNotBlank(qualifierString)) {
-						spDocSpec.setQualifier(ObjectIdentifierQualifier.fromValue(qualifierString));
+
+				SpDocSpecification spDocSpec = null;
+				String currentSPDocSpecificationPath = xadesPaths.getCurrentSPDocSpecification();
+				if (Utils.isStringNotEmpty(currentSPDocSpecificationPath)) {
+					Element spDocSpecificationElement = DomUtils.getElement(signaturePolicyStoreElement, currentSPDocSpecificationPath);
+					if (spDocSpecificationElement != null) {
+						spDocSpec = buildSpDocSpecification(spDocSpecificationElement);
+					}
+				}
+				sps.setSpDocSpecification(spDocSpec);
+
+				String currentSignaturePolicyDocumentPath = xadesPaths.getCurrentSignaturePolicyDocument();
+				if (Utils.isStringNotEmpty(currentSignaturePolicyDocumentPath)) {
+					String spDocB64 = DomUtils.getValue(signaturePolicyStoreElement, currentSignaturePolicyDocumentPath);
+					if (Utils.isStringNotEmpty(spDocB64) && Utils.isBase64Encoded(spDocB64)) {
+						sps.setSignaturePolicyContent(new InMemoryDocument(Utils.fromBase64(spDocB64)));
 					}
 				}
 
-				String description = DomUtils.getValue(signaturePolicyStoreElement, xadesPaths.getCurrentSPDocSpecificationDescription());
-				spDocSpec.setDescription(description);
-				
-				NodeList documentReferenceList = DomUtils.getNodeList(signaturePolicyStoreElement,
-						xadesPaths.getCurrentSPDocSpecificationDocumentReferenceElements());
-				String[] documentationReferences = null;
-				if (documentReferenceList != null && documentReferenceList.getLength() > 0) {
-					documentationReferences = new String[documentReferenceList.getLength()];
-					for (int i = 0; i < documentReferenceList.getLength(); i++) {
-						documentationReferences[i] = documentReferenceList.item(i).getTextContent();
+				String currentSigPolDocLocalURI = xadesPaths.getCurrentSigPolDocLocalURI();
+				if (Utils.isStringNotEmpty(currentSigPolDocLocalURI)) {
+					String sigPolDocLocalURI = DomUtils.getValue(signaturePolicyStoreElement, currentSigPolDocLocalURI);
+					if (Utils.isStringNotEmpty(sigPolDocLocalURI)) {
+						sps.setSigPolDocLocalURI(sigPolDocLocalURI);
 					}
 				}
-				spDocSpec.setDocumentationReferences(documentationReferences);
-				
-				sps.setSpDocSpecification(spDocSpec);
-				
-				String spDocB64 = DomUtils.getValue(signaturePolicyStoreElement,
-						xadesPaths.getCurrentSignaturePolicyDocument());
-				if (Utils.isStringNotEmpty(spDocB64) && Utils.isBase64Encoded(spDocB64)) {
-					sps.setSignaturePolicyContent(new InMemoryDocument(Utils.fromBase64(spDocB64)));
-				}
+
 				return sps;
 			}
 		}
 		return null;
 	}
 
+	private SpDocSpecification buildSpDocSpecification(Element spDocSpecificationElement) {
+		SpDocSpecification spDocSpec = new SpDocSpecification();
+
+		Element identifierElement = DomUtils.getElement(spDocSpecificationElement, xadesPaths.getCurrentIdentifier());
+		if (identifierElement != null) {
+			String spDocSpecId = identifierElement.getTextContent();
+			spDocSpec.setId(DSSUtils.getObjectIdentifier(spDocSpecId));
+
+			String qualifierString = identifierElement.getAttribute(XAdES132Attribute.QUALIFIER.getAttributeName());
+			if (Utils.isStringNotBlank(qualifierString)) {
+				spDocSpec.setQualifier(ObjectIdentifierQualifier.fromValue(qualifierString));
+			}
+		}
+
+		String description = DomUtils.getValue(spDocSpecificationElement, xadesPaths.getCurrentDescription());
+		if (Utils.isStringNotBlank(description)) {
+			spDocSpec.setDescription(description);
+		}
+
+		String currentDocumentationReferenceElementsPath = xadesPaths.getCurrentDocumentationReferenceElements();
+		if (Utils.isStringNotEmpty(currentDocumentationReferenceElementsPath)) {
+			String[] documentationReferences = null;
+			NodeList documentReferenceList = DomUtils.getNodeList(spDocSpecificationElement, currentDocumentationReferenceElementsPath);
+			if (documentReferenceList != null && documentReferenceList.getLength() > 0) {
+				documentationReferences = new String[documentReferenceList.getLength()];
+				for (int i = 0; i < documentReferenceList.getLength(); i++) {
+					documentationReferences[i] = documentReferenceList.item(i).getTextContent();
+				}
+			}
+			spDocSpec.setDocumentationReferences(documentationReferences);
+		}
+
+		return spDocSpec;
+	}
+
 	@Override
 	public List<SignerRole> getSignedAssertions() {
 		List<SignerRole> result = new ArrayList<>();
 		String signedAssertionPath = xadesPaths.getSignedAssertionPath();
-
 		if (signedAssertionPath != null) {
 			NodeList nodeList = DomUtils.getNodeList(signatureElement, signedAssertionPath);
 			for (int ii = 0; ii < nodeList.getLength(); ii++) {
@@ -748,11 +781,16 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	 * @return {@link Element}
 	 */
 	public Element getCompleteCertificateRefs() {
-		Element completeCertificateRefs = DomUtils.getElement(signatureElement, xadesPaths.getCompleteCertificateRefsPath());
-		if (completeCertificateRefs != null) {
-			return completeCertificateRefs;
+		Element element = null;
+		String completeCertificateRefsPath = xadesPaths.getCompleteCertificateRefsPath();
+		if (Utils.isStringNotEmpty(completeCertificateRefsPath)) {
+			element = DomUtils.getElement(signatureElement, completeCertificateRefsPath);
 		}
-		return DomUtils.getElement(signatureElement, xadesPaths.getCompleteCertificateRefsV2Path());
+		String completeCertificateRefsV2Path = xadesPaths.getCompleteCertificateRefsV2Path();
+		if (element == null && Utils.isStringNotEmpty(completeCertificateRefsV2Path)) {
+			element = DomUtils.getElement(signatureElement, completeCertificateRefsV2Path);
+		}
+		return element;
 	}
 
 	/**
@@ -770,12 +808,14 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	 * @return {@link NodeList}
 	 */
 	public NodeList getSigAndRefsTimeStamp() {
-		NodeList nodeList = DomUtils.getNodeList(signatureElement, xadesPaths.getSigAndRefsTimestampPath());
-		if (nodeList == null || nodeList.getLength() == 0) {
-			String sigAndRefsTimestampV2Path = xadesPaths.getSigAndRefsTimestampV2Path();
-			if (sigAndRefsTimestampV2Path != null) {
-				nodeList = DomUtils.getNodeList(signatureElement, sigAndRefsTimestampV2Path);
-			}
+		NodeList nodeList = null;
+		String sigAndRefsTimestampPath = xadesPaths.getSigAndRefsTimestampPath();
+		if (Utils.isStringNotEmpty(sigAndRefsTimestampPath)) {
+			nodeList = DomUtils.getNodeList(signatureElement, sigAndRefsTimestampPath);
+		}
+		String sigAndRefsTimestampV2Path = xadesPaths.getSigAndRefsTimestampV2Path();
+		if ((nodeList == null || nodeList.getLength() == 0) && Utils.isStringNotEmpty(sigAndRefsTimestampV2Path)) {
+			nodeList = DomUtils.getNodeList(signatureElement, sigAndRefsTimestampV2Path);
 		}
 		return nodeList;
 	}
@@ -786,12 +826,14 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	 * @return {@link NodeList}
 	 */
 	public NodeList getRefsOnlyTimestampTimeStamp() {
-		NodeList nodeList = DomUtils.getNodeList(signatureElement, xadesPaths.getRefsOnlyTimestampPath());
-		if (nodeList == null || nodeList.getLength() == 0) {
-			String refsOnlyTimestampV2Path = xadesPaths.getRefsOnlyTimestampV2Path();
-			if (refsOnlyTimestampV2Path != null) {
-				nodeList = DomUtils.getNodeList(signatureElement, refsOnlyTimestampV2Path);
-			}
+		NodeList nodeList = null;
+		String refsOnlyTimestampPath = xadesPaths.getRefsOnlyTimestampPath();
+		if (Utils.isStringNotEmpty(refsOnlyTimestampPath)) {
+			nodeList = DomUtils.getNodeList(signatureElement, refsOnlyTimestampPath);
+		}
+		String refsOnlyTimestampV2Path = xadesPaths.getRefsOnlyTimestampV2Path();
+		if ((nodeList == null || nodeList.getLength() == 0) && Utils.isStringNotEmpty(refsOnlyTimestampV2Path)) {
+			nodeList = DomUtils.getNodeList(signatureElement, refsOnlyTimestampV2Path);
 		}
 		return nodeList;
 	}
@@ -844,8 +886,36 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	/**
-	 * Checks the presence of CompleteCertificateRefs and CompleteRevocationRefs segments in the signature, what is the
-	 * proof -C profile existence
+	 * Checks the presence of signing certificate covered by the signature, what is the proof -BES profile existence
+	 *
+	 * @return true if BES Profile is detected
+	 */
+	public boolean hasBESProfile() {
+		return getBaselineRequirementsChecker().hasExtendedBESProfile();
+	}
+
+	/**
+	 * Checks the presence of SignaturePolicyIdentifier element in the signature,
+	 * what is the proof -EPES profile existence
+	 *
+	 * @return true if EPES Profile is detected
+	 */
+	public boolean hasEPESProfile() {
+		return getBaselineRequirementsChecker().hasExtendedEPESProfile();
+	}
+
+	/**
+	 * Checks the presence of SignatureTimeStamp element in the signature, what is the proof -T profile existence
+	 *
+	 * @return true if T Profile is detected
+	 */
+	public boolean hasExtendedTProfile() {
+		return getBaselineRequirementsChecker().hasExtendedTProfile();
+	}
+
+	/**
+	 * Checks the presence of CompleteCertificateRefs and CompleteRevocationRefs segments in the signature,
+	 * what is the proof -C profile existence
 	 *
 	 * @return true if C Profile is detected
 	 */
@@ -1205,7 +1275,7 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 			}
 			return santuarioSignature;
 		} catch (XMLSecurityException e) {
-			throw new DSSException("Unable to initialize santuario XMLSignature", e);
+			throw new DSSException(String.format("Unable to initialize Santuario XMLSignature. Reason : %s", e.getMessage()), e);
 		}
 	}
 
@@ -1244,10 +1314,12 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	
 	private boolean isDetachedSignatureValueDocument(DSSDocument detachedContents) {
 		try {
-			Document document = DomUtils.buildDOM(detachedContents);
-			if (document != null) {
-				Node node = document.getChildNodes().item(0);
-				return XMLDSigElement.SIGNATURE_VALUE.getTagName().equals(node.getLocalName());
+			if (DomUtils.isDOM(detachedContents)) {
+				Document document = DomUtils.buildDOM(detachedContents);
+				if (document != null) {
+					Node node = document.getChildNodes().item(0);
+					return XMLDSigElement.SIGNATURE_VALUE.getTagName().equals(node.getLocalName());
+				}
 			}
 		} catch (Exception e) {
 			// continue
@@ -1356,18 +1428,29 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 
 	@Override
 	public SignatureLevel getDataFoundUpToLevel() {
-		if (!hasBProfile()) {
+		if (!hasBESProfile()) {
 			return SignatureLevel.XML_NOT_ETSI;
 		}
-		if (!hasTProfile()) {
-			return SignatureLevel.XAdES_BASELINE_B;
+
+		boolean baselineProfile = hasBProfile();
+
+		if (!hasExtendedTProfile()) {
+			if (baselineProfile) {
+				return SignatureLevel.XAdES_BASELINE_B;
+			} else if (hasEPESProfile()) {
+				return SignatureLevel.XAdES_EPES;
+			}
+			return SignatureLevel.XAdES_BES;
 		}
 
-		if (hasLTProfile()) {
+		baselineProfile = baselineProfile && hasTProfile();
+
+		if (baselineProfile && hasLTProfile()) {
 			if (hasLTAProfile()) {
 				return SignatureLevel.XAdES_BASELINE_LTA;
 			}
 			return SignatureLevel.XAdES_BASELINE_LT;
+
 		} else if (hasCProfile()) {
 			if (hasXLProfile()) {
 				if (hasAProfile()) {
@@ -1381,9 +1464,15 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 				return SignatureLevel.XAdES_X;
 			}
 			return SignatureLevel.XAdES_C;
-		} else {
-			return SignatureLevel.XAdES_BASELINE_T;
+
+		} else if (hasXLProfile()) {
+			if (hasAProfile()) {
+				return SignatureLevel.XAdES_A; // XAdES-E-A can be built on XAdES-E-T directly
+			}
+			return SignatureLevel.XAdES_LT;
 		}
+
+		return baselineProfile ? SignatureLevel.XAdES_BASELINE_T : SignatureLevel.XAdES_T;
 	}
 
 	@Override
@@ -1422,16 +1511,35 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 					LOG.warn("The Identifier for a CommitmentTypeIndication is not defined! The CommitmentType is skipped.");
 					continue;
 				}
-				CommitmentTypeIndication commitmentTypeIndication = new CommitmentTypeIndication(uri);
+				if (DSSUtils.isUrnOid(uri)) {
+					uri = DSSUtils.getOidCode(uri);
+				}
+
+				final CommitmentTypeIndication commitmentTypeIndication = new CommitmentTypeIndication(uri);
 				
-				Element descriptionNode = DomUtils.getElement(commitmentTypeIndicationNode, xadesPaths.getCurrentCommitmentDescriptionPath());
+				final Element descriptionNode = DomUtils.getElement(commitmentTypeIndicationNode,
+						xadesPaths.getCurrentCommitmentDescriptionPath());
 				if (descriptionNode != null) {
 					commitmentTypeIndication.setDescription(descriptionNode.getTextContent());
 				}
-				Element docRefsNode = DomUtils.getElement(commitmentTypeIndicationNode, xadesPaths.getCurrentCommitmentDocumentationReferencesPath());
+				final Element docRefsNode = DomUtils.getElement(commitmentTypeIndicationNode,
+						xadesPaths.getCurrentCommitmentDocumentationReferencesPath());
 				if (docRefsNode != null) {
 					commitmentTypeIndication.setDocumentReferences(getDocumentationReferences(docRefsNode));
 				}
+
+				final Element allSignedDataObjectsNode = DomUtils.getElement(commitmentTypeIndicationNode,
+						xadesPaths.getCurrentCommitmentAllSignedDataObjectsPath());
+				if (allSignedDataObjectsNode != null) {
+					commitmentTypeIndication.setAllDataSignedObjects(true);
+				} else {
+					final NodeList commitmentObjectReferencesNodeList = DomUtils.getNodeList(commitmentTypeIndicationNode,
+							xadesPaths.getCurrentCommitmentObjectReferencesPath());
+					if (commitmentObjectReferencesNodeList != null && commitmentObjectReferencesNodeList.getLength() > 0) {
+						commitmentTypeIndication.setObjectReferences(getObjectReferences(commitmentObjectReferencesNodeList));
+					}
+				}
+
 				result.add(commitmentTypeIndication);
 			}
 		}
@@ -1439,7 +1547,7 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	}
 	
 	private List<String> getDocumentationReferences(Element docRefsNode) {
-		NodeList docRefsChildNodes = DomUtils.getNodeList(docRefsNode, xadesPaths.getCurrentDocumentationReference());
+		final NodeList docRefsChildNodes = DomUtils.getNodeList(docRefsNode, xadesPaths.getCurrentDocumentationReference());
 		if (docRefsChildNodes.getLength() > 0) {
 			List<String> docRefs = new ArrayList<>();
 			for (int jj = 0; jj < docRefsChildNodes.getLength(); jj++) {
@@ -1451,6 +1559,14 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 		return null;
 	}
 
+	private List<String> getObjectReferences(NodeList commitmentObjectReferencesNodeList) {
+		List<String> signedDataObjects = new ArrayList<>();
+		for (int i = 0; i < commitmentObjectReferencesNodeList.getLength(); i++) {
+			signedDataObjects.add(DomUtils.getId(commitmentObjectReferencesNodeList.item(i).getTextContent()));
+		}
+		return signedDataObjects;
+	}
+
 	/**
 	 * Gets a list of found references
 	 *
@@ -1460,7 +1576,7 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 		if (references == null) {
 			XMLSignature santuarioSignature = getSantuarioSignature();
 			SignedInfo signedInfo = santuarioSignature.getSignedInfo();
-			return DSSXMLUtils.extractReferences(signedInfo);
+            references = DSSXMLUtils.extractReferences(signedInfo);
 		}
 		return references;
 	}
@@ -1471,11 +1587,9 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	 * @return a list of {@link Element}s
 	 */
 	public List<Element> getSignatureObjects() {
-
 		final NodeList list = DomUtils.getNodeList(signatureElement, XMLDSigPaths.OBJECT_PATH);
 		final List<Element> references = new ArrayList<>(list.getLength());
 		for (int ii = 0; ii < list.getLength(); ii++) {
-
 			final Node node = list.item(ii);
 			final Element element = (Element) node;
 			if (DomUtils.getElement(element, xadesPaths.getSignedPropertiesPath()) != null) {

@@ -147,10 +147,7 @@ public class ASiCWithCAdESServiceTest extends PKIFactoryAccess {
         
         signatureParameters.aSiC().setMimeType(Utils.EMPTY_STRING);
         signAndValidate(documentToSign, signatureParameters);
-        
-        signatureParameters.aSiC().setSignatureFileName(Utils.EMPTY_STRING);
-        signAndValidate(documentToSign, signatureParameters);
-        
+
 	}
 	
 	private DSSDocument signAndValidate(DSSDocument documentToSign, ASiCWithCAdESSignatureParameters signatureParameters) throws IOException {
@@ -186,8 +183,8 @@ public class ASiCWithCAdESServiceTest extends PKIFactoryAccess {
         assertEquals("Only CAdES form is allowed !", exception.getMessage());
         
         extensionParameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_B);
-        exception = assertThrows(IllegalArgumentException.class, () -> extendAndValidate(signedDocument, extensionParameters));
-        assertEquals("Unsupported signature format : CAdES-BASELINE-B", exception.getMessage());
+        exception = assertThrows(UnsupportedOperationException.class, () -> extendAndValidate(signedDocument, extensionParameters));
+        assertEquals("Unsupported signature format 'CAdES-BASELINE-B' for extension.", exception.getMessage());
         
         extensionParameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_LTA);
         extendAndValidate(signedDocument, extensionParameters);

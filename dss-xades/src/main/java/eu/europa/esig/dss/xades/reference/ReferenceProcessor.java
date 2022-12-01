@@ -27,7 +27,6 @@ import eu.europa.esig.dss.definition.xmldsig.XMLDSigElement;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DigestDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
-import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.xades.DSSXMLUtils;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
@@ -53,6 +52,7 @@ public class ReferenceProcessor {
      * Empty constructor (to be used for non-signature references, e.g. for a Manifest)
      */
     public ReferenceProcessor() {
+        // empty
     }
 
     /**
@@ -106,8 +106,7 @@ public class ReferenceProcessor {
 
     private Node getNodeToTransform(DSSReference reference) {
         DSSDocument contents = reference.getContents();
-        byte[] docBinaries = DSSUtils.toByteArray(contents);
-        if (!DomUtils.isDOM(docBinaries)) {
+        if (!DomUtils.isDOM(contents)) {
             // cannot be transformed
             return null;
         }
@@ -129,7 +128,7 @@ public class ReferenceProcessor {
             dom.appendChild(adopted);
             return dom;
 
-        } else if (!Utils.isStringBlank(uri) && uri.startsWith("#")) {
+        } else if (DomUtils.startsFromHash(uri)) {
             final Document document = DomUtils.buildDOM(contents);
             DSSXMLUtils.recursiveIdBrowse(document.getDocumentElement());
             final String targetId = DomUtils.getId(uri);

@@ -25,6 +25,7 @@ import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.model.DigestDocument;
 import eu.europa.esig.dss.model.TimestampBinary;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
@@ -37,6 +38,7 @@ import eu.europa.esig.dss.xades.reference.DSSReference;
 import eu.europa.esig.dss.xades.reference.ReferenceBuilder;
 import eu.europa.esig.dss.xades.reference.ReferenceOutputType;
 import eu.europa.esig.dss.xades.reference.ReferenceProcessor;
+import eu.europa.esig.dss.xades.reference.ReferenceVerifier;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.tsp.TSPException;
 import org.slf4j.Logger;
@@ -89,14 +91,17 @@ public class AllDataObjectsTimeStampBuilder {
 	 * @return {@link TimestampToken}
 	 */
 	public TimestampToken build(List<DSSDocument> documents) {
+		assertTimestampCreationPossible(documents);
+
 		// Prepare references
-		ReferenceBuilder referenceBuilder = new ReferenceBuilder(documents, signatureParameters);
 		List<DSSReference> references = signatureParameters.getReferences();
-		if (Utils.isCollectionNotEmpty(references)) {
-			referenceBuilder.checkReferencesValidity();
-		} else {
+		if (Utils.isCollectionEmpty(references)) {
+			final ReferenceBuilder referenceBuilder = new ReferenceBuilder(documents, signatureParameters);
 			references = referenceBuilder.build();
-			signatureParameters.setReferences(references);
+			signatureParameters.getContext().setReferences(references);
+		} else {
+			final ReferenceVerifier referenceVerifier = new ReferenceVerifier(signatureParameters);
+			referenceVerifier.checkReferencesValidity();
 		}
 
 		byte[] dataToBeDigested;
@@ -144,6 +149,14 @@ public class AllDataObjectsTimeStampBuilder {
 			return token;
 		} catch (TSPException | IOException | CMSException e) {
 			throw new DSSException("Cannot build an AllDataObjectsTimestamp", e);
+		}
+	}
+
+	private void assertTimestampCreationPossible(List<DSSDocument> documents) {
+		for (DSSDocument document : documents) {
+			if (document instanceof DigestDocument) {
+				throw new IllegalArgumentException("Content timestamp creation is not possible with DigestDocument!");
+			}
 		}
 	}
 

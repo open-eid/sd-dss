@@ -36,6 +36,7 @@ import java.util.Objects;
  */
 public final class XmlDefinerUtils {
 	
+	/** Singleton */
 	private static XmlDefinerUtils singleton;
 
 	/** Builds the secure version of {@code javax.xml.parsers.DocumentBuilderFactory} */
@@ -49,6 +50,12 @@ public final class XmlDefinerUtils {
 
 	/** Builds the secure version of {@code Validator} */
 	private ValidatorConfigurator secureValidatorConfigurator = ValidatorConfigurator.getSecureValidatorConfigurator();
+
+	/**
+	 * Singleton
+	 */
+	private XmlDefinerUtils() {
+	}
 	
 	/**
 	 * Instantiate the {@code XmlDefinerUtils}
@@ -109,10 +116,8 @@ public final class XmlDefinerUtils {
 	 * DTD/XSD + secure processing
 	 * 
 	 * @return {@link SchemaFactory}
-	 * @throws SAXException
-	 *                      in case of exception
 	 */
-	public SchemaFactory getSecureSchemaFactory() throws SAXException {
+	public SchemaFactory getSecureSchemaFactory() {
 		return secureSchemaFactoryBuilder.build();
 	}
 	
@@ -149,10 +154,8 @@ public final class XmlDefinerUtils {
 	 * 
 	 * @param validator
 	 *                  the validator to be configured
-	 * @throws SAXException
-	 *                      in case of exception
 	 */
-	public void configure(Validator validator) throws SAXException {
+	public void configure(Validator validator) {
 		secureValidatorConfigurator.configure(validator);
 	}
 

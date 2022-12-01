@@ -20,28 +20,26 @@
  */
 package eu.europa.esig.dss.asic.xades.signature.asice;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.jupiter.api.BeforeEach;
-
 import eu.europa.esig.dss.asic.xades.ASiCWithXAdESSignatureParameters;
 import eu.europa.esig.dss.asic.xades.signature.ASiCWithXAdESService;
-import eu.europa.esig.dss.asic.xades.signature.AbstractASiCWithXAdESMultipleDocumentsTestSignature;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.TimestampWrapper;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
+import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
-import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.signature.MultipleDocumentsSignatureService;
 import eu.europa.esig.dss.xades.XAdESTimestampParameters;
+import org.junit.jupiter.api.BeforeEach;
 
-public class ASiCEXAdESMultiFilesLevelLTATest extends AbstractASiCWithXAdESMultipleDocumentsTestSignature {
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class ASiCEXAdESMultiFilesLevelLTATest extends AbstractASiCEWithXAdESMultipleDocumentsTestSignature {
 
 	private ASiCWithXAdESService service;
 	private ASiCWithXAdESSignatureParameters signatureParameters;
@@ -75,33 +73,26 @@ public class ASiCEXAdESMultiFilesLevelLTATest extends AbstractASiCWithXAdESMulti
 		
 		assertEquals(2, diagnosticData.getTimestampList().size());
 		
+		boolean sigTstFound = false;
 		boolean archiveTimestampFound = false;
 		for (TimestampWrapper timestamp : diagnosticData.getTimestampList()) {
-			if (timestamp.getType().isArchivalTimestamp()) {
+			if (TimestampType.SIGNATURE_TIMESTAMP.equals(timestamp.getType())) {
+				assertEquals(0, timestamp.getTimestampScopes().size());
+				assertEquals(2, timestamp.getTimestampedSignedData().size());
+				sigTstFound = true;
+			} else if (TimestampType.ARCHIVE_TIMESTAMP.equals(timestamp.getType())) {
+				assertEquals(2, timestamp.getTimestampScopes().size());
+				assertEquals(2, timestamp.getTimestampedSignedData().size());
 				archiveTimestampFound = true;
 			}
 		}
+		assertTrue(sigTstFound);
 		assertTrue(archiveTimestampFound);
 	}
 
 	@Override
 	protected ASiCWithXAdESSignatureParameters getSignatureParameters() {
 		return signatureParameters;
-	}
-
-	@Override
-	protected MimeType getExpectedMime() {
-		return MimeType.ASICE;
-	}
-
-	@Override
-	protected boolean isBaselineT() {
-		return true;
-	}
-
-	@Override
-	protected boolean isBaselineLTA() {
-		return true;
 	}
 
 	@Override

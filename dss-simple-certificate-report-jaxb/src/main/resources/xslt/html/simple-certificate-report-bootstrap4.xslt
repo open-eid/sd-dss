@@ -111,6 +111,19 @@
 		        	</dl>
 	        	</xsl:if>
 	        	
+	        	<xsl:if test="dss:enactedMRA">
+					<dl>
+			    		<xsl:attribute name="class">row mb-0</xsl:attribute>
+			            <dt>
+			            	<xsl:attribute name="class">col-sm-3</xsl:attribute>
+			            </dt>
+			            <dd>
+			            	<xsl:attribute name="class">col-sm-9</xsl:attribute>
+							The qualification level has been determined using an enacted trust service equivalence mapping.
+			            </dd>
+					</dl>
+				</xsl:if>			
+	        	
 				<xsl:apply-templates select="dss:subject"/>
 				
 				<xsl:if test="dss:keyUsages or dss:extendedKeyUsages">
@@ -342,7 +355,7 @@
 					<xsl:with-param name="DateTimeStr" select="dss:revocationDate"/>
 				</xsl:call-template>)
 			</xsl:when>    	
-			<xsl:when test="dss:productionDate">
+			<xsl:when test="dss:thisUpdate">
       			<i>
 					<xsl:attribute name="class">fa fa-check-circle text-success</xsl:attribute>
 					<xsl:attribute name="title">Not Revoked</xsl:attribute>

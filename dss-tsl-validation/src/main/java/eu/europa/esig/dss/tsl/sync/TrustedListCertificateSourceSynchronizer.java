@@ -166,12 +166,11 @@ public class TrustedListCertificateSourceSynchronizer {
 					if (Utils.isCollectionNotEmpty(trustServiceProviders)) {
 						for (TrustServiceProvider original : trustServiceProviders) {
 							TrustServiceProvider detached = getDetached(original);
-
 							for (TrustService trustService : original.getServices()) {
 								TimeDependentValues<TrustServiceStatusAndInformationExtensions> statusAndInformationExtensions = trustService
 										.getStatusAndInformationExtensions();
-								TrustProperties trustProperties = getTrustProperties(relatedLOTL, tlInfo, detached, statusAndInformationExtensions);
-
+								TrustProperties trustProperties = getTrustProperties(
+										relatedLOTL, tlInfo, detached, statusAndInformationExtensions);
 								for (CertificateToken certificate : trustService.getCertificates()) {
 									addCertificate(trustPropertiesByCerts, certificate, trustProperties);
 								}
@@ -187,11 +186,7 @@ public class TrustedListCertificateSourceSynchronizer {
 
 	private void addCertificate(Map<CertificateToken, List<TrustProperties>> trustPropertiesByCerts, CertificateToken certificate,
 			TrustProperties trustProperties) {
-		List<TrustProperties> list = trustPropertiesByCerts.get(certificate);
-		if (list == null) {
-			list = new ArrayList<>();
-			trustPropertiesByCerts.put(certificate, list);
-		}
+		List<TrustProperties> list = trustPropertiesByCerts.computeIfAbsent(certificate, k -> new ArrayList<>());
 		if (!list.contains(trustProperties)) {
 			list.add(trustProperties);
 		}
@@ -229,7 +224,8 @@ public class TrustedListCertificateSourceSynchronizer {
 		if (relatedLOTL == null) {
 			return new TrustProperties(tlInfo.getDSSId(), detached, statusAndInformationExtensions);
 		}
-		return new TrustProperties(relatedLOTL.getDSSId(), tlInfo.getDSSId(), detached, statusAndInformationExtensions);
+		return new TrustProperties(relatedLOTL.getDSSId(), tlInfo.getDSSId(), detached,
+				statusAndInformationExtensions);
 	}
 
 }

@@ -20,7 +20,10 @@
  */
 package eu.europa.esig.dss.pades.signature.visible.suite;
 
+import eu.europa.esig.dss.alert.ExceptionOnStatusAlert;
 import eu.europa.esig.dss.alert.LogOnStatusAlert;
+import eu.europa.esig.dss.alert.StatusAlert;
+import eu.europa.esig.dss.alert.exception.AlertException;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlPDFRevision;
@@ -37,6 +40,7 @@ import eu.europa.esig.dss.pades.SignatureImageParameters;
 import eu.europa.esig.dss.pades.signature.PAdESService;
 import eu.europa.esig.dss.pades.signature.suite.AbstractPAdESTestSignature;
 import eu.europa.esig.dss.pdf.AbstractPDFSignatureService;
+import eu.europa.esig.dss.pdf.AbstractPdfObjFactory;
 import eu.europa.esig.dss.pdf.IPdfObjFactory;
 import eu.europa.esig.dss.pdf.PDFSignatureService;
 import eu.europa.esig.dss.pdf.ServiceLoaderPdfObjFactory;
@@ -49,6 +53,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PAdESVisibleWithOverlappingFieldsTest extends AbstractPAdESTestSignature {
@@ -77,11 +82,14 @@ public class PAdESVisibleWithOverlappingFieldsTest extends AbstractPAdESTestSign
 		signatureParameters.setImageParameters(signatureImageParameters);
 
 		service = new PAdESService(getOfflineCertificateVerifier());
-		service.setPdfObjFactory(new MockLogAlertPdfObjectFactory());
 	}
 	
 	@Override
 	protected DSSDocument sign() {
+		MockLogAlertPdfObjectFactory pdfObjectFactory = new PAdESVisibleWithOverlappingFieldsTest.MockLogAlertPdfObjectFactory();
+		pdfObjectFactory.setAlertOnSignatureFieldOverlap(new ExceptionOnStatusAlert());
+		service.setPdfObjFactory(pdfObjectFactory);
+
 		DSSDocument signed = super.sign();
 		
 		SignatureFieldParameters fieldParameters = signatureParameters.getImageParameters().getFieldParameters();
@@ -89,13 +97,13 @@ public class PAdESVisibleWithOverlappingFieldsTest extends AbstractPAdESTestSign
 		fieldParameters.setOriginY(50);
 		
 		documentToSign = signed;
+
+		Exception exception = assertThrows(AlertException.class, () -> super.sign());
+		assertEquals("The new signature field position overlaps with an existing annotation!", exception.getMessage());
+
+		pdfObjectFactory.setAlertOnSignatureFieldOverlap(new LogOnStatusAlert());
 		
 		return super.sign();
-	}
-	
-	@Override
-	protected void onDocumentSigned(byte[] byteArray) {
-		// skip
 	}
 	
 	@Override
@@ -161,35 +169,37 @@ public class PAdESVisibleWithOverlappingFieldsTest extends AbstractPAdESTestSign
 		return GOOD_USER;
 	}
 	
-	private static class MockLogAlertPdfObjectFactory implements IPdfObjFactory {
+	private static class MockLogAlertPdfObjectFactory extends AbstractPdfObjFactory {
 		
-		private final IPdfObjFactory pdfObjectFactory = new ServiceLoaderPdfObjFactory();
+		private static final IPdfObjFactory pdfObjectFactory = new ServiceLoaderPdfObjFactory();
+
+		private static AbstractPDFSignatureService service;
+
+		static {
+			service = (AbstractPDFSignatureService) pdfObjectFactory.newPAdESSignatureService();
+		}
+
+		public void setAlertOnSignatureFieldOverlap(StatusAlert alertOnSignatureFieldOutsidePageDimensions) {
+			service.setAlertOnSignatureFieldOverlap(alertOnSignatureFieldOutsidePageDimensions);
+		}
 		
 		@Override
 		public PDFSignatureService newPAdESSignatureService() {
-			AbstractPDFSignatureService service = (AbstractPDFSignatureService) pdfObjectFactory.newPAdESSignatureService();
-			service.setAlertOnSignatureFieldOverlap(new LogOnStatusAlert());
 			return service;
 		}
 
 		@Override
 		public PDFSignatureService newContentTimestampService() {
-			AbstractPDFSignatureService service = (AbstractPDFSignatureService) pdfObjectFactory.newContentTimestampService();
-			service.setAlertOnSignatureFieldOverlap(new LogOnStatusAlert());
 			return service;
 		}
 
 		@Override
 		public PDFSignatureService newSignatureTimestampService() {
-			AbstractPDFSignatureService service = (AbstractPDFSignatureService) pdfObjectFactory.newSignatureTimestampService();
-			service.setAlertOnSignatureFieldOverlap(new LogOnStatusAlert());
 			return service;
 		}
 
 		@Override
 		public PDFSignatureService newArchiveTimestampService() {
-			AbstractPDFSignatureService service = (AbstractPDFSignatureService) pdfObjectFactory.newArchiveTimestampService();
-			service.setAlertOnSignatureFieldOverlap(new LogOnStatusAlert());
 			return service;
 		}
 		

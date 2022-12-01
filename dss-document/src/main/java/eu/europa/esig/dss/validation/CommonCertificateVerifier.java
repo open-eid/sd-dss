@@ -26,7 +26,6 @@ import eu.europa.esig.dss.alert.StatusAlert;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.model.x509.revocation.crl.CRL;
 import eu.europa.esig.dss.model.x509.revocation.ocsp.OCSP;
-import eu.europa.esig.dss.spi.client.http.DataLoader;
 import eu.europa.esig.dss.spi.x509.CertificateSource;
 import eu.europa.esig.dss.spi.x509.ListCertificateSource;
 import eu.europa.esig.dss.spi.x509.aia.AIASource;
@@ -44,9 +43,8 @@ import java.util.Objects;
  * - Trusted certificates source;<br>
  * - Adjunct certificates source (not trusted);<br>
  * - OCSP source;<br>
- * - CRL source.<br>
- *
- * The {@code DataLoader} should be provided to give access to the certificates through AIA.
+ * - CRL source;<br>
+ * - AIA source to give access to the certificates through AIA.
  *
  */
 public class CommonCertificateVerifier implements CertificateVerifier {
@@ -76,11 +74,22 @@ public class CommonCertificateVerifier implements CertificateVerifier {
 	private RevocationSource<CRL> crlSource;
 
 	/**
-	 * Defines a revocation data loading strategy used to fetch OCSP or CRL for validating certificates.
+	 * Creates a revocation data loading strategy used to fetch OCSP or CRL for validating certificates.
 	 *
-	 * Default: {@code OCSPFirstRevocationDataLoadingStrategy} is used to extract OCSP token first and CRL after
+	 * Default: {@code OCSPFirstRevocationDataLoadingStrategyFactory} is used to extract OCSP token first and CRL after
 	 */
-	private RevocationDataLoadingStrategy revocationDataLoadingStrategy = new OCSPFirstRevocationDataLoadingStrategy();
+	private RevocationDataLoadingStrategyFactory revocationDataLoadingStrategyFactory = new OCSPFirstRevocationDataLoadingStrategyFactory();
+
+	/**
+	 * Verifies the validity of retrieved revocation data (used to evaluate if a new revocation should be requested).
+	 */
+	private RevocationDataVerifier revocationDataVerifier = RevocationDataVerifier.createDefaultRevocationDataVerifier();
+
+	/**
+	 * Defines whether a revocation data failed a verification still shall be returned to the validation process,
+	 * when no valid revocation has been obtained.
+	 */
+	private boolean revocationFallback = false;
 
 	/**
 	 * The AIA source used to download a certificate's issuer by the AIA URI(s)
@@ -143,13 +152,21 @@ public class CommonCertificateVerifier implements CertificateVerifier {
 	private StatusAlert alertOnExpiredSignature = new ExceptionOnStatusAlert();
 
 	/**
-	 * This variable set the behavior to follow for revocation retrieving in case of
+	 * This variable sets the behavior to follow for revocation retrieving in case of
 	 * untrusted certificate chains.
 	 * 
 	 * Default : false (revocation are not checked in case of certificates issued
 	 * from an unsure source)
 	 */
 	private boolean checkRevocationForUntrustedChains = false;
+
+	/**
+	 * This variable sets whether POEs should be extracted from timestamps with
+	 * untrusted certificate chains.
+	 *
+	 * Default : false (POE is not extracted from a timestamp with untrusted certificate chain)
+	 */
+	private boolean extractPOEFromUntrustedChains = false;
 
 	/**
 	 * The default constructor. The {@code DataLoader} is created to allow the
@@ -160,8 +177,8 @@ public class CommonCertificateVerifier implements CertificateVerifier {
 	}
 
 	/**
-	 * This constructor allows to create {@code CommonCertificateVerifier} without {@code DataLoader}. It means that
-	 * only a profile -B signatures can be created.
+	 * This constructor allows creating of {@code CommonCertificateVerifier} without {@code DataLoader}.
+	 * It means that only a -B profile signature can be created.
 	 *
 	 * @param simpleCreationOnly
 	 *            if true the {@code CommonCertificateVerifier} will not contain {@code AIASource}.
@@ -194,14 +211,35 @@ public class CommonCertificateVerifier implements CertificateVerifier {
 	}
 
 	@Override
-	public RevocationDataLoadingStrategy getRevocationDataLoadingStrategy() {
-		return revocationDataLoadingStrategy;
+	public RevocationDataLoadingStrategyFactory getRevocationDataLoadingStrategyFactory() {
+		return revocationDataLoadingStrategyFactory;
 	}
 
 	@Override
-	public void setRevocationDataLoadingStrategy(RevocationDataLoadingStrategy revocationDataLoadingStrategy) {
-		Objects.requireNonNull(revocationDataLoadingStrategy, "RevocationDataLoadingStrategy shall be defined!");
-		this.revocationDataLoadingStrategy = revocationDataLoadingStrategy;
+	public void setRevocationDataLoadingStrategyFactory(RevocationDataLoadingStrategyFactory revocationDataLoadingStrategyFactory) {
+		Objects.requireNonNull(revocationDataLoadingStrategyFactory, "RevocationDataLoadingStrategyFactory shall be defined!");
+		this.revocationDataLoadingStrategyFactory = revocationDataLoadingStrategyFactory;
+	}
+
+	@Override
+	public RevocationDataVerifier getRevocationDataVerifier() {
+		return revocationDataVerifier;
+	}
+
+	@Override
+	public void setRevocationDataVerifier(RevocationDataVerifier revocationDataVerifier) {
+		Objects.requireNonNull(revocationDataVerifier, "RevocationDataVerifier shall be defined!");
+		this.revocationDataVerifier = revocationDataVerifier;
+	}
+
+	@Override
+	public boolean isRevocationFallback() {
+		return revocationFallback;
+	}
+
+	@Override
+	public void setRevocationFallback(boolean revocationFallback) {
+		this.revocationFallback = revocationFallback;
 	}
 
 	@Override
@@ -273,12 +311,6 @@ public class CommonCertificateVerifier implements CertificateVerifier {
 		if (adjunctCertificateSource.getCertificateSourceType().isTrusted()) {
 			LOG.warn("Adjunct certificate sources shouldn't be trusted. An adjunct certificate source contains missing intermediate certificates");
 		}
-	}
-
-	@Override
-	public void setDataLoader(final DataLoader dataLoader) {
-		LOG.warn("Use of deprecated method setDataLoader(DataLoader)! This method will override the defined AIASource.");
-		aiaSource = new DefaultAIASource(dataLoader);
 	}
 
 	@Override
@@ -365,6 +397,16 @@ public class CommonCertificateVerifier implements CertificateVerifier {
 	@Override
 	public void setCheckRevocationForUntrustedChains(boolean checkRevocationForUntrustedChains) {
 		this.checkRevocationForUntrustedChains = checkRevocationForUntrustedChains;
+	}
+
+	@Override
+	public boolean isExtractPOEFromUntrustedChains() {
+		return extractPOEFromUntrustedChains;
+	}
+
+	@Override
+	public void setExtractPOEFromUntrustedChains(boolean extractPOEFromUntrustedChains) {
+		this.extractPOEFromUntrustedChains = extractPOEFromUntrustedChains;
 	}
 
 	@Override

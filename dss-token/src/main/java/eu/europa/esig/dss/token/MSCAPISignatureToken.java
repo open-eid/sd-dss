@@ -33,6 +33,13 @@ import java.security.KeyStore.PasswordProtection;
  */
 public class MSCAPISignatureToken extends AbstractKeyStoreTokenConnection {
 
+	/**
+	 * Default constructor
+	 */
+	public MSCAPISignatureToken() {
+		// empty
+	}
+
 	@Override
 	protected KeyStore getKeyStore() throws DSSException {
 		KeyStore keyStore;
@@ -52,6 +59,7 @@ public class MSCAPISignatureToken extends AbstractKeyStoreTokenConnection {
 
 	@Override
 	public void close() {
+		// nothing to close
 	}
 
 }

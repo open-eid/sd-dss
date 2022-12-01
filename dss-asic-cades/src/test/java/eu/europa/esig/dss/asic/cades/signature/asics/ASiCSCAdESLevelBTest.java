@@ -24,7 +24,7 @@ import eu.europa.esig.dss.asic.cades.ASiCWithCAdESContainerExtractor;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESSignatureParameters;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESTimestampParameters;
 import eu.europa.esig.dss.asic.cades.signature.ASiCWithCAdESService;
-import eu.europa.esig.dss.asic.common.ASiCExtractResult;
+import eu.europa.esig.dss.asic.common.ASiCContent;
 import eu.europa.esig.dss.asic.common.AbstractASiCContainerExtractor;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
@@ -36,7 +36,7 @@ import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
-import eu.europa.esig.dss.validation.SignedDocumentValidator;
+import eu.europa.esig.dss.validation.TokenIdentifierProvider;
 import eu.europa.esig.dss.validation.UserFriendlyIdentifierProvider;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,10 +75,8 @@ public class ASiCSCAdESLevelBTest extends AbstractASiCSCAdESTestSignature {
 	}
 
 	@Override
-	protected SignedDocumentValidator getValidator(DSSDocument signedDocument) {
-		SignedDocumentValidator validator = super.getValidator(signedDocument);
-		validator.setTokenIdentifierProvider(new UserFriendlyIdentifierProvider());
-		return validator;
+	protected TokenIdentifierProvider getTokenIdentifierProvider() {
+		return new UserFriendlyIdentifierProvider();
 	}
 
 	@Override
@@ -88,7 +86,7 @@ public class ASiCSCAdESLevelBTest extends AbstractASiCSCAdESTestSignature {
 		InMemoryDocument doc = new InMemoryDocument(byteArray);
 
 		AbstractASiCContainerExtractor extractor = new ASiCWithCAdESContainerExtractor(doc);
-		ASiCExtractResult extract = extractor.extract();
+		ASiCContent extract = extractor.extract();
 
 		assertEquals(0, extract.getUnsupportedDocuments().size());
 
@@ -117,6 +115,8 @@ public class ASiCSCAdESLevelBTest extends AbstractASiCSCAdESTestSignature {
 
 	@Override
 	protected void verifySourcesAndDiagnosticData(List<AdvancedSignature> advancedSignatures, DiagnosticData diagnosticData) {
+		super.verifySourcesAndDiagnosticData(advancedSignatures, diagnosticData);
+
 		assertEquals(1, advancedSignatures.size());
 		AdvancedSignature advancedSignature = advancedSignatures.get(0);
 		SignatureWrapper signature = diagnosticData.getSignatureById(advancedSignature.getId());

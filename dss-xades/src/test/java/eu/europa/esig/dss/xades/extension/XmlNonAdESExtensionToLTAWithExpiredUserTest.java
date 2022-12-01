@@ -32,6 +32,7 @@ import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.utils.Utils;
+import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 import eu.europa.esig.dss.xades.definition.XAdESNamespaces;
 import eu.europa.esig.dss.xades.signature.XAdESService;
@@ -63,6 +64,13 @@ public class XmlNonAdESExtensionToLTAWithExpiredUserTest extends AbstractXAdESTe
     }
 
     @Override
+    protected CertificateVerifier getCompleteCertificateVerifier() {
+        CertificateVerifier certificateVerifier = super.getCompleteCertificateVerifier();
+        certificateVerifier.setRevocationFallback(true);
+        return certificateVerifier;
+    }
+
+    @Override
     protected XAdESSignatureParameters getSignatureParameters() {
         XAdESSignatureParameters signatureParameters = new XAdESSignatureParameters();
         signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPING);
@@ -70,6 +78,13 @@ public class XmlNonAdESExtensionToLTAWithExpiredUserTest extends AbstractXAdESTe
         signatureParameters.setSignWithExpiredCertificate(true);
         signatureParameters.setGenerateTBSWithoutCertificate(true);
         return signatureParameters;
+    }
+
+    @Override
+    protected XAdESSignatureParameters getExtensionParameters() {
+        XAdESSignatureParameters extensionParameters = super.getExtensionParameters();
+        extensionParameters.setSignWithExpiredCertificate(true);
+        return extensionParameters;
     }
 
     @Override
@@ -95,8 +110,8 @@ public class XmlNonAdESExtensionToLTAWithExpiredUserTest extends AbstractXAdESTe
     @Override
     protected DSSDocument extendSignature(DSSDocument signedDocument) throws Exception {
         Exception exception = assertThrows(AlertException.class, () -> super.extendSignature(signedDocument));
-        assertTrue(exception.getMessage().contains("The signing certificate has been expired and " +
-                "there is no POE during its validity range."));
+        assertTrue(exception.getMessage().contains("The signing certificate has expired and " +
+                "there is no POE during its validity range :"));
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());

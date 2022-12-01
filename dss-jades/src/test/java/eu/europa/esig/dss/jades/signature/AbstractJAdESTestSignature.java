@@ -20,32 +20,40 @@
  */
 package eu.europa.esig.dss.jades.signature;
 
+import eu.europa.esig.dss.diagnostic.CertificateRefWrapper;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
+import eu.europa.esig.dss.diagnostic.FoundCertificatesProxy;
+import eu.europa.esig.dss.diagnostic.RelatedCertificateWrapper;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
+import eu.europa.esig.dss.enumerations.CertificateRefOrigin;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.enumerations.EncryptionAlgorithm;
 import eu.europa.esig.dss.enumerations.JWSSerializationType;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.jades.DSSJsonUtils;
 import eu.europa.esig.dss.jades.HTTPHeader;
+import eu.europa.esig.dss.jades.JAdESHeaderParameterNames;
 import eu.europa.esig.dss.jades.JAdESSignatureParameters;
 import eu.europa.esig.dss.jades.JAdESTimestampParameters;
+import eu.europa.esig.dss.jades.validation.JAdESCertificateSource;
 import eu.europa.esig.dss.jades.validation.JAdESSignature;
 import eu.europa.esig.dss.jades.validation.JWS;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.MimeType;
+import eu.europa.esig.dss.spi.DSSASN1Utils;
+import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.test.signature.AbstractPkiFactoryTestDocumentSignatureService;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
+import eu.europa.esig.dss.validation.SignatureCertificateSource;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.validationreport.jaxb.SADataObjectFormatType;
 import eu.europa.esig.validationreport.jaxb.SignatureIdentifierType;
 import eu.europa.esig.validationreport.jaxb.SignatureValidationReportType;
 import eu.europa.esig.validationreport.jaxb.ValidationReportType;
-import org.jose4j.json.JsonUtil;
 import org.jose4j.jwx.HeaderParameterNames;
 import org.jose4j.jwx.Headers;
-import org.jose4j.lang.JoseException;
 
 import java.util.Collections;
 import java.util.List;
@@ -56,6 +64,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -67,6 +76,17 @@ public abstract class AbstractJAdESTestSignature
 		return Collections.singletonList(getDocumentToSign());
 	}
 	
+	@Override
+	protected void onDocumentSigned(byte[] byteArray) {
+		super.onDocumentSigned(byteArray);
+
+		if (JWSSerializationType.COMPACT_SERIALIZATION.equals(getSignatureParameters().getJwsSerializationType())) {
+			for (byte b : byteArray) {
+				assertFalse(DSSUtils.isLineBreakByte(b));
+			}
+		}
+	}
+
 	@Override
 	@SuppressWarnings("unchecked")
 	protected void checkAdvancedSignatures(List<AdvancedSignature> signatures) {
@@ -97,32 +117,53 @@ public abstract class AbstractJAdESTestSignature
 				}
 
 			}
-			
-			try {
-				Headers headers = jws.getHeaders();
-				Map<String, Object> signedHeaders = JsonUtil.parseJson(headers.getFullHeaderAsJsonString());
-				
-				Set<String> keySet = signedHeaders.keySet();
-				assertTrue(Utils.isCollectionNotEmpty(keySet));
-				for (String signedPropertyName : keySet) {
-					assertTrue(DSSJsonUtils.getSupportedCriticalHeaders().contains(signedPropertyName) ||
-							DSSJsonUtils.isCriticalHeaderException(signedPropertyName));
-				}
-				
-				Object crit = signedHeaders.get(HeaderParameterNames.CRITICAL);
-				assertTrue(crit instanceof List<?>);
-				
-				List<String> critArray = (List<String>) crit;
-				assertTrue(Utils.isCollectionNotEmpty(critArray));
-				for (String critItem : critArray) {
-					assertTrue(DSSJsonUtils.getSupportedCriticalHeaders().contains(critItem));
-					assertFalse(DSSJsonUtils.isCriticalHeaderException(critItem));
-				}
-				
-			} catch (JoseException e) {
-				fail(e);
+
+			Headers headers = jws.getHeaders();
+			Set<String> keySet = DSSJsonUtils.extractJOSEHeaderMembersSet(jws);
+			assertTrue(Utils.isCollectionNotEmpty(keySet));
+			for (String signedPropertyName : keySet) {
+				assertTrue(DSSJsonUtils.getSupportedProtectedCriticalHeaders().contains(signedPropertyName) ||
+						DSSJsonUtils.isCriticalHeaderException(signedPropertyName) ||
+						JAdESHeaderParameterNames.ETSI_U.equals(signedPropertyName));
 			}
-			
+
+			Object crit = headers.getObjectHeaderValue(HeaderParameterNames.CRITICAL);
+			assertTrue(crit instanceof List<?>);
+
+			List<String> critArray = (List<String>) crit;
+			assertTrue(Utils.isCollectionNotEmpty(critArray));
+			for (String critItem : critArray) {
+				assertTrue(DSSJsonUtils.getSupportedProtectedCriticalHeaders().contains(critItem));
+				assertFalse(DSSJsonUtils.isCriticalHeaderException(critItem));
+			}
+		}
+	}
+
+	@Override
+	protected void checkSignatureValue(DiagnosticData diagnosticData) {
+		super.checkSignatureValue(diagnosticData);
+
+		for (SignatureWrapper signatureWrapper : diagnosticData.getSignatures()) {
+			if (signatureWrapper.getEncryptionAlgorithm() != null && signatureWrapper.getDigestAlgorithm() != null &&
+					signatureWrapper.getEncryptionAlgorithm().isEquivalent(EncryptionAlgorithm.ECDSA)) {
+				assertFalse(DSSASN1Utils.isAsn1EncodedSignatureValue(signatureWrapper.getSignatureValue()), "PLAIN-ECDSA is expected!");
+
+				int bitLength = DSSASN1Utils.getSignatureValueBitLength(signatureWrapper.getSignatureValue());
+				switch (signatureWrapper.getDigestAlgorithm()) {
+					case SHA256:
+						assertEquals(256, bitLength);
+						break;
+					case SHA384:
+						assertEquals(384, bitLength);
+						break;
+					case SHA512:
+						assertTrue(bitLength == 520 || bitLength == 528);
+						break;
+					default:
+						fail(String.format("DigestAlgorithm '%s' is not supported for JWS with ECDSA!",
+								signatureWrapper.getDigestAlgorithm()));
+				}
+			}
 		}
 	}
 
@@ -157,6 +198,45 @@ public abstract class AbstractJAdESTestSignature
 		}
 	}
 	
+	@Override
+	protected void checkSigningCertificateValue(DiagnosticData diagnosticData) {
+		super.checkSigningCertificateValue(diagnosticData);
+
+		for (SignatureWrapper signatureWrapper : diagnosticData.getSignatures()) {
+			FoundCertificatesProxy foundCertificates = signatureWrapper.foundCertificates();
+			List<RelatedCertificateWrapper> signingCertificates = foundCertificates.getRelatedCertificatesByRefOrigin(CertificateRefOrigin.SIGNING_CERTIFICATE);
+			assertEquals(1, signingCertificates.size());
+
+			List<CertificateRefWrapper> references = signingCertificates.get(0).getReferences();
+			List<RelatedCertificateWrapper> kidCerts = foundCertificates.getRelatedCertificatesByRefOrigin(CertificateRefOrigin.KEY_IDENTIFIER);
+
+			if (getSignatureParameters().isIncludeKeyIdentifier()) {
+				assertEquals(2, references.size());
+				assertEquals(1, kidCerts.size());
+			} else {
+				assertEquals(1, references.size());
+				assertEquals(0, kidCerts.size());
+			}
+
+			for (CertificateRefWrapper certificateRef : references) {
+				if (CertificateRefOrigin.SIGNING_CERTIFICATE.equals(certificateRef.getOrigin())) {
+					assertNotNull(certificateRef.getDigestAlgoAndValue());
+					assertNotNull(certificateRef.getDigestMethod());
+					assertTrue(certificateRef.isDigestValuePresent());
+					assertTrue(certificateRef.isDigestValueMatch());
+					assertNull(certificateRef.getIssuerSerial());
+
+				} else if (CertificateRefOrigin.KEY_IDENTIFIER.equals(certificateRef.getOrigin())) {
+					assertNotNull(certificateRef.getCertificateId());
+					assertNotNull(certificateRef.getIssuerSerial());
+					assertTrue(certificateRef.isIssuerSerialPresent());
+					assertTrue(certificateRef.isIssuerSerialMatch());
+					assertNull(certificateRef.getDigestAlgoAndValue());
+				}
+			}
+		}
+	}
+
 	@Override
 	protected void checkReportsSignatureIdentifier(Reports reports) {
 		DiagnosticData diagnosticData = reports.getDiagnosticData();
@@ -226,6 +306,21 @@ public abstract class AbstractJAdESTestSignature
 				
 				assertTrue(found);
 			}
+		}
+	}
+
+	@Override
+	protected void verifyCertificateSourceData(SignatureCertificateSource certificateSource, FoundCertificatesProxy foundCertificates) {
+		super.verifyCertificateSourceData(certificateSource, foundCertificates);
+
+		if (certificateSource instanceof JAdESCertificateSource) {
+			JAdESCertificateSource jadesCertificateSource = (JAdESCertificateSource) certificateSource;
+			assertEquals(jadesCertificateSource.getKeyIdentifierCertificates().size(),
+					foundCertificates.getRelatedCertificatesByRefOrigin(CertificateRefOrigin.KEY_IDENTIFIER).size() +
+							foundCertificates.getOrphanCertificatesByRefOrigin(CertificateRefOrigin.KEY_IDENTIFIER).size());
+			assertEquals(jadesCertificateSource.getKeyIdentifierCertificateRefs().size(),
+					foundCertificates.getRelatedCertificateRefsByRefOrigin(CertificateRefOrigin.KEY_IDENTIFIER).size() +
+							foundCertificates.getOrphanCertificateRefsByRefOrigin(CertificateRefOrigin.KEY_IDENTIFIER).size());
 		}
 	}
 
