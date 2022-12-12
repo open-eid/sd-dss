@@ -81,6 +81,7 @@ import org.apache.xml.security.signature.SignedInfo;
 import org.apache.xml.security.signature.XMLSignature;
 import org.apache.xml.security.utils.resolver.ResourceResolver;
 import org.apache.xml.security.utils.resolver.implementations.ResolverXPointer;
+import org.digidoc4j.dss.xades.BDocTmSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -900,6 +901,20 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 		return new XAdESBaselineRequirementsChecker(this, certificateVerifier);
 	}
 
+	/**
+	 * Checks if the T-level is present in the signature.
+	 * In addition to default checks, also takes into account the presence of BDoc TimeMark OCSP response.
+	 *
+	 * @return TRUE if the T-level is present, FALSE otherwise
+	 */
+	@Override
+	public boolean hasTProfile() {
+		if (BDocTmSupport.hasBDocTmOcsp(signatureElement, xadesPath)) {
+			return true;
+		}
+		return super.hasTProfile();
+	}
+
 	@Override
 	public void checkSignatureIntegrity() {
 		if (signatureCryptographicVerification != null) {
@@ -1392,7 +1407,11 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 
 		boolean baselineProfile = hasBProfile();
 
-		if (!hasExtendedTProfile()) {
+		// DD4J-830 Profile check exception for Estonian BDoc-TM
+		boolean skipExtendedTProfileCheck = baselineProfile && BDocTmSupport.hasBDocTmOcsp(signatureElement, xadesPath);
+		// DD4J-830
+
+		if (!skipExtendedTProfileCheck && !hasExtendedTProfile()) {
 			if (baselineProfile) {
 				return SignatureLevel.XAdES_BASELINE_B;
 			} else if (hasEPESProfile()) {
