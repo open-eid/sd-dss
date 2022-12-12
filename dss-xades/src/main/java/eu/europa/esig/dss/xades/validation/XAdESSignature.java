@@ -877,10 +877,8 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	 * @return
 	 */
 	public boolean hasTProfile() {
-		if (BDocTmSupport.hasBDocTmPolicyId(signatureElement, xadesPaths)) {
-			//BDoc-TM has policy id and OCSP response containing TimeMark
-			boolean hasOcspResponse = Utils.isStringNotBlank(DomUtils.getValue(signatureElement, xadesPaths.getRevocationValuesPath() + xadesPaths.getCurrentEncapsulatedOCSPValue().substring(1)));
-			return hasOcspResponse;
+		if (BDocTmSupport.hasBDocTmOcsp(signatureElement, xadesPaths)) {
+			return true;
 		}
 		return super.hasTProfile();
 	}
@@ -1434,7 +1432,11 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 
 		boolean baselineProfile = hasBProfile();
 
-		if (!hasExtendedTProfile()) {
+		// DD4J-830 Profile check exception for Estonian BDoc-TM
+		boolean skipExtendedTProfileCheck = baselineProfile && BDocTmSupport.hasBDocTmOcsp(signatureElement, xadesPaths);
+		// DD4J-830
+
+		if (!skipExtendedTProfileCheck && !hasExtendedTProfile()) {
 			if (baselineProfile) {
 				return SignatureLevel.XAdES_BASELINE_B;
 			} else if (hasEPESProfile()) {
