@@ -59,7 +59,6 @@ import eu.europa.esig.xades.definition.xades122.XAdES122Element;
 import eu.europa.esig.xades.definition.xades141.XAdES141Element;
 import eu.europa.esig.dss.xades.validation.XAdESSignature;
 import eu.europa.esig.dss.xades.validation.XMLDocumentValidator;
-import org.digidoc4j.dss.xades.BDocTmSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -209,12 +208,6 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 
 			Element levelBUnsignedProperties = (Element) unsignedSignaturePropertiesDom.cloneNode(true);
 
-			//BDoc support - do not add Timestamp for BDoc Timemark signatures
-			if (BDocTmSupport.isBdocTmSignatureProfile(params)) {
-				continue;
-			}
-			//End of BDoc support
-
 			final XAdESTimestampParameters signatureTimestampParameters = params.getSignatureTimestampParameters();
 			final DigestAlgorithm digestAlgorithm = signatureTimestampParameters.getDigestAlgorithm();
 			final String canonicalizationMethod = signatureTimestampParameters.getCanonicalizationMethod();
@@ -274,19 +267,9 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 		Element certificateValuesDom = null;
 		if (Utils.isCollectionNotEmpty(certificatesToBeAdded)) {
 			certificateValuesDom = DomUtils.addElement(documentDom, parentDom, getXadesNamespace(), getCurrentXAdESElements().getElementCertificateValues());
-			//Custom Estonian functionality: OCSP responder certificate must have RESPONDER_CERT id attribute (needed only for jDigidoc interoperability)
-			int responderCertCounter = 0;
-			//End of Custom Estonian functionality
 			for (final CertificateToken certificateToken : certificatesToBeAdded) {
 				final String base64EncodeCertificate = Utils.toBase64(certificateToken.getEncoded());
-				Element element = DomUtils.addTextElement(documentDom, certificateValuesDom, getXadesNamespace(), getCurrentXAdESElements().getElementEncapsulatedX509Certificate(), base64EncodeCertificate);
-				//BDoc-TM functionality: OCSP responder certificate must have RESPONDER_CERT id attribute (needed only for jDigidoc interoperability)
-				boolean isCaCert = certificateToken.getCertificate().getBasicConstraints() != -1;
-				if(DSSASN1Utils.isOCSPSigning(certificateToken) && !isCaCert) {
-					element.setAttribute("Id", xadesSignature.getId() + "-RESPONDER_CERT-" + responderCertCounter);
-					responderCertCounter++;
-				}
-				//End of BDoc-TM functionality
+				DomUtils.addTextElement(documentDom, certificateValuesDom, getXadesNamespace(), getCurrentXAdESElements().getElementEncapsulatedX509Certificate(), base64EncodeCertificate);
 			}
 		}
 		return certificateValuesDom;
