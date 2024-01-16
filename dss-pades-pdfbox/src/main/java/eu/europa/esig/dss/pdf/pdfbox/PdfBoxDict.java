@@ -94,11 +94,11 @@ class PdfBoxDict implements PdfDict {
 
 	@Override
 	public PdfArray getAsArray(String name) {
-		COSArray array = (COSArray) wrapped.getDictionaryObject(name);
-		if (array == null) {
-			return null;
+		COSBase val = wrapped.getDictionaryObject(name);
+		if (val instanceof COSArray) {
+			return new PdfBoxArray((COSArray) val, document);
 		}
-		return new PdfBoxArray(array, document);
+		return null;
 	}
 
 	@Override
@@ -196,6 +196,24 @@ class PdfBoxDict implements PdfDict {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public InputStream createRawInputStream() throws IOException {
+		if (wrapped instanceof COSStream) {
+			return ((COSStream) wrapped).createRawInputStream();
+		}
+		return null;
+	}
+
+	@Override
+	public long getRawStreamSize() throws IOException {
+		try (InputStream is = createRawInputStream()) {
+			if (is != null) {
+				return Utils.getInputStreamSize(is);
+			}
+		}
+		return -1;
 	}
 
 	@Override

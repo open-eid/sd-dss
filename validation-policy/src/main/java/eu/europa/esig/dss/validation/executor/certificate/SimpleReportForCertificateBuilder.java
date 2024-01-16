@@ -25,23 +25,30 @@ import eu.europa.esig.dss.detailedreport.jaxb.XmlConclusion;
 import eu.europa.esig.dss.diagnostic.CertificateRevocationWrapper;
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
-import eu.europa.esig.dss.diagnostic.TrustedServiceWrapper;
+import eu.europa.esig.dss.diagnostic.TrustServiceWrapper;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlLangAndValue;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlOID;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlTrustedService;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlTrustedServiceProvider;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlTrustService;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlTrustServiceProvider;
+import eu.europa.esig.dss.jaxb.object.Message;
+import eu.europa.esig.dss.policy.ValidationPolicy;
 import eu.europa.esig.dss.simplecertificatereport.jaxb.XmlChainItem;
+import eu.europa.esig.dss.simplecertificatereport.jaxb.XmlDetails;
+import eu.europa.esig.dss.simplecertificatereport.jaxb.XmlMessage;
 import eu.europa.esig.dss.simplecertificatereport.jaxb.XmlRevocation;
 import eu.europa.esig.dss.simplecertificatereport.jaxb.XmlSimpleCertificateReport;
 import eu.europa.esig.dss.simplecertificatereport.jaxb.XmlSubject;
 import eu.europa.esig.dss.simplecertificatereport.jaxb.XmlTrustAnchor;
+import eu.europa.esig.dss.simplecertificatereport.jaxb.XmlValidationPolicy;
 import eu.europa.esig.dss.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Builds a SimpleReport for a certificate validation
@@ -54,6 +61,9 @@ public class SimpleReportForCertificateBuilder {
 	/** The detailed report */
 	private final DetailedReport detailedReport;
 
+	/** The validation policy */
+	private final ValidationPolicy policy;
+
 	/** The validation time */
 	private final Date currentTime;
 
@@ -65,13 +75,15 @@ public class SimpleReportForCertificateBuilder {
 	 *
 	 * @param diagnosticData {@link DiagnosticData}
 	 * @param detailedReport {@link DetailedReport}
+	 * @param policy {@link ValidationPolicy}
 	 * @param currentTime {@link Date} validation time
-	 * @param certificateId {@link String} if od certificate to be valdiated
+	 * @param certificateId {@link String} if od certificate to be validated
 	 */
 	public SimpleReportForCertificateBuilder(DiagnosticData diagnosticData, DetailedReport detailedReport,
-											 Date currentTime, String certificateId) {
+											 ValidationPolicy policy, Date currentTime, String certificateId) {
 		this.diagnosticData = diagnosticData;
 		this.detailedReport = detailedReport;
+		this.policy = policy;
 		this.currentTime = currentTime;
 		this.certificateId = certificateId;
 	}
@@ -82,7 +94,11 @@ public class SimpleReportForCertificateBuilder {
 	 * @return {@link XmlSimpleCertificateReport}
 	 */
 	public XmlSimpleCertificateReport build() {
-		XmlSimpleCertificateReport simpleReport = new XmlSimpleCertificateReport();
+		final XmlSimpleCertificateReport simpleReport = new XmlSimpleCertificateReport();
+
+		addPolicyNode(simpleReport);
+		addValidationTime(simpleReport);
+
 		simpleReport.setValidationTime(currentTime);
 		List<XmlChainItem> chain = new ArrayList<>();
 
@@ -100,6 +116,17 @@ public class SimpleReportForCertificateBuilder {
 		return simpleReport;
 	}
 
+	private void addPolicyNode(XmlSimpleCertificateReport report) {
+		XmlValidationPolicy xmlPolicy = new XmlValidationPolicy();
+		xmlPolicy.setPolicyName(policy.getPolicyName());
+		xmlPolicy.setPolicyDescription(policy.getPolicyDescription());
+		report.setValidationPolicy(xmlPolicy);
+	}
+
+	private void addValidationTime(XmlSimpleCertificateReport report) {
+		report.setValidationTime(currentTime);
+	}
+
 	private XmlChainItem getChainItem(CertificateWrapper certificate) {
 		XmlChainItem item = new XmlChainItem();
 		item.setId(certificate.getId());
@@ -112,7 +139,7 @@ public class SimpleReportForCertificateBuilder {
 		item.setNotAfter(certificate.getNotAfter());
 		item.setKeyUsages(certificate.getKeyUsages());
 		item.setExtendedKeyUsages(getReadable(certificate.getExtendedKeyUsages()));
-		item.setAiaUrls(emptyToNull(certificate.getAuthorityInformationAccessUrls()));
+		item.setAiaUrls(emptyToNull(certificate.getCAIssuersAccessUrls()));
 		item.setOcspUrls(emptyToNull(certificate.getOCSPAccessUrls()));
 		item.setCrlUrls(emptyToNull(certificate.getCRLDistributionPoints()));
 		item.setCpsUrls(emptyToNull(certificate.getCpsUrls()));
@@ -128,16 +155,19 @@ public class SimpleReportForCertificateBuilder {
 		item.setRevocation(revocation);
 
 		if (certificate.isTrusted()) {
-			List<XmlTrustedServiceProvider> trustServiceProviders = filterByCertificateId(certificate.getTrustServiceProviders(), certificate.getId());
+			List<XmlTrustServiceProvider> trustServiceProviders = filterByCertificateId(certificate.getTrustServiceProviders(), certificate.getId());
 			List<XmlTrustAnchor> trustAnchors = new ArrayList<>();
-			for (XmlTrustedServiceProvider xmlTrustedServiceProvider : trustServiceProviders) {
-				List<XmlTrustedService> trustedServices = xmlTrustedServiceProvider.getTrustedServices();
-				Set<String> uniqueServiceNames = getUniqueServiceNames(trustedServices);
+			for (XmlTrustServiceProvider xmlTrustServiceProvider : trustServiceProviders) {
+				List<XmlTrustService> trustServices = xmlTrustServiceProvider.getTrustServices();
+				Set<String> uniqueServiceNames = getUniqueServiceNames(trustServices);
 				for (String serviceName : uniqueServiceNames) {
 					XmlTrustAnchor trustAnchor = new XmlTrustAnchor();
-					trustAnchor.setCountryCode(xmlTrustedServiceProvider.getTL().getCountryCode());
-					trustAnchor.setTrustServiceProvider(getFirst(xmlTrustedServiceProvider.getTSPNames()));
-					List<String> tspRegistrationIdentifiers = xmlTrustedServiceProvider.getTSPRegistrationIdentifiers();
+					if (xmlTrustServiceProvider.getTL() != null) {
+						trustAnchor.setCountryCode(xmlTrustServiceProvider.getTL().getCountryCode());
+						trustAnchor.setTslType(xmlTrustServiceProvider.getTL().getTSLType());
+					}
+					trustAnchor.setTrustServiceProvider(getEnOrFirst(xmlTrustServiceProvider.getTSPNames()));
+					List<String> tspRegistrationIdentifiers = xmlTrustServiceProvider.getTSPRegistrationIdentifiers();
 					if (Utils.isCollectionNotEmpty(tspRegistrationIdentifiers)) {
 						trustAnchor.setTrustServiceProviderRegistrationId(tspRegistrationIdentifiers.get(0));
 					}
@@ -154,29 +184,39 @@ public class SimpleReportForCertificateBuilder {
 		item.setIndication(conclusion.getIndication());
 		item.setSubIndication(conclusion.getSubIndication());
 
+		XmlDetails validationDetails = getX509ValidationDetails(certificate.getId());
+		if (isNotEmpty(validationDetails)) {
+			item.setX509ValidationDetails(validationDetails);
+		}
+
 		return item;
 	}
 
-	private String getFirst(List<XmlLangAndValue> langAndValues) {
+	private String getEnOrFirst(List<XmlLangAndValue> langAndValues) {
 		if (Utils.isCollectionNotEmpty(langAndValues)) {
+			for (XmlLangAndValue langAndValue : langAndValues) {
+				if (langAndValue.getLang() != null && "en".equalsIgnoreCase(langAndValue.getLang())) {
+					return langAndValue.getValue();
+				}
+			}
 			return langAndValues.get(0).getValue();
 		}
 		return null;
 	}
 
-	private List<XmlTrustedServiceProvider> filterByCertificateId(List<XmlTrustedServiceProvider> trustServiceProviders, String certificateId) {
-		List<XmlTrustedServiceProvider> result = new ArrayList<>();
-		for (XmlTrustedServiceProvider xmlTrustedServiceProvider : trustServiceProviders) {
-			List<XmlTrustedService> trustedServices = xmlTrustedServiceProvider.getTrustedServices();
+	private List<XmlTrustServiceProvider> filterByCertificateId(List<XmlTrustServiceProvider> trustServiceProviders, String certificateId) {
+		List<XmlTrustServiceProvider> result = new ArrayList<>();
+		for (XmlTrustServiceProvider xmlTrustServiceProvider : trustServiceProviders) {
+			List<XmlTrustService> trustServices = xmlTrustServiceProvider.getTrustServices();
 			boolean foundCertId = false;
-			for (XmlTrustedService xmlTrustedService : trustedServices) {
-				if (Utils.areStringsEqual(certificateId, xmlTrustedService.getServiceDigitalIdentifier().getId())) {
+			for (XmlTrustService xmlTrustService : trustServices) {
+				if (Utils.areStringsEqual(certificateId, xmlTrustService.getServiceDigitalIdentifier().getId())) {
 					foundCertId = true;
 					break;
 				}
 			}
 			if (foundCertId) {
-				result.add(xmlTrustedServiceProvider);
+				result.add(xmlTrustServiceProvider);
 			}
 		}
 		return result;
@@ -197,10 +237,10 @@ public class SimpleReportForCertificateBuilder {
 		return null;
 	}
 
-	private Set<String> getUniqueServiceNames(List<XmlTrustedService> trustedServices) {
+	private Set<String> getUniqueServiceNames(List<XmlTrustService> trustServices) {
 		Set<String> result = new HashSet<>();
-		for (XmlTrustedService xmlTrustedService : trustedServices) {
-			result.add(getFirst(xmlTrustedService.getServiceNames()));
+		for (XmlTrustService xmlTrustService : trustServices) {
+			result.add(getEnOrFirst(xmlTrustService.getServiceNames()));
 		}
 		return result;
 	}
@@ -231,15 +271,62 @@ public class SimpleReportForCertificateBuilder {
 		firstChainItem.setQualificationAtIssuance(detailedReport.getCertificateQualificationAtIssuance(certificateId));
 		firstChainItem.setQualificationAtValidation(detailedReport.getCertificateQualificationAtValidation(certificateId));
 
+		XmlDetails qualificationDetailsAtIssuanceTime = getCertificateQualificationDetailsAtIssuanceTime(certificate.getId());
+		if (isNotEmpty(qualificationDetailsAtIssuanceTime)) {
+			firstChainItem.setQualificationDetailsAtIssuance(qualificationDetailsAtIssuanceTime);
+		}
+		XmlDetails qualificationDetailsAtValidationTime = getCertificateQualificationDetailsAtValidationTime(certificate.getId());
+		if (isNotEmpty(qualificationDetailsAtValidationTime)) {
+			firstChainItem.setQualificationDetailsAtValidation(qualificationDetailsAtValidationTime);
+		}
+
 		Boolean enactedMRA = null;
-		List<TrustedServiceWrapper> trustedServices = certificate.getTrustedServices();
-		for (TrustedServiceWrapper trustedServiceWrapper : trustedServices) {
-			if (trustedServiceWrapper.isEnactedMRA()) {
+		List<TrustServiceWrapper> trustServices = certificate.getTrustServices();
+		for (TrustServiceWrapper trustServiceWrapper : trustServices) {
+			if (trustServiceWrapper.isEnactedMRA()) {
 				enactedMRA = true;
 				break;
 			}
 		}
 		firstChainItem.setEnactedMRA(enactedMRA);
+	}
+
+	private XmlDetails getX509ValidationDetails(String tokenId) {
+		XmlDetails validationDetails = new XmlDetails();
+		validationDetails.getError().addAll(convert(detailedReport.getAdESValidationErrors(tokenId)));
+		validationDetails.getWarning().addAll(convert(detailedReport.getAdESValidationWarnings(tokenId)));
+		validationDetails.getInfo().addAll(convert(detailedReport.getAdESValidationInfos(tokenId)));
+		return validationDetails;
+	}
+
+	private XmlDetails getCertificateQualificationDetailsAtIssuanceTime(String tokenId) {
+		XmlDetails qualificationDetails = new XmlDetails();
+		qualificationDetails.getError().addAll(convert(detailedReport.getCertificateQualificationErrorsAtIssuanceTime(tokenId)));
+		qualificationDetails.getWarning().addAll(convert(detailedReport.getCertificateQualificationWarningsAtIssuanceTime(tokenId)));
+		qualificationDetails.getInfo().addAll(convert(detailedReport.getCertificateQualificationInfosAtIssuanceTime(tokenId)));
+		return qualificationDetails;
+	}
+
+	private XmlDetails getCertificateQualificationDetailsAtValidationTime(String tokenId) {
+		XmlDetails qualificationDetails = new XmlDetails();
+		qualificationDetails.getError().addAll(convert(detailedReport.getCertificateQualificationErrorsAtValidationTime(tokenId)));
+		qualificationDetails.getWarning().addAll(convert(detailedReport.getCertificateQualificationWarningsAtValidationTime(tokenId)));
+		qualificationDetails.getInfo().addAll(convert(detailedReport.getCertificateQualificationInfosAtValidationTime(tokenId)));
+		return qualificationDetails;
+	}
+
+	private List<XmlMessage> convert(Collection<Message> messages) {
+		return messages.stream().map(m -> {
+			XmlMessage xmlMessage = new XmlMessage();
+			xmlMessage.setKey(m.getKey());
+			xmlMessage.setValue(m.getValue());
+			return xmlMessage;
+		}).collect(Collectors.toList());
+	}
+
+	private boolean isNotEmpty(XmlDetails details) {
+		return Utils.isCollectionNotEmpty(details.getError()) || Utils.isCollectionNotEmpty(details.getWarning()) ||
+				Utils.isCollectionNotEmpty(details.getInfo());
 	}
 
 }

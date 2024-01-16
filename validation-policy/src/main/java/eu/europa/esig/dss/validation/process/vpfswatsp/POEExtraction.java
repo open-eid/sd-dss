@@ -22,6 +22,7 @@ package eu.europa.esig.dss.validation.process.vpfswatsp;
 
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
+import eu.europa.esig.dss.diagnostic.EvidenceRecordWrapper;
 import eu.europa.esig.dss.diagnostic.OrphanTokenWrapper;
 import eu.europa.esig.dss.diagnostic.RevocationWrapper;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
@@ -67,6 +68,7 @@ public class POEExtraction {
 	 * Default constructor initializing an empty map
 	 */
 	public POEExtraction() {
+		// empty
 	}
 
 	/**
@@ -82,8 +84,11 @@ public class POEExtraction {
 		for (SignatureWrapper signature : diagnosticData.getAllSignatures()) {
 			addPOE(signature.getId(), controlTimePoe);
 		}
-		for (TimestampWrapper timestamp : diagnosticData.getTimestampSet()) {
+		for (TimestampWrapper timestamp : diagnosticData.getTimestampList()) {
 			addPOE(timestamp.getId(), controlTimePoe);
+		}
+		for (EvidenceRecordWrapper evidenceRecord : diagnosticData.getEvidenceRecords()) {
+			addPOE(evidenceRecord.getId(), controlTimePoe);
 		}
 		for (CertificateWrapper certificate : diagnosticData.getUsedCertificates()) {
 			addPOE(certificate.getId(), controlTimePoe);
@@ -135,10 +140,40 @@ public class POEExtraction {
 		if (timestamp.isMessageImprintDataFound() && timestamp.isMessageImprintDataIntact()) {
 			List<XmlTimestampedObject> timestampedObjects = timestamp.getTimestampedObjects();
 			if (Utils.isCollectionNotEmpty(timestampedObjects)) {
-				POE poe = new POE(timestamp);
+				POE poe = new TimestampPOE(timestamp);
 				for (XmlTimestampedObject xmlTimestampedObject : timestampedObjects) {
 					addPOE(xmlTimestampedObject.getToken().getId(), poe);
 				}
+			}
+		}
+	}
+
+	/**
+	 * Extracts POE for all objects covered by an evidence record
+	 *
+	 * @param evidenceRecord {@link EvidenceRecordWrapper}
+	 */
+	public void extractPOE(EvidenceRecordWrapper evidenceRecord) {
+		List<XmlTimestampedObject> coveredObjects = evidenceRecord.getCoveredObjects();
+		if (Utils.isCollectionNotEmpty(coveredObjects)) {
+			POE poe = new EvidenceRecordPOE(evidenceRecord);
+			for (XmlTimestampedObject xmlTimestampedObject : coveredObjects) {
+				addPOE(xmlTimestampedObject.getToken().getId(), poe);
+			}
+		}
+	}
+
+	/**
+	 * Extracts POE for given timestamped objects
+	 *
+	 * @param timestampedObjects a list of {@link XmlTimestampedObject} to get POE for
+	 * @param poeTime to be provided for timestamped objects
+	 */
+	public void extractPOE(List<XmlTimestampedObject> timestampedObjects, Date poeTime) {
+		if (Utils.isCollectionNotEmpty(timestampedObjects) && poeTime != null) {
+			POE poe = new POE(poeTime);
+			for (XmlTimestampedObject xmlTimestampedObject : timestampedObjects) {
+				addPOE(xmlTimestampedObject.getToken().getId(), poe);
 			}
 		}
 	}

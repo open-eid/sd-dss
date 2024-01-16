@@ -53,12 +53,6 @@ public class MockDataLoader implements DataLoader {
 	}
 
 	@Override
-	public byte[] get(String url, boolean refresh) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public byte[] post(String url, byte[] content) {
 		// TODO Auto-generated method stub
 		return null;

@@ -24,19 +24,23 @@ import com.lowagie.text.Rectangle;
 import com.lowagie.text.exceptions.BadPasswordException;
 import com.lowagie.text.pdf.AcroFields;
 import com.lowagie.text.pdf.AcroFields.Item;
+import com.lowagie.text.pdf.ByteBuffer;
 import com.lowagie.text.pdf.PdfArray;
 import com.lowagie.text.pdf.PdfDictionary;
 import com.lowagie.text.pdf.PdfIndirectReference;
+import com.lowagie.text.pdf.PdfLiteral;
 import com.lowagie.text.pdf.PdfName;
 import com.lowagie.text.pdf.PdfNumber;
 import com.lowagie.text.pdf.PdfObject;
 import com.lowagie.text.pdf.PdfReader;
 import com.lowagie.text.pdf.PdfString;
+import com.lowagie.text.pdf.PdfWriter;
 import eu.europa.esig.dss.enumerations.CertificationPermission;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.model.InMemoryDocument;
+import eu.europa.esig.dss.pades.PAdESCommonParameters;
 import eu.europa.esig.dss.pades.exception.InvalidPasswordException;
-import eu.europa.esig.dss.pades.exception.ProtectedDocumentException;
 import eu.europa.esig.dss.pades.validation.PdfSignatureDictionary;
 import eu.europa.esig.dss.pades.validation.PdfSignatureField;
 import eu.europa.esig.dss.pdf.AnnotationBox;
@@ -47,6 +51,7 @@ import eu.europa.esig.dss.pdf.PdfDssDict;
 import eu.europa.esig.dss.pdf.PdfSigDictWrapper;
 import eu.europa.esig.dss.pdf.SingleDssDict;
 import eu.europa.esig.dss.pdf.visible.ImageRotationUtils;
+import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +77,9 @@ public class ITextDocumentReader implements PdfDocumentReader {
 	/** The PDF document reader */
 	private final PdfReader pdfReader;
 
+	/** The original PDF document */
+	private DSSDocument dssDocument;
+
 	/** The map of signature dictionaries and corresponding signature fields */
 	private Map<PdfSignatureDictionary, List<PdfSignatureField>> signatureDictionaryMap;
 
@@ -96,6 +104,7 @@ public class ITextDocumentReader implements PdfDocumentReader {
 	 */
 	public ITextDocumentReader(DSSDocument dssDocument, byte[] passwordProtection) throws IOException, InvalidPasswordException {
 		Objects.requireNonNull(dssDocument, "The document must be defined!");
+		this.dssDocument = dssDocument;
 		try (InputStream is = dssDocument.openStream()) {
 			this.pdfReader = new PdfReader(is, passwordProtection);
 		} catch (BadPasswordException e) {
@@ -114,6 +123,7 @@ public class ITextDocumentReader implements PdfDocumentReader {
 	 */
 	public ITextDocumentReader(byte[] binaries, byte[] passwordProtection) throws IOException, InvalidPasswordException {
 		Objects.requireNonNull(binaries, "The document binaries must be defined!");
+		this.dssDocument = new InMemoryDocument(binaries);
 		try {
 			this.pdfReader = new PdfReader(binaries, passwordProtection);
 		} catch (BadPasswordException e) {
@@ -229,11 +239,11 @@ public class ITextDocumentReader implements PdfDocumentReader {
 		PdfDictionary pageDictionary = pdfReader.getPageN(page);
 		PdfArray annots = pageDictionary.getAsArray(PdfName.ANNOTS);
 		if (annots != null) {
-			AnnotationBox pageBox = getPageBox(page);
+			List<PdfAnnotation> pdfAnnotations = new ArrayList<>();
+
 			int pageRotation = getPageRotation(page);
-			List<PdfAnnotation> pdfAnnotations = new ArrayList<>(); 
 			for (PdfObject pdfObject : annots.getElements()) {
-				PdfAnnotation pdfAnnotation = toPdfAnnotation(pdfObject, pageBox, pageRotation);
+				PdfAnnotation pdfAnnotation = toPdfAnnotation(pdfObject, pageRotation);
 				if (pdfAnnotation != null) {
 					pdfAnnotations.add(pdfAnnotation);
 				}
@@ -244,18 +254,29 @@ public class ITextDocumentReader implements PdfDocumentReader {
 		return Collections.emptyList();
 	}
 	
-	private PdfAnnotation toPdfAnnotation(PdfObject pdfObject, AnnotationBox pageBox, int pageRotation) {
+	private PdfAnnotation toPdfAnnotation(PdfObject pdfObject, int pageRotation) {
 		PdfDictionary annotDictionary = getAnnotDictionary(pdfObject);
 		if (annotDictionary != null) {
 			AnnotationBox annotationBox = getAnnotationBox(annotDictionary);
 			if (annotationBox != null) {
-				annotationBox = ImageRotationUtils.rotateRelativelyWrappingBox(annotationBox, pageBox, pageRotation);
+				if (isNoRotate(annotDictionary)) {
+					annotationBox = ImageRotationUtils.ensureNoRotate(annotationBox, pageRotation);
+				}
 				PdfAnnotation pdfAnnotation = new PdfAnnotation(annotationBox);
 				pdfAnnotation.setName(getSignatureFieldName(annotDictionary));
 				return pdfAnnotation;
 			}
 		}
 		return null;
+	}
+
+	private boolean isNoRotate(PdfDictionary annotDictionary) {
+		PdfNumber pdfNumber = annotDictionary.getAsNumber(PdfName.F);
+		if (pdfNumber != null) {
+			int ff = pdfNumber.intValue();
+			return (ff & com.lowagie.text.pdf.PdfAnnotation.FLAGS_NOROTATE) == com.lowagie.text.pdf.PdfAnnotation.FLAGS_NOROTATE;
+		}
+		return false;
 	}
 	
 	private PdfDictionary getAnnotDictionary(PdfObject pdfObject) {
@@ -310,19 +331,53 @@ public class ITextDocumentReader implements PdfDocumentReader {
 	}
 
 	@Override
-	public void checkDocumentPermissions() {
-		if (!pdfReader.isOpenedWithFullPermissions()) {
-			throw new ProtectedDocumentException("The document cannot be modified! The document is protected.");
+	public boolean isEncrypted() {
+		return pdfReader.isEncrypted();
+	}
+
+	@Override
+	public boolean isOpenWithOwnerAccess() {
+		return !isEncrypted() || pdfReader.isOwnerPasswordUsed();
+	}
+
+	@Override
+	public boolean canFillSignatureForm() {
+		if (!isOpenWithOwnerAccess()) {
+			int permissions = pdfReader.getPermissions();
+			return isAllowModifyAnnotations(permissions) || isAllowFillIn(permissions);
 		}
-		else if (pdfReader.isEncrypted()) {
-			throw new ProtectedDocumentException("The document cannot be modified! The document is encrypted.");
+		return true;
+	}
+
+	@Override
+	public boolean canCreateSignatureField() {
+		if (!isOpenWithOwnerAccess()) {
+			int permissions = pdfReader.getPermissions();
+			return isAllowModifyContents(permissions) && isAllowModifyAnnotations(permissions);
 		}
+		return true;
+	}
+
+	private boolean isAllowModifyContents(int permissions) {
+		return isPermissionBitPresent(permissions, PdfWriter.ALLOW_MODIFY_CONTENTS);
+	}
+
+	private boolean isAllowModifyAnnotations(int permissions) {
+		return isPermissionBitPresent(permissions, PdfWriter.ALLOW_MODIFY_ANNOTATIONS);
+	}
+
+	private boolean isAllowFillIn(int permissions) {
+		return isPermissionBitPresent(permissions, PdfWriter.ALLOW_FILL_IN);
+	}
+
+	private boolean isPermissionBitPresent(int permissions, int permissionBit) {
+		return (permissionBit & permissions) > 0;
 	}
 
 	@Override
 	public CertificationPermission getCertificationPermission() {
 		int certificationLevel = pdfReader.getCertificationLevel();
-		if (certificationLevel != 0) {
+		if (certificationLevel > 0) {
 			return CertificationPermission.fromCode(certificationLevel);
 		}
 		return null;
@@ -350,6 +405,48 @@ public class ITextDocumentReader implements PdfDocumentReader {
 	@Override
 	public PdfDict getCatalogDictionary() {
 		return new ITextPdfDict(pdfReader.getCatalog());
+	}
+
+	/**
+	 * Computes a DocumentId in a deterministic way based on the given {@code parameters} and the document
+	 *
+	 * @param parameters {@link PAdESCommonParameters}
+	 * @return {@link PdfObject} representing an /ID entry containing a deterministic identifier
+	 */
+	public PdfObject generateDocumentId(PAdESCommonParameters parameters) {
+		/*
+		 * Computation is according to "14.4 File identifiers"
+		 */
+		String deterministicId = parameters.getDeterministicId();
+		if (dssDocument != null) {
+			if (dssDocument.getName() != null) {
+				deterministicId = deterministicId + "-" + dssDocument.getName();
+			}
+			deterministicId = deterministicId + "-" + DSSUtils.getFileByteSize(dssDocument);
+		}
+
+		final String md5 = DSSUtils.getMD5Digest(deterministicId.getBytes());
+		final byte[] bytes = Utils.fromHex(md5);
+
+		// see {@code com.lowagie.text.pdf.PdfEncryption.createInfoId(byte[] idPartOne, byte[] idPartTwo)}
+		try (ByteBuffer buf = new ByteBuffer(90)) {
+			buf.append('[').append('<');
+			for (int k = 0; k < 16; ++k) {
+				buf.appendHex(bytes[k]);
+			}
+			/*
+			 * When a PDF file is first written, both identifiers shall be set to the same value.
+			 */
+			buf.append('>').append('<');
+			for (int k = 0; k < 16; ++k) {
+				buf.appendHex(bytes[k]);
+			}
+			buf.append('>').append(']');
+			return new PdfLiteral(buf.toByteArray());
+
+		} catch (IOException e) {
+			throw new DSSException("Unable to generate the fileId", e);
+		}
 	}
 
 }

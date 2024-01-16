@@ -111,9 +111,33 @@ public interface PdfDocumentReader extends Closeable {
 	BufferedImage generateImageScreenshotWithoutAnnotations(int page, List<PdfAnnotation> addedAnnotations) throws IOException;
 
 	/**
-	 * This method checks if the document is not encrypted or with limited edition rights
+	 * This method checks whether the document is encrypted
+	 *
+	 * @return TRUE if the document is encrypted, FALSE otherwise
 	 */
-	void checkDocumentPermissions();
+	boolean isEncrypted();
+
+	/**
+	 * This method verifies if the document has been opened with a full owner access (all modifications are permitted)
+	 *
+	 * @return TRUE if the document has been open with a full access, FALSE otherwise
+	 */
+	boolean isOpenWithOwnerAccess();
+
+	/**
+	 * This method verifies whether fill-in of existing signature fields is allowed
+	 * by PDF document permissions dictionary
+	 *
+	 * @return TRUE if fill-in signature forms is permitted, FALSE otherwise
+	 */
+	boolean canFillSignatureForm();
+
+	/**
+	 * This method verifies whether creation of new signature fields is allowed by the PDF permissions dictionary
+	 *
+	 * @return TRUE if the new signature field creation is permitted, FALSE otherwise
+	 */
+	boolean canCreateSignatureField();
 
 	/**
 	 * Returns value of /DocMDP dictionary defining the permitted modification in a PDF, when present

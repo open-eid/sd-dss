@@ -22,18 +22,19 @@ package eu.europa.esig.dss.ws.server.signing.rest.client;
 
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.MaskGenerationFunction;
+import eu.europa.esig.dss.enumerations.SignatureAlgorithm;
 import eu.europa.esig.dss.ws.dto.DigestDTO;
 import eu.europa.esig.dss.ws.dto.SignatureValueDTO;
 import eu.europa.esig.dss.ws.dto.ToBeSignedDTO;
 import eu.europa.esig.dss.ws.server.signing.dto.RemoteKeyEntry;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 import java.io.Serializable;
 import java.util.List;
 
@@ -103,6 +104,23 @@ public interface RestSignatureTokenConnection extends Serializable {
 			@PathParam("alias") String alias);
 
 	/**
+	 * This method signs the {@code toBeSigned} data with the digest
+	 * {@code digestAlgorithm} and the given {@code alias}.
+	 *
+	 * @param toBeSigned
+	 *                        The data that need to be signed
+	 * @param signatureAlgorithm
+	 *                        The signature algorithm to be used for signing
+	 * @param alias
+	 *                        The key alias to be used
+	 * @return The array of bytes representing the signature value
+	 */
+	@POST
+	@Path("sign-with-signature-algo/{alias}/{signature-algo}")
+	SignatureValueDTO sign(ToBeSignedDTO toBeSigned, @PathParam("signature-algo") SignatureAlgorithm signatureAlgorithm,
+						   @PathParam("alias") String alias);
+
+	/**
 	 * 
 	 * This method signs the {@code digest} data with the given {@code alias}.
 	 * 
@@ -118,7 +136,6 @@ public interface RestSignatureTokenConnection extends Serializable {
 	SignatureValueDTO signDigest(DigestDTO digest, @PathParam("alias") String alias);
 
 	/**
-	 * 
 	 * This method signs the {@code digest} data with a mask {@code mgf} and the
 	 * given {@code alias}.
 	 * 
@@ -134,5 +151,23 @@ public interface RestSignatureTokenConnection extends Serializable {
 	@POST
 	@Path("sign-digest/{alias}/{mask}")
 	SignatureValueDTO signDigest(DigestDTO digest, @PathParam("mask") MaskGenerationFunction mgf, @PathParam("alias") String alias);
+
+	/**
+	 * This method signs the {@code digest} data with a mask {@code mgf} and the
+	 * given {@code alias}.
+	 *
+	 * @param digest
+	 *               The digested data that need to be signed
+	 * @param signatureAlgorithm
+	 *                        The signature algorithm to be used for signing
+	 * @param alias
+	 *               The key alias to be used
+	 * @return the signature value representation with the used algorithm and the
+	 *         binary value
+	 */
+	@POST
+	@Path("sign-digest-with-signature-algo/{alias}/{signature-algo}")
+	SignatureValueDTO signDigest(DigestDTO digest, @PathParam("signature-algo") SignatureAlgorithm signatureAlgorithm,
+								 @PathParam("alias") String alias);
 
 }

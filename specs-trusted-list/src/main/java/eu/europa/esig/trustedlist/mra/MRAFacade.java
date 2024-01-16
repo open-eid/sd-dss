@@ -23,8 +23,8 @@ package eu.europa.esig.trustedlist.mra;
 import eu.europa.esig.trustedlist.TrustedListFacade;
 import org.xml.sax.SAXException;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
 import javax.xml.validation.Schema;
 
 /**
@@ -35,6 +35,13 @@ public class MRAFacade extends TrustedListFacade {
 
     /** MRA utils */
     private static final MRAUtils MRA_UTILS = MRAUtils.getInstance();
+
+    /**
+     * Default constructor
+     */
+    protected MRAFacade() {
+        // empty
+    }
 
     /**
      * Creates a new facade

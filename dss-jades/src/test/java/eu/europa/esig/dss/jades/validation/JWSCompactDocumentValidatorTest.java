@@ -80,6 +80,8 @@ public class JWSCompactDocumentValidatorTest extends AbstractTestValidator {
 		assertFalse(validator.isSupported(wrong));
 		wrong = new InMemoryDocument(new byte[] {});
 		assertFalse(validator.isSupported(wrong));
+		wrong = InMemoryDocument.createEmptyDocument();
+		assertFalse(validator.isSupported(wrong));
 	}
 	
 	@Override
@@ -116,6 +118,11 @@ public class JWSCompactDocumentValidatorTest extends AbstractTestValidator {
 	protected DSSDocument getNoSignatureDocument() {
 		// not applicable
 		return null;
+	}
+
+	@Override
+	protected DSSDocument getXmlEvidenceRecordDocument() {
+		return new FileDocument("src/test/resources/validation/evidence-record/evidence-record-a0baac29-c2b6-4544-abc5-d26ac6c8b655.xml");
 	}
 
 }

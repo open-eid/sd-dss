@@ -29,19 +29,18 @@ import eu.europa.esig.dss.asic.xades.signature.ASiCWithXAdESService;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlContainerInfo;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
+import eu.europa.esig.dss.enumerations.MimeTypeEnum;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.exception.IllegalInputException;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
-import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.test.AbstractPkiFactoryTestValidation;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.reports.Reports;
-import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -56,8 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ASiCSWithXAdESContainerMergerTest extends
-        AbstractPkiFactoryTestValidation<ASiCWithXAdESSignatureParameters, XAdESTimestampParameters> {
+public class ASiCSWithXAdESContainerMergerTest extends AbstractPkiFactoryTestValidation {
 
     @Test
     public void isSupportedTest() {
@@ -75,7 +73,7 @@ public class ASiCSWithXAdESContainerMergerTest extends
 
     @Test
     public void createAndMergeTest() {
-        DSSDocument toSignDocument = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeType.TEXT);
+        DSSDocument toSignDocument = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeTypeEnum.TEXT);
         ASiCWithXAdESService service = new ASiCWithXAdESService(getOfflineCertificateVerifier());
 
         ASiCWithXAdESSignatureParameters signatureParameters = new ASiCWithXAdESSignatureParameters();
@@ -114,7 +112,7 @@ public class ASiCSWithXAdESContainerMergerTest extends
 
     @Test
     public void mergeAsicWithZipTest() {
-        DSSDocument toSignDocument = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeType.TEXT);
+        DSSDocument toSignDocument = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeTypeEnum.TEXT);
         ASiCWithXAdESService service = new ASiCWithXAdESService(getOfflineCertificateVerifier());
 
         ASiCWithXAdESSignatureParameters signatureParameters = new ASiCWithXAdESSignatureParameters();
@@ -128,7 +126,7 @@ public class ASiCSWithXAdESContainerMergerTest extends
         SignatureValue signatureValue = getToken().sign(dataToSign, signatureParameters.getDigestAlgorithm(), getPrivateKeyEntry());
         DSSDocument containerOne = service.signDocument(toSignDocument, signatureParameters, signatureValue);
 
-        DSSDocument documentToAdd = new InMemoryDocument("Bye World !".getBytes(), "directory/test.txt", MimeType.TEXT);
+        DSSDocument documentToAdd = new InMemoryDocument("Bye World !".getBytes(), "directory/test.txt", MimeTypeEnum.TEXT);
         ASiCContent asicContentToAdd = new ASiCContent();
         asicContentToAdd.getUnsupportedDocuments().add(documentToAdd);
 
@@ -227,10 +225,10 @@ public class ASiCSWithXAdESContainerMergerTest extends
         ASiCContent secondASiCContent = new ASiCContent();
 
         firstASiCContent.setSignatureDocuments(Collections.singletonList(
-                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeType.XML)));
+                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeTypeEnum.XML)));
         secondASiCContent.setSignatureDocuments(Arrays.asList(
-                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeType.XML),
-                new InMemoryDocument("signature".getBytes(), "META-INF/signature001.xml", MimeType.XML)));
+                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeTypeEnum.XML),
+                new InMemoryDocument("signature".getBytes(), "META-INF/signature001.xml", MimeTypeEnum.XML)));
 
         ASiCSWithXAdESContainerMerger merger = new ASiCSWithXAdESContainerMerger(firstASiCContent, secondASiCContent);
         Exception exception = assertThrows(UnsupportedOperationException.class, () -> merger.merge());
@@ -244,9 +242,9 @@ public class ASiCSWithXAdESContainerMergerTest extends
         ASiCContent secondASiCContent = new ASiCContent();
 
         firstASiCContent.setSignatureDocuments(Collections.singletonList(
-                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeType.XML)));
+                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeTypeEnum.XML)));
         secondASiCContent.setSignatureDocuments(Collections.singletonList(
-                new InMemoryDocument("signature".getBytes(), "META-INF/signature001.xml", MimeType.XML)));
+                new InMemoryDocument("signature".getBytes(), "META-INF/signature001.xml", MimeTypeEnum.XML)));
 
         ASiCSWithXAdESContainerMerger merger = new ASiCSWithXAdESContainerMerger(firstASiCContent, secondASiCContent);
         Exception exception = assertThrows(UnsupportedOperationException.class, () -> merger.merge());
@@ -260,9 +258,9 @@ public class ASiCSWithXAdESContainerMergerTest extends
         ASiCContent secondASiCContent = new ASiCContent();
 
         firstASiCContent.setSignatureDocuments(Collections.singletonList(
-                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeType.XML)));
+                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeTypeEnum.XML)));
         secondASiCContent.setTimestampDocuments(Collections.singletonList(
-                new InMemoryDocument("timestamp".getBytes(), "META-INF/timestamp.tst", MimeType.TST)));
+                new InMemoryDocument("timestamp".getBytes(), "META-INF/timestamp.tst", MimeTypeEnum.TST)));
 
         ASiCSWithXAdESContainerMerger merger = new ASiCSWithXAdESContainerMerger(firstASiCContent, secondASiCContent);
         Exception exception = assertThrows(UnsupportedOperationException.class, () -> merger.merge());
@@ -276,14 +274,14 @@ public class ASiCSWithXAdESContainerMergerTest extends
         ASiCContent secondASiCContent = new ASiCContent();
 
         firstASiCContent.setSignatureDocuments(Collections.singletonList(
-                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeType.XML)));
+                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeTypeEnum.XML)));
         firstASiCContent.setSignedDocuments(Collections.singletonList(
-                new InMemoryDocument("Hello World!".getBytes(), "hello.txt", MimeType.TEXT)));
+                new InMemoryDocument("Hello World!".getBytes(), "hello.txt", MimeTypeEnum.TEXT)));
         secondASiCContent.setSignatureDocuments(Collections.singletonList(
-                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeType.XML)));
+                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeTypeEnum.XML)));
         secondASiCContent.setSignedDocuments(Arrays.asList(
-                new InMemoryDocument("Hello World!".getBytes(), "hello.txt", MimeType.TEXT),
-                new InMemoryDocument("Bye World!".getBytes(), "bye.txt", MimeType.TEXT)));
+                new InMemoryDocument("Hello World!".getBytes(), "hello.txt", MimeTypeEnum.TEXT),
+                new InMemoryDocument("Bye World!".getBytes(), "bye.txt", MimeTypeEnum.TEXT)));
 
         ASiCSWithXAdESContainerMerger merger = new ASiCSWithXAdESContainerMerger(firstASiCContent, secondASiCContent);
         Exception exception = assertThrows(UnsupportedOperationException.class, () -> merger.merge());
@@ -297,13 +295,13 @@ public class ASiCSWithXAdESContainerMergerTest extends
         ASiCContent secondASiCContent = new ASiCContent();
 
         firstASiCContent.setSignatureDocuments(Collections.singletonList(
-                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeType.XML)));
+                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeTypeEnum.XML)));
         firstASiCContent.setSignedDocuments(Collections.singletonList(
-                new InMemoryDocument("Hello World!".getBytes(), "hello.txt", MimeType.TEXT)));
+                new InMemoryDocument("Hello World!".getBytes(), "hello.txt", MimeTypeEnum.TEXT)));
         secondASiCContent.setSignatureDocuments(Collections.singletonList(
-                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeType.XML)));
+                new InMemoryDocument("signature".getBytes(), "META-INF/signatures.xml", MimeTypeEnum.XML)));
         secondASiCContent.setSignedDocuments(Collections.singletonList(
-                new InMemoryDocument("Hello World!".getBytes(), "bye.txt", MimeType.TEXT)));
+                new InMemoryDocument("Hello World!".getBytes(), "bye.txt", MimeTypeEnum.TEXT)));
 
         ASiCSWithXAdESContainerMerger merger = new ASiCSWithXAdESContainerMerger(firstASiCContent, secondASiCContent);
         Exception exception = assertThrows(UnsupportedOperationException.class, () -> merger.merge());
@@ -317,9 +315,9 @@ public class ASiCSWithXAdESContainerMergerTest extends
         ASiCContent secondASiCContent = new ASiCContent();
 
         firstASiCContent.setSignedDocuments(Collections.singletonList(
-                new InMemoryDocument("Hello World!".getBytes(), "hello.txt", MimeType.TEXT)));
+                new InMemoryDocument("Hello World!".getBytes(), "hello.txt", MimeTypeEnum.TEXT)));
         secondASiCContent.setSignedDocuments(Collections.singletonList(
-                new InMemoryDocument("Bye World!".getBytes(), "hello.txt", MimeType.TEXT)));
+                new InMemoryDocument("Bye World!".getBytes(), "hello.txt", MimeTypeEnum.TEXT)));
 
         ASiCSWithXAdESContainerMerger merger = new ASiCSWithXAdESContainerMerger(firstASiCContent, secondASiCContent);
         Exception exception = assertThrows(UnsupportedOperationException.class, () -> merger.merge());
@@ -329,7 +327,7 @@ public class ASiCSWithXAdESContainerMergerTest extends
 
     @Test
     public void mergeMultipleContainersTest() {
-        DSSDocument toSignDocument = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeType.TEXT);
+        DSSDocument toSignDocument = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeTypeEnum.TEXT);
         ASiCWithXAdESService service = new ASiCWithXAdESService(getOfflineCertificateVerifier());
 
         ASiCWithXAdESSignatureParameters signatureParameters = new ASiCWithXAdESSignatureParameters();
@@ -462,8 +460,8 @@ public class ASiCSWithXAdESContainerMergerTest extends
         ASiCContent firstASiCContent = new ASiCContent();
         ASiCContent secondASiCContent = new ASiCContent();
 
-        firstASiCContent.setZipComment(ASiCUtils.getZipComment(MimeType.ASICS));
-        secondASiCContent.setZipComment(ASiCUtils.getZipComment(MimeType.ZIP));
+        firstASiCContent.setZipComment(ASiCUtils.getZipComment(MimeTypeEnum.ASICS));
+        secondASiCContent.setZipComment(ASiCUtils.getZipComment(MimeTypeEnum.ZIP));
 
         ASiCSWithXAdESContainerMerger merger = new ASiCSWithXAdESContainerMerger(firstASiCContent, secondASiCContent);
         Exception exception = assertThrows(UnsupportedOperationException.class, () -> merger.merge());

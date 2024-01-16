@@ -33,8 +33,8 @@ public class UserCredentials implements Serializable {
     /** Identifies user's login name or username */
     private String username;
 
-    /** The password authentication string */
-    private String password;
+    /** The authentication password */
+    private char[] password;
 
     /**
      * Empty constructor
@@ -47,9 +47,9 @@ public class UserCredentials implements Serializable {
      * Default constructor
      *
      * @param username {@link String}
-     * @param password {@link String}
+     * @param password a char array representing the password string
      */
-    public UserCredentials(String username, String password) {
+    public UserCredentials(String username, char[] password) {
         this.username = username;
         this.password = password;
     }
@@ -77,7 +77,7 @@ public class UserCredentials implements Serializable {
      *
      * @return {@link String}
      */
-    public String getPassword() {
+    public char[] getPassword() {
         return password;
     }
 
@@ -86,7 +86,7 @@ public class UserCredentials implements Serializable {
      *
      * @param password {@link String}
      */
-    public void setPassword(String password) {
+    public void setPassword(char[] password) {
         this.password = password;
     }
 

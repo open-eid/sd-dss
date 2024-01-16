@@ -20,7 +20,7 @@
  */
 package eu.europa.esig.dss.cookbook.example.sign;
 
-import eu.europa.esig.dss.DomUtils;
+import eu.europa.esig.dss.xml.utils.DomUtils;
 import eu.europa.esig.dss.cookbook.example.CookbookTools;
 import eu.europa.esig.dss.enumerations.CommitmentType;
 import eu.europa.esig.dss.enumerations.CommitmentTypeEnum;
@@ -39,7 +39,7 @@ import eu.europa.esig.dss.token.DSSPrivateKeyEntry;
 import eu.europa.esig.dss.token.SignatureTokenConnection;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
-import eu.europa.esig.dss.validation.timestamp.TimestampToken;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampToken;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 import eu.europa.esig.dss.xades.signature.XAdESService;
 import eu.europa.esig.xades.XAdES319132Utils;
@@ -94,6 +94,9 @@ public class SignXmlXadesBPropertiesTest extends CookbookTools {
 			xadesSignatureParameters.setDigestAlgorithm(DigestAlgorithm.SHA512);
 			xadesSignatureParameters.setSigningCertificate(privateKey.getCertificate());
 			xadesSignatureParameters.setCertificateChain(privateKey.getCertificateChain());
+			// tag::prettyPrint[]
+			xadesSignatureParameters.setPrettyPrint(true);
+			// end::prettyPrint[]
 
 			// Configuration of several signed attributes like ...
 			BLevelParameters bLevelParameters = xadesSignatureParameters.bLevel();
@@ -137,7 +140,7 @@ public class SignXmlXadesBPropertiesTest extends CookbookTools {
 
 			CommonCertificateVerifier verifier = new CommonCertificateVerifier();
 			XAdESService service = new XAdESService(verifier);
-			service.setTspSource(getOnlineTSPSource());
+			service.setTspSource(getTSPSource());
 
 			// Allows setting of content-timestamp (part of the signed attributes)
 			TimestampToken contentTimestamp = service.getContentTimestamp(toSignDocument, xadesSignatureParameters);

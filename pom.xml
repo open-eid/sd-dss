@@ -5,7 +5,7 @@
 
 	<groupId>org.digidoc4j.dss</groupId>
 	<artifactId>sd-dss</artifactId>
-	<version>5.11.1.d4j.1</version>
+	<version>6.0.d4j.1</version>
 	<packaging>pom</packaging>
 
 	<name>Digital Signature Services</name>
@@ -41,37 +41,34 @@
 
 	<properties>
 		<project.encoding>UTF-8</project.encoding>
-		<module-name />
+		<module-name>jpms_dss</module-name>
 
-		<slf4j.version>1.7.36</slf4j.version>
-		<logback-classic.version>1.2.11</logback-classic.version>
+		<slf4j.version>2.0.9</slf4j.version>
+		<logback-classic.version>1.3.14</logback-classic.version> <!-- Version 1.4+ supports only Java 11+ -->
 
-		<bouncycastle.version>1.70</bouncycastle.version>
-		<xmlsec.version>2.3.1</xmlsec.version>
-		<jose4j.version>0.7.12</jose4j.version>
-		<pdfbox.version>2.0.26</pdfbox.version>
-		<openpdf.version>1.3.29</openpdf.version>
-		<httpclient5.version>5.1.3</httpclient5.version>
-		<commons-codec.version>1.15</commons-codec.version> <!-- Synchronized with santuario -->
+		<bouncycastle.version>1.76</bouncycastle.version>
+		<xmlsec.version>3.0.3</xmlsec.version> <!-- Version 4+ supports only Java 11+ -->
+		<jose4j.version>0.9.4</jose4j.version>
+		<pdfbox.version>2.0.30</pdfbox.version>
+		<openpdf.version>1.3.34</openpdf.version>
+		<verapdf.version>1.24.1</verapdf.version>
+		<httpclient5.version>5.3</httpclient5.version>
 
-		<jakarta.bind-api.version>2.3.3</jakarta.bind-api.version> <!-- Synchronized with santuario -->
-		<jakarta.activation-api.version>1.2.2</jakarta.activation-api.version> <!-- Synchronized with santuario -->
-		<jaxb-runtime.version>2.3.6</jaxb-runtime.version>
+		<jakarta.bind-api.version>3.0.1</jakarta.bind-api.version> <!-- Version 4 requires JDK 11+ -->
+		<jakarta.activation-api.version>2.1.2</jakarta.activation-api.version>
+		<jaxb-runtime.version>3.0.2</jaxb-runtime.version>
 
 		<!-- REST/SOAP API -->
-		<jakarta.rs-api.version>2.1.6</jakarta.rs-api.version>
-		<jakarta.ws-api.version>2.3.2</jakarta.ws-api.version>
+		<jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
+		<jakarta.xml.ws-api.version>3.0.1</jakarta.xml.ws-api.version>
 
-		<junit.version>5.9.1</junit.version>
+		<junit.version>5.10.1</junit.version>
 
 		<awaitility.version>4.2.0</awaitility.version>
-		<mockito.version>3.12.4</mockito.version>
-		<h2database.version>2.1.214</h2database.version>
-		<jackson.version>2.13.4</jackson.version>
-		<jackson-databind.version>2.13.4.2</jackson-databind.version> <!-- To be used while jackson is not updated -->
-		<fop-core.version>2.7</fop-core.version>
-		<xml-apis.version>1.4.01</xml-apis.version> <!-- Synchronized with fop-core -->
-		<batik.version>1.16</batik.version> <!-- To be used while fop-core is not updated -->
+		<mockito.version>4.11.0</mockito.version> <!-- Version 5 requires JDK 11+ -->
+		<h2database.version>2.2.224</h2database.version>
+		<jackson.version>2.16.0</jackson.version>
+		<fop-core.version>2.9</fop-core.version>
 
 		<dss.groupId>org.digidoc4j.dss</dss.groupId>
 
@@ -96,6 +93,7 @@
 	<modules>
 		<module>dss-enumerations</module>
 		<module>dss-alert</module>
+		<module>dss-xml-common</module>
 		<module>dss-jaxb-common</module>
 		<module>dss-jaxb-parsers</module>
 		<module>specs-xmldsig</module>
@@ -104,6 +102,7 @@
 		<module>specs-validation-report</module>
 		<module>specs-asic-manifest</module>
 		<module>specs-saml-assertion</module>
+		<module>specs-xmlers</module>
 		<module>specs-jws</module>
 		<module>specs-jades</module>
 		<module>dss-policy-jaxb</module>
@@ -116,25 +115,31 @@
 		<module>dss-utils-google-guava</module>
 		<module>dss-i18n</module>
 		<module>dss-model</module>
+		<module>dss-xml-utils</module>
 		<module>dss-crl-parser</module>
 		<module>dss-crl-parser-x509crl</module>
 		<module>dss-crl-parser-stream</module>
 		<module>dss-spi</module>
+		<module>validation-policy</module>
 		<module>dss-document</module>
 		<module>dss-service</module>
-		<module>dss-test</module>
 		<module>dss-token</module>
-		<module>validation-policy</module>
+		<module>dss-pki-factory-jaxb</module>
+		<module>dss-pki-factory</module>
+		<module>dss-test</module>
 		<module>dss-xades</module>
 		<module>dss-cades</module>
 		<module>dss-jades</module>
 		<module>dss-pades</module>
+		<module>dss-pdfa</module>
 		<module>dss-pades-pdfbox</module>
 		<module>dss-pades-openpdf</module>
 		<module>dss-asic-common</module>
 		<module>dss-asic-xades</module>
 		<module>dss-asic-cades</module>
 		<module>dss-tsl-validation</module>
+		<module>dss-evidence-record-common</module>
+		<module>dss-evidence-record-xml</module>
 		<module>dss-common-remote-dto</module>
 		<module>dss-common-remote-converter</module>
 		<module>dss-signature-dto</module>
@@ -171,7 +176,7 @@
 
 		<module>dss-jacoco-coverage</module>
 		<module>dss-bom</module>
-	</modules>
+    </modules>
 
 	<build>
 		<plugins>
@@ -230,7 +235,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.1.0</version>
+				<version>3.3.0</version>
 				<executions>
 					<execution>
 						<goals>
@@ -330,7 +335,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>3.0.0</version>
+				<version>3.4.1</version>
 				<!-- 			    <dependencies> -->
 				<!-- 			        <dependency> -->
 				<!-- 			            <groupId>de.skuzzle.enforcer</groupId> -->
@@ -385,7 +390,7 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.8</version>
+				<version>0.8.11</version>
 				<executions>
 					<execution>
 						<id>prepare-agent</id>
@@ -402,32 +407,32 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.10.1</version>
+					<version>3.11.0</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-source-plugin</artifactId>
-					<version>3.2.1</version>
+					<version>3.3.0</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
-					<version>3.0.0-M7</version>
+					<version>3.2.2</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-javadoc-plugin</artifactId>
-					<version>3.4.0</version>
+					<version>3.6.3</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-site-plugin</artifactId>
-					<version>3.12.0</version>
+					<version>3.12.1</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-resources-plugin</artifactId>
-					<version>3.2.0</version>
+					<version>3.3.1</version>
 					<configuration>
 						<encoding>${project.encoding}</encoding>
 						<nonFilteredFileExtensions><!-- Avoid to modify keystore -->
@@ -439,27 +444,27 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-release-plugin</artifactId>
-					<version>2.5.3</version>
+					<version>3.0.1</version>
 					<configuration>
 						<autoVersionSubmodules>true</autoVersionSubmodules>
 						<tagNameFormat>@{project.version}</tagNameFormat>
-						<releaseProfiles>release-sign-artifacts</releaseProfiles>
+						<releaseProfiles>release</releaseProfiles>
 					</configuration>
 				</plugin>
 				<plugin>
-					<groupId>org.jvnet.jaxb2.maven2</groupId>
-					<artifactId>maven-jaxb2-plugin</artifactId>
-					<version>0.15.1</version>
+					<groupId>org.jvnet.jaxb</groupId>
+					<artifactId>jaxb-maven-plugin</artifactId>
+					<version>3.0.1</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-install-plugin</artifactId>
-					<version>3.0.0</version>
+					<version>3.1.1</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-project-info-reports-plugin</artifactId>
-					<version>3.4.0</version>
+					<version>3.5.0</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -469,7 +474,7 @@
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>
 					<artifactId>build-helper-maven-plugin</artifactId>
-					<version>3.3.0</version>
+					<version>3.5.0</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -479,7 +484,7 @@
 		<url>https://ec.europa.eu/digital-building-blocks/code/scm/esig/dss.git</url>
 		<connection>scm:git:https://ec.europa.eu/digital-building-blocks/code/scm/esig/dss.git</connection>
 		<developerConnection>scm:git:https://ec.europa.eu/digital-building-blocks/code/scm/esig/dss.git</developerConnection>
-		<tag>5.11.1</tag>
+		<tag>6.0</tag>
 	</scm>
 
 	<dependencyManagement>
@@ -517,6 +522,11 @@
 			</dependency>
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
+				<artifactId>specs-xmlers</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
 				<artifactId>specs-jws</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -528,6 +538,16 @@
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-spi</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-xml-common</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-xml-utils</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -605,6 +625,17 @@
 			</dependency>
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-pdfa</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-pdfa</artifactId>
+				<type>test-jar</type>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-pades-pdfbox</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -616,6 +647,22 @@
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-xades</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-evidence-record-common</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-evidence-record-common</artifactId>
+				<type>test-jar</type>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-evidence-record-xml</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -882,7 +929,16 @@
 				<type>test-jar</type>
 				<scope>test</scope>
 			</dependency>
-
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-pki-factory</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-pki-factory-jaxb</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 			<!-- Public Dependencies -->
 
 			<dependency>
@@ -896,14 +952,14 @@
 				<version>${pdfbox.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.pdfbox</groupId>
-				<artifactId>preflight</artifactId>
-				<version>${pdfbox.version}</version>
-			</dependency>
-			<dependency>
 				<groupId>com.github.librepdf</groupId>
 				<artifactId>openpdf</artifactId>
 				<version>${openpdf.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.verapdf</groupId>
+				<artifactId>validation-model-jakarta</artifactId>
+				<version>${verapdf.version}</version>
 			</dependency>
 
 			<dependency>
@@ -913,12 +969,12 @@
 			</dependency>
 			<dependency>
 				<groupId>org.bouncycastle</groupId>
-				<artifactId>bcprov-jdk15on</artifactId>
+				<artifactId>bcprov-jdk18on</artifactId>
 				<version>${bouncycastle.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.bouncycastle</groupId>
-				<artifactId>bcpkix-jdk15on</artifactId>
+				<artifactId>bcpkix-jdk18on</artifactId>
 				<version>${bouncycastle.version}</version>
 			</dependency>
 			<dependency>
@@ -950,48 +1006,11 @@
 				<version>${fop-core.version}</version>
 			</dependency>
 
-			<!-- Upgraded in order to avoid vulnerability in the previous version -->
-			<dependency>
-				<groupId>org.apache.xmlgraphics</groupId>
-				<artifactId>batik-anim</artifactId>
-				<version>${batik.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.xmlgraphics</groupId>
-				<artifactId>batik-awt-util</artifactId>
-				<version>${batik.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.xmlgraphics</groupId>
-				<artifactId>batik-bridge</artifactId>
-				<version>${batik.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.xmlgraphics</groupId>
-				<artifactId>batik-extension</artifactId>
-				<version>${batik.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.xmlgraphics</groupId>
-				<artifactId>batik-gvt</artifactId>
-				<version>${batik.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.xmlgraphics</groupId>
-				<artifactId>batik-transcoder</artifactId>
-				<version>${batik.version}</version>
-			</dependency>
-
 			<!-- Synchronized with fop-core -->
 			<dependency>
 				<groupId>org.apache.xmlgraphics</groupId>
 				<artifactId>xmlgraphics-commons</artifactId>
 				<version>${fop-core.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>xml-apis</groupId>
-				<artifactId>xml-apis</artifactId>
-				<version>${xml-apis.version}</version>
 			</dependency>
 
 			<!-- JAXB -->
@@ -1011,17 +1030,23 @@
 				<version>${jaxb-runtime.version}</version>
 				<scope>runtime</scope>
 			</dependency>
+			<dependency>
+				<groupId>org.glassfish.jaxb</groupId>
+				<artifactId>jaxb-core</artifactId>
+				<version>${jaxb-runtime.version}</version>
+				<scope>runtime</scope>
+			</dependency>
 
 			<!-- REST/SOAP API -->
 			<dependency>
 				<groupId>jakarta.ws.rs</groupId>
 				<artifactId>jakarta.ws.rs-api</artifactId>
-				<version>${jakarta.rs-api.version}</version>
+				<version>${jakarta.ws.rs-api.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>jakarta.xml.ws</groupId>
 				<artifactId>jakarta.xml.ws-api</artifactId>
-				<version>${jakarta.ws-api.version}</version>
+				<version>${jakarta.xml.ws-api.version}</version>
 			</dependency>
 
 			<!-- Testing -->
@@ -1050,13 +1075,8 @@
 			</dependency>
 			<dependency>
 				<groupId>com.fasterxml.jackson.module</groupId>
-				<artifactId>jackson-module-jaxb-annotations</artifactId>
+				<artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
 				<version>${jackson.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.core</groupId>
-				<artifactId>jackson-databind</artifactId>
-				<version>${jackson-databind.version}</version>
 			</dependency>
 
 		</dependencies>
@@ -1110,7 +1130,7 @@
 					<plugin>
 						<groupId>org.owasp</groupId>
 						<artifactId>dependency-check-maven</artifactId>
-						<version>7.1.1</version>
+						<version>9.0.4</version>
 						<configuration>
 							<failBuildOnCVSS>8</failBuildOnCVSS>
 						</configuration>
@@ -1126,36 +1146,13 @@
 			</build>
 		</profile>
 		<profile>
-			<id>jdk19-plus</id>
-			<activation>
-				<jdk>[9,)</jdk>
-			</activation>
-			<!--             <properties> -->
-			<!-- 				<maven.compiler.release>9</maven.compiler.release> -->
-			<!--             </properties> -->
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-javadoc-plugin</artifactId>
-						<configuration>
-							<release>8</release>
-							<additionalJOptions>
-								<additionalJOption>-html5</additionalJOption>
-							</additionalJOptions>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
 			<id>spotless</id>
 			<build>
 				<plugins>
 					<plugin>
 						<groupId>com.diffplug.spotless</groupId>
 						<artifactId>spotless-maven-plugin</artifactId>
-						<version>2.23.0</version>
+						<version>2.41.1</version>
 						<configuration>
 							<java>
 								<licenseHeader>
@@ -1181,7 +1178,7 @@
 			</build>
 		</profile>
 		<profile>
-			<id>release-sign-artifacts</id>
+			<id>release</id>
 			<activation>
 				<property>
 					<name>prepareRelease</name>
@@ -1192,8 +1189,42 @@
 				<plugins>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<configuration>
+							<encoding>UTF-8</encoding>
+						</configuration>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>aggregate</id>
+								<phase>site</phase>
+								<goals>
+									<goal>aggregate</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>3.0.1</version>
+						<version>3.1.0</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>

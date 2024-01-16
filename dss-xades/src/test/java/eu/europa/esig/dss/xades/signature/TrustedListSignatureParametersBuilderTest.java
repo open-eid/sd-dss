@@ -20,7 +20,7 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
-import eu.europa.esig.dss.DomUtils;
+import eu.europa.esig.dss.xml.utils.DomUtils;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDigestMatcher;
@@ -59,10 +59,13 @@ public class TrustedListSignatureParametersBuilderTest extends AbstractXAdESTest
 		documentToSign = new FileDocument(new File("src/test/resources/eu-lotl-no-sig.xml"));
 		service = new XAdESService(getOfflineCertificateVerifier());
 		
-		signatureParameters = new TrustedListSignatureParametersBuilder(getSigningCert(), documentToSign)
+		signatureParameters = getSignatureParametersBuilder().build();
+	}
+
+	protected TrustedListSignatureParametersBuilder getSignatureParametersBuilder() {
+		return new TrustedListSignatureParametersBuilder(getSigningCert(), documentToSign)
 				.setReferenceId(REFERENCE_ID)
-				.setReferenceDigestAlgorithm(REFERENCE_DIGEST_ALGORITHM)
-				.build();
+				.setReferenceDigestAlgorithm(REFERENCE_DIGEST_ALGORITHM);
 	}
 	
 	@Override

@@ -26,7 +26,7 @@ import eu.europa.esig.dss.spi.x509.CandidatesForSigningCertificate;
 import eu.europa.esig.dss.spi.x509.CertificateValidity;
 import eu.europa.esig.dss.spi.x509.ListCertificateSource;
 import eu.europa.esig.dss.utils.Utils;
-import eu.europa.esig.dss.validation.timestamp.TimestampToken;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,10 +48,19 @@ public abstract class BaselineRequirementsChecker<AS extends DefaultAdvancedSign
     protected final AS signature;
 
     /** The offline copy of a CertificateVerifier */
-    private final CertificateVerifier offlineCertificateVerifier;
+    protected final CertificateVerifier offlineCertificateVerifier;
 
     /** Cached ValidationContext object to ensure validation is processed only once */
     private ValidationContext validationContext;
+
+    /**
+     * Constructor without {@code CertificateVerifier} (to be used for B-level validation only)
+     *
+     * @param signature {@link DefaultAdvancedSignature} to validate
+     */
+    protected BaselineRequirementsChecker(final AS signature) {
+        this(signature, null);
+    }
 
     /**
      * Default constructor
@@ -140,7 +149,7 @@ public abstract class BaselineRequirementsChecker<AS extends DefaultAdvancedSign
      * @return TRUE if the signature has an LT-profile, FALSE otherwise
      */
     public boolean minimalLTRequirement() {
-        Objects.requireNonNull(offlineCertificateVerifier, "offlineCertificateVerifier cannot be null!");
+        Objects.requireNonNull(offlineCertificateVerifier, "offlineCertificateVerifier cannot be null for LT-level verification!");
 
         ListCertificateSource certificateSources = getCertificateSourcesExceptLastArchiveTimestamp();
         boolean certificateFound = certificateSources.getNumberOfCertificates() > 0;

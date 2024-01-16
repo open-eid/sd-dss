@@ -22,7 +22,7 @@ package eu.europa.esig.dss.cades.validation;
 
 import eu.europa.esig.dss.validation.AbstractSignatureIdentifierBuilder;
 import eu.europa.esig.dss.validation.AdvancedSignature;
-import eu.europa.esig.dss.validation.ManifestFile;
+import eu.europa.esig.dss.model.ManifestFile;
 import org.bouncycastle.cms.SignerInformation;
 
 import java.io.ByteArrayOutputStream;
@@ -33,6 +33,8 @@ import java.util.Collection;
  * Builds a SignatureIdentifier for CAdES signature
  */
 public class CAdESSignatureIdentifierBuilder extends AbstractSignatureIdentifierBuilder {
+
+	private static final long serialVersionUID = -7828439853620987517L;
 
 	/**
 	 * The default constructor

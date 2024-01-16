@@ -20,15 +20,15 @@
  */
 package eu.europa.esig.dss.asic.cades.signature.manifest;
 
-import eu.europa.esig.dss.DomUtils;
+import eu.europa.esig.asic.manifest.definition.ASiCManifestAttribute;
+import eu.europa.esig.asic.manifest.definition.ASiCManifestElement;
+import eu.europa.esig.asic.manifest.definition.ASiCManifestNamespace;
+import eu.europa.esig.dss.xml.utils.DomUtils;
 import eu.europa.esig.dss.asic.cades.validation.ASiCWithCAdESUtils;
 import eu.europa.esig.dss.asic.common.ASiCContent;
-import eu.europa.esig.dss.asic.common.definition.ASiCAttribute;
-import eu.europa.esig.dss.asic.common.definition.ASiCElement;
-import eu.europa.esig.dss.asic.common.definition.ASiCNamespace;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.enumerations.MimeTypeEnum;
 import eu.europa.esig.dss.model.DSSDocument;
-import eu.europa.esig.dss.model.MimeType;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -94,10 +94,10 @@ public class ASiCEWithCAdESArchiveManifestBuilder extends AbstractManifestBuilde
 	 */
 	public DSSDocument build() {
 		final Document documentDom = DomUtils.buildDOM();
-		final Element asicManifestDom = DomUtils.createElementNS(documentDom, ASiCNamespace.NS, ASiCElement.ASIC_MANIFEST);
+		final Element asicManifestDom = DomUtils.createElementNS(documentDom, ASiCManifestNamespace.NS, ASiCManifestElement.ASIC_MANIFEST);
 		documentDom.appendChild(asicManifestDom);
 
-		addSigReference(documentDom, asicManifestDom, timestampFileUri, MimeType.TST);
+		addSigReference(documentDom, asicManifestDom, timestampFileUri, MimeTypeEnum.TST);
 
 		for (DSSDocument signature : asicContent.getSignatureDocuments()) {
 			addDataObjectReference(documentDom, asicManifestDom, signature, digestAlgorithm);
@@ -125,7 +125,7 @@ public class ASiCEWithCAdESArchiveManifestBuilder extends AbstractManifestBuilde
 	private Element addDataObjectReferenceForRootArchiveManifest(final Document documentDom, final Element asicManifestDom, 
 			DSSDocument document, DigestAlgorithm digestAlgorithm) {
 		Element dataObjectReferenceElement = addDataObjectReference(documentDom, asicManifestDom, document, digestAlgorithm);
-		dataObjectReferenceElement.setAttribute(ASiCAttribute.ROOTFILE.getAttributeName(), "true");
+		dataObjectReferenceElement.setAttribute(ASiCManifestAttribute.ROOTFILE.getAttributeName(), "true");
 		return dataObjectReferenceElement;
 	}
 

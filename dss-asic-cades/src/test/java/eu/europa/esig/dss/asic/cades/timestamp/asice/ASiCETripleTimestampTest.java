@@ -31,10 +31,10 @@ import eu.europa.esig.dss.diagnostic.RelatedRevocationWrapper;
 import eu.europa.esig.dss.diagnostic.TimestampWrapper;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.Indication;
+import eu.europa.esig.dss.enumerations.MimeTypeEnum;
 import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
-import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
 import eu.europa.esig.validationreport.jaxb.ValidationStatusType;
@@ -46,14 +46,15 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ASiCETripleTimestampTest extends AbstractASiCWithCAdESTestValidation {
 
     @Test
     public void test() throws IOException {
-        DSSDocument documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeType.TEXT);
-        DSSDocument documentToSign2 = new InMemoryDocument("Bye World !".getBytes(), "test2.text", MimeType.TEXT);
+        DSSDocument documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeTypeEnum.TEXT);
+        DSSDocument documentToSign2 = new InMemoryDocument("Bye World !".getBytes(), "test2.text", MimeTypeEnum.TEXT);
         List<DSSDocument> docs = Arrays.asList(documentToSign, documentToSign2);
 
         ASiCWithCAdESTimestampParameters timestampParameters = new ASiCWithCAdESTimestampParameters();
@@ -86,7 +87,8 @@ public class ASiCETripleTimestampTest extends AbstractASiCWithCAdESTestValidatio
         int lastTimestampedRevocationDataAmount = -1;
         int lastTimestampedTimestampsAmount = -1;
         for (TimestampWrapper timestampWrapper : timestampList) {
-            assertEquals(TimestampType.CONTENT_TIMESTAMP, timestampWrapper.getType());
+            assertEquals(TimestampType.CONTAINER_TIMESTAMP, timestampWrapper.getType());
+            assertNull(timestampWrapper.getArchiveTimestampType());
 
             assertTrue(lastTimestampedSignedDataAmount < timestampWrapper.getTimestampedSignedData().size());
             lastTimestampedSignedDataAmount = timestampWrapper.getTimestampedSignedData().size();

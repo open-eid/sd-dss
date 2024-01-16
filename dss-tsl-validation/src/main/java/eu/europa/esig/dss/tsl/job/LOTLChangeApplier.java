@@ -66,7 +66,7 @@ public class LOTLChangeApplier {
 	}
 
 	/**
-	 * Applyes changes for all defined records
+	 * Applies changes for all defined records
 	 */
 	public void analyzeAndApply() {
 		for (Entry<CacheKey, ParsingCacheDTO> oldEntry : oldValues.entrySet()) {
@@ -81,7 +81,7 @@ public class LOTLChangeApplier {
 	private Map<String, List<CertificateToken>> getTLPointers(ParsingCacheDTO parsingResult) {
 		List<OtherTSLPointer> tlOtherPointers = parsingResult.getTlOtherPointers();
 		if (Utils.isCollectionNotEmpty(tlOtherPointers)) {
-			return tlOtherPointers.stream().collect(Collectors.toMap(OtherTSLPointer::getLocation, OtherTSLPointer::getCertificates));
+			return tlOtherPointers.stream().collect(Collectors.toMap(OtherTSLPointer::getTSLLocation, OtherTSLPointer::getSdiCertificates));
 		}
 		return Collections.emptyMap();
 	}

@@ -23,9 +23,13 @@ package eu.europa.esig.dss.xades.validation.timestamp;
 import eu.europa.esig.dss.crl.CRLBinary;
 import eu.europa.esig.dss.crl.CRLUtils;
 import eu.europa.esig.dss.enumerations.ArchiveTimestampType;
+import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.model.DSSMessageDigest;
+import eu.europa.esig.dss.model.ReferenceValidation;
 import eu.europa.esig.dss.model.identifier.Identifier;
+import eu.europa.esig.dss.model.scope.SignatureScope;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.spi.DSSRevocationUtils;
 import eu.europa.esig.dss.spi.DSSUtils;
@@ -33,24 +37,30 @@ import eu.europa.esig.dss.spi.x509.CertificateRef;
 import eu.europa.esig.dss.spi.x509.revocation.crl.CRLRef;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPRef;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPResponseBinary;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampInclude;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampToken;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampedReference;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
 import eu.europa.esig.dss.validation.SignatureProperties;
+import eu.europa.esig.dss.validation.evidencerecord.EvidenceRecord;
 import eu.europa.esig.dss.validation.timestamp.SignatureTimestampSource;
-import eu.europa.esig.dss.validation.timestamp.TimestampToken;
-import eu.europa.esig.dss.validation.timestamp.TimestampedReference;
+import eu.europa.esig.dss.validation.timestamp.SignatureTimestampIdentifierBuilder;
 import eu.europa.esig.dss.xades.DSSXMLUtils;
 import eu.europa.esig.dss.xades.XAdESSignatureUtils;
-import eu.europa.esig.dss.xades.definition.XAdESNamespaces;
-import eu.europa.esig.dss.xades.definition.XAdESPaths;
-import eu.europa.esig.dss.xades.definition.xades132.XAdES132Element;
-import eu.europa.esig.dss.xades.definition.xades141.XAdES141Element;
+import eu.europa.esig.dss.xades.reference.XAdESReferenceValidation;
 import eu.europa.esig.dss.xades.validation.XAdESAttribute;
 import eu.europa.esig.dss.xades.validation.XAdESCertificateRefExtractionUtils;
 import eu.europa.esig.dss.xades.validation.XAdESRevocationRefExtractionUtils;
 import eu.europa.esig.dss.xades.validation.XAdESSignature;
 import eu.europa.esig.dss.xades.validation.XAdESSignedDataObjectProperties;
 import eu.europa.esig.dss.xades.validation.XAdESUnsignedSigProperties;
+import eu.europa.esig.dss.xades.validation.scope.XAdESTimestampScopeFinder;
+import eu.europa.esig.xades.definition.XAdESNamespace;
+import eu.europa.esig.xades.definition.XAdESPath;
+import eu.europa.esig.xades.definition.xades132.XAdES132Element;
+import eu.europa.esig.xades.definition.xades141.XAdES141Element;
+import eu.europa.esig.xades.definition.xadesen.XAdESENElement;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,10 +68,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The timestamp source for a XAdES signature
@@ -75,23 +86,20 @@ public class XAdESTimestampSource extends SignatureTimestampSource<XAdESSignatur
 	private final transient Element signatureElement;
 
 	/** XAdES XPaths to use */
-	private final XAdESPaths xadesPaths;
+	private final XAdESPath xadesPaths;
 
-	/** The XAdESTimestampDataBuilder */
-	private transient XAdESTimestampDataBuilder timestampDataBuilder;
+	/** Map between time-stamp tokens and corresponding XAdES attributes */
+	private final Map<TimestampToken, XAdESAttribute> timestampAttributeMap = new HashMap<>();
 
 	/**
 	 * Default constructor
 	 *
 	 * @param signature {@link XAdESSignature}
-	 * @param signatureElement {@link Element}
-	 * @param xadesPaths {@link XAdESPaths}
 	 */
-	public XAdESTimestampSource(final XAdESSignature signature, final Element signatureElement, 
-			final XAdESPaths xadesPaths) {
+	public XAdESTimestampSource(final XAdESSignature signature) {
 		super(signature);
-		this.signatureElement = signatureElement;
-		this.xadesPaths = xadesPaths;
+		this.signatureElement = signature.getSignatureElement();
+		this.xadesPaths = signature.getXAdESPaths();
 	}
 
 	@Override
@@ -105,57 +113,80 @@ public class XAdESTimestampSource extends SignatureTimestampSource<XAdESSignatur
 	}
 
 	@Override
-	protected XAdESTimestampDataBuilder getTimestampDataBuilder() {
-		if (timestampDataBuilder == null) {
-			timestampDataBuilder = new XAdESTimestampDataBuilder(signatureElement, signature.getReferences(), xadesPaths);
-		}
-		return timestampDataBuilder;
+	protected XAdESTimestampMessageDigestBuilder getTimestampMessageImprintDigestBuilder(DigestAlgorithm digestAlgorithm) {
+		return new XAdESTimestampMessageDigestBuilder(signature, digestAlgorithm);
+	}
+
+	@Override
+	protected XAdESTimestampMessageDigestBuilder getTimestampMessageImprintDigestBuilder(TimestampToken timestampToken) {
+		return new XAdESTimestampMessageDigestBuilder(signature, timestampToken)
+				.setTimestampAttribute(timestampAttributeMap.get(timestampToken));
 	}
 	
 	/**
-	 * Returns concatenated data for a SignatureTimestamp
+	 * Returns message-imprint digest for a SignatureTimestamp
 	 *
-	 * @param canonicalizationMethod {@link String} canonicalization method to use
-	 * @return byte array
+	 * @param digestAlgorithm
+	 *              {@link DigestAlgorithm} to be used for message-digest computation
+	 * @param canonicalizationMethod
+	 *              {@link String} canonicalization method to use
+	 * @return {@link DSSMessageDigest}
 	 */
-	public byte[] getSignatureTimestampData(String canonicalizationMethod) {
-		return timestampDataBuilder.getSignatureTimestampData(canonicalizationMethod);
+	public DSSMessageDigest getSignatureTimestampMessageDigest(DigestAlgorithm digestAlgorithm, String canonicalizationMethod) {
+		XAdESTimestampMessageDigestBuilder builder = getTimestampMessageImprintDigestBuilder(digestAlgorithm)
+				.setCanonicalizationAlgorithm(canonicalizationMethod);
+		return builder.getSignatureTimestampMessageDigest();
 	}
 	
 	/**
-	 * Returns concatenated data for a SigAndRefsTimestamp
+	 * Returns message-imprint digest for a SigAndRefsTimestamp
 	 *
+	 * @param digestAlgorithm
+	 *              {@link DigestAlgorithm} to be used for message-digest computation
 	 * @param canonicalizationMethod
 	 *              {@link String} canonicalization method to use
 	 * @param en319132
 	 *              defines if the timestamp shall be created accordingly to ETSI EN 319 132-1 (SigAndRefsTimestampV2)
-	 * @return byte array
+	 * @return {@link DSSMessageDigest}
 	 */
-	public byte[] getTimestampX1Data(String canonicalizationMethod, boolean en319132) {
-		return timestampDataBuilder.getTimestampX1Data(canonicalizationMethod, en319132);
+	public DSSMessageDigest getTimestampX1MessageDigest(DigestAlgorithm digestAlgorithm, String canonicalizationMethod, boolean en319132) {
+		XAdESTimestampMessageDigestBuilder builder = getTimestampMessageImprintDigestBuilder(digestAlgorithm)
+				.setCanonicalizationAlgorithm(canonicalizationMethod)
+				.setEn319132(en319132);
+		return builder.getTimestampX1MessageDigest();
 	}
 
 	/**
-	 * Returns concatenated data for a RefsOnlyTimestamp
+	 * Returns message-imprint digest for a RefsOnlyTimestamp
 	 *
+	 * @param digestAlgorithm
+	 *              {@link DigestAlgorithm} to be used for message-digest computation
 	 * @param canonicalizationMethod
 	 *              {@link String} canonicalization method to use
 	 * @param en319132
 	 *              defines if the timestamp shall be created accordingly to ETSI EN 319 132-1 (RefsOnlyTimestampV2)
-	 * @return byte array
+	 * @return {@link DSSMessageDigest}
 	 */
-	public byte[] getTimestampX2Data(String canonicalizationMethod, boolean en319132) {
-		return timestampDataBuilder.getTimestampX2Data(canonicalizationMethod, en319132);
+	public DSSMessageDigest getTimestampX2MessageDigest(DigestAlgorithm digestAlgorithm, String canonicalizationMethod, boolean en319132) {
+		XAdESTimestampMessageDigestBuilder builder = getTimestampMessageImprintDigestBuilder(digestAlgorithm)
+				.setCanonicalizationAlgorithm(canonicalizationMethod)
+				.setEn319132(en319132);
+		return builder.getTimestampX2MessageDigest();
 	}
 	
 	/**
-	 * Returns concatenated data for an ArchiveTimestamp
+	 * Returns message-imprint digest for an ArchiveTimeStamp
 	 *
-	 * @param canonicalizationMethod {@link String} canonicalization method to use
-	 * @return byte array
+	 * @param digestAlgorithm
+	 *              {@link DigestAlgorithm} to be used for message-digest computation
+	 * @param canonicalizationMethod
+	 *              {@link String} canonicalization method to use
+	 * @return {@link DSSMessageDigest}
 	 */
-	public byte[] getArchiveTimestampData(String canonicalizationMethod) {
-		return timestampDataBuilder.getArchiveTimestampData(canonicalizationMethod);
+	public DSSMessageDigest getArchiveTimestampData(DigestAlgorithm digestAlgorithm, String canonicalizationMethod) {
+		XAdESTimestampMessageDigestBuilder builder = getTimestampMessageImprintDigestBuilder(digestAlgorithm)
+				.setCanonicalizationAlgorithm(canonicalizationMethod);
+		return builder.getArchiveTimestampMessageDigest();
 	}
 
 	@Override
@@ -254,6 +285,11 @@ public class XAdESTimestampSource extends SignatureTimestampSource<XAdESSignatur
 	}
 
 	@Override
+	protected boolean isEvidenceRecord(XAdESAttribute unsignedAttribute) {
+		return XAdESENElement.SEALING_EVIDENCE_RECORDS.isSameTagName(unsignedAttribute.getName());
+	}
+
+	@Override
 	protected List<TimestampToken> makeTimestampTokens(XAdESAttribute signatureAttribute, TimestampType timestampType,
 			List<TimestampedReference> references) {
 		final NodeList encapsulatedTimestamps = signatureAttribute
@@ -263,7 +299,7 @@ public class XAdESTimestampSource extends SignatureTimestampSource<XAdESSignatur
 			return Collections.emptyList();
 		}
 
-		/**
+		/*
 		 * 6.3 Requirements on XAdES signature's elements, qualifying properties and
 		 * services n) Requirement for SignatureTimeStamp. Each SignatureTimeStamp
 		 * element shall contain only one electronic time-stamp.
@@ -275,11 +311,14 @@ public class XAdESTimestampSource extends SignatureTimestampSource<XAdESSignatur
 		final List<TimestampToken> result = new ArrayList<>();
 		for (int ii = 0; ii < encapsulatedTimestamps.getLength(); ii++) {
 			final Element encapsulatedTimeStamp = (Element) encapsulatedTimestamps.item(ii);
-			TimestampToken timestampToken = createTimestampToken(encapsulatedTimeStamp, timestampType, references);
+			TimestampToken timestampToken = createTimestampToken(encapsulatedTimeStamp, timestampType, references, signatureAttribute, ii);
 			if (timestampToken != null) {
-				timestampToken.setTimestampAttribute(signatureAttribute);
 				timestampToken.setCanonicalizationMethod(signatureAttribute.getTimestampCanonicalizationMethod());
 				timestampToken.setTimestampIncludes(signatureAttribute.getTimestampIncludedReferences());
+				if (TimestampType.INDIVIDUAL_DATA_OBJECTS_TIMESTAMP.equals(timestampType)) {
+					addReferences(timestampToken.getTimestampedReferences(), getIndividualDataContentTimestampReferences(signatureAttribute.getTimestampIncludedReferences()));
+				}
+				timestampAttributeMap.put(timestampToken, signatureAttribute);
 				result.add(timestampToken);
 			}
 		}
@@ -287,10 +326,17 @@ public class XAdESTimestampSource extends SignatureTimestampSource<XAdESSignatur
 	}
 
 	private TimestampToken createTimestampToken(final Element encapsulatedTimeStamp, TimestampType timestampType,
-			List<TimestampedReference> references) {
+			List<TimestampedReference> references, XAdESAttribute signatureAttribute, Integer orderWithinAttribute) {
 		try {
-			return new TimestampToken(Utils.fromBase64(encapsulatedTimeStamp.getTextContent()), timestampType,
-					references);
+			String base64EncodedTimestamp = encapsulatedTimeStamp.getTextContent();
+			byte[] binaries = Utils.fromBase64(base64EncodedTimestamp);
+			final SignatureTimestampIdentifierBuilder identifierBuilder = new SignatureTimestampIdentifierBuilder(binaries)
+					.setSignature(signature)
+					.setAttribute(signatureAttribute)
+					.setOrderOfAttribute(getAttributeOrder(signatureAttribute))
+					.setOrderWithinAttribute(orderWithinAttribute);
+			return new TimestampToken(binaries, timestampType, references, identifierBuilder);
+
 		} catch (Exception e) {
 			if (LOG.isDebugEnabled()) {
 				LOG.warn("Unable to build timestamp token from binaries '{}'! Reason : {}",
@@ -298,8 +344,47 @@ public class XAdESTimestampSource extends SignatureTimestampSource<XAdESSignatur
 			} else {
 				LOG.warn("Unable to build timestamp token! Reason : {}", e.getMessage(), e);
 			}
-			return null;
 		}
+		return null;
+	}
+
+	@Override
+	protected List<EvidenceRecord> makeEvidenceRecords(XAdESAttribute signatureAttribute, List<TimestampedReference> references) {
+		throw new UnsupportedOperationException("Not implemented!");
+	}
+
+	@Override
+	protected List<SignatureScope> getTimestampScopes(TimestampToken timestampToken) {
+		XAdESTimestampScopeFinder timestampScopeFinder = new XAdESTimestampScopeFinder();
+		timestampScopeFinder.setSignature(signature);
+		return timestampScopeFinder.findTimestampScope(timestampToken);
+	}
+
+	private List<TimestampedReference> getIndividualDataContentTimestampReferences(List<TimestampInclude> timestampIncludes) {
+		List<SignatureScope> result = new ArrayList<>();
+		List<SignatureScope> signatureScopes = signature.getSignatureScopes();
+		if (Utils.isCollectionNotEmpty(signatureScopes)) {
+			for (ReferenceValidation referenceValidation : signature.getReferenceValidations()) {
+				XAdESReferenceValidation xadesReferenceValidation = (XAdESReferenceValidation) referenceValidation;
+				if (isContentTimestampedReference(xadesReferenceValidation, timestampIncludes)) {
+					for (SignatureScope signatureScope : signatureScopes) {
+						if (Utils.endsWithIgnoreCase(xadesReferenceValidation.getUri(), signatureScope.getDocumentName())) {
+							result.add(signatureScope);
+						}
+					}
+				}
+			}
+		}
+		return getSignerDataTimestampedReferences(result);
+	}
+
+	private boolean isContentTimestampedReference(XAdESReferenceValidation xadesReferenceValidation, List<TimestampInclude> includes) {
+		for (TimestampInclude timestampInclude : includes) {
+			if (xadesReferenceValidation.getId().equals(timestampInclude.getURI())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -309,8 +394,10 @@ public class XAdESTimestampSource extends SignatureTimestampSource<XAdESSignatur
 	}
 	
 	@Override
-	protected List<TimestampedReference> getArchiveTimestampOtherReferences(TimestampToken timestampToken) {
-		return getKeyInfoReferences();
+	protected List<TimestampedReference> getArchiveTimestampReferences(List<TimestampToken> previousTimestamps) {
+		List<TimestampedReference> timestampedReferences = super.getArchiveTimestampReferences(previousTimestamps);
+		addReferences(timestampedReferences, getKeyInfoReferences());
+		return timestampedReferences;
 	}
 	
 	@Override
@@ -444,15 +531,15 @@ public class XAdESTimestampSource extends SignatureTimestampSource<XAdESSignatur
 				xadesPaths.getCurrentRevocationValuesEncapsulatedOCSPValue() : xadesPaths.getCurrentEncapsulatedOCSPValue();
 		NodeList encapsulatedNodes = unsignedAttribute.getNodeList(xPathString);
 		for (int ii = 0; ii < encapsulatedNodes.getLength(); ii++) {
-			Element element = (Element) encapsulatedNodes.item(ii);
-			byte[] binaries = getEncapsulatedTokenBinaries(element);
 			try {
+				Element element = (Element) encapsulatedNodes.item(ii);
+				byte[] binaries = getEncapsulatedTokenBinaries(element);
 				BasicOCSPResp basicOCSPResp = DSSRevocationUtils.loadOCSPFromBinaries(binaries);
 				ocspIdentifiers.add(OCSPResponseBinary.build(basicOCSPResp));
-			} catch (IOException e) {
+			} catch (Exception e) {
 				String errorMessage = "Unable to parse OCSP response binaries : {}";
 				if (LOG.isDebugEnabled()) {
-					LOG.error(errorMessage, e.getMessage(), e);
+					LOG.warn(errorMessage, e.getMessage(), e);
 				} else {
 					LOG.warn(errorMessage, e.getMessage());
 				}
@@ -463,6 +550,7 @@ public class XAdESTimestampSource extends SignatureTimestampSource<XAdESSignatur
 	
 	/**
 	 * Returns encapsulated byte array from the given {@code encapsulatedElement}
+	 *
 	 * @param encapsulatedElement {@link Element} to get binaries from
 	 * @return byte array
 	 */
@@ -477,12 +565,13 @@ public class XAdESTimestampSource extends SignatureTimestampSource<XAdESSignatur
 			}
 		}
 		throw new DSSException(String.format("Cannot create the token reference. "
-				+ "The element with local name [%s] must contain an encapsulated base64 token value!", encapsulatedElement.getLocalName()));
+				+ "The element with local name [%s] must contain an encapsulated base64 token value! "
+				+ "The found value is not a text node!", encapsulatedElement.getLocalName()));
 	}
 
 	@Override
 	protected ArchiveTimestampType getArchiveTimestampType(XAdESAttribute unsignedAttribute) {
-		if (XAdESNamespaces.XADES_141.isSameUri(unsignedAttribute.getNamespace())) {
+		if (XAdESNamespace.XADES_141.isSameUri(unsignedAttribute.getNamespace())) {
 			return ArchiveTimestampType.XAdES_141;
 		}
 		return ArchiveTimestampType.XAdES;

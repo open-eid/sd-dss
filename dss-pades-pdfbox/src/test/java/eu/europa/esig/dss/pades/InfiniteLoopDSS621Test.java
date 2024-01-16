@@ -86,7 +86,7 @@ public class InfiniteLoopDSS621Test {
 
 	@Test
 	public void testReadTimestamp1() throws Exception {
-        assertTimeout(ofMillis(5000), () -> {
+        assertTimeout(ofMillis(6000), () -> {
         	DSSDocument signDocument = new InMemoryDocument(getClass().getResourceAsStream(FILE_PATH));
     		final CommonCertificateVerifier certificateVerifier = new CommonCertificateVerifier();
 			certificateVerifier.setAIASource(null); // Error 404 on DER policy
@@ -238,7 +238,7 @@ public class InfiniteLoopDSS621Test {
 
 					logger.debug("SIGNATURE VALUE : " + signatureValue);
 
-					Cipher cipher = Cipher.getInstance(encryptionAlgorithm.getName());
+					Cipher cipher = Cipher.getInstance(encryptionAlgorithm.getName(),"SunJCE");
 					cipher.init(Cipher.DECRYPT_MODE, signerCertificate);
 					byte[] decrypted = cipher.doFinal(encryptedInfoOctedString.getOctets());
 

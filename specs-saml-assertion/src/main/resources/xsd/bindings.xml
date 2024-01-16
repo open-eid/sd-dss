@@ -1,13 +1,18 @@
-<?xml version="1.0"?>
-<jaxb:bindings version="1.0"
-	xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
-	xmlns:xs="http://www.w3.org/2001/XMLSchema"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://java.sun.com/xml/ns/jaxb http://java.sun.com/xml/ns/jaxb/bindingschema_2_0.xsd">
+<jaxb:bindings version="3.0"
+	xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-	<jaxb:globalBindings>
-		<jaxb:serializable uid="1" />
-	</jaxb:globalBindings>
+	<jaxb:bindings schemaLocation="saml-schema-metadata-2.0.xsd" node="/xs:schema">
+		<jaxb:schemaBindings>
+			<jaxb:package name="eu.europa.esig.saml.jaxb.metadata" />
+		</jaxb:schemaBindings>
+	</jaxb:bindings>
+
+	<jaxb:bindings schemaLocation="sstc-saml-metadata-algsupport-v1.0.xsd" node="/xs:schema">
+		<jaxb:schemaBindings>
+			<jaxb:package name="eu.europa.esig.saml.jaxb.metadata.algsupport" />
+		</jaxb:schemaBindings>
+	</jaxb:bindings>
 
 	<jaxb:bindings schemaLocation="saml-schema-assertion-2.0.xsd" node="/xs:schema">
 		<jaxb:schemaBindings>
@@ -57,7 +62,7 @@
 			<jaxb:package name="eu.europa.esig.saml.jaxb.xacml" />
 		</jaxb:schemaBindings>
 	</jaxb:bindings>
-	
+
 	<jaxb:bindings schemaLocation="saml-schema-authn-context-2.0.xsd" node="/xs:schema">
 		<jaxb:schemaBindings>
 			<jaxb:package name="eu.europa.esig.saml.jaxb.authn.context" />

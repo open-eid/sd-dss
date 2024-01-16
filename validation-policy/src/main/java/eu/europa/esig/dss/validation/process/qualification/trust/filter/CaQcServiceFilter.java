@@ -20,23 +20,24 @@
  */
 package eu.europa.esig.dss.validation.process.qualification.trust.filter;
 
-import eu.europa.esig.dss.diagnostic.TrustedServiceWrapper;
+import eu.europa.esig.dss.diagnostic.TrustServiceWrapper;
 import eu.europa.esig.dss.validation.process.qualification.trust.ServiceTypeIdentifier;
 
 /**
- * Filters TrustedServices by CA/QC type
+ * Filters TrustServices by CA/QC type
  *
  */
-public class CaQcServiceFilter extends AbstractTrustedServiceFilter {
+public class CaQcServiceFilter extends AbstractTrustServiceFilter {
 
 	/**
 	 * Default constructor
 	 */
 	public CaQcServiceFilter() {
+		// empty
 	}
 
 	@Override
-	boolean isAcceptable(TrustedServiceWrapper service) {
+	protected boolean isAcceptable(TrustServiceWrapper service) {
 		return ServiceTypeIdentifier.isCaQc(service.getType());
 	}
 

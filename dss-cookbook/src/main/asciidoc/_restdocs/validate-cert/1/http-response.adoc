@@ -1,27 +1,29 @@
 [source,http,options="nowrap"]
 ----
 HTTP/1.1 200 OK
-Date: Fri, 29 Jul 2022 13:53:01 GMT
+Date: Tue, 12 Dec 2023 15:35:11 GMT
 X-Content-Type-Options: nosniff
 X-XSS-Protection: 1; mode=block
 Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Security-Policy: default-src 'self' http://localhost:9795 fonts.googleapis.com fonts.gstatic.com cdnjs.cloudflare.com 'unsafe-inline' data:;
+Content-Security-Policy: default-src 'self' http://localhost:9795 'unsafe-inline' data:;
 Server: ESIG-DSS
 Content-Type: application/json
 Transfer-Encoding: chunked
 Keep-Alive: timeout=20
 Connection: keep-alive
-Content-Length: 6902
+Content-Length: 7703
 
 {
   "diagnosticData" : {
     "DocumentName" : null,
-    "ValidationDate" : "2022-07-29T13:53:01Z",
+    "ValidationDate" : "2023-12-12T15:35:11Z",
     "ContainerInfo" : null,
+    "PDFAInfo" : null,
     "Signature" : null,
+    "EvidenceRecord" : null,
     "Certificate" : [ {
       "Id" : "C-02F3EBCA0163274253BC809D27498DD41BB0316D7E6B066960115DE155589D9C",
       "SubjectDistinguishedName" : [ {
@@ -52,20 +54,12 @@ Content-Length: 6902
       "Surname" : null,
       "Pseudonym" : null,
       "Email" : null,
-      "subjectAlternativeName" : null,
-      "aiaUrl" : [ ],
-      "crlUrl" : [ ],
-      "ocspServerUrl" : [ ],
       "Source" : [ "OTHER" ],
       "NotAfter" : "2047-07-04T07:57:24Z",
       "NotBefore" : "2017-06-08T11:26:01Z",
       "PublicKeySize" : 2048,
       "PublicKeyEncryptionAlgo" : "RSA",
       "EntityKey" : "PK-3CFCA257859E202BCC83864D02B267B08A997C357AB98D923BBC63F00607C7B6",
-      "KeyUsage" : [ "keyCertSign", "crlSign" ],
-      "extendedKeyUsagesOid" : [ ],
-      "IdPkixOcspNoCheck" : false,
-      "ValAssuredShortTermCertificate" : null,
       "BasicSignature" : {
         "EncryptionAlgoUsedToSignThisToken" : "RSA",
         "KeyLengthUsedToSignThisToken" : "?",
@@ -78,9 +72,16 @@ Content-Length: 6902
       "ChainItem" : [ ],
       "Trusted" : false,
       "SelfSigned" : false,
-      "certificatePolicy" : [ ],
-      "QcStatements" : null,
-      "TrustedServiceProvider" : [ ],
+      "certificateExtensions" : [ {
+        "KeyUsages" : {
+          "keyUsageBit" : [ "keyCertSign", "crlSign" ],
+          "octets" : null,
+          "OID" : "2.5.29.15",
+          "description" : null,
+          "critical" : true
+        }
+      } ],
+      "TrustServiceProvider" : [ ],
       "CertificateRevocation" : [ ],
       "Base64Encoded" : null,
       "DigestAlgoAndValue" : {
@@ -96,6 +97,10 @@ Content-Length: 6902
     "TrustedList" : [ ]
   },
   "simpleCertificateReport" : {
+    "ValidationPolicy" : {
+      "PolicyName" : "Certificate policy TL based",
+      "PolicyDescription" : "Validates electronic certificates and indicates its qualification status at issuance and validation time.\n        All certificates and their related chains are validated against the EU Member State Trusted Lists (this includes\n        target certificate and certificates used to validate certificate validity status services - CRLs, OCSP).\n    "
+    },
     "ChainItem" : [ {
       "id" : "C-02F3EBCA0163274253BC809D27498DD41BB0316D7E6B066960115DE155589D9C",
       "subject" : {
@@ -121,7 +126,9 @@ Content-Length: 6902
       "cpsUrl" : null,
       "pdsUrl" : null,
       "qualificationAtIssuance" : "N/A",
+      "qualificationDetailsAtIssuance" : null,
       "qualificationAtValidation" : "N/A",
+      "qualificationDetailsAtValidation" : null,
       "enactedMRA" : null,
       "revocation" : {
         "thisUpdate" : null,
@@ -130,12 +137,20 @@ Content-Length: 6902
       },
       "trustAnchor" : null,
       "Indication" : "INDETERMINATE",
-      "SubIndication" : "NO_CERTIFICATE_CHAIN_FOUND"
+      "SubIndication" : "NO_CERTIFICATE_CHAIN_FOUND",
+      "X509ValidationDetails" : {
+        "Error" : [ {
+          "value" : "The certificate chain is not trusted, it does not contain a trust anchor.",
+          "Key" : "BBB_XCV_CCCBB_ANS"
+        } ],
+        "Warning" : [ ],
+        "Info" : [ ]
+      }
     } ],
-    "ValidationTime" : "2022-07-29T13:53:01Z"
+    "ValidationTime" : "2023-12-12T15:35:11Z"
   },
   "detailedReport" : {
-    "signatureOrTimestampOrCertificate" : [ {
+    "signatureOrTimestampOrEvidenceRecord" : [ {
       "Certificate" : {
         "ValidationCertificateQualification" : [ ],
         "Constraint" : [ {

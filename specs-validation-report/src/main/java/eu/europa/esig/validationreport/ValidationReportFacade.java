@@ -24,9 +24,9 @@ import eu.europa.esig.dss.jaxb.common.AbstractJaxbFacade;
 import eu.europa.esig.validationreport.jaxb.ValidationReportType;
 import org.xml.sax.SAXException;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBException;
 import javax.xml.validation.Schema;
 import java.io.IOException;
 
@@ -37,6 +37,13 @@ public class ValidationReportFacade extends AbstractJaxbFacade<ValidationReportT
 
 	/** Validation report utils */
 	private static final ValidationReportUtils ETSI_VR_UTILS = ValidationReportUtils.getInstance();
+
+	/**
+	 * Default constructor
+	 */
+	protected ValidationReportFacade() {
+		// empty
+	}
 
 	/**
 	 * Creates a new facade

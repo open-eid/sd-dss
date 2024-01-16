@@ -21,7 +21,7 @@
 package eu.europa.esig.dss.pades.validation.scope;
 
 import eu.europa.esig.dss.pades.validation.PAdESSignature;
-import eu.europa.esig.dss.validation.scope.SignatureScope;
+import eu.europa.esig.dss.model.scope.SignatureScope;
 import eu.europa.esig.dss.validation.scope.SignatureScopeFinder;
 
 import java.util.Arrays;
@@ -38,6 +38,7 @@ public class PAdESSignatureScopeFinder extends PdfRevisionScopeFinder implements
 	 * Default constructor
 	 */
 	public PAdESSignatureScopeFinder() {
+		// empty
 	}
 
 	@Override

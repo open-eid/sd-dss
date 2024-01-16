@@ -20,7 +20,7 @@
  */
 package eu.europa.esig.dss.ws.signature.soap.client;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -35,6 +35,7 @@ public class DateAdapter extends XmlAdapter<String, Date> {
 	 * Default constructor
 	 */
 	public DateAdapter() {
+		// empty
 	}
 
 	@Override

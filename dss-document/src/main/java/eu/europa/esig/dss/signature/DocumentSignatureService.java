@@ -27,14 +27,15 @@ import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
-import eu.europa.esig.dss.validation.timestamp.TimestampToken;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampToken;
 
 import java.io.Serializable;
 
 /**
  * This interface {@code DocumentSignatureService} provides operations for the signature creation and for its extension.
  *
- *
+ * @param <SP> implementation of signature parameters corresponding to the supported signature format
+ * @param <TP> implementation of timestamp parameters corresponding to the supported document format
  */
 public interface DocumentSignatureService<SP extends SerializableSignatureParameters, TP extends SerializableTimestampParameters> extends Serializable {
 

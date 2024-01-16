@@ -22,25 +22,31 @@ package eu.europa.esig.dss.validation.timestamp;
 
 import eu.europa.esig.dss.crl.CRLBinary;
 import eu.europa.esig.dss.enumerations.ArchiveTimestampType;
+import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.enumerations.TimestampedObjectType;
-import eu.europa.esig.dss.model.DSSDocument;
+import eu.europa.esig.dss.model.DSSMessageDigest;
+import eu.europa.esig.dss.model.ManifestFile;
 import eu.europa.esig.dss.model.identifier.Identifier;
+import eu.europa.esig.dss.model.scope.SignatureScope;
 import eu.europa.esig.dss.model.x509.revocation.crl.CRL;
 import eu.europa.esig.dss.model.x509.revocation.ocsp.OCSP;
+import eu.europa.esig.dss.spi.SignatureCertificateSource;
 import eu.europa.esig.dss.spi.x509.CertificateRef;
 import eu.europa.esig.dss.spi.x509.ListCertificateSource;
+import eu.europa.esig.dss.spi.x509.revocation.ListRevocationSource;
 import eu.europa.esig.dss.spi.x509.revocation.crl.CRLRef;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPRef;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPResponseBinary;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampToken;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampTokenComparator;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampedReference;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
-import eu.europa.esig.dss.validation.ListRevocationSource;
-import eu.europa.esig.dss.validation.ManifestFile;
 import eu.europa.esig.dss.validation.SignatureAttribute;
-import eu.europa.esig.dss.validation.SignatureCertificateSource;
 import eu.europa.esig.dss.validation.SignatureProperties;
-import eu.europa.esig.dss.validation.scope.SignatureScope;
+import eu.europa.esig.dss.validation.evidencerecord.EvidenceRecord;
+import eu.europa.esig.dss.validation.scope.EncapsulatedTimestampScopeFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,37 +91,47 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
     /**
      * Enclosed content timestamps.
      */
-    protected List<TimestampToken> contentTimestamps;
+    protected transient List<TimestampToken> contentTimestamps;
 
     /**
      * Enclosed signature timestamps.
      */
-    protected List<TimestampToken> signatureTimestamps;
+    protected transient List<TimestampToken> signatureTimestamps;
 
     /**
      * Enclosed SignAndRefs timestamps.
      */
-    protected List<TimestampToken> sigAndRefsTimestamps;
+    protected transient List<TimestampToken> sigAndRefsTimestamps;
 
     /**
      * Enclosed RefsOnly timestamps.
      */
-    protected List<TimestampToken> refsOnlyTimestamps;
+    protected transient List<TimestampToken> refsOnlyTimestamps;
 
     /**
      * This variable contains the list of enclosed archive signature timestamps.
      */
-    protected List<TimestampToken> archiveTimestamps;
+    protected transient List<TimestampToken> archiveTimestamps;
 
     /**
      * This variable contains the list of detached timestamp tokens (used in ASiC with CAdES).
      */
-    protected List<TimestampToken> detachedTimestamps;
+    protected transient List<TimestampToken> detachedTimestamps;
+
+    /**
+     * This variable contains the list of evidence records embedded to the signature document.
+     */
+    protected transient List<EvidenceRecord> embeddedEvidenceRecords;
+
+    /**
+     * This variable contains the list of evidence records detached from the signature document.
+     */
+    protected transient List<EvidenceRecord> detachedEvidenceRecords;
 
     /**
      * A list of all TimestampedReferences extracted from a signature
      */
-    protected List<TimestampedReference> unsignedPropertiesReferences;
+    protected transient List<TimestampedReference> unsignedPropertiesReferences;
 
     /**
      * A cached instance of Signed Signature Properties
@@ -179,7 +195,7 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
 
     @Override
     public List<TimestampToken> getDocumentTimestamps() {
-        /** Applicable only for PAdES */
+        // Applicable only for PAdES
         return Collections.emptyList();
     }
 
@@ -199,9 +215,32 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
         timestampTokens.addAll(getTimestampsX1());
         timestampTokens.addAll(getTimestampsX2());
         timestampTokens.addAll(getArchiveTimestamps());
-        timestampTokens.addAll(getDocumentTimestamps());
         timestampTokens.addAll(getDetachedTimestamps());
         return timestampTokens;
+    }
+
+    @Override
+    public List<EvidenceRecord> getEmbeddedEvidenceRecords() {
+        if (embeddedEvidenceRecords == null) {
+            createAndValidate();
+        }
+        return embeddedEvidenceRecords;
+    }
+
+    @Override
+    public List<EvidenceRecord> getDetachedEvidenceRecords() {
+        if (detachedEvidenceRecords == null) {
+            createAndValidate();
+        }
+        return detachedEvidenceRecords;
+    }
+
+    @Override
+    public List<EvidenceRecord> getAllEvidenceRecords() {
+        List<EvidenceRecord> evidenceRecords = new ArrayList<>();
+        evidenceRecords.addAll(getEmbeddedEvidenceRecords());
+        evidenceRecords.addAll(getDetachedEvidenceRecords());
+        return evidenceRecords;
     }
 
     @Override
@@ -236,14 +275,31 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
         allArchiveTimestamps.addAll(getArchiveTimestamps());
         allArchiveTimestamps.addAll(getDocumentTimestamps()); // can be a document timestamp for PAdES
         allArchiveTimestamps.addAll(getDetachedTimestamps()); // can be a detached timestamp for ASiC with CAdES
-        allArchiveTimestamps.sort(new TimestampTokenComparator());
         if (Utils.isCollectionNotEmpty(allArchiveTimestamps)) {
-            for (int ii = 0; ii < allArchiveTimestamps.size() - 1; ii++) {
-                TimestampToken timestampToken = allArchiveTimestamps.get(ii);
-                timestampTokens.add(timestampToken);
+            if (Utils.isCollectionNotEmpty(timestampTokens) || containsTimestampsCoveringOtherTimestamps(allArchiveTimestamps)) {
+                // exclude the last archive timestamp
+                allArchiveTimestamps.sort(new TimestampTokenComparator());
+                for (int ii = 0; ii < allArchiveTimestamps.size() - 1; ii++) {
+                    TimestampToken timestampToken = allArchiveTimestamps.get(ii);
+                    timestampTokens.add(timestampToken);
+                }
+            } else {
+                // add all timestamps for validation
+                timestampTokens.addAll(allArchiveTimestamps);
             }
         }
         return timestampTokens;
+    }
+
+    private boolean containsTimestampsCoveringOtherTimestamps(List<TimestampToken> timestampTokens) {
+        for (TimestampToken timestampToken : timestampTokens) {
+            List<TimestampedReference> timestampedReferences = timestampToken.getTimestampedReferences();
+            if (Utils.isCollectionNotEmpty(timestampedReferences) &&
+                    timestampedReferences.stream().anyMatch(r -> TimestampedObjectType.TIMESTAMP.equals(r.getCategory()))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -291,6 +347,16 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
         detachedTimestamps.add(timestamp);
     }
 
+    @Override
+    public void addExternalEvidenceRecord(EvidenceRecord evidenceRecord) {
+        // if evidence records not created yet
+        if (detachedEvidenceRecords == null) {
+            createAndValidate();
+        }
+        processExternalEvidenceRecord(evidenceRecord);
+        detachedEvidenceRecords.add(evidenceRecord);
+    }
+
     /**
      * Populates all the lists by data found into the signature
      */
@@ -302,6 +368,9 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
         refsOnlyTimestamps = new ArrayList<>();
         archiveTimestamps = new ArrayList<>();
         detachedTimestamps = new ArrayList<>();
+
+        embeddedEvidenceRecords = new ArrayList<>();
+        detachedEvidenceRecords = new ArrayList<>();
 
         // initialize combined revocation sources
         crlSource = new ListRevocationSource<>(signature.getCRLSource());
@@ -331,10 +400,10 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
             List<TimestampToken> timestampTokens;
 
             if (isContentTimestamp(signedAttribute)) {
-                timestampTokens = makeTimestampTokens(signedAttribute, TimestampType.CONTENT_TIMESTAMP);
+                timestampTokens = makeTimestampTokens(signedAttribute, TimestampType.CONTENT_TIMESTAMP, getSignerDataReferences());
 
             } else if (isAllDataObjectsTimestamp(signedAttribute)) {
-                timestampTokens = makeTimestampTokens(signedAttribute, TimestampType.ALL_DATA_OBJECTS_TIMESTAMP);
+                timestampTokens = makeTimestampTokens(signedAttribute, TimestampType.ALL_DATA_OBJECTS_TIMESTAMP, getSignerDataReferences());
 
             } else if (isIndividualDataObjectsTimestamp(signedAttribute)) {
                 timestampTokens = makeTimestampTokens(signedAttribute, TimestampType.INDIVIDUAL_DATA_OBJECTS_TIMESTAMP);
@@ -363,7 +432,7 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
             return;
         }
 
-        final List<TimestampToken> timestamps = new ArrayList<>();
+        final List<TimestampToken> allTimestamps = new ArrayList<>();
 
         for (SA unsignedAttribute : unsignedSignatureProperties.getAttributes()) {
             List<TimestampToken> timestampTokens;
@@ -396,8 +465,8 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
             } else if (isSigAndRefsTimestamp(unsignedAttribute)) {
                 final List<TimestampedReference> references = new ArrayList<>();
 
-                List<TimestampToken> signatureTimestamps = filterSignatureTimestamps(timestamps);
-                addReferences(references, getEncapsulatedReferencesFromTimestamps(signatureTimestamps));
+                List<TimestampToken> processedSignatureTimestamps = filterSignatureTimestamps(allTimestamps);
+                addReferences(references, getEncapsulatedReferencesFromTimestamps(processedSignatureTimestamps));
                 addReferences(references, unsignedPropertiesReferences);
 
                 timestampTokens = makeTimestampTokens(unsignedAttribute, TimestampType.VALIDATION_DATA_TIMESTAMP, references);
@@ -420,7 +489,7 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
                     continue;
                 }
                 setArchiveTimestampType(timestampTokens, unsignedAttribute);
-                incorporateArchiveTimestampReferences(timestampTokens, timestamps);
+                incorporateArchiveTimestampReferences(timestampTokens, allTimestamps);
 
                 archiveTimestamps.addAll(timestampTokens);
 
@@ -439,13 +508,26 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
                 // not processed
                 continue;
 
+            } else if (isEvidenceRecord(unsignedAttribute)) {
+                List<EvidenceRecord> evidenceRecords = makeEvidenceRecords(unsignedAttribute, unsignedPropertiesReferences);
+                if (Utils.isCollectionEmpty(evidenceRecords)) {
+                    continue;
+                }
+                incorporateEvidenceRecordEvidenceReferences(evidenceRecords, allTimestamps);
+
+                for (EvidenceRecord evidenceRecord : evidenceRecords) {
+                    populateSources(evidenceRecord.getTimestamps());
+                }
+                embeddedEvidenceRecords.addAll(evidenceRecords);
+                continue;
+
             } else {
                 LOG.warn("The unsigned attribute with a name [{}] is not supported in TimestampSource processing", unsignedAttribute);
                 continue;
             }
 
             populateSources(timestampTokens);
-            timestamps.addAll(timestampTokens);
+            allTimestamps.addAll(timestampTokens);
         }
 
     }
@@ -642,6 +724,15 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
     protected abstract boolean isSignaturePolicyStore(SA unsignedAttribute);
 
     /**
+     * Determines if the given {@code unsignedAttribute} is an instance of
+     * "evidence-record" element
+     *
+     * @param unsignedAttribute {@link SA} to process
+     * @return TRUE if the {@code unsignedAttribute} is an evidence record, FALSE otherwise
+     */
+    protected abstract boolean isEvidenceRecord(SA unsignedAttribute);
+
+    /**
      * Creates a timestamp token from the provided {@code signatureAttribute}
      *
      * @param signatureAttribute {@link SignatureAttribute} to create timestamp from
@@ -681,28 +772,18 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
         return Collections.emptyList();
     }
 
+    /**
+     * Creates a list of evidence records from the provided {@code signatureAttribute}
+     *
+     * @param signatureAttribute {@link SignatureAttribute} to create evidence records from
+     * @param references         list of {@link TimestampedReference}s covered by the current evidence record(s)
+     * @return a list of {@link EvidenceRecord}s
+     */
+    protected abstract List<EvidenceRecord> makeEvidenceRecords(SA signatureAttribute, List<TimestampedReference> references);
+
     @Override
     public List<TimestampedReference> getSignerDataReferences() {
         return getSignerDataTimestampedReferences(signature.getSignatureScopes());
-    }
-
-    /**
-     * Creates a list of {@link TimestampedReference}s from a given list of {@code SignatureScope}s
-     *
-     * @param signatureScopes a list of {@link SignatureScope} to create {@link TimestampedReference}s for
-     * @return a list of {@link TimestampedReference}s
-     */
-    protected List<TimestampedReference> getSignerDataTimestampedReferences(List<SignatureScope> signatureScopes) {
-        final List<TimestampedReference> references = new ArrayList<>();
-        if (Utils.isCollectionNotEmpty(signatureScopes)) {
-            for (SignatureScope signatureScope : signatureScopes) {
-                addReference(references, new TimestampedReference(signatureScope.getDSSIdAsString(), TimestampedObjectType.SIGNED_DATA));
-                if (Utils.isCollectionNotEmpty(signatureScope.getChildren())) {
-                    addReferences(references, getSignerDataTimestampedReferences(signatureScope.getChildren()));
-                }
-            }
-        }
-        return references;
     }
 
     /**
@@ -714,9 +795,18 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
         final List<TimestampedReference> references = new ArrayList<>();
         addReferences(references, getEncapsulatedReferencesFromTimestamps(getContentTimestamps()));
         addReferences(references, getSignerDataReferences());
-        addReference(references, new TimestampedReference(signature.getId(), TimestampedObjectType.SIGNATURE));
+        addReference(references, getSignatureReference());
         addReferences(references, getSigningCertificateTimestampReferences());
         return references;
+    }
+
+    /**
+     * Creates a timestamped reference for the current signature
+     *
+     * @return {@link TimestampedReference}
+     */
+    protected TimestampedReference getSignatureReference() {
+        return new TimestampedReference(signature.getId(), TimestampedObjectType.SIGNATURE);
     }
 
     /**
@@ -873,21 +963,30 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
      */
     protected void incorporateArchiveTimestampReferences(TimestampToken timestampToken,
                                                          List<TimestampToken> previousTimestamps) {
-        addReferences(timestampToken.getTimestampedReferences(), getSignatureTimestampReferences());
-        addReferences(timestampToken.getTimestampedReferences(), getEncapsulatedReferencesFromTimestamps(previousTimestamps));
-        addReferences(timestampToken.getTimestampedReferences(), unsignedPropertiesReferences);
-        addReferences(timestampToken.getTimestampedReferences(), getArchiveTimestampOtherReferences(timestampToken));
+        addReferences(timestampToken.getTimestampedReferences(), getArchiveTimestampReferences(previousTimestamps));
+    }
+
+    private void incorporateEvidenceRecordEvidenceReferences(List<EvidenceRecord> createdEvidenceRecords,
+                                                             List<TimestampToken> previousTimestamps) {
+        for (EvidenceRecord evidenceRecord : createdEvidenceRecords) {
+            addReferences(evidenceRecord.getTimestampedReferences(), getArchiveTimestampReferences(previousTimestamps));
+            processEvidenceRecordTimestamps(evidenceRecord);
+        }
     }
 
     /**
-     * Returns a list of {@code TimestampedReference}s for the given archive {@code timestampToken}
-     * that cannot be extracted from signature attributes (signed or unsigned),
-     * depending on its format (signedData for CAdES or, keyInfo for XAdES)
+     * Returns a list of time-stamped references for an archival time-stamp
      *
-     * @param timestampToken {@link TimestampToken} to get archive timestamp references for
-     * @return list of {@link TimestampedReference}s
+     * @param previousTimestamps a list of previous {@link TimestampToken}s
+     * @return a list of {@link TimestampedReference}s
      */
-    protected abstract List<TimestampedReference> getArchiveTimestampOtherReferences(TimestampToken timestampToken);
+    protected List<TimestampedReference> getArchiveTimestampReferences(List<TimestampToken> previousTimestamps) {
+        List<TimestampedReference> timestampedReferences = new ArrayList<>();
+        addReferences(timestampedReferences, getSignatureTimestampReferences());
+        addReferences(timestampedReferences, getEncapsulatedReferencesFromTimestamps(previousTimestamps));
+        addReferences(timestampedReferences, unsignedPropertiesReferences);
+        return timestampedReferences;
+    }
 
     /**
      * Returns a list of all {@code TimestampedReference}s found into CMS SignedData of the signature
@@ -994,38 +1093,39 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
      */
     protected void validateTimestamps() {
 
-        TimestampDataBuilder timestampDataBuilder = getTimestampDataBuilder();
+        DSSMessageDigest messageDigest = null;
 
         /*
          * This validates the content-timestamp tokensToProcess present in the signature.
          */
         for (final TimestampToken timestampToken : getContentTimestamps()) {
-            final DSSDocument timestampedData = timestampDataBuilder.getContentTimestampData(timestampToken);
-            timestampToken.matchData(timestampedData);
+            messageDigest = getTimestampMessageImprintDigestBuilder(timestampToken).getContentTimestampMessageDigest();
+            timestampToken.matchData(messageDigest);
+            timestampToken.setTimestampScopes(getTimestampScopes(timestampToken));
         }
 
         /*
          * This validates the signature timestamp tokensToProcess present in the signature.
          */
         for (final TimestampToken timestampToken : getSignatureTimestamps()) {
-            final DSSDocument timestampedData = timestampDataBuilder.getSignatureTimestampData(timestampToken);
-            timestampToken.matchData(timestampedData);
+            messageDigest = getTimestampMessageImprintDigestBuilder(timestampToken).getSignatureTimestampMessageDigest();
+            timestampToken.matchData(messageDigest);
         }
 
         /*
          * This validates the SigAndRefs timestamp tokensToProcess present in the signature.
          */
         for (final TimestampToken timestampToken : getTimestampsX1()) {
-            final DSSDocument timestampedData = timestampDataBuilder.getTimestampX1Data(timestampToken);
-            timestampToken.matchData(timestampedData);
+            messageDigest = getTimestampMessageImprintDigestBuilder(timestampToken).getTimestampX1MessageDigest();
+            timestampToken.matchData(messageDigest);
         }
 
         /*
          * This validates the RefsOnly timestamp tokensToProcess present in the signature.
          */
         for (final TimestampToken timestampToken : getTimestampsX2()) {
-            final DSSDocument timestampedData = timestampDataBuilder.getTimestampX2Data(timestampToken);
-            timestampToken.matchData(timestampedData);
+            messageDigest = getTimestampMessageImprintDigestBuilder(timestampToken).getTimestampX2MessageDigest();
+            timestampToken.matchData(messageDigest);
         }
 
         /*
@@ -1033,45 +1133,118 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
          */
         for (final TimestampToken timestampToken : getArchiveTimestamps()) {
             if (!timestampToken.isProcessed()) {
-                final DSSDocument timestampedData = timestampDataBuilder.getArchiveTimestampData(timestampToken);
-                timestampToken.matchData(timestampedData);
+                messageDigest = getTimestampMessageImprintDigestBuilder(timestampToken).getArchiveTimestampMessageDigest();
+                timestampToken.matchData(messageDigest);
+                timestampToken.setTimestampScopes(getTimestampScopes(timestampToken));
             }
         }
 
     }
 
     /**
-     * Returns a related {@link TimestampDataBuilder}
+     * Returns a {@link TimestampMessageDigestBuilder} to compute message digest
+     * with the provided {@code DigestAlgorithm}
      *
-     * @return {@link TimestampDataBuilder}
+     * @param digestAlgorithm {@link DigestAlgorithm} to use for message-digest computation
+     * @return {@link TimestampMessageDigestBuilder}
      */
-    protected abstract TimestampDataBuilder getTimestampDataBuilder();
+    protected abstract TimestampMessageDigestBuilder getTimestampMessageImprintDigestBuilder(
+            DigestAlgorithm digestAlgorithm);
+
+    /**
+     * Returns a related {@link TimestampMessageDigestBuilder}
+     *
+     * @param timestampToken {@link TimestampToken} to get message-imprint digest builder for
+     * @return {@link TimestampMessageDigestBuilder}
+     */
+    protected abstract TimestampMessageDigestBuilder getTimestampMessageImprintDigestBuilder(TimestampToken timestampToken);
+
+    /**
+     * Generates timestamp token scopes
+     *
+     * @param timestampToken {@link TimestampToken} to get timestamp sources for
+     * @return a list of {@link SignatureScope}s
+     */
+    protected List<SignatureScope> getTimestampScopes(TimestampToken timestampToken) {
+        EncapsulatedTimestampScopeFinder timestampScopeFinder = new EncapsulatedTimestampScopeFinder();
+        timestampScopeFinder.setSignature(signature);
+        return timestampScopeFinder.findTimestampScope(timestampToken);
+    }
 
     private void processExternalTimestamp(TimestampToken externalTimestamp) {
         // add all validation data present in Signature CMS SignedData, because an external timestamp covers a whole signature file
         addReferences(externalTimestamp.getTimestampedReferences(), getSignatureSignedDataReferences());
         // add references from previously added timestamps
         addReferences(externalTimestamp.getTimestampedReferences(), getEncapsulatedReferencesFromTimestamps(
-                getTimestampsCoveredByExternalTimestamp(externalTimestamp)));
+                getTimestampsCoveredByManifest(externalTimestamp.getManifestFile())));
         // add existing counter signatures
         addReferences(externalTimestamp.getTimestampedReferences(), getCounterSignatureReferences(signature));
         // populate timestamp certificate source with values present in the timestamp
         populateSources(externalTimestamp);
     }
 
-    private List<TimestampToken> getTimestampsCoveredByExternalTimestamp(TimestampToken externalTimestamp) {
+    private List<TimestampToken> getTimestampsCoveredByManifest(ManifestFile manifestFile) {
         List<TimestampToken> result = new ArrayList<>();
         for (TimestampToken timestampToken : getAllTimestamps()) {
-            if (detachedTimestamps.contains(timestampToken)) {
-                ManifestFile manifestFile = externalTimestamp.getManifestFile();
-                if (manifestFile == null || !manifestFile.isDocumentCovered(timestampToken.getFileName())) {
-                    // the detached timestamp is not covered, continue
-                    continue;
-                }
+            if (detachedTimestamps.contains(timestampToken) &&
+                    (manifestFile == null || !manifestFile.isDocumentCovered(timestampToken.getFileName()))) {
+                // the detached timestamp is not covered, continue
+                continue;
             }
             result.add(timestampToken);
         }
         return result;
+    }
+
+    private void processExternalEvidenceRecord(EvidenceRecord evidenceRecord) {
+        final List<TimestampedReference> timestampedReferences = new ArrayList<>();
+        addReferences(timestampedReferences, getSignatureTimestampReferences());
+        addReferences(timestampedReferences, getSignatureSignedDataReferences());
+        addReferences(timestampedReferences, getEncapsulatedReferencesFromTimestamps(getSignatureTimestamps()));
+        addReferences(timestampedReferences, unsignedPropertiesReferences);
+        addReferences(timestampedReferences, getEncapsulatedReferencesFromTimestamps(getTimestampsX1()));
+        addReferences(timestampedReferences, getEncapsulatedReferencesFromTimestamps(getTimestampsX2()));
+        addReferences(timestampedReferences, getEncapsulatedReferencesFromTimestamps(getArchiveTimestamps()));
+        addReferences(timestampedReferences, getEncapsulatedReferencesFromTimestamps(
+                getTimestampsCoveredByManifest(evidenceRecord.getManifestFile())));
+        addReferences(evidenceRecord.getTimestampedReferences(), timestampedReferences);
+
+        processEvidenceRecordTimestamps(evidenceRecord);
+        processEmbeddedEvidenceRecords(evidenceRecord);
+        populateSources(evidenceRecord);
+    }
+
+
+    /**
+     * Enriches embedded time-stamp tokens with evidence record references
+     *
+     * @param evidenceRecord {@link EvidenceRecord}
+     */
+    private void processEvidenceRecordTimestamps(EvidenceRecord evidenceRecord) {
+        for (TimestampToken timestampToken : evidenceRecord.getTimestamps()) {
+            ensureOnlyDataTimestampReferencesPresent(timestampToken.getTimestampedReferences(), evidenceRecord.getTimestampedReferences());
+            addReferences(timestampToken.getTimestampedReferences(), evidenceRecord.getTimestampedReferences());
+        }
+    }
+
+    private void processEmbeddedEvidenceRecords(EvidenceRecord evidenceRecord) {
+        for (EvidenceRecord embeddedEvidenceRecord : evidenceRecord.getDetachedEvidenceRecords()) {
+            addReferences(embeddedEvidenceRecord.getTimestampedReferences(), evidenceRecord.getTimestampedReferences());
+            processEvidenceRecordTimestamps(embeddedEvidenceRecord);
+        }
+    }
+
+    /**
+     * This method is a workaround to ensure time-stamps from evidence record do not refer
+     * signature or time-stamp files in addition to token references
+     *
+     * @param referenceList a list of {@link TimestampedReference} from time-stamp token
+     * @param referencesToCheck a list of {@link TimestampedReference} from an evidence record
+     */
+    private void ensureOnlyDataTimestampReferencesPresent(List<TimestampedReference> referenceList, List<TimestampedReference> referencesToCheck) {
+        referenceList.removeIf(timestampedReference ->
+                TimestampedObjectType.SIGNED_DATA.equals(timestampedReference.getCategory()) &&
+                        referencesToCheck.stream().noneMatch(timestampedReference::equals));
     }
 
     /**
@@ -1098,6 +1271,18 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
         }
     }
 
+    /**
+     * Allows to populate all sources from an external evidence record
+     *
+     * @param externalEvidenceRecord {@link EvidenceRecord} to populate data from
+     */
+    protected void populateSources(EvidenceRecord externalEvidenceRecord) {
+        if (externalEvidenceRecord != null) {
+            // TODO : add extraction of embedded validation data
+            populateSources(externalEvidenceRecord.getTimestamps());
+        }
+    }
+
     @Override
     public boolean isTimestamped(String tokenId, TimestampedObjectType objectType) {
         return isTimestamped(signature, tokenId, objectType);
@@ -1115,6 +1300,28 @@ public abstract class SignatureTimestampSource<AS extends AdvancedSignature, SA 
         }
 
         return false;
+    }
+
+    /**
+     * Gets position of the {@code signatureAttribute} either within signed or unsigned properties
+     *
+     * @param signatureAttribute {@link SignatureAttribute} to search for
+     * @return position of the attribute within properties, NULL if not found
+     */
+    protected Integer getAttributeOrder(SA signatureAttribute) {
+        for (int i = 0; i < getSignedSignatureProperties().getAttributes().size(); i++) {
+            SA property = getSignedSignatureProperties().getAttributes().get(i);
+            if (signatureAttribute.equals(property)) {
+                return i;
+            }
+        }
+        for (int i = 0; i < getUnsignedSignatureProperties().getAttributes().size(); i++) {
+            SA property = getUnsignedSignatureProperties().getAttributes().get(i);
+            if (signatureAttribute.equals(property)) {
+                return i;
+            }
+        }
+        return null;
     }
 
 }

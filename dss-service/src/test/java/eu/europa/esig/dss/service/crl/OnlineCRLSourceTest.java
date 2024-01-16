@@ -25,16 +25,17 @@ import eu.europa.esig.dss.enumerations.SignatureValidity;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.service.http.commons.CommonsDataLoader;
 import eu.europa.esig.dss.spi.DSSUtils;
+import eu.europa.esig.dss.spi.exception.DSSExternalResourceException;
 import eu.europa.esig.dss.spi.x509.revocation.crl.CRLToken;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -57,7 +58,6 @@ public class OnlineCRLSourceTest {
 	@BeforeAll
 	public static void init() {
 		dataLoader = new CommonsDataLoader();
-		dataLoader.setTimeoutConnection(60000);
 
 		goodUser = DSSUtils.loadCertificate(dataLoader.get("http://dss.nowina.lu/pki-factory/crt/good-user.crt"));
 		goodCa = DSSUtils.loadCertificate(dataLoader.get("http://dss.nowina.lu/pki-factory/crt/good-ca.crt"));
@@ -70,25 +70,29 @@ public class OnlineCRLSourceTest {
 
 	@BeforeEach
 	public void beforeEach() {
+		dataLoader.setTimeoutResponse(60000);
 		onlineCRLSource = new OnlineCRLSource(dataLoader);
 	}
 	
 	@Test
 	public void getRevocationTokenTest() {
-		CRLToken revocationToken = onlineCRLSource.getRevocationToken(goodUser, goodCa);
-		assertNull(revocationToken);
+		Exception exception = assertThrows(DSSExternalResourceException.class,
+				() -> onlineCRLSource.getRevocationToken(goodUser, goodCa));
+		assertEquals("No CRL location found for certificate with Id '" + goodUser.getDSSIdAsString() + "'", exception.getMessage());
 		
-		revocationToken = onlineCRLSource.getRevocationToken(goodCa, rootCa);
+		CRLToken revocationToken = onlineCRLSource.getRevocationToken(goodCa, rootCa);
 		assertNotNull(revocationToken);
 	}
 	
 	@Test
 	public void getRevocationTokenEd25519Test() {
-		CRLToken revocationToken = onlineCRLSource.getRevocationToken(ed25519goodCa, ed25519goodUser);
-		assertNull(revocationToken);
+		Exception exception = assertThrows(DSSExternalResourceException.class,
+				() -> onlineCRLSource.getRevocationToken(ed25519goodCa, ed25519goodUser));
+		assertTrue(exception.getMessage().contains("Unable to retrieve CRL for certificate with Id '" + ed25519goodCa.getDSSIdAsString() + "'"));
 
-		revocationToken = onlineCRLSource.getRevocationToken(ed25519goodCa, ed25519RootCa);
+		CRLToken revocationToken = onlineCRLSource.getRevocationToken(ed25519goodCa, ed25519RootCa);
 		assertNotNull(revocationToken);
+		assertTrue(revocationToken.isSignatureIntact());
 		assertTrue(revocationToken.isValid());
 		assertEquals(SignatureAlgorithm.ED25519, revocationToken.getSignatureAlgorithm());
 		assertEquals(SignatureValidity.VALID, revocationToken.getSignatureValidity());
@@ -96,32 +100,37 @@ public class OnlineCRLSourceTest {
 
 	@Test
 	public void getRevocationTokenWithAlternateUrlTest() {
-		CRLToken wrongRevocationToken = onlineCRLSource.getRevocationToken(goodUser, goodCa, Arrays.asList(alternative_url));
-		assertNull(wrongRevocationToken);
+		Exception exception = assertThrows(DSSExternalResourceException.class,
+				() -> onlineCRLSource.getRevocationToken(goodUser, goodCa, Collections.singletonList(alternative_url)));
+		assertTrue(exception.getMessage().contains("Unable to retrieve CRL for certificate with Id '" + goodUser.getDSSIdAsString() + "'"));
 		
-		CRLToken revocationToken = onlineCRLSource.getRevocationToken(goodCa, rootCa, Arrays.asList(alternative_url));
+		CRLToken revocationToken = onlineCRLSource.getRevocationToken(goodCa, rootCa, Collections.singletonList(alternative_url));
 		assertNotNull(revocationToken);
 	}
 	
 	@Test
 	public void getRevocationTokenWithWrongAlternateUrlTest() {
-		CRLToken revocationToken = onlineCRLSource.getRevocationToken(goodUser, goodCa, Arrays.asList(wrong_url));
-		assertNull(revocationToken);
-		
-		revocationToken = onlineCRLSource.getRevocationToken(goodCa, rootCa, Arrays.asList(wrong_url));
+		Exception exception = assertThrows(DSSExternalResourceException.class,
+				() -> onlineCRLSource.getRevocationToken(goodUser, goodCa, Collections.singletonList(wrong_url)));
+		assertTrue(exception.getMessage().contains("Unable to retrieve CRL for certificate with Id '" + goodUser.getDSSIdAsString() + "'"));
+
+		CRLToken revocationToken = onlineCRLSource.getRevocationToken(goodCa, rootCa, Collections.singletonList(wrong_url));
 		assertNotNull(revocationToken);
 	}
 	
 	@Test
 	public void timeoutTest() {
-		dataLoader.setTimeoutConnection(1);
-		CRLToken revocationToken = onlineCRLSource.getRevocationToken(goodUser, goodCa, Arrays.asList(wrong_url, alternative_url));
-		assertNull(revocationToken);
-		
-		revocationToken = onlineCRLSource.getRevocationToken(goodCa, rootCa, Arrays.asList(wrong_url, alternative_url));
-		assertNull(revocationToken);
+		dataLoader.setTimeoutResponse(1);
 
-		dataLoader.setTimeoutConnection(60000);
+		Exception exception = assertThrows(DSSExternalResourceException.class,
+				() -> onlineCRLSource.getRevocationToken(goodUser, goodCa, Arrays.asList(wrong_url, alternative_url)));
+		assertTrue(exception.getMessage().contains("Unable to retrieve CRL for certificate with Id '" + goodUser.getDSSIdAsString() + "'"));
+		assertTrue(exception.getMessage().contains("Read timed out"));
+
+		exception = assertThrows(DSSExternalResourceException.class,
+				() -> onlineCRLSource.getRevocationToken(goodCa, rootCa, Arrays.asList(wrong_url, alternative_url)));
+		assertTrue(exception.getMessage().contains("Unable to retrieve CRL for certificate with Id '" + goodCa.getDSSIdAsString() + "'"));
+		assertTrue(exception.getMessage().contains("Read timed out"));
 	}
 
 	@Test

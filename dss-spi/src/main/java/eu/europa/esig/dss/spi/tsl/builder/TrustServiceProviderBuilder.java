@@ -67,6 +67,7 @@ public class TrustServiceProviderBuilder {
 	 * Default constructor
 	 */
 	public TrustServiceProviderBuilder() {
+		// empty
 	}
 
 	/**
@@ -217,7 +218,7 @@ public class TrustServiceProviderBuilder {
 	/**
 	 * Gets a list of trust services
 	 *
-	 * @return a a list of {@link TrustService}s
+	 * @return a list of {@link TrustService}s
 	 */
 	public List<TrustService> getServices() {
 		return getUnmodifiableTrustServices(services);

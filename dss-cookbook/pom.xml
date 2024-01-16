@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.11.1.d4j.1</version>
+		<version>6.0.d4j.1</version>
 	</parent>
 
 	<name>CookBook</name>
@@ -57,11 +57,19 @@
 <!-- 		</dependency> -->
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-pdfa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-xades</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-jades</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-evidence-record-xml</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>${dss.groupId}</groupId>

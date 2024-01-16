@@ -28,11 +28,11 @@ import eu.europa.esig.dss.diagnostic.SignerDataWrapper;
 import eu.europa.esig.dss.diagnostic.TimestampWrapper;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDigestMatcher;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
+import eu.europa.esig.dss.enumerations.MimeTypeEnum;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
-import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ASiCECAdESSignTimestampedContainerTest extends AbstractASiCECAdESTestSignature {
 
     private static final DSSDocument originalDocument = new InMemoryDocument(
-            "Hello World !".getBytes(), "test.text", MimeType.TEXT);
+            "Hello World !".getBytes(), "test.text", MimeTypeEnum.TEXT);
 
     private DocumentSignatureService<ASiCWithCAdESSignatureParameters, ASiCWithCAdESTimestampParameters> service;
     private ASiCWithCAdESSignatureParameters signatureParameters;
@@ -86,7 +86,7 @@ public class ASiCECAdESSignTimestampedContainerTest extends AbstractASiCECAdESTe
         assertEquals(1, timestampList.size());
 
         TimestampWrapper timestampWrapper = timestampList.get(0);
-        assertEquals(TimestampType.CONTENT_TIMESTAMP, timestampWrapper.getType());
+        assertEquals(TimestampType.CONTAINER_TIMESTAMP, timestampWrapper.getType());
         assertNull(timestampWrapper.getArchiveTimestampType());
         assertEquals(2, timestampWrapper.getDigestMatchers().size());
 

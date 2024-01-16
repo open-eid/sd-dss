@@ -63,11 +63,6 @@ public class MemoryDataLoader implements DataLoader {
 	}
 
 	@Override
-	public byte[] get(String url, boolean refresh) {
-		return get(url);
-	}
-
-	@Override
 	public byte[] post(String url, byte[] content) {
 		return get(url);
 	}

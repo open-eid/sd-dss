@@ -26,17 +26,20 @@ import eu.europa.esig.dss.crl.CRLValidity;
 import eu.europa.esig.dss.enumerations.RevocationOrigin;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.model.x509.revocation.crl.CRL;
+import eu.europa.esig.dss.spi.CertificateExtensionsUtils;
 import eu.europa.esig.dss.spi.DSSRevocationUtils;
 import eu.europa.esig.dss.spi.DSSUtils;
-import eu.europa.esig.dss.spi.client.jdbc.JdbcCacheConnector;
+import eu.europa.esig.dss.spi.client.jdbc.query.SqlQuery;
+import eu.europa.esig.dss.spi.client.jdbc.query.SqlSelectQuery;
+import eu.europa.esig.dss.spi.client.jdbc.record.SqlRecord;
 import eu.europa.esig.dss.spi.exception.DSSExternalResourceException;
 import eu.europa.esig.dss.spi.x509.revocation.JdbcRevocationSource;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationToken;
 import eu.europa.esig.dss.spi.x509.revocation.crl.CRLSource;
 import eu.europa.esig.dss.spi.x509.revocation.crl.CRLToken;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -44,172 +47,192 @@ import java.util.List;
  */
 public class JdbcCacheCRLSource extends JdbcRevocationSource<CRL> implements CRLSource {
 
-	private static final long serialVersionUID = 3007740140330998336L;
+    private static final long serialVersionUID = 3007740140330998336L;
 
-	/**
-	 * Used in the init method to check if the table exists
-	 */
-	private static final String SQL_INIT_CHECK_EXISTENCE = "SELECT COUNT(*) FROM CACHED_CRL";
+    /**
+     * Used in the init method to check if the table exists
+     */
+    private static final SqlQuery SQL_INIT_CHECK_EXISTENCE = SqlQuery.createQuery("SELECT COUNT(*) FROM CACHED_CRL");
 
-	/**
-	 * Used in the init method to create the table, if not existing: ID (char40
-	 * = SHA1 length) and DATA (blob)
-	 */
-	private static final String SQL_INIT_CREATE_TABLE = "CREATE TABLE CACHED_CRL (ID CHAR(40), DATA BLOB, ISSUER LONGVARBINARY)";
+    /**
+     * Used in the init method to create the table, if not existing: ID (char40
+     * = SHA1 length) and DATA (blob)
+     */
+    private static final SqlQuery SQL_INIT_CREATE_TABLE = SqlQuery.createQuery("CREATE TABLE CACHED_CRL (ID CHAR(40), DATA BLOB, ISSUER LONGVARBINARY)");
 
-	/**
-	 * Used in the find method to select the crl via the id
-	 */
-	private static final String SQL_FIND_QUERY = "SELECT * FROM CACHED_CRL WHERE ID = ?";
+    /**
+     * Used to drop the cache table
+     */
+    private static final SqlQuery SQL_DROP_TABLE = SqlQuery.createQuery("DROP TABLE CACHED_CRL");
 
-	/**
-	 * Used in the find method when selecting the crl via the id to get the ID
-	 * (char40) from the resultset
-	 */
-	private static final String SQL_FIND_QUERY_ID = "ID";
+    /**
+     * Used via the find method to insert a new record
+     */
+    private static final SqlQuery SQL_FIND_INSERT = SqlQuery.createQuery("INSERT INTO CACHED_CRL (ID, DATA, ISSUER) VALUES (?, ?, ?)");
 
-	/**
-	 * Used in the find method when selecting the crl via the id to get the DATA
-	 * (blob) from the resultset
-	 */
-	private static final String SQL_FIND_QUERY_DATA = "DATA";
+    /**
+     * Used via the find method to update an existing record via the id
+     */
+    private static final SqlQuery SQL_FIND_UPDATE = SqlQuery.createQuery("UPDATE CACHED_CRL SET DATA = ?, ISSUER = ?  WHERE ID = ?");
 
-	/**
-	 * Used in the find method when selecting the issuer certificate via the id
-	 * to get the ISSUER (blob) from the resultset
-	 */
-	private static final String SQL_FIND_QUERY_ISSUER = "ISSUER";
+    /**
+     * Used via the find method to remove an existing record by the id
+     */
+    private static final SqlQuery SQL_FIND_REMOVE = SqlQuery.createQuery("DELETE FROM CACHED_CRL WHERE ID = ?");
 
-	/**
-	 * Used via the find method to insert a new record
-	 */
-	private static final String SQL_FIND_INSERT = "INSERT INTO CACHED_CRL (ID, DATA, ISSUER) VALUES (?, ?, ?)";
+    /**
+     * A list of requests to extract the certificates by
+     */
+    private static final SqlSelectQuery SQL_FIND_QUERY = new SqlSelectQuery("SELECT * FROM CACHED_CRL WHERE ID = ?") {
+        @Override
+        public SqlCRLRecord getRecord(ResultSet rs) throws SQLException {
+            SqlCRLRecord response = new SqlCRLRecord();
+            response.id = rs.getString("ID");
+            response.crlBinary = rs.getBytes("DATA");
+            response.certificateIssuerBinary = rs.getBytes("ISSUER");
+            return response;
+        }
+    };
 
-	/**
-	 * Used via the find method to update an existing record via the id
-	 */
-	private static final String SQL_FIND_UPDATE = "UPDATE CACHED_CRL SET DATA = ?, ISSUER = ?  WHERE ID = ?";
+    /**
+     * Default constructor
+     */
+    public JdbcCacheCRLSource() {
+        // empty
+    }
 
-	/**
-	 * Used via the find method to remove an existing record by the id
-	 */
-	private static final String SQL_FIND_REMOVE = "DELETE FROM CACHED_CRL WHERE ID = ?";
-	
-	/**
-	 * Used to drop the cache table
-	 */
-	private static final String SQL_DROP_TABLE = "DROP TABLE CACHED_CRL";
+    @Override
+    protected SqlQuery getCreateTableQuery() {
+        return SQL_INIT_CREATE_TABLE;
+    }
 
-	/**
-	 * A list of requests to extract the certificates by
-	 */
-	private static List<JdbcCacheConnector.JdbcResultRequest> findCRLRequests;
+    @Override
+    protected SqlQuery getTableExistenceQuery() {
+        return SQL_INIT_CHECK_EXISTENCE;
+    }
 
-	static {
-		findCRLRequests = new ArrayList<>();
-		findCRLRequests.add(new JdbcCacheConnector.JdbcResultRequest(SQL_FIND_QUERY_ID, String.class));
-		findCRLRequests.add(new JdbcCacheConnector.JdbcResultRequest(SQL_FIND_QUERY_DATA, byte[].class));
-		findCRLRequests.add(new JdbcCacheConnector.JdbcResultRequest(SQL_FIND_QUERY_ISSUER, byte[].class));
-	}
+    @Override
+    protected SqlQuery getInsertRevocationTokenEntryQuery() {
+        return SQL_FIND_INSERT;
+    }
 
-	/**
-	 * Default constructor
-	 */
-	public JdbcCacheCRLSource() {
-	}
-	
-	@Override
-	protected String getCreateTableQuery() {
-		return SQL_INIT_CREATE_TABLE;
-	}
-	
-	@Override
-	protected String getTableExistenceQuery() {
-		return SQL_INIT_CHECK_EXISTENCE;
-	}
-	
-	@Override
-	protected String getFindRevocationQuery() {
-		return SQL_FIND_QUERY;
-	}
+    @Override
+    protected SqlQuery getUpdateRevocationTokenEntryQuery() {
+        return SQL_FIND_UPDATE;
+    }
 
-	@Override
-	protected String getRemoveRevocationTokenEntryQuery() {
-		return SQL_FIND_REMOVE;
-	}
+    @Override
+    protected SqlQuery getRemoveRevocationTokenEntryQuery() {
+        return SQL_FIND_REMOVE;
+    }
 
-	@Override
-	protected String getDeleteTableQuery() {
-		return SQL_DROP_TABLE;
-	}
+    @Override
+    protected SqlQuery getDeleteTableQuery() {
+        return SQL_DROP_TABLE;
+    }
 
-	@Override
-	protected Collection<JdbcCacheConnector.JdbcResultRequest> getRevocationDataExtractRequests() {
-		return findCRLRequests;
-	}
-	
-	/**
-	 * Returns a revocation token key
-	 *
-	 * @param certificateToken {@link CertificateToken}
-	 * @return revocation token key {@link String}
-	 */
-	@Override
-	protected List<String> initRevocationTokenKeys(CertificateToken certificateToken) {
-		return DSSRevocationUtils.getCRLRevocationTokenKeys(certificateToken);
-	}
+    @Override
+    protected SqlSelectQuery getRevocationDataExtractQuery() {
+        return SQL_FIND_QUERY;
+    }
 
-	@Override
-	protected RevocationToken<CRL> buildRevocationTokenFromResult(JdbcCacheConnector.JdbcResultRecord resultRecord,
-				CertificateToken certificateToken, CertificateToken issuerCertificateToken) throws DSSExternalResourceException {
-		try {
-			CRLBinary crlBinary = CRLUtils.buildCRLBinary((byte[]) resultRecord.get(SQL_FIND_QUERY_DATA));
-			CertificateToken cachedIssuerCertificate = DSSUtils.loadCertificate((byte[]) resultRecord.get(SQL_FIND_QUERY_ISSUER));
+    /**
+     * Returns a revocation token key
+     *
+     * @param certificateToken {@link CertificateToken}
+     * @return revocation token key {@link String}
+     */
+    @Override
+    protected List<String> initRevocationTokenKeys(CertificateToken certificateToken) {
+        return DSSRevocationUtils.getCRLRevocationTokenKeys(certificateToken);
+    }
 
-			final CRLValidity cached = CRLUtils.buildCRLValidity(crlBinary, cachedIssuerCertificate);
-			cached.setIssuerToken(cachedIssuerCertificate);
-			
-			CRLToken crlToken = new CRLToken(certificateToken, cached);
-			crlToken.setExternalOrigin(RevocationOrigin.CACHED);
-			return crlToken;
-			
-		} catch (Exception e) {
-			throw new DSSExternalResourceException(String.format(
-					"An error occurred during an attempt to get a revocation token. Reason : %s", e.getMessage()), e);
-		}
-	}
+    @Override
+    protected RevocationToken<CRL> buildRevocationTokenFromResult(SqlRecord response, CertificateToken certificateToken,
+                                                                  CertificateToken issuerCertificateToken) throws DSSExternalResourceException {
+        try {
+            final SqlCRLRecord crlResponse = (SqlCRLRecord) response;
+            CRLBinary crlBinary = CRLUtils.buildCRLBinary(crlResponse.crlBinary);
+            CertificateToken cachedIssuerCertificate = DSSUtils.loadCertificate(crlResponse.certificateIssuerBinary);
 
-	@Override
-	protected void insertRevocation(final String revocationKey, final RevocationToken<CRL> token) {
-		CRLToken crlToken = (CRLToken) token;
-		CRLValidity crlValidity = crlToken.getCrlValidity();
+            final CRLValidity cached = CRLUtils.buildCRLValidity(crlBinary, cachedIssuerCertificate);
+            cached.setIssuerToken(cachedIssuerCertificate);
 
-		jdbcCacheConnector.execute(SQL_FIND_INSERT, revocationKey, crlValidity.getDerEncoded(),
-				crlValidity.getIssuerToken().getEncoded());
-	}
+            CRLToken crlToken = new CRLToken(certificateToken, cached);
+            crlToken.setExternalOrigin(RevocationOrigin.CACHED);
+            return crlToken;
 
-	@Override
-	protected void updateRevocation(final String revocationKey, final RevocationToken<CRL> token) {
-		CRLToken crlToken = (CRLToken) token;
-		CRLValidity crlValidity = crlToken.getCrlValidity();
+        } catch (Exception e) {
+            throw new DSSExternalResourceException(String.format(
+                    "An error occurred during an attempt to get a revocation token. Reason : %s", e.getMessage()), e);
+        }
+    }
 
-		jdbcCacheConnector.execute(SQL_FIND_UPDATE, crlValidity.getDerEncoded(), crlValidity.getIssuerToken().getEncoded(),
-				revocationKey);
-	}
+    @Override
+    protected void insertRevocation(final String revocationKey, final RevocationToken<CRL> token) {
+        CRLToken crlToken = (CRLToken) token;
+        CRLValidity crlValidity = crlToken.getCrlValidity();
 
-	@Override
-	public CRLToken getRevocationToken(CertificateToken certificateToken, CertificateToken issuerCertificateToken) {
-		return (CRLToken) super.getRevocationToken(certificateToken, issuerCertificateToken);
-	}
+        getJdbcCacheConnector().execute(getInsertRevocationTokenEntryQuery(), revocationKey, crlValidity.getDerEncoded(),
+                crlValidity.getIssuerToken().getEncoded());
+    }
 
-	@Override
-	public CRLToken getRevocationToken(CertificateToken certificateToken, CertificateToken issuerCertificateToken, boolean forceRefresh) {
-		return (CRLToken) super.getRevocationToken(certificateToken, issuerCertificateToken, forceRefresh);
-	}
-	
-	@Override
-	protected String getRevocationTokenKey(CertificateToken certificateToken, String urlString) {
-		return DSSRevocationUtils.getCRLRevocationTokenKey(urlString);
-	}
+    @Override
+    protected void updateRevocation(final String revocationKey, final RevocationToken<CRL> token) {
+        CRLToken crlToken = (CRLToken) token;
+        CRLValidity crlValidity = crlToken.getCrlValidity();
+
+        getJdbcCacheConnector().execute(getUpdateRevocationTokenEntryQuery(), crlValidity.getDerEncoded(),
+                crlValidity.getIssuerToken().getEncoded(), revocationKey);
+    }
+
+    @Override
+    public CRLToken getRevocationToken(CertificateToken certificateToken, CertificateToken issuerCertificateToken) {
+        return (CRLToken) super.getRevocationToken(certificateToken, issuerCertificateToken);
+    }
+
+    @Override
+    public CRLToken getRevocationToken(CertificateToken certificateToken, CertificateToken issuerCertificateToken, boolean forceRefresh) {
+        return (CRLToken) super.getRevocationToken(certificateToken, issuerCertificateToken, forceRefresh);
+    }
+
+    @Override
+    protected List<String> getRevocationAccessUrls(CertificateToken certificateToken) {
+        return CertificateExtensionsUtils.getCRLAccessUrls(certificateToken);
+    }
+
+    @Override
+    protected String getRevocationTokenKey(CertificateToken certificateToken, String urlString) {
+        return DSSRevocationUtils.getCRLRevocationTokenKey(urlString);
+    }
+
+    /**
+     * Represents a CRL record extracted from the SQL database table
+     */
+    protected static class SqlCRLRecord implements SqlRecord {
+
+        /**
+         * ID of the record
+         */
+        protected String id;
+
+        /**
+         * CRL binary
+         */
+        protected byte[] crlBinary;
+
+        /**
+         * Binary of the CRL issuer certificate
+         */
+        protected byte[] certificateIssuerBinary;
+
+        /**
+         * Default constructor
+         */
+        protected SqlCRLRecord() {
+            // empty
+        }
+
+    }
 
 }

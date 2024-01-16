@@ -37,6 +37,7 @@ import eu.europa.esig.dss.spi.x509.CandidatesForSigningCertificate;
 import eu.europa.esig.dss.spi.x509.CertificateValidity;
 import eu.europa.esig.dss.spi.x509.SignatureIntegrityValidator;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationToken;
+import eu.europa.esig.dss.utils.Utils;
 import org.bouncycastle.asn1.ASN1GeneralizedTime;
 import org.bouncycastle.asn1.isismtt.ISISMTTObjectIdentifiers;
 import org.bouncycastle.asn1.isismtt.ocsp.CertHash;
@@ -53,7 +54,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.x500.X500Principal;
-import java.io.StringWriter;
 import java.security.PublicKey;
 import java.text.ParseException;
 import java.util.Arrays;
@@ -266,14 +266,14 @@ public class OCSPToken extends RevocationToken<OCSP> {
 	}
 
 	/**
-	 * Indicates if the token signature is intact.
+	 * Indicates if the OCSP token is valid.
 	 * NOTE: The method isSignedBy(token) must be called before!
 	 *
-	 * @return {@code true} or {@code false}
+	 * @return whether the OCSP token is valid
 	 */
 	@Override
 	public boolean isValid() {
-		return SignatureValidity.VALID == signatureValidity;
+		return isSignatureIntact() && isOCSPVersionValid();
 	}
 	
 	/**
@@ -298,6 +298,30 @@ public class OCSPToken extends RevocationToken<OCSP> {
 		return signatureValidity;
 	}
 
+	/**
+	 * This method returns version defined within the OCSP token (returns version value + 1, i.e. 'v1' for value '0').
+	 * Returns '1' if no version defined (default value).
+	 *
+	 * @return version from the basic OCSP response
+	 */
+	public int getOCSPTokenVersion() {
+		return basicOCSPResp.getVersion();
+	}
+
+	/**
+	 * This method verifies whether the basic OCSP response contains the valid version of the response syntax,
+	 * which MUST be v1 (value is 0) (see RFC 6960).
+	 *
+	 * @return TRUE if the basic OCSP response version is v1 (value 0) or not defined, FALSE otherwise
+	 */
+	private boolean isOCSPVersionValid() {
+		boolean versionValid = getOCSPTokenVersion() == 1;
+		if (!versionValid && Utils.isStringEmpty(signatureInvalidityReason)) {
+			signatureInvalidityReason = "Basic OCSP Response version is invalid (shall be v1)!";
+		}
+		return versionValid;
+	}
+
 	@Override
 	public RevocationType getRevocationType() {
 		return RevocationType.OCSP;
@@ -311,7 +335,7 @@ public class OCSPToken extends RevocationToken<OCSP> {
 
 	@Override
 	public String toString(String indentStr) {
-		final StringWriter out = new StringWriter();
+		final StringBuilder out = new StringBuilder();
 		out.append(indentStr).append("OCSPToken[\n");
 		indentStr += "\t";
 		out.append(indentStr).append("Id: ").append(getDSSIdAsString()).append('\n');

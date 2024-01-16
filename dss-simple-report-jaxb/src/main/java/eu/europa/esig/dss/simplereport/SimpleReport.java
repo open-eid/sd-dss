@@ -20,6 +20,7 @@
  */
 package eu.europa.esig.dss.simplereport;
 
+import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.Indication;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignatureQualification;
@@ -27,7 +28,9 @@ import eu.europa.esig.dss.enumerations.SubIndication;
 import eu.europa.esig.dss.enumerations.TimestampQualification;
 import eu.europa.esig.dss.jaxb.object.Message;
 import eu.europa.esig.dss.simplereport.jaxb.XmlCertificateChain;
+import eu.europa.esig.dss.simplereport.jaxb.XmlEvidenceRecord;
 import eu.europa.esig.dss.simplereport.jaxb.XmlMessage;
+import eu.europa.esig.dss.simplereport.jaxb.XmlPDFAInfo;
 import eu.europa.esig.dss.simplereport.jaxb.XmlSignature;
 import eu.europa.esig.dss.simplereport.jaxb.XmlSignatureScope;
 import eu.europa.esig.dss.simplereport.jaxb.XmlSimpleReport;
@@ -119,7 +122,7 @@ public class SimpleReport {
 	 */
 	public List<String> getSignatureIdList() {
 		final List<String> signatureIdList = new ArrayList<>();
-		List<XmlToken> tokens = wrapped.getSignatureOrTimestamp();
+		List<XmlToken> tokens = wrapped.getSignatureOrTimestampOrEvidenceRecord();
 		if (tokens != null) {
 			for (XmlToken token : tokens) {
 				if (token instanceof XmlSignature) {
@@ -137,7 +140,7 @@ public class SimpleReport {
 	 */
 	public List<String> getTimestampIdList() {
 		final List<String> timestampIdList = new ArrayList<>();
-		List<XmlToken> tokens = wrapped.getSignatureOrTimestamp();
+		List<XmlToken> tokens = wrapped.getSignatureOrTimestampOrEvidenceRecord();
 		if (tokens != null) {
 			for (XmlToken token : tokens) {
 				if (token instanceof XmlTimestamp) {
@@ -146,6 +149,24 @@ public class SimpleReport {
 			}
 		}
 		return timestampIdList;
+	}
+
+	/**
+	 * This method retrieves the evidence record ids
+	 *
+	 * @return the {@code List} of evidence record id(s) contained in the simpleReport
+	 */
+	public List<String> getEvidenceRecordIdList() {
+		final List<String> erIdList = new ArrayList<>();
+		List<XmlToken> tokens = wrapped.getSignatureOrTimestampOrEvidenceRecord();
+		if (tokens != null) {
+			for (XmlToken token : tokens) {
+				if (token instanceof XmlEvidenceRecord) {
+					erIdList.add(token.getId());
+				}
+			}
+		}
+		return erIdList;
 	}
 
 	/**
@@ -170,6 +191,19 @@ public class SimpleReport {
 		final List<String> timestampIdList = getTimestampIdList();
 		if (!timestampIdList.isEmpty()) {
 			return timestampIdList.get(0);
+		}
+		return null;
+	}
+
+	/**
+	 * This method returns the first evidence record Id.
+	 *
+	 * @return the first evidence record id
+	 */
+	public String getFirstEvidenceRecordId() {
+		final List<String> evidenceRecordIdList = getEvidenceRecordIdList();
+		if (!evidenceRecordIdList.isEmpty()) {
+			return evidenceRecordIdList.get(0);
 		}
 		return null;
 	}
@@ -380,7 +414,10 @@ public class SimpleReport {
 
 	/**
 	 * If the signature validation is TOTAL_PASSED, the result date is the date from
-	 * when a signature extension is useful (all certificates can be covered by a usable revocation data).
+	 * when a signature extension is possible to ensure the revocation freshness
+	 * (all certificates can be covered by a usable revocation data).
+	 * When certificate chain(s) do not require fresh revocation data
+	 * (e.g. if signature contains all necessary revocation data), NULL is returned.
 	 * 
 	 * @param signatureId the signature id
 	 * @return the minimal useful date for a signature extension (or null)
@@ -495,20 +532,46 @@ public class SimpleReport {
 	 * @return the wrapper for the given token id
 	 */
 	private XmlToken getTokenById(String tokenId) {
-		List<XmlToken> tokens = wrapped.getSignatureOrTimestamp();
+		List<XmlToken> tokens = wrapped.getSignatureOrTimestampOrEvidenceRecord();
 		if (tokens != null) {
 			for (XmlToken token : tokens) {
 				if (tokenId.equals(token.getId())) {
 					return token;
 				} else if (token instanceof XmlSignature) {
-					XmlTimestamps timestamps = ((XmlSignature) token).getTimestamps();
-					if (timestamps != null) {
-						for (XmlTimestamp timestamp : timestamps.getTimestamp()) {
-							if (tokenId.equals(timestamp.getId())) {
-								return timestamp;
-							}
-						}
+					XmlTimestamp timestampById = getSignatureTimestampById((XmlSignature) token, tokenId);
+					if (timestampById != null) {
+						return timestampById;
 					}
+					// TODO : handle embedded evidence record timestamps
+				} else if (token instanceof XmlEvidenceRecord) {
+					XmlTimestamp timestampById = getEvidenceRecordTimestampById((XmlEvidenceRecord) token, tokenId);
+					if (timestampById != null) {
+						return timestampById;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	private XmlTimestamp getSignatureTimestampById(XmlSignature signature, String tokenId) {
+		XmlTimestamps timestamps = signature.getTimestamps();
+		if (timestamps != null && timestamps.getTimestamp() != null) {
+			for (XmlTimestamp timestamp : timestamps.getTimestamp()) {
+				if (tokenId.equals(timestamp.getId())) {
+					return timestamp;
+				}
+			}
+		}
+		return null;
+	}
+
+	private XmlTimestamp getEvidenceRecordTimestampById(XmlEvidenceRecord evidenceRecord, String tokenId) {
+		XmlTimestamps timestamps = evidenceRecord.getTimestamps();
+		if (timestamps != null && timestamps.getTimestamp() != null) {
+			for (XmlTimestamp timestamp : timestamps.getTimestamp()) {
+				if (tokenId.equals(timestamp.getId())) {
+					return timestamp;
 				}
 			}
 		}
@@ -546,11 +609,26 @@ public class SimpleReport {
 	}
 
 	/**
+	 * This method returns a wrapper for the given evidence record
+	 *
+	 * @param evidenceRecordId
+	 *            the evidence record id
+	 * @return the wrapper for the given evidence record id
+	 */
+	public XmlEvidenceRecord getEvidenceRecordById(String evidenceRecordId) {
+		XmlToken token = getTokenById(evidenceRecordId);
+		if (token instanceof XmlEvidenceRecord) {
+			return (XmlEvidenceRecord) token;
+		}
+		return null;
+	}
+
+	/**
 	 * This method returns a list of timestamps for a signature with the given id
 	 *
 	 * @param signatureId
 	 *            the signature id
-	 * @return list if timestamp wrappers
+	 * @return list if timestamps
 	 */
 	public List<XmlTimestamp> getSignatureTimestamps(String signatureId) {
 		XmlSignature xmlSignature = getSignatureById(signatureId);
@@ -561,7 +639,53 @@ public class SimpleReport {
 	}
 
 	/**
-	 * This method returns a list of {@code XmlSignatureScope}s for the token (signature or timestamp) with a given Id
+	 * This method returns a list of evidence record for a signature with the given id
+	 *
+	 * @param signatureId
+	 *            the signature id
+	 * @return list if evidence records
+	 */
+	public List<XmlEvidenceRecord> getSignatureEvidenceRecords(String signatureId) {
+		XmlSignature xmlSignature = getSignatureById(signatureId);
+		if (xmlSignature != null && xmlSignature.getEvidenceRecords() != null) {
+			return xmlSignature.getEvidenceRecords().getEvidenceRecord();
+		}
+		return Collections.emptyList();
+	}
+
+	/**
+	 * This method returns a list of timestamps for an evidence record with the given id
+	 *
+	 * @param evidenceRecordId
+	 *            the evidence record id
+	 * @return list if timestamp wrappers
+	 */
+	public List<XmlTimestamp> getEvidenceRecordTimestamps(String evidenceRecordId) {
+		XmlEvidenceRecord xmlEvidenceRecord = getEvidenceRecordById(evidenceRecordId);
+		if (xmlEvidenceRecord != null && xmlEvidenceRecord.getTimestamps() != null) {
+			return xmlEvidenceRecord.getTimestamps().getTimestamp();
+		}
+		return Collections.emptyList();
+	}
+
+	/**
+	 * This method returns the lowest POE of evidence record
+	 *
+	 * @param evidenceRecordId
+	 *            the evidence record id
+	 * @return the best signing time
+	 */
+	public Date getEvidenceRecordPOE(final String evidenceRecordId) {
+		XmlEvidenceRecord xmlEvidenceRecord = getEvidenceRecordById(evidenceRecordId);
+		if (xmlEvidenceRecord != null) {
+			return xmlEvidenceRecord.getPOETime();
+		}
+		return null;
+	}
+
+	/**
+	 * This method returns a list of {@code XmlSignatureScope}s for the token (signature, timestamp or evidence record)
+	 * with a given Id
 	 *
 	 * @param tokenId {@link String} id of a token to get {@code XmlSignatureScope}s for
 	 * @return a list of {@link XmlSignatureScope}s
@@ -573,12 +697,50 @@ public class SimpleReport {
 				return ((XmlSignature) tokenById).getSignatureScope();
 			} else if (tokenById instanceof XmlTimestamp) {
 				return ((XmlTimestamp) tokenById).getTimestampScope();
+			} else if (tokenById instanceof XmlEvidenceRecord) {
+				return ((XmlEvidenceRecord) tokenById).getEvidenceRecordScope();
 			} else {
 				throw new UnsupportedOperationException(String.format(
 						"Signature scope extraction is not supported for an object of class '%s'", tokenById.getClass()));
 			}
 		}
 		return Collections.emptyList();
+	}
+
+	/**
+	 * Returns a container type, when applicable (i.e. ASiC validation)
+	 *
+	 * @return {@link ASiCContainerType}
+	 */
+	public ASiCContainerType getContainerType() {
+		return wrapped.getContainerType();
+	}
+
+	/**
+	 * Returns a PDF/A Profile name
+	 *
+	 * @return {@link String}
+	 */
+	public String getPDFAProfile() {
+		XmlPDFAInfo pdfaInfo = wrapped.getPDFAInfo();
+		if (pdfaInfo != null) {
+			return pdfaInfo.getPDFAProfile();
+		}
+		return null;
+	}
+
+	/**
+	 * Returns whether the PDF document is compliant to PDF/A specification.
+	 * Returns FALSE for all non-PDF documents.
+	 *
+	 * @return if the document is compliant to the determined PDF/A profile
+	 */
+	public boolean isPDFACompliant() {
+		XmlPDFAInfo pdfaInfo = wrapped.getPDFAInfo();
+		if (pdfaInfo != null) {
+			return pdfaInfo.isValid();
+		}
+		return false;
 	}
 
 	/**

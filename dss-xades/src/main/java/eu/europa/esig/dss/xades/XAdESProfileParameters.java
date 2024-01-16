@@ -35,11 +35,6 @@ public class XAdESProfileParameters extends ProfileParameters {
 	private static final long serialVersionUID = 2655781283234085565L;
 
 	/**
-	 * The id created in a deterministic way based on the filled parameters to use in the signature file
-	 */
-	private String deterministicId;
-
-	/**
 	 * The XAdES creation profile
 	 */
 	private SignatureProfile profile;
@@ -60,21 +55,10 @@ public class XAdESProfileParameters extends ProfileParameters {
 	private List<DSSReference> references;
 
 	/**
-	 * Gets the deterministic id
-	 *
-	 * @return {@link String}
+	 * Default constructor
 	 */
-	public String getDeterministicId() {
-		return deterministicId;
-	}
-
-	/**
-	 * Sets the deterministic id
-	 *
-	 * @param deterministicId {@link String}
-	 */
-	public void setDeterministicId(String deterministicId) {
-		this.deterministicId = deterministicId;
+	public XAdESProfileParameters() {
+		// empty
 	}
 
 	/**

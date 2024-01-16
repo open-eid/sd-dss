@@ -20,9 +20,12 @@
  */
 package eu.europa.esig.dss.pades.validation.scope;
 
-import eu.europa.esig.dss.model.Digest;
+import eu.europa.esig.dss.model.DSSDocument;
+import eu.europa.esig.dss.model.identifier.TokenIdentifierProvider;
+import eu.europa.esig.dss.model.scope.SignatureScope;
 import eu.europa.esig.dss.pades.validation.ByteRange;
-import eu.europa.esig.dss.validation.scope.SignatureScope;
+
+import java.util.Objects;
 
 /**
  * The signature scope represents a signed PDF byte range
@@ -40,16 +43,41 @@ public abstract class PdfByteRangeSignatureScope extends SignatureScope {
 	 *
 	 * @param name {@link String} document name
 	 * @param byteRange {@link ByteRange}
-	 * @param digest {@link Digest}
+	 * @param document {@link DSSDocument} pdf revision document
 	 */
-	protected PdfByteRangeSignatureScope(final String name, final ByteRange byteRange, final Digest digest) {
-		super(name, digest);
+	protected PdfByteRangeSignatureScope(final String name, final ByteRange byteRange, final DSSDocument document) {
+		super(name, document);
 		this.byteRange = byteRange;
 	}
 
 	@Override
-	public String getDescription() {
+	public String getDescription(TokenIdentifierProvider tokenIdentifierProvider) {
 		return "The document ByteRange : " + byteRange;
+	}
+
+	@Override
+	public String toString() {
+		return "PdfByteRangeSignatureScope{" +
+				"byteRange=" + byteRange +
+				"} " + super.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof PdfByteRangeSignatureScope)) return false;
+		if (!super.equals(o)) return false;
+
+		PdfByteRangeSignatureScope that = (PdfByteRangeSignatureScope) o;
+
+		return Objects.equals(byteRange, that.byteRange);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + (byteRange != null ? byteRange.hashCode() : 0);
+		return result;
 	}
 
 }

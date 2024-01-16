@@ -24,10 +24,14 @@ import eu.europa.esig.dss.detailedreport.DetailedReport;
 import eu.europa.esig.dss.diagnostic.CertificateRevocationWrapper;
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
+import eu.europa.esig.dss.diagnostic.EvidenceRecordWrapper;
 import eu.europa.esig.dss.diagnostic.RelatedRevocationWrapper;
 import eu.europa.esig.dss.diagnostic.RevocationWrapper;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
 import eu.europa.esig.dss.diagnostic.TimestampWrapper;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlLangAndValue;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlTrustService;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlTrustServiceProvider;
 import eu.europa.esig.dss.enumerations.Indication;
 import eu.europa.esig.dss.enumerations.SignatureQualification;
 import eu.europa.esig.dss.enumerations.SubIndication;
@@ -39,7 +43,10 @@ import eu.europa.esig.dss.policy.ValidationPolicy;
 import eu.europa.esig.dss.simplereport.jaxb.XmlCertificate;
 import eu.europa.esig.dss.simplereport.jaxb.XmlCertificateChain;
 import eu.europa.esig.dss.simplereport.jaxb.XmlDetails;
+import eu.europa.esig.dss.simplereport.jaxb.XmlEvidenceRecord;
+import eu.europa.esig.dss.simplereport.jaxb.XmlEvidenceRecords;
 import eu.europa.esig.dss.simplereport.jaxb.XmlMessage;
+import eu.europa.esig.dss.simplereport.jaxb.XmlPDFAInfo;
 import eu.europa.esig.dss.simplereport.jaxb.XmlSemantic;
 import eu.europa.esig.dss.simplereport.jaxb.XmlSignature;
 import eu.europa.esig.dss.simplereport.jaxb.XmlSignatureLevel;
@@ -48,8 +55,11 @@ import eu.europa.esig.dss.simplereport.jaxb.XmlSimpleReport;
 import eu.europa.esig.dss.simplereport.jaxb.XmlTimestamp;
 import eu.europa.esig.dss.simplereport.jaxb.XmlTimestampLevel;
 import eu.europa.esig.dss.simplereport.jaxb.XmlTimestamps;
+import eu.europa.esig.dss.simplereport.jaxb.XmlTrustAnchor;
+import eu.europa.esig.dss.simplereport.jaxb.XmlTrustAnchors;
+import eu.europa.esig.dss.simplereport.jaxb.XmlValidationMessages;
+import eu.europa.esig.dss.simplereport.jaxb.XmlValidationPolicy;
 import eu.europa.esig.dss.utils.Utils;
-import eu.europa.esig.dss.validation.executor.AbstractSimpleReportBuilder;
 import eu.europa.esig.dss.validation.process.ValidationProcessUtils;
 import eu.europa.esig.dss.validation.process.vpfswatsp.POEExtraction;
 
@@ -64,13 +74,25 @@ import java.util.stream.Collectors;
 /**
  * This class builds a SimpleReport XmlDom from the diagnostic data and detailed validation report.
  */
-public class SimpleReportBuilder extends AbstractSimpleReportBuilder {
+public class SimpleReportBuilder {
 
 	/** i18nProvider */
 	private final I18nProvider i18nProvider;
 
 	/** Defines if the semantics shall be included */
 	private final boolean includeSemantics;
+
+	/** The validation time */
+	private final Date currentTime;
+
+	/** The validation policy */
+	private final ValidationPolicy policy;
+
+	/** The DiagnosticData to use */
+	private final DiagnosticData diagnosticData;
+
+	/** The detailed report */
+	private final DetailedReport detailedReport;
 
 	/** The number of processed signatures */
 	private int totalSignatureCount = 0;
@@ -99,7 +121,10 @@ public class SimpleReportBuilder extends AbstractSimpleReportBuilder {
 	 */
 	public SimpleReportBuilder(I18nProvider i18nProvider, Date currentTime, ValidationPolicy policy,
 			DiagnosticData diagnosticData, DetailedReport detailedReport, boolean includeSemantics) {
-		super(currentTime, policy, diagnosticData, detailedReport);
+		this.currentTime = currentTime;
+		this.policy = policy;
+		this.diagnosticData = diagnosticData;
+		this.detailedReport = detailedReport;
 		this.i18nProvider = i18nProvider;
 		this.includeSemantics = includeSemantics;
 	}
@@ -109,9 +134,7 @@ public class SimpleReportBuilder extends AbstractSimpleReportBuilder {
 	 *
 	 * @return the object representing {@code XmlSimpleReport}
 	 */
-	@Override
 	public XmlSimpleReport build() {
-
 		validSignatureCount = 0;
 		totalSignatureCount = 0;
 
@@ -119,21 +142,45 @@ public class SimpleReportBuilder extends AbstractSimpleReportBuilder {
 		poe.init(diagnosticData, diagnosticData.getValidationDate());
 		poe.collectAllPOE(diagnosticData.getTimestampList());
 
-		XmlSimpleReport simpleReport = super.build();
+		final XmlSimpleReport simpleReport = new XmlSimpleReport();
+
+		addPolicyNode(simpleReport);
+		addValidationTime(simpleReport);
+		addDocumentName(simpleReport);
 
 		boolean containerInfoPresent = diagnosticData.isContainerInfoPresent();
+		if (containerInfoPresent) {
+			addContainerType(simpleReport);
+		}
 
 		Set<String> attachedTimestampIds = new HashSet<>();
+		Set<String> attachedEvidenceRecordIds = new HashSet<>();
 		for (SignatureWrapper signature : diagnosticData.getSignatures()) {
 			attachedTimestampIds.addAll(signature.getTimestampIdsList());
-			simpleReport.getSignatureOrTimestamp().add(getSignature(signature, containerInfoPresent));
+			attachedEvidenceRecordIds.addAll(signature.getEvidenceRecordIdsList());
+			attachedTimestampIds.addAll(signature.getEvidenceRecordTimestampIds());
+			simpleReport.getSignatureOrTimestampOrEvidenceRecord().add(getSignature(signature, containerInfoPresent));
+		}
+
+		for (EvidenceRecordWrapper evidenceRecord : diagnosticData.getEvidenceRecords()) {
+			if (attachedEvidenceRecordIds.contains(evidenceRecord.getId())) {
+				continue;
+			}
+			attachedTimestampIds.addAll(evidenceRecord.getTimestampIdsList());
+			Indication erValidationIndication = detailedReport.getEvidenceRecordValidationIndication(evidenceRecord.getId());
+			if (erValidationIndication != null) {
+				simpleReport.getSignatureOrTimestampOrEvidenceRecord().add(getXmlEvidenceRecord(evidenceRecord));
+			}
 		}
 
 		for (TimestampWrapper timestamp : diagnosticData.getTimestampList()) {
 			if (attachedTimestampIds.contains(timestamp.getId())) {
 				continue;
 			}
-			simpleReport.getSignatureOrTimestamp().add(getXmlTimestamp(timestamp));
+			Indication tstValidationIndication = detailedReport.getBasicTimestampValidationIndication(timestamp.getId());
+			if (tstValidationIndication != null) {
+				simpleReport.getSignatureOrTimestampOrEvidenceRecord().add(getXmlTimestamp(timestamp));
+			}
 		}
 
 		addStatistics(simpleReport);
@@ -142,7 +189,28 @@ public class SimpleReportBuilder extends AbstractSimpleReportBuilder {
 			addSemantics(simpleReport);
 		}
 
+		addPDFAProfile(simpleReport);
+
 		return simpleReport;
+	}
+
+	private void addPolicyNode(XmlSimpleReport report) {
+		XmlValidationPolicy xmlPolicy = new XmlValidationPolicy();
+		xmlPolicy.setPolicyName(policy.getPolicyName());
+		xmlPolicy.setPolicyDescription(policy.getPolicyDescription());
+		report.setValidationPolicy(xmlPolicy);
+	}
+
+	private void addValidationTime(XmlSimpleReport report) {
+		report.setValidationTime(currentTime);
+	}
+
+	private void addDocumentName(XmlSimpleReport report) {
+		report.setDocumentName(diagnosticData.getDocumentName());
+	}
+
+	private void addContainerType(XmlSimpleReport simpleReport) {
+		simpleReport.setContainerType(diagnosticData.getContainerType());
 	}
 
 	private void addSemantics(XmlSimpleReport simpleReport) {
@@ -166,6 +234,25 @@ public class SimpleReportBuilder extends AbstractSimpleReportBuilder {
 	private void addStatistics(XmlSimpleReport simpleReport) {
 		simpleReport.setValidSignaturesCount(validSignatureCount);
 		simpleReport.setSignaturesCount(totalSignatureCount);
+	}
+
+	private void addPDFAProfile(XmlSimpleReport simpleReport) {
+		String pdfaProfileId = diagnosticData.getPDFAProfileId();
+		if (pdfaProfileId != null) {
+			XmlPDFAInfo xmlPDFAInfo = new XmlPDFAInfo();
+			xmlPDFAInfo.setPDFAProfile(pdfaProfileId);
+			xmlPDFAInfo.setValid(diagnosticData.isPDFACompliant());
+			if (Utils.isCollectionNotEmpty(diagnosticData.getPDFAValidationErrors())) {
+				xmlPDFAInfo.setValidationMessages(toXmlValidationMessages(diagnosticData.getPDFAValidationErrors()));
+			}
+			simpleReport.setPDFAInfo(xmlPDFAInfo);
+		}
+	}
+
+	private XmlValidationMessages toXmlValidationMessages(Collection<String> errors) {
+		XmlValidationMessages xmlValidationMessages = new XmlValidationMessages();
+		xmlValidationMessages.getError().addAll(errors);
+		return xmlValidationMessages;
 	}
 
 	/**
@@ -232,11 +319,25 @@ public class SimpleReportBuilder extends AbstractSimpleReportBuilder {
 
 		xmlSignature.setCertificateChain(getCertChain(signatureId));
 
+		List<EvidenceRecordWrapper> evidenceRecordList = signature.getEvidenceRecords();
+		if (Utils.isCollectionNotEmpty(evidenceRecordList)) {
+			XmlEvidenceRecords xmlEvidenceRecords = new XmlEvidenceRecords();
+			for (EvidenceRecordWrapper evidenceRecord : evidenceRecordList) {
+				Indication erIndication = detailedReport.getEvidenceRecordValidationIndication(evidenceRecord.getId());
+				if (erIndication != null) {
+					xmlEvidenceRecords.getEvidenceRecord().add(getXmlEvidenceRecord(evidenceRecord));
+				}
+			}
+			if (Utils.isCollectionNotEmpty(xmlEvidenceRecords.getEvidenceRecord())) {
+				xmlSignature.setEvidenceRecords(xmlEvidenceRecords);
+			}
+		}
+
 		List<TimestampWrapper> timestampList = signature.getTimestampList();
 		if (Utils.isCollectionNotEmpty(timestampList)) {
 			XmlTimestamps xmlTimestamps = new XmlTimestamps();
 			for (TimestampWrapper timestamp : timestampList) {
-				Indication tstValidationIndication = detailedReport.getTimestampValidationIndication(timestamp.getId());
+				Indication tstValidationIndication = detailedReport.getBasicTimestampValidationIndication(timestamp.getId());
 				if (tstValidationIndication != null) {
 					xmlTimestamps.getTimestamp().add(getXmlTimestamp(timestamp));
 				}
@@ -287,10 +388,76 @@ public class SimpleReportBuilder extends AbstractSimpleReportBuilder {
 				XmlCertificate certificate = new XmlCertificate();
 				certificate.setId(certId);
 				certificate.setQualifiedName(getReadableCertificateName(certId));
+				if (isTrustAnchor(certId)) {
+					certificate.setTrusted(true);
+					certificate.setTrustAnchors(getXmlTrustAnchors(certId));
+				}
 				xmlCertificateChain.getCertificate().add(certificate);
 			}
 		}
 		return xmlCertificateChain;
+	}
+
+	private XmlTrustAnchors getXmlTrustAnchors(String certId) {
+		List<XmlTrustServiceProvider> xmlTrustServiceProviders = filterByCertificateId(certId);
+		if (Utils.isCollectionNotEmpty(xmlTrustServiceProviders)) {
+			final XmlTrustAnchors xmlTrustAnchors = new XmlTrustAnchors();
+			for (XmlTrustServiceProvider trustServiceProvider : xmlTrustServiceProviders) {
+				final XmlTrustAnchor trustAnchor = new XmlTrustAnchor();
+				if (trustServiceProvider.getTL() != null) {
+					trustAnchor.setCountryCode(trustServiceProvider.getTL().getCountryCode());
+					trustAnchor.setTSLType(trustServiceProvider.getTL().getTSLType());
+				}
+				trustAnchor.setTrustServiceProvider(getEnOrFirst(trustServiceProvider.getTSPNames()));
+				List<String> tspRegistrationIdentifiers = trustServiceProvider.getTSPRegistrationIdentifiers();
+				if (Utils.isCollectionNotEmpty(tspRegistrationIdentifiers)) {
+					trustAnchor.setTrustServiceProviderRegistrationId(tspRegistrationIdentifiers.get(0));
+				}
+				trustAnchor.getTrustServiceName().addAll(getUniqueServiceNames(trustServiceProvider));
+				xmlTrustAnchors.getTrustAnchor().add(trustAnchor);
+			}
+			return xmlTrustAnchors;
+		}
+		return null;
+	}
+
+	private Set<String> getUniqueServiceNames(XmlTrustServiceProvider trustServiceProvider) {
+		Set<String> result = new HashSet<>();
+		for (XmlTrustService xmlTrustService : trustServiceProvider.getTrustServices()) {
+			result.add(getEnOrFirst(xmlTrustService.getServiceNames()));
+		}
+		return result;
+	}
+
+	private String getEnOrFirst(List<XmlLangAndValue> langAndValues) {
+		if (Utils.isCollectionNotEmpty(langAndValues)) {
+			for (XmlLangAndValue langAndValue : langAndValues) {
+				if (langAndValue.getLang() != null && "en".equalsIgnoreCase(langAndValue.getLang())) {
+					return langAndValue.getValue();
+				}
+			}
+			return langAndValues.get(0).getValue();
+		}
+		return null;
+	}
+
+	private List<XmlTrustServiceProvider> filterByCertificateId(String certId) {
+		CertificateWrapper certificate = diagnosticData.getCertificateById(certId);
+		List<XmlTrustServiceProvider> result = new ArrayList<>();
+		for (XmlTrustServiceProvider xmlTrustServiceProvider : certificate.getTrustServiceProviders()) {
+			List<XmlTrustService> trustServices = xmlTrustServiceProvider.getTrustServices();
+			boolean foundCertId = false;
+			for (XmlTrustService xmlTrustService : trustServices) {
+				if (Utils.areStringsEqual(certId, xmlTrustService.getServiceDigitalIdentifier().getId())) {
+					foundCertId = true;
+					break;
+				}
+			}
+			if (foundCertId) {
+				result.add(xmlTrustServiceProvider);
+			}
+		}
+		return result;
 	}
 
 	private void addBestSignatureTime(SignatureWrapper signature, XmlSignature xmlSignature) {
@@ -317,7 +484,7 @@ public class SimpleReportBuilder extends AbstractSimpleReportBuilder {
 		XmlSignatureScope xmlSignatureScope = new XmlSignatureScope();
 		xmlSignatureScope.setId(signatureScope.getSignerData().getId());
 		xmlSignatureScope.setName(signatureScope.getName());
-		xmlSignatureScope.setScope(signatureScope.getScope().name());
+		xmlSignatureScope.setScope(signatureScope.getScope());
 		xmlSignatureScope.setValue(signatureScope.getDescription());
 		return xmlSignatureScope;
 	}
@@ -333,6 +500,11 @@ public class SimpleReportBuilder extends AbstractSimpleReportBuilder {
 	private String getReadableCertificateName(final String certId) {
 		CertificateWrapper certificateWrapper = diagnosticData.getUsedCertificateByIdNullSafe(certId);
 		return certificateWrapper.getReadableCertificateName();
+	}
+
+	private boolean isTrustAnchor(final String certId) {
+		CertificateWrapper certificateWrapper = diagnosticData.getUsedCertificateByIdNullSafe(certId);
+		return certificateWrapper.isTrusted();
 	}
 
 	private void addSignatureProfile(final XmlSignature xmlSignature) {
@@ -389,6 +561,53 @@ public class SimpleReportBuilder extends AbstractSimpleReportBuilder {
 		}
 
 		return xmlTimestamp;
+	}
+
+	private XmlEvidenceRecord getXmlEvidenceRecord(EvidenceRecordWrapper evidenceRecordWrapper) {
+		XmlEvidenceRecord xmlEvidenceRecord = new XmlEvidenceRecord();
+
+		String evidenceRecordId = evidenceRecordWrapper.getId();
+		xmlEvidenceRecord.setId(evidenceRecordId);
+		xmlEvidenceRecord.setFilename(evidenceRecordWrapper.getFilename());
+
+		xmlEvidenceRecord.setPOETime(detailedReport.getEvidenceRecordLowestPOETime(evidenceRecordId));
+
+		Indication indication = detailedReport.getFinalIndication(evidenceRecordId);
+		xmlEvidenceRecord.setIndication(indication);
+		finalIndications.add(indication);
+
+		SubIndication subIndication = detailedReport.getFinalSubIndication(evidenceRecordId);
+		if (subIndication != null) {
+			xmlEvidenceRecord.setSubIndication(subIndication);
+			finalSubIndications.add(subIndication);
+		}
+
+		XmlDetails validationDetails = getAdESValidationDetails(evidenceRecordId);
+		if (isNotEmpty(validationDetails)) {
+			xmlEvidenceRecord.setAdESValidationDetails(validationDetails);
+		}
+
+		if (Utils.isCollectionNotEmpty(evidenceRecordWrapper.getEvidenceRecordScopes())) {
+			for (eu.europa.esig.dss.diagnostic.jaxb.XmlSignatureScope timestampScope : evidenceRecordWrapper.getEvidenceRecordScopes()) {
+				xmlEvidenceRecord.getEvidenceRecordScope().add(getXmlSignatureScope(timestampScope));
+			}
+		}
+
+		List<TimestampWrapper> timestampList = evidenceRecordWrapper.getTimestampList();
+		if (Utils.isCollectionNotEmpty(timestampList)) {
+			XmlTimestamps xmlTimestamps = new XmlTimestamps();
+			for (TimestampWrapper timestamp : timestampList) {
+				Indication tstValidationIndication = detailedReport.getBasicTimestampValidationIndication(timestamp.getId());
+				if (tstValidationIndication != null) {
+					xmlTimestamps.getTimestamp().add(getXmlTimestamp(timestamp));
+				}
+			}
+			if (Utils.isCollectionNotEmpty(xmlTimestamps.getTimestamp())) {
+				xmlEvidenceRecord.setTimestamps(xmlTimestamps);
+			}
+		}
+
+		return xmlEvidenceRecord;
 	}
 
 	private String getProducedByName(TimestampWrapper timestampWrapper) {

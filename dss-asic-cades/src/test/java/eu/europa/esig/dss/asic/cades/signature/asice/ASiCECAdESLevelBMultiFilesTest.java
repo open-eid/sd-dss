@@ -34,15 +34,16 @@ import eu.europa.esig.dss.diagnostic.jaxb.XmlSignatureScope;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlSignerData;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.DigestMatcherType;
+import eu.europa.esig.dss.enumerations.MimeType;
+import eu.europa.esig.dss.enumerations.MimeTypeEnum;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignatureScopeType;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
-import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.signature.MultipleDocumentsSignatureService;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
-import eu.europa.esig.dss.validation.timestamp.TimestampToken;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampToken;
 import eu.europa.esig.validationreport.jaxb.SignersDocumentType;
 import eu.europa.esig.validationreport.jaxb.ValidationObjectType;
 import eu.europa.esig.xades.jaxb.xades132.DigestAlgAndValueType;
@@ -69,8 +70,8 @@ public class ASiCECAdESLevelBMultiFilesTest extends AbstractASiCEWithCAdESMultip
 		service = new ASiCWithCAdESService(getOfflineCertificateVerifier());
 		service.setTspSource(getAlternateGoodTsa());
 
-		documentsToSign.add(new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeType.TEXT));
-		documentsToSign.add(new InMemoryDocument("Bye World !".getBytes(), "test2.text", MimeType.TEXT));
+		documentsToSign.add(new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeTypeEnum.TEXT));
+		documentsToSign.add(new InMemoryDocument("Bye World !".getBytes(), "test2.text", MimeTypeEnum.TEXT));
 		documentsToSign.add(new InMemoryDocument(DSSUtils.EMPTY_BYTE_ARRAY, "emptyByteArray"));
 
 		signatureParameters = new ASiCWithCAdESSignatureParameters();
@@ -113,7 +114,7 @@ public class ASiCECAdESLevelBMultiFilesTest extends AbstractASiCEWithCAdESMultip
 
 		byte[] mimeTypeContent = DSSUtils.toByteArray(mimeTypeDocument);
 		try {
-			assertEquals(MimeType.ASICE.getMimeTypeString(), new String(mimeTypeContent, "UTF-8"));
+			assertEquals(MimeTypeEnum.ASICE.getMimeTypeString(), new String(mimeTypeContent, "UTF-8"));
 		} catch (UnsupportedEncodingException e) {
 			fail(e.getMessage());
 		}
@@ -181,7 +182,7 @@ public class ASiCECAdESLevelBMultiFilesTest extends AbstractASiCEWithCAdESMultip
 		super.checkMimeType(diagnosticData);
 
 		for (SignatureWrapper signatureWrapper : diagnosticData.getSignatures()) {
-			assertEquals(MimeType.XML, MimeType.fromMimeTypeString(signatureWrapper.getMimeType()));
+			assertEquals(MimeTypeEnum.XML, MimeType.fromMimeTypeString(signatureWrapper.getMimeType()));
 		}
 	}
 

@@ -29,6 +29,8 @@ import eu.europa.esig.dss.enumerations.CertificateRefOrigin;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.EncryptionAlgorithm;
 import eu.europa.esig.dss.enumerations.JWSSerializationType;
+import eu.europa.esig.dss.enumerations.MimeType;
+import eu.europa.esig.dss.enumerations.MimeTypeEnum;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.jades.DSSJsonUtils;
 import eu.europa.esig.dss.jades.HTTPHeader;
@@ -39,16 +41,14 @@ import eu.europa.esig.dss.jades.validation.JAdESCertificateSource;
 import eu.europa.esig.dss.jades.validation.JAdESSignature;
 import eu.europa.esig.dss.jades.validation.JWS;
 import eu.europa.esig.dss.model.DSSDocument;
-import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.test.signature.AbstractPkiFactoryTestDocumentSignatureService;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
-import eu.europa.esig.dss.validation.SignatureCertificateSource;
+import eu.europa.esig.dss.spi.SignatureCertificateSource;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
-import eu.europa.esig.validationreport.jaxb.SADataObjectFormatType;
 import eu.europa.esig.validationreport.jaxb.SignatureIdentifierType;
 import eu.europa.esig.validationreport.jaxb.SignatureValidationReportType;
 import eu.europa.esig.validationreport.jaxb.ValidationReportType;
@@ -170,9 +170,9 @@ public abstract class AbstractJAdESTestSignature
 	@Override
 	protected MimeType getExpectedMime() {
 		if (JWSSerializationType.COMPACT_SERIALIZATION.equals(getSignatureParameters().getJwsSerializationType())) {
-			return MimeType.JOSE;
+			return MimeTypeEnum.JOSE;
 		} else {
-			return MimeType.JOSE_JSON;
+			return MimeTypeEnum.JOSE_JSON;
 		}
 	}
 
@@ -209,13 +209,18 @@ public abstract class AbstractJAdESTestSignature
 
 			List<CertificateRefWrapper> references = signingCertificates.get(0).getReferences();
 			List<RelatedCertificateWrapper> kidCerts = foundCertificates.getRelatedCertificatesByRefOrigin(CertificateRefOrigin.KEY_IDENTIFIER);
+			List<RelatedCertificateWrapper> x5uCerts = foundCertificates.getRelatedCertificatesByRefOrigin(CertificateRefOrigin.X509_URL);
+
+			int signCertRefs = 1 + (Utils.isCollectionNotEmpty(kidCerts) ? 1 : 0) + (Utils.isCollectionNotEmpty(x5uCerts) ? 1 : 0);
+			assertEquals(signCertRefs, references.size());
 
 			if (getSignatureParameters().isIncludeKeyIdentifier()) {
-				assertEquals(2, references.size());
 				assertEquals(1, kidCerts.size());
+			} else if (Utils.isStringNotEmpty(getSignatureParameters().getX509Url())) {
+				assertTrue(Utils.isCollectionNotEmpty(x5uCerts));
 			} else {
-				assertEquals(1, references.size());
 				assertEquals(0, kidCerts.size());
+				assertEquals(0, x5uCerts.size());
 			}
 
 			for (CertificateRefWrapper certificateRef : references) {
@@ -253,20 +258,12 @@ public abstract class AbstractJAdESTestSignature
 	}
 	
 	@Override
-	protected void checkMimeType(DiagnosticData diagnosticData) {
+	protected void checkSignatureType(DiagnosticData diagnosticData) {
 		super.checkMimeType(diagnosticData);
 
 		SignatureWrapper signature = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId());
-		assertNotNull(signature.getMimeType());
-		assertEquals(getExpectedMime(), MimeType.fromMimeTypeString(signature.getMimeType()));
-	}
-
-	@Override
-	protected void validateETSIDataObjectFormatType(SADataObjectFormatType dataObjectFormat) {
-		super.validateETSIDataObjectFormatType(dataObjectFormat);
-
-		assertNotNull(dataObjectFormat.getMimeType());
-		assertEquals(getExpectedMime(), MimeType.fromMimeTypeString(dataObjectFormat.getMimeType()));
+		assertNotNull(signature.getSignatureType());
+		assertEquals(getExpectedMime(), MimeType.fromMimeTypeString(signature.getSignatureType()));
 	}
 
 	@Override

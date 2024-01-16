@@ -39,6 +39,7 @@ public class JWSSerializationDocumentValidatorTest extends AbstractTestValidator
 	public void test() {
 		JWSSerializationDocumentValidator validator = new JWSSerializationDocumentValidator();
 		assertFalse(validator.isSupported(new InMemoryDocument(new byte[] {})));
+		assertFalse(validator.isSupported(InMemoryDocument.createEmptyDocument()));
 		assertFalse(validator.isSupported(new InMemoryDocument("{".getBytes())));
 		assertTrue(validator.isSupported(new InMemoryDocument("{}".getBytes())));
 		assertFalse(validator.isSupported(new InMemoryDocument("{hello:\"world\"}".getBytes())));
@@ -78,6 +79,11 @@ public class JWSSerializationDocumentValidatorTest extends AbstractTestValidator
 	@Override
 	protected DSSDocument getNoSignatureDocument() {
 		return new FileDocument("src/test/resources/validation/jws-serialization-no-signatures.json");
+	}
+
+	@Override
+	protected DSSDocument getXmlEvidenceRecordDocument() {
+		return new FileDocument("src/test/resources/validation/evidence-record/evidence-record-a0baac29-c2b6-4544-abc5-d26ac6c8b655.xml");
 	}
 
 }

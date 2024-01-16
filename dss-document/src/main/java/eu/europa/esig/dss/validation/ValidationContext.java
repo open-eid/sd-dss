@@ -25,9 +25,11 @@ import eu.europa.esig.dss.model.x509.revocation.crl.CRL;
 import eu.europa.esig.dss.model.x509.revocation.ocsp.OCSP;
 import eu.europa.esig.dss.spi.x509.CertificateSource;
 import eu.europa.esig.dss.spi.x509.ListCertificateSource;
+import eu.europa.esig.dss.spi.x509.revocation.ListRevocationSource;
 import eu.europa.esig.dss.spi.x509.revocation.OfflineRevocationSource;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationToken;
-import eu.europa.esig.dss.validation.timestamp.TimestampToken;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampToken;
+import eu.europa.esig.dss.validation.evidencerecord.EvidenceRecord;
 
 import java.util.Date;
 import java.util.Set;
@@ -93,6 +95,13 @@ public interface ValidationContext {
 	 *            {@code TimestampToken} timestamp token to verify
 	 */
 	void addTimestampTokenForVerification(final TimestampToken timestampToken);
+
+	/**
+	 * Adds Evidence Record's content to proceed with validation
+	 *
+	 * @param evidenceRecord {@link EvidenceRecord} to add content from
+	 */
+	void addEvidenceRecordForVerification(EvidenceRecord evidenceRecord);
 
 
 	/**
@@ -178,14 +187,26 @@ public interface ValidationContext {
 	boolean checkAllTimestampsValid();
 
 	/**
-	 * This method allows to verify if all processed certificates are not revoked
-	 * 
+	 * This method allows to verify if the certificate is not revoked
+	 *
 	 * Additionally, an alert can be handled
 	 * {@link CertificateVerifier#setAlertOnRevokedCertificate(eu.europa.esig.dss.alert.StatusAlert)}
-	 * 
+	 *
+	 * @param certificateToken {@code CertificateToken} certificate to be checked
 	 * @return true if all certificates are valid
 	 */
-	boolean checkAllCertificatesValid();
+	boolean checkCertificateNotRevoked(CertificateToken certificateToken);
+
+	/**
+	 * This method allows to verify if signature certificates are not revoked
+	 *
+	 * Additionally, an alert can be handled
+	 * {@link CertificateVerifier#setAlertOnRevokedCertificate(eu.europa.esig.dss.alert.StatusAlert)}
+	 *
+	 * @param signature {@code AdvancedSignature} signature to be checked
+	 * @return true if all certificates are valid
+	 */
+	boolean checkCertificatesNotRevoked(AdvancedSignature signature);
 
 	/**
 	 * This method allows to verify if there is at least one revocation data present

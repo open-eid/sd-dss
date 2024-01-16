@@ -114,7 +114,7 @@ public class DSSSecureRandomProvider implements SecureRandomProvider {
 		byte[] seed = buildSeed();
 		byte[] value = DSSUtils.digest(digestAlgorithm, seed);
 		while (value.length < binaryLength) {
-			value = DSSUtils.concatenate(value, value);
+			value = Utils.concat(value, value);
 		}
 		value = Utils.subarray(value, 0, binaryLength);
 		return new FixedSecureRandom(value);
@@ -135,10 +135,6 @@ public class DSSSecureRandomProvider implements SecureRandomProvider {
 				SignatureImageParameters imageParameters = parameters.getImageParameters();
 				if (imageParameters != null) {
 					baos.write(imageParameters.toString().getBytes());
-				}
-				String passwordProtection = parameters.getPasswordProtection();
-				if (passwordProtection != null) {
-					baos.write(passwordProtection.getBytes());
 				}
 				Date signingDate = parameters.getSigningDate();
 				if (signingDate != null) {

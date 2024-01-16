@@ -35,6 +35,8 @@ import java.util.List;
 
 /**
  * Checks if the revocation freshness checker's result is valid
+ *
+ * @param <T> implementation of the block's conclusion
  */
 public class RevocationFreshnessCheckerResultCheck<T extends XmlConstraintsConclusion> extends ChainItem<T> {
 
@@ -93,7 +95,7 @@ public class RevocationFreshnessCheckerResultCheck<T extends XmlConstraintsConcl
 	@Override
 	protected String buildAdditionalInfo() {
 		if (rfcResult.getId() != null) {
-			return i18nProvider.getMessage(MessageTag.REVOCATION_ID, rfcResult.getId());
+			return i18nProvider.getMessage(MessageTag.TOKEN_ID, rfcResult.getId());
 		}
 		return null;
 	}

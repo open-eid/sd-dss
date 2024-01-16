@@ -34,15 +34,16 @@ public class TLSignatureErrorDetection implements AlertDetector<TLInfo> {
 	 * Default constructor
 	 */
 	public TLSignatureErrorDetection() {
+		// empty
 	}
 
 	@Override
 	public boolean detect(TLInfo info) {
 
 		DownloadInfoRecord downloadCacheInfo = info.getDownloadCacheInfo();
-		if (downloadCacheInfo.isDesynchronized()) {
+		if (downloadCacheInfo != null && downloadCacheInfo.isDesynchronized()) {
 			ValidationInfoRecord validationCacheInfo = info.getValidationCacheInfo();
-			if (!validationCacheInfo.isValid()) {
+			if (validationCacheInfo != null && !validationCacheInfo.isValid()) {
 				return true;
 			}
 		}

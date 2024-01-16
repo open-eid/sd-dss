@@ -61,6 +61,7 @@ public class ExpirationAndSignatureCheckStrategy implements SynchronizationStrat
 	 * Default constructor instantiating object with null values
 	 */
 	public ExpirationAndSignatureCheckStrategy() {
+		// empty
 	}
 
 	/**
@@ -124,7 +125,7 @@ public class ExpirationAndSignatureCheckStrategy implements SynchronizationStrat
 
 		if (!syncExpired) {
 			ParsingInfoRecord parsingCacheInfo = tlInfo.getParsingCacheInfo();
-			if (parsingCacheInfo.isResultExist()) {
+			if (parsingCacheInfo != null && parsingCacheInfo.isResultExist()) {
 				Date currentDate = new Date();
 				Date nextUpdateDate = parsingCacheInfo.getNextUpdateDate();
 				if (nextUpdateDate == null || currentDate.after(nextUpdateDate)) {
@@ -135,7 +136,7 @@ public class ExpirationAndSignatureCheckStrategy implements SynchronizationStrat
 
 		if (!syncInvalid) {
 			ValidationInfoRecord validationCacheInfo = tlInfo.getValidationCacheInfo();
-			if (validationCacheInfo.isResultExist()) {
+			if (validationCacheInfo != null && validationCacheInfo.isResultExist()) {
 				return validationCacheInfo.isValid();
 			}
 		}

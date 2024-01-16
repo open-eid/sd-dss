@@ -47,12 +47,15 @@ import eu.europa.esig.dss.tsl.alerts.detections.OJUrlChangeDetection;
 import eu.europa.esig.dss.tsl.alerts.detections.TLSignatureErrorDetection;
 import eu.europa.esig.dss.tsl.alerts.handlers.log.LogTLSignatureErrorAlertHandler;
 import eu.europa.esig.dss.tsl.cache.CacheCleaner;
+import eu.europa.esig.dss.tsl.function.EUTLOtherTSLPointer;
 import eu.europa.esig.dss.tsl.function.GrantedTrustService;
 import eu.europa.esig.dss.tsl.function.NonEmptyTrustService;
 import eu.europa.esig.dss.tsl.function.OfficialJournalSchemeInformationURI;
+import eu.europa.esig.dss.tsl.function.SchemeTerritoryOtherTSLPointer;
 import eu.europa.esig.dss.tsl.function.TLPredicateFactory;
 import eu.europa.esig.dss.tsl.function.TrustServiceProviderByTSPName;
 import eu.europa.esig.dss.tsl.function.TrustServiceProviderPredicate;
+import eu.europa.esig.dss.tsl.function.XMLOtherTSLPointer;
 import eu.europa.esig.dss.tsl.job.TLValidationJob;
 import eu.europa.esig.dss.tsl.source.LOTLSource;
 import eu.europa.esig.dss.tsl.source.TLSource;
@@ -114,8 +117,8 @@ public class TLValidationJobSnippets {
 		return trustedListsCertificateSource;
 	}
 
-	private String getPassword() {
-		return "dss-password";
+	private char[] getPassword() {
+		return "dss-password".toCharArray();
 	}
 
 	public void jobConfig() {
@@ -346,11 +349,14 @@ public class TLValidationJobSnippets {
 		// "http://uri.etsi.org/TrstSvc/TrustedList/TSLType/EUlistofthelists" type
 		lotlSource.setLotlPredicate(TLPredicateFactory.createEULOTLPredicate());
 
-		// tag::predicate-country[]
 		// the predicates filter only TSL pointers with scheme territories "DE" (Germany) and "RO" (Romania)
 		// to XML documents with "http://uri.etsi.org/TrstSvc/TrustedList/TSLType/EUgeneric" type
-		lotlSource.setTlPredicate(TLPredicateFactory.createEUTLCountryCodePredicate("DE", "RO"));
+		// tag::predicate-country[]
+		lotlSource.setTlPredicate(new SchemeTerritoryOtherTSLPointer(Arrays.asList("DE", "RO")).and(new EUTLOtherTSLPointer()).and(new XMLOtherTSLPointer()));
 		// end::predicate-country[]
+		// tag::predicate-country-5.11[]
+		lotlSource.setTlPredicate(TLPredicateFactory.createEUTLCountryCodePredicate("DE", "RO"));
+		// end::predicate-country-5.11[]
 		// end::predicates[]
 	}
 
@@ -515,7 +521,8 @@ public class TLValidationJobSnippets {
 		// Default : not defined
 		//
 		// OfficialJournalSchemeInformationURI allows to specify the Official Journal
-		// URL where the signing certificates are published
+		// URL where the used LOTL signing-certificate keystore is published
+		// When set, builds LOTL keystore based on pivots defined before the given URL
 		lotlSource.setSigningCertificatesAnnouncementPredicate(
 				new OfficialJournalSchemeInformationURI("https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=uriserv:OJ.C_.2019.276.01.0001.01.ENG"));
 
@@ -540,7 +547,7 @@ public class TLValidationJobSnippets {
 
 	private CertificateSource getSigningCertificatesForEuropeanLOTL() {
 		try {
-			return new KeyStoreCertificateSource(new File("src/main/resources/keystore.p12"), "PKCS12", "dss-password");
+			return new KeyStoreCertificateSource(new File("src/main/resources/keystore.p12"), "PKCS12", getPassword());
 		} catch (IOException e) {
 			throw new DSSException(e);
 		}

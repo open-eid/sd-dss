@@ -76,15 +76,6 @@
             <CommonName>Slav Koler</CommonName>
             <CountryName>CZ</CountryName>
             <Email>koler@mail.cz</Email>
-            <AuthorityInformationAccessUrls>
-                <aiaUrl>http://q.ica.cz/ca_nbusr09.p7c</aiaUrl>
-            </AuthorityInformationAccessUrls>
-            <CRLDistributionPoints>
-                <crlUrl>http://qcrldp1.ica.cz/qica09.crl</crlUrl>
-                <crlUrl>http://qcrldp2.ica.cz/qica09.crl</crlUrl>
-                <crlUrl>http://qcrldp3.ica.cz/qica09.crl</crlUrl>
-            </CRLDistributionPoints>
-            <OCSPAccessUrls/>
             <Sources>
                 <Source>SIGNATURE</Source>
             </Sources>
@@ -93,12 +84,6 @@
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
             <EntityKey>PK-4AE84856DAD3520D875D28EDF71D513AA08EF813C96B22A9B6C3A562956FF4B1</EntityKey>
-            <KeyUsageBits>
-                <KeyUsage>digitalSignature</KeyUsage>
-                <KeyUsage>nonRepudiation</KeyUsage>
-            </KeyUsageBits>
-            <ExtendedKeyUsages/>
-            <IdPkixOcspNoCheck>false</IdPkixOcspNoCheck>
             <BasicSignature>
                 <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
                 <KeyLengthUsedToSignThisToken>2048</KeyLengthUsedToSignThisToken>
@@ -112,16 +97,30 @@
             </CertificateChain>
             <Trusted>false</Trusted>
             <SelfSigned>false</SelfSigned>
-            <CertificatePolicies>
-                <certificatePolicy>1.3.6.1.4.1.23624.1.1.30.3.1</certificatePolicy>
-                <certificatePolicy>1.3.158.36061701.0.0.0.1.2.2</certificatePolicy>
-            </CertificatePolicies>
-            <QcStatements>
-                <QcCompliance present="true"/>
-                <QcSSCD present="true"/>
-            </QcStatements>
-            <TrustedServiceProviders>
-                <TrustedServiceProvider TL="TL-57FCA8BD35213403F3B984949365A5B03DB909F620AFE49D66A1470F964C551F" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+            <CertificateExtensions>
+                <KeyUsages OID="2.5.29.15" critical="true">
+                    <keyUsageBit>digitalSignature</keyUsageBit>
+                    <keyUsageBit>nonRepudiation</keyUsageBit>
+                </KeyUsages>
+                <AuthorityInformationAccess OID="1.3.6.1.5.5.7.1.1" critical="false">
+                    <caIssuersUrl>http://q.ica.cz/ca_nbusr09.p7c</caIssuersUrl>
+                </AuthorityInformationAccess>
+                <CRLDistributionPoints OID="2.5.29.31" critical="false">
+                    <crlUrl>http://qcrldp1.ica.cz/qica09.crl</crlUrl>
+                    <crlUrl>http://qcrldp2.ica.cz/qica09.crl</crlUrl>
+                    <crlUrl>http://qcrldp3.ica.cz/qica09.crl</crlUrl>
+                </CRLDistributionPoints>
+                <CertificatePolicies OID="2.5.29.32" critical="true">
+                    <certificatePolicy>1.3.6.1.4.1.23624.1.1.30.3.1</certificatePolicy>
+                    <certificatePolicy>1.3.158.36061701.0.0.0.1.2.2</certificatePolicy>
+                </CertificatePolicies>
+                <QcStatements OID="1.3.6.1.5.5.7.1.3" critical="false">
+                    <QcCompliance present="true"/>
+                    <QcSSCD present="true"/>
+                </QcStatements>
+            </CertificateExtensions>
+            <TrustServiceProviders>
+                <TrustServiceProvider TL="TL-57FCA8BD35213403F3B984949365A5B03DB909F620AFE49D66A1470F964C551F" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
                     <TSPNames>
                         <TSPName lang="cs">První certifikační autorita, a.s.</TSPName>
                         <TSPName lang="en">First certification authority, a.s.</TSPName>
@@ -129,8 +128,8 @@
                     <TSPRegistrationIdentifiers>
                         <TSPRegistrationIdentifier>VATCZ-26439395</TSPRegistrationIdentifier>
                     </TSPRegistrationIdentifiers>
-                    <TrustedServices>
-                        <TrustedService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
+                    <TrustServices>
+                        <TrustService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
                             <ServiceNames>
                                 <ServiceName lang="cs">(16) I.CA - vydávání kvalifikovaných certifikátů</ServiceName>
                                 <ServiceName lang="en">(16) I.CA - issuing qualified certificates</ServiceName>
@@ -144,8 +143,8 @@
                             <AdditionalServiceInfoUris>
                                 <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
-                        </TrustedService>
-                        <TrustedService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
+                        </TrustService>
+                        <TrustService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
                             <ServiceNames>
                                 <ServiceName lang="cs">(16) I.CA - vydávání kvalifikovaných certifikátů</ServiceName>
                                 <ServiceName lang="en">(16) I.CA - issuing qualified certificates</ServiceName>
@@ -158,10 +157,10 @@
                                 <Qualifier>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCSSCDStatusAsInCert</Qualifier>
                             </CapturedQualifiers>
                             <AdditionalServiceInfoUris/>
-                        </TrustedService>
-                    </TrustedServices>
-                </TrustedServiceProvider>
-                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                        </TrustService>
+                    </TrustServices>
+                </TrustServiceProvider>
+                <TrustServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
                     <TSPNames>
                         <TSPName lang="cs">První certifikační autorita, a.s.</TSPName>
                         <TSPName lang="en">First certification authority, a.s.</TSPName>
@@ -170,8 +169,8 @@
                         <TSPRegistrationIdentifier>VATCZ-CZ26439395</TSPRegistrationIdentifier>
                         <TSPRegistrationIdentifier>NTRCZ-26439395</TSPRegistrationIdentifier>
                     </TSPRegistrationIdentifiers>
-                    <TrustedServices>
-                        <TrustedService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
+                    <TrustServices>
+                        <TrustService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
                             <ServiceNames>
                                 <ServiceName lang="en">(33) I.CA - Qualified Certification Authority, 09/2009</ServiceName>
                             </ServiceNames>
@@ -183,8 +182,8 @@
                                 <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                                 <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
-                        </TrustedService>
-                        <TrustedService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
+                        </TrustService>
+                        <TrustService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
                             <ServiceNames>
                                 <ServiceName lang="en">(33) I.CA - Qualified Certification Authority, 09/2009</ServiceName>
                             </ServiceNames>
@@ -196,8 +195,8 @@
                             <AdditionalServiceInfoUris>
                                 <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
-                        </TrustedService>
-                        <TrustedService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
+                        </TrustService>
+                        <TrustService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
                             <ServiceNames>
                                 <ServiceName lang="en">(33) I.CA - Qualified Certification Authority, 09/2009</ServiceName>
                             </ServiceNames>
@@ -207,10 +206,10 @@
                             <EndDate>2016-06-30T22:00:00Z</EndDate>
                             <CapturedQualifiers/>
                             <AdditionalServiceInfoUris/>
-                        </TrustedService>
-                    </TrustedServices>
-                </TrustedServiceProvider>
-            </TrustedServiceProviders>
+                        </TrustService>
+                    </TrustServices>
+                </TrustServiceProvider>
+            </TrustServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-9C46B1720C0D69196832AC41CD34E59C421251E1F18AED430446A790B86466EF">
                     <Status>GOOD</Status>
@@ -231,9 +230,6 @@
             <CountryName>CZ</CountryName>
             <OrganizationName>První certifikační autorita, a.s.</OrganizationName>
             <OrganizationalUnit>I.CA - Accredited Provider of Certification Services</OrganizationalUnit>
-            <AuthorityInformationAccessUrls/>
-            <CRLDistributionPoints/>
-            <OCSPAccessUrls/>
             <Sources>
                 <Source>TRUSTED_LIST</Source>
             </Sources>
@@ -242,12 +238,6 @@
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
             <EntityKey>PK-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802</EntityKey>
-            <KeyUsageBits>
-                <KeyUsage>keyCertSign</KeyUsage>
-                <KeyUsage>crlSign</KeyUsage>
-            </KeyUsageBits>
-            <ExtendedKeyUsages/>
-            <IdPkixOcspNoCheck>false</IdPkixOcspNoCheck>
             <BasicSignature>
                 <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
                 <KeyLengthUsedToSignThisToken>2048</KeyLengthUsedToSignThisToken>
@@ -258,11 +248,18 @@
             <CertificateChain/>
             <Trusted>true</Trusted>
             <SelfSigned>true</SelfSigned>
-            <CertificatePolicies>
-                <certificatePolicy>2.5.29.32.0</certificatePolicy>
-            </CertificatePolicies>
-            <TrustedServiceProviders>
-                <TrustedServiceProvider TL="TL-57FCA8BD35213403F3B984949365A5B03DB909F620AFE49D66A1470F964C551F" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+            <CertificateExtensions>
+                <BasicConstraints OID="2.5.29.19" critical="true" CA="true" />
+                <KeyUsages OID="2.5.29.15" critical="true">
+                    <keyUsageBit>keyCertSign</keyUsageBit>
+                    <keyUsageBit>crlSign</keyUsageBit>
+                </KeyUsages>
+                <CertificatePolicies OID="2.5.29.32" critical="true">
+                    <certificatePolicy>2.5.29.32.0</certificatePolicy>
+                </CertificatePolicies>
+            </CertificateExtensions>
+            <TrustServiceProviders>
+                <TrustServiceProvider TL="TL-57FCA8BD35213403F3B984949365A5B03DB909F620AFE49D66A1470F964C551F" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
                     <TSPNames>
                         <TSPName lang="cs">První certifikační autorita, a.s.</TSPName>
                         <TSPName lang="en">First certification authority, a.s.</TSPName>
@@ -270,8 +267,8 @@
                     <TSPRegistrationIdentifiers>
                         <TSPRegistrationIdentifier>VATCZ-26439395</TSPRegistrationIdentifier>
                     </TSPRegistrationIdentifiers>
-                    <TrustedServices>
-                        <TrustedService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
+                    <TrustServices>
+                        <TrustService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
                             <ServiceNames>
                                 <ServiceName lang="cs">(16) I.CA - vydávání kvalifikovaných certifikátů</ServiceName>
                                 <ServiceName lang="en">(16) I.CA - issuing qualified certificates</ServiceName>
@@ -282,8 +279,8 @@
                             <AdditionalServiceInfoUris>
                                 <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
-                        </TrustedService>
-                        <TrustedService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
+                        </TrustService>
+                        <TrustService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
                             <ServiceNames>
                                 <ServiceName lang="cs">(16) I.CA - vydávání kvalifikovaných certifikátů</ServiceName>
                                 <ServiceName lang="en">(16) I.CA - issuing qualified certificates</ServiceName>
@@ -292,10 +289,10 @@
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/accredited</Status>
                             <StartDate>2009-09-01T00:00:00Z</StartDate>
                             <EndDate>2016-06-30T22:00:00Z</EndDate>
-                        </TrustedService>
-                    </TrustedServices>
-                </TrustedServiceProvider>
-                <TrustedServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
+                        </TrustService>
+                    </TrustServices>
+                </TrustServiceProvider>
+                <TrustServiceProvider TL="TL-E9B06DA147E169206B0CC37F5202CC878097444EF14D52EA2042871139986DAC" LOTL="LOTL-EC2AE37FE9A43B48B1CFE2A57EBEE2BD6373EDFF36537EB1BC905747ACBF4C3B">
                     <TSPNames>
                         <TSPName lang="cs">První certifikační autorita, a.s.</TSPName>
                         <TSPName lang="en">First certification authority, a.s.</TSPName>
@@ -304,8 +301,8 @@
                         <TSPRegistrationIdentifier>VATCZ-CZ26439395</TSPRegistrationIdentifier>
                         <TSPRegistrationIdentifier>NTRCZ-26439395</TSPRegistrationIdentifier>
                     </TSPRegistrationIdentifiers>
-                    <TrustedServices>
-                        <TrustedService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
+                    <TrustServices>
+                        <TrustService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
                             <ServiceNames>
                                 <ServiceName lang="en">(33) I.CA - Qualified Certification Authority, 09/2009</ServiceName>
                             </ServiceNames>
@@ -316,8 +313,8 @@
                                 <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                                 <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
-                        </TrustedService>
-                        <TrustedService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
+                        </TrustService>
+                        <TrustService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
                             <ServiceNames>
                                 <ServiceName lang="en">(33) I.CA - Qualified Certification Authority, 09/2009</ServiceName>
                             </ServiceNames>
@@ -328,8 +325,8 @@
                             <AdditionalServiceInfoUris>
                                 <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
-                        </TrustedService>
-                        <TrustedService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
+                        </TrustService>
+                        <TrustService ServiceDigitalIdentifier="C-C0C05A8D8DA55EAF27AA9B910B0A6EF0D8BBDED346928DB872E182C2073E9802">
                             <ServiceNames>
                                 <ServiceName lang="en">(33) I.CA - Qualified Certification Authority, 09/2009</ServiceName>
                             </ServiceNames>
@@ -337,10 +334,10 @@
                             <Status>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/accredited</Status>
                             <StartDate>2005-06-15T00:00:00Z</StartDate>
                             <EndDate>2016-06-30T22:00:00Z</EndDate>
-                        </TrustedService>
-                    </TrustedServices>
-                </TrustedServiceProvider>
-            </TrustedServiceProviders>
+                        </TrustService>
+                    </TrustServices>
+                </TrustServiceProvider>
+            </TrustServiceProviders>
             <DigestAlgoAndValue>
                 <DigestMethod>SHA256</DigestMethod>
                 <DigestValue>wMBajY2lXq8nqpuRCwpu8Ni73tNGko24cuGCwgc+mAI=</DigestValue>

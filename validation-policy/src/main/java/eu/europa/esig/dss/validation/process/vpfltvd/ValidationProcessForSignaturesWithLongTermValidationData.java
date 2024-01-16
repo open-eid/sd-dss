@@ -31,8 +31,8 @@ import eu.europa.esig.dss.detailedreport.jaxb.XmlRFC;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlSignature;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlSubXCV;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlTimestamp;
+import eu.europa.esig.dss.detailedreport.jaxb.XmlValidationProcessBasicTimestamp;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlValidationProcessLongTermData;
-import eu.europa.esig.dss.detailedreport.jaxb.XmlValidationProcessTimestamp;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlXCV;
 import eu.europa.esig.dss.diagnostic.CertificateRefWrapper;
 import eu.europa.esig.dss.diagnostic.CertificateRevocationWrapper;
@@ -47,7 +47,6 @@ import eu.europa.esig.dss.enumerations.Context;
 import eu.europa.esig.dss.enumerations.Indication;
 import eu.europa.esig.dss.enumerations.RevocationOrigin;
 import eu.europa.esig.dss.enumerations.RevocationReason;
-import eu.europa.esig.dss.enumerations.RevocationType;
 import eu.europa.esig.dss.enumerations.SubIndication;
 import eu.europa.esig.dss.i18n.I18nProvider;
 import eu.europa.esig.dss.i18n.MessageTag;
@@ -77,8 +76,8 @@ import eu.europa.esig.dss.validation.process.vpfltvd.checks.RevocationDateAfterB
 import eu.europa.esig.dss.validation.process.vpfltvd.checks.SigningTimeAttributePresentCheck;
 import eu.europa.esig.dss.validation.process.vpfltvd.checks.TimestampCoherenceOrderCheck;
 import eu.europa.esig.dss.validation.process.vpfltvd.checks.TimestampDelayCheck;
-import eu.europa.esig.dss.validation.process.vpfltvd.checks.TimestampMessageImprintCheck;
-import eu.europa.esig.dss.validation.process.vpftsp.checks.BasicTimestampValidationCheck;
+import eu.europa.esig.dss.validation.process.vpfltvd.checks.TimestampMessageImprintWithIdCheck;
+import eu.europa.esig.dss.validation.process.vpftsp.checks.BasicTimestampValidationWithIdCheck;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -245,7 +244,7 @@ public class ValidationProcessForSignaturesWithLongTermValidationData extends Ch
 					 * If PASSED is returned and if the returned generation time is before best-signature-time,
 					 * the process shall set best-signature-time to this date and shall try the next token.
 					 */
-					XmlValidationProcessTimestamp timestampValidationProcess = getTimestampValidationProcess(timestampWrapper.getId());
+					XmlValidationProcessBasicTimestamp timestampValidationProcess = getTimestampValidationProcess(timestampWrapper.getId());
 					if (timestampValidationProcess != null) {
 						item = item.setNextItem(timestampBasicSignatureValidation(timestampWrapper, timestampValidationProcess));
 					}
@@ -459,12 +458,12 @@ public class ValidationProcessForSignaturesWithLongTermValidationData extends Ch
 	}
 
 	private ChainItem<XmlValidationProcessLongTermData> timestampMessageImprint(TimestampWrapper timestampWrapper) {
-		return new TimestampMessageImprintCheck<>(i18nProvider, result, timestampWrapper, getWarnLevelConstraint());
+		return new TimestampMessageImprintWithIdCheck<>(i18nProvider, result, timestampWrapper, getWarnLevelConstraint());
 	}
 
 	private ChainItem<XmlValidationProcessLongTermData> timestampBasicSignatureValidation(
-			TimestampWrapper timestampWrapper, XmlValidationProcessTimestamp timestampValidationResult) {
-		return new BasicTimestampValidationCheck<>(i18nProvider, result, timestampWrapper,
+			TimestampWrapper timestampWrapper, XmlValidationProcessBasicTimestamp timestampValidationResult) {
+		return new BasicTimestampValidationWithIdCheck<>(i18nProvider, result, timestampWrapper,
 				timestampValidationResult, getWarnLevelConstraint());
 	}
 	
@@ -685,10 +684,10 @@ public class ValidationProcessForSignaturesWithLongTermValidationData extends Ch
 		return xpoe;
 	}
 	
-	private XmlValidationProcessTimestamp getTimestampValidationProcess(String timestampId) {
+	private XmlValidationProcessBasicTimestamp getTimestampValidationProcess(String timestampId) {
 		for (XmlTimestamp xmlTimestamp : xmlTimestamps) {
 			if (timestampId.equals(xmlTimestamp.getId())) {
-				return xmlTimestamp.getValidationProcessTimestamp();
+				return xmlTimestamp.getValidationProcessBasicTimestamp();
 			}
 		}
 		return null;

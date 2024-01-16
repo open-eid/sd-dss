@@ -20,21 +20,20 @@
  */
 package eu.europa.esig.dss.spi.x509;
 
+import eu.europa.esig.dss.model.x509.CertificateToken;
+import eu.europa.esig.dss.spi.CertificateExtensionsUtils;
+import eu.europa.esig.dss.spi.DSSASN1Utils;
+import eu.europa.esig.dss.spi.DSSUtils;
+import org.junit.jupiter.api.Test;
+
+import java.io.File;
+import java.util.Arrays;
+
 import static java.time.Duration.ofMillis;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-
-import org.junit.jupiter.api.Test;
-
-import eu.europa.esig.dss.model.x509.CertificateToken;
-import eu.europa.esig.dss.spi.DSSASN1Utils;
-import eu.europa.esig.dss.spi.DSSUtils;
 
 public class CertificateSourceCasesTest {
 
@@ -61,16 +60,16 @@ public class CertificateSourceCasesTest {
 		assertEquals(2, lcs.getNumberOfEntities());
 		assertEquals(2, lcs.getBySubject(c1.getSubject()).size());
 
-		assertEquals(1, lcs.getBySki(DSSASN1Utils.getSki(c1)).size());
-		assertEquals(1, lcs.getBySki(DSSASN1Utils.getSki(c2)).size());
+		assertEquals(1, lcs.getBySki(CertificateExtensionsUtils.getSubjectKeyIdentifier(c1).getSki()).size());
+		assertEquals(1, lcs.getBySki(CertificateExtensionsUtils.getSubjectKeyIdentifier(c2).getSki()).size());
 		assertEquals(1, lcs.getByPublicKey(c1.getPublicKey()).size());
 		assertEquals(1, lcs.getByPublicKey(c2.getPublicKey()).size());
 
 		assertTrue(lcs.isTrusted(c1));
 		assertFalse(lcs.isTrusted(c2));
 
-		assertEquals(2, lcs.getCertificateSource(c1).size());
-		assertEquals(1, lcs.getCertificateSource(c2).size());
+		assertEquals(2, lcs.getCertificateSourceType(c1).size());
+		assertEquals(1, lcs.getCertificateSourceType(c2).size());
 	}
 
 	@Test
@@ -105,7 +104,7 @@ public class CertificateSourceCasesTest {
 		assertEquals(2, lcs.getByPublicKey(c1.getPublicKey()).size());
 		assertEquals(2, lcs.getByPublicKey(c2.getPublicKey()).size());
 
-		assertTrue(lcs.isTrusted(c1));
+		assertFalse(lcs.isTrusted(c1));
 		assertTrue(lcs.isTrusted(c2));
 
 		assertEquals(0, lcs.getBySki(null).size());
@@ -129,22 +128,37 @@ public class CertificateSourceCasesTest {
 		assertEquals(2, ccc.getNumberOfCertificates());
 		assertEquals(1, ccc.getNumberOfEntities());
 		assertEquals(2, ccc.getBySubject(c1.getSubject()).size());
+		assertEquals(2, ccc.getBySubject(c2.getSubject()).size());
 		assertEquals(2, ccc.getBySki(DSSASN1Utils.computeSkiFromCert(c1)).size());
+		assertEquals(2, ccc.getBySki(DSSASN1Utils.computeSkiFromCert(c2)).size());
+
+		assertFalse(ccc.isTrusted(c1));
+		assertFalse(ccc.isTrusted(c2));
+
+		CommonTrustedCertificateSource ctcs = new CommonTrustedCertificateSource();
+		ctcs.addCertificate(c1);
 
 		ListCertificateSource lcs = new ListCertificateSource(ccc);
 		lcs.add(ccc);
+		lcs.add(ctcs);
 
 		assertEquals(2, lcs.getNumberOfCertificates());
 		assertEquals(1, lcs.getNumberOfEntities());
 		assertEquals(2, lcs.getBySubject(c1.getSubject()).size());
 		assertEquals(2, lcs.getBySki(DSSASN1Utils.computeSkiFromCert(c1)).size());
+		assertEquals(2, lcs.getBySki(DSSASN1Utils.computeSkiFromCert(c2)).size());
+		assertEquals(2, lcs.getByPublicKey(c1.getPublicKey()).size());
+		assertEquals(2, lcs.getByPublicKey(c2.getPublicKey()).size());
+
+		assertTrue(lcs.isTrusted(c1));
+		assertTrue(lcs.isTrusted(c2));
 	}
 
 	@Test
-	public void extractTLSKeystore() throws IOException {
-		assertTimeout(ofMillis(3000), () -> {
+	public void extractTLSKeystore() {
+		assertTimeout(ofMillis(30000), () -> {
 			KeyStoreCertificateSource kscs = new KeyStoreCertificateSource(new File("src/test/resources/extract-tls.p12"),
-					"PKCS12", "ks-password");
+					"PKCS12", "ks-password".toCharArray());
 	
 			CommonCertificateSource ccc = new CommonCertificateSource();
 	

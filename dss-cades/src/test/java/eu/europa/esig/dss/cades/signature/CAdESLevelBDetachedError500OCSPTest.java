@@ -20,13 +20,6 @@
  */
 package eu.europa.esig.dss.cades.signature;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.jupiter.api.BeforeEach;
-
 import eu.europa.esig.dss.cades.CAdESSignatureParameters;
 import eu.europa.esig.dss.enumerations.Indication;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
@@ -36,7 +29,16 @@ import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.simplereport.SimpleReport;
+import eu.europa.esig.dss.test.pki.crl.UnknownPkiCRLSource;
+import eu.europa.esig.dss.test.pki.ocsp.UnknownPkiOCSPSource;
+import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
+import org.junit.jupiter.api.BeforeEach;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CAdESLevelBDetachedError500OCSPTest extends AbstractCAdESTestSignature {
 
@@ -54,7 +56,7 @@ public class CAdESLevelBDetachedError500OCSPTest extends AbstractCAdESTestSignat
 		signatureParameters.setSignaturePackaging(SignaturePackaging.DETACHED);
 		signatureParameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_B);
 
-		service = new CAdESService(getOfflineCertificateVerifier());
+		service = new CAdESService(getCompleteCertificateVerifier());
 
 	}
 
@@ -69,11 +71,19 @@ public class CAdESLevelBDetachedError500OCSPTest extends AbstractCAdESTestSignat
 	}
 
 	@Override
+	protected CertificateVerifier getCompleteCertificateVerifier() {
+		CertificateVerifier certificateVerifier = super.getCompleteCertificateVerifier();
+		certificateVerifier.setCrlSource(new UnknownPkiCRLSource(getCertEntityRepository()));
+		certificateVerifier.setOcspSource(new UnknownPkiOCSPSource(getCertEntityRepository()));
+		return certificateVerifier;
+	}
+
+	@Override
 	protected void verifySimpleReport(SimpleReport simpleReport) {
 		super.verifySimpleReport(simpleReport);
 
 		assertEquals(Indication.INDETERMINATE, simpleReport.getIndication(simpleReport.getFirstSignatureId()));
-		assertEquals(SubIndication.TRY_LATER, simpleReport.getSubIndication(simpleReport.getFirstSignatureId()));
+		assertEquals(SubIndication.CERTIFICATE_CHAIN_GENERAL_FAILURE, simpleReport.getSubIndication(simpleReport.getFirstSignatureId()));
 	}
 
 	@Override

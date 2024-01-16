@@ -37,6 +37,7 @@ import eu.europa.esig.dss.model.SpDocSpecification;
 import eu.europa.esig.dss.model.TimestampBinary;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
+import eu.europa.esig.dss.spi.DSSMessageDigestCalculator;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
@@ -490,6 +491,32 @@ public class DSSJsonUtils {
 	}
 
 	/**
+	 * Writes digest on a concatenated binaries of provided {@code documents}
+	 *
+	 * @param documents list of {@link DSSDocument}s to be concatenated
+	 * @param isBase64UrlEncoded defines whether the document octets shall be base64url-encoded
+	 * @param digestCalculator {@link DSSMessageDigestCalculator} to compute message-digest with
+	 */
+	public static void writeDocumentsDigest(List<DSSDocument> documents, boolean isBase64UrlEncoded,
+											DSSMessageDigestCalculator digestCalculator) {
+		if (Utils.isCollectionEmpty(documents)) {
+			throw new IllegalArgumentException("Unable to build a message-digest. Reason : the detached content is not provided!");
+		}
+
+		byte[] octets = null;
+		if (documents.size() == 1) {
+			octets = getDocumentOctets(documents.get(0), isBase64UrlEncoded);
+			digestCalculator.update(octets);
+
+		} else {
+			for (DSSDocument document : documents) {
+				octets = getDocumentOctets(document, isBase64UrlEncoded);
+				digestCalculator.update(octets);
+			}
+		}
+	}
+
+	/**
 	 * This method returns binaries of the {@code document} to be used for payload computation,
 	 * depending on the {@code isBase64UrlEncoded} parameter.
 	 * When {@code isBase64UrlEncoded} is set to TRUE, returns base64url-encoded binaries of the {@code document}.
@@ -620,9 +647,13 @@ public class DSSJsonUtils {
 	 * @return {@link IssuerSerial}
 	 */
 	public static IssuerSerial getIssuerSerial(String value) {
-		if (Utils.isStringNotEmpty(value) && Utils.isBase64Encoded(value)) {
-			byte[] binary = Utils.fromBase64(value);
-			return DSSASN1Utils.getIssuerSerial(binary);
+		if (Utils.isStringNotEmpty(value)) {
+			if (Utils.isBase64Encoded(value)) {
+				byte[] binary = Utils.fromBase64(value);
+				return DSSASN1Utils.getIssuerSerial(binary);
+			} else {
+				LOG.warn("The IssuerSerial value is not base64-encoded!");
+			}
 		}
 		return null;
 	}
@@ -846,7 +877,7 @@ public class DSSJsonUtils {
 
 			String id = getAsString(spDSpec, JAdESHeaderParameterNames.ID);
 			if (Utils.isStringNotEmpty(id)) {
-				spDocSpecification.setId(DSSUtils.getObjectIdentifier(id));
+				spDocSpecification.setId(DSSUtils.getObjectIdentifierValue(id));
 			}
 
 			String desc = getAsString(spDSpec, JAdESHeaderParameterNames.DESC);
@@ -1207,6 +1238,20 @@ public class DSSJsonUtils {
 			}
 		}
 		return listOfNumbers;
+	}
+
+	/**
+	 * Returns a complete mime type string.
+	 * The method adds "application/" prefix when required.
+	 *
+	 * @param mimeType {@link String} extracted
+	 * @return {@link String} representing a complete mime type
+	 */
+	public static String getMimeTypeString(String mimeType) {
+		if (Utils.isStringNotEmpty(mimeType) && !mimeType.contains("/")) {
+			return DSSJsonUtils.MIME_TYPE_APPLICATION_PREFIX + mimeType;
+		}
+		return mimeType;
 	}
 
 }

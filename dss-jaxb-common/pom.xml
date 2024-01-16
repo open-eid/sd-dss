@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.digidoc4j.dss</groupId>
         <artifactId>sd-dss</artifactId>
-        <version>5.11.1.d4j.1</version>
+        <version>6.0.d4j.1</version>
     </parent>
 
     <artifactId>dss-jaxb-common</artifactId>
@@ -17,11 +17,7 @@
     <dependencies>
         <dependency>
             <groupId>${dss.groupId}</groupId>
-            <artifactId>dss-enumerations</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${dss.groupId}</groupId>
-            <artifactId>dss-alert</artifactId>
+            <artifactId>dss-xml-common</artifactId>
         </dependency>
 
         <dependency>

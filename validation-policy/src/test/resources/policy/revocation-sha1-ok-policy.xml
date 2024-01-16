@@ -28,8 +28,8 @@
 			<Id>ANY_POLICY</Id>
 			<Id>NO_POLICY</Id>
 		</AcceptablePolicies>
-		<PolicyAvailable Level="FAIL" />
-		<PolicyHashMatch Level="FAIL" />
+		<PolicyAvailable Level="INFORM" />
+		<PolicyHashMatch Level="WARN" />
 		<AcceptableFormats Level="FAIL">
 			<Id>*</Id>
 		</AcceptableFormats>
@@ -41,16 +41,19 @@
 			<SignatureDuplicated Level="FAIL" />
 			<ProspectiveCertificateChain Level="FAIL" />
 			<SignerInformationStore Level="FAIL" />
-<!-- 			<TrustedServiceTypeIdentifier Level="WARN"> -->
+			<ByteRange Level="FAIL" />
+			<ByteRangeCollision Level="WARN" />
+			<PdfSignatureDictionary Level="FAIL" />
+<!-- 			<TrustServiceTypeIdentifier Level="WARN"> -->
 <!-- 				<Id>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</Id> -->
-<!-- 			</TrustedServiceTypeIdentifier> -->
-<!-- 			<TrustedServiceStatus Level="FAIL"> -->
+<!-- 			</TrustServiceTypeIdentifier> -->
+<!-- 			<TrustServiceStatus Level="FAIL"> -->
 <!-- 				<Id>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision</Id> -->
 <!-- 				<Id>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/accredited</Id> -->
 <!-- 				<Id>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/supervisionincessation</Id> -->
 <!-- 				<Id>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Id> -->
 <!-- 				<Id>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/withdrawn</Id> -->
-<!-- 			</TrustedServiceStatus> -->
+<!-- 			</TrustServiceStatus> -->
 			<SigningCertificate>
 				<Recognition Level="FAIL" />
 				<Signature Level="FAIL" />
@@ -63,6 +66,12 @@
 				<KeyUsage Level="WARN">
 					<Id>nonRepudiation</Id>
 				</KeyUsage>
+				<PolicyTree Level="WARN" />
+				<NameConstraints Level="WARN" />
+				<ForbiddenExtensions Level="FAIL">
+					<Id>1.3.6.1.5.5.7.48.1.5</Id> <!-- ocsp_noCheck -->
+				</ForbiddenExtensions>
+				<IssuerName Level="FAIL" />
 				<SerialNumberPresent Level="WARN" />
 				<NotRevoked Level="FAIL" />
 				<NotOnHold Level="FAIL" />
@@ -80,6 +89,9 @@
 				<RevocationDataAvailable Level="FAIL" />
 				<CRLNextUpdatePresent Level="WARN" />
 				<RevocationFreshness Level="IGNORE" Unit="SECONDS" Value="0"/>
+				<CA Level="FAIL" />
+				<MaxPathLength Level="FAIL" />
+				<IssuerName Level="FAIL" />
 				<NotRevoked Level="FAIL" />
 				<NotOnHold Level="FAIL" />
 				<Cryptographic />
@@ -115,16 +127,16 @@
 			<SignatureIntact Level="FAIL" />
 			<SignatureDuplicated Level="FAIL" />
 			<ProspectiveCertificateChain Level="FAIL" />
-<!-- 			<TrustedServiceTypeIdentifier Level="WARN"> -->
+<!-- 			<TrustServiceTypeIdentifier Level="WARN"> -->
 <!-- 				<Id>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</Id> -->
-<!-- 			</TrustedServiceTypeIdentifier> -->
-<!-- 			<TrustedServiceStatus Level="FAIL"> -->
+<!-- 			</TrustServiceTypeIdentifier> -->
+<!-- 			<TrustServiceStatus Level="FAIL"> -->
 <!-- 				<Id>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision</Id> -->
 <!-- 				<Id>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/accredited</Id> -->
 <!-- 				<Id>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/supervisionincessation</Id> -->
 <!-- 				<Id>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</Id> -->
 <!-- 				<Id>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/withdrawn</Id> -->
-<!-- 			</TrustedServiceStatus> -->
+<!-- 			</TrustServiceStatus> -->
 			<SigningCertificate>
 				<Recognition Level="FAIL" />
 				<Signature Level="FAIL" />
@@ -137,6 +149,12 @@
 				<KeyUsage Level="WARN">
 					<Id>nonRepudiation</Id>
 				</KeyUsage>
+				<PolicyTree Level="WARN" />
+				<NameConstraints Level="WARN" />
+				<ForbiddenExtensions Level="FAIL">
+					<Id>1.3.6.1.5.5.7.48.1.5</Id> <!-- ocsp_noCheck -->
+				</ForbiddenExtensions>
+				<IssuerName Level="FAIL" />
 				<SerialNumberPresent Level="WARN" />
 				<NotRevoked Level="FAIL" />
 				<NotOnHold Level="FAIL" />
@@ -154,6 +172,9 @@
 				<RevocationDataAvailable Level="FAIL" />
 				<CRLNextUpdatePresent Level="WARN" />
 				<RevocationFreshness Level="IGNORE" Unit="SECONDS" Value="0"/>
+				<CA Level="FAIL" />
+				<MaxPathLength Level="FAIL" />
+				<IssuerName Level="FAIL" />
 				<NotRevoked Level="FAIL" />
 				<NotOnHold Level="FAIL" />
 				<Cryptographic />
@@ -196,9 +217,13 @@
 				<RevocationDataAvailable Level="FAIL" />
 				<CRLNextUpdatePresent Level="WARN" />
 				<RevocationFreshness Level="IGNORE" Unit="SECONDS" Value="0"/>
-				<ExtendedKeyUsage Level="WARN">
+				<ExtendedKeyUsage Level="FAIL">
 					<Id>timeStamping</Id>
 				</ExtendedKeyUsage>
+				<ForbiddenExtensions Level="FAIL">
+					<Id>1.3.6.1.5.5.7.48.1.5</Id> <!-- ocsp_noCheck -->
+				</ForbiddenExtensions>
+				<IssuerName Level="FAIL" />
 				<NotRevoked Level="FAIL" />
 				<NotOnHold Level="FAIL" />
 				<NotSelfSigned Level="WARN" />
@@ -210,6 +235,9 @@
 				<RevocationDataAvailable Level="WARN" />
 				<CRLNextUpdatePresent Level="WARN" />
 				<RevocationFreshness Level="IGNORE" Unit="SECONDS" Value="0"/>
+				<CA Level="FAIL" />
+				<MaxPathLength Level="FAIL" />
+				<IssuerName Level="FAIL" />
 				<NotRevoked Level="FAIL" />
 				<NotOnHold Level="FAIL" />
 				<Cryptographic />
@@ -230,6 +258,7 @@
 				<RevocationDataAvailable Level="FAIL" />
 				<CRLNextUpdatePresent Level="WARN" />
 				<RevocationFreshness Level="IGNORE" Unit="SECONDS" Value="0"/>
+				<IssuerName Level="FAIL" />
 				<NotRevoked Level="FAIL" />
 				<NotOnHold Level="FAIL" />
 				<Cryptographic />
@@ -240,6 +269,9 @@
 				<RevocationDataAvailable Level="WARN" />
 				<CRLNextUpdatePresent Level="WARN" />
 				<RevocationFreshness Level="IGNORE" Unit="SECONDS" Value="0"/>
+				<CA Level="FAIL" />
+				<MaxPathLength Level="FAIL" />
+				<IssuerName Level="FAIL" />
 				<NotRevoked Level="FAIL" />
 				<NotOnHold Level="FAIL" />
 				<Cryptographic />
@@ -272,7 +304,7 @@
 					<Algo>RIPEMD160</Algo>
 					<Algo>WHIRLPOOL</Algo>
 				</AcceptableDigestAlgo>
-				<AlgoExpirationDate Format="yyyy">
+				<AlgoExpirationDate Level="FAIL" Format="yyyy" UpdateDate="2022" LevelAfterUpdate="WARN">
 					<!-- Digest algorithms -->
 <!--				<Algo Date="2005">MD2</Algo> 		Not referenced in ETSI/SOGIS -->
 					<Algo Date="2005">MD5</Algo> <!-- ETSI TS 102 176-1 (Historical) V2.1.1 -->
@@ -309,12 +341,19 @@
 					<Algo Date="2029" Size="384">PLAIN-ECDSA</Algo> <!-- ETSI 119 312 V1.4.2 -->
 					<Algo Date="2029" Size="512">PLAIN-ECDSA</Algo> <!-- ETSI 119 312 V1.4.2 -->
 
-					<!-- 		<Algo Date="2026" Size="32">Ed25519</Algo> 		Not referenced in ETSI/SOGIS -->
+					<!-- 		<Algo Date="2026" Size="24">EdDSA</Algo> 		Not referenced in ETSI/SOGIS -->
 					<!-- end Encryption algorithms -->
 				</AlgoExpirationDate>
 			</Cryptographic> 
 		</BasicSignatureConstraints>
 	</Revocation>
+	<EvidenceRecord>
+		<DataObjectExistence Level="FAIL" />
+		<DataObjectIntact Level="FAIL" />
+		<DataObjectFound Level="FAIL" />
+		<DataObjectGroup Level="WARN" />
+		<Cryptographic />
+	</EvidenceRecord>
 	<Cryptographic Level="FAIL">
 		<AcceptableEncryptionAlgo>
 			<Algo>RSA</Algo>
@@ -343,7 +382,7 @@
 			<Algo>RIPEMD160</Algo>
 			<Algo>WHIRLPOOL</Algo>
 		</AcceptableDigestAlgo>
-		<AlgoExpirationDate Format="yyyy">
+		<AlgoExpirationDate Level="FAIL" Format="yyyy" UpdateDate="2022" LevelAfterUpdate="WARN">
 			<!-- Digest algorithms -->
 <!--		<Algo Date="2005">MD2</Algo> 		Not referenced in ETSI/SOGIS -->
 			<Algo Date="2005">MD5</Algo> <!-- ETSI TS 102 176-1 (Historical) V2.1.1 -->
@@ -380,7 +419,7 @@
 			<Algo Date="2029" Size="384">PLAIN-ECDSA</Algo> <!-- ETSI 119 312 V1.4.2 -->
 			<Algo Date="2029" Size="512">PLAIN-ECDSA</Algo> <!-- ETSI 119 312 V1.4.2 -->
 
-			<!-- 		<Algo Date="2026" Size="32">Ed25519</Algo> 		Not referenced in ETSI/SOGIS -->
+			<!-- 		<Algo Date="2026" Size="24">EdDSA</Algo> 		Not referenced in ETSI/SOGIS -->
 			<!-- end Encryption algorithms -->
 		</AlgoExpirationDate>
 	</Cryptographic> 

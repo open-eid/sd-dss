@@ -20,15 +20,20 @@
  */
 package org.digidoc4j.dss.xades;
 
-import eu.europa.esig.dss.DomUtils;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.Policy;
 import eu.europa.esig.dss.spi.DSSRevocationUtils;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
-import eu.europa.esig.dss.xades.definition.XAdESPaths;
-import org.bouncycastle.asn1.*;
+import eu.europa.esig.dss.xml.utils.DomUtils;
+import eu.europa.esig.xades.definition.XAdESPath;
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DLSequence;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
@@ -60,11 +65,11 @@ public class BDocTmSupport implements Serializable {
     return BDOC_TM_POLICY_ID.equals(policyId);
   }
 
-  public static boolean hasBDocTmPolicyId(Element signatureElement, XAdESPaths xadesPaths) {
+  public static boolean hasBDocTmPolicyId(Element signatureElement, XAdESPath xadesPath) {
 
-    Element policyIdentifier = DomUtils.getElement(signatureElement, xadesPaths.getSignaturePolicyIdentifierPath());
+    Element policyIdentifier = DomUtils.getElement(signatureElement, xadesPath.getSignaturePolicyIdentifierPath());
     if (policyIdentifier != null) {
-      final Element policyId = DomUtils.getElement(policyIdentifier, xadesPaths.getCurrentSignaturePolicyId());
+      final Element policyId = DomUtils.getElement(policyIdentifier, xadesPath.getCurrentSignaturePolicyId());
       if (policyId != null) {
         String policyIdString = Utils.trim(policyId.getTextContent());
         return Utils.areStringsEqualIgnoreCase(BDocTmSupport.BDOC_TM_POLICY_ID, policyIdString);
@@ -73,9 +78,9 @@ public class BDocTmSupport implements Serializable {
     return false;
   }
 
-  public static boolean hasBDocTmOcsp(Element signatureElement, XAdESPaths xadesPaths) {
-    if (hasBDocTmPolicyId(signatureElement, xadesPaths)) {
-      String ocspValuesPath = xadesPaths.getRevocationValuesPath() + xadesPaths.getCurrentOCSPValuesChildren().substring(1);
+  public static boolean hasBDocTmOcsp(Element signatureElement, XAdESPath xadesPath) {
+    if (hasBDocTmPolicyId(signatureElement, xadesPath)) {
+      String ocspValuesPath = xadesPath.getRevocationValuesPath() + xadesPath.getCurrentOCSPValuesChildren().substring(1);
       NodeList ocspValues = DomUtils.getNodeList(signatureElement, ocspValuesPath);
       for (int i = 0; i < ocspValues.getLength(); i++) {
         try {

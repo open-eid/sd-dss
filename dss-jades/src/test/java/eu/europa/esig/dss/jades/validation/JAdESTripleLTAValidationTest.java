@@ -35,7 +35,7 @@ import eu.europa.esig.dss.spi.x509.CommonTrustedCertificateSource;
 import eu.europa.esig.validationreport.jaxb.AttributeBaseType;
 import eu.europa.esig.validationreport.jaxb.SignatureAttributesType;
 
-import javax.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBElement;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -95,25 +95,22 @@ public class JAdESTripleLTAValidationTest extends AbstractJAdESTestValidation {
         boolean revocationValuesFound = false;
         boolean timestampValidationDataFound = false;
 
-        List<Object> signatureAttributeObjects = signatureAttributes.getSigningTimeOrSigningCertificateOrDataObjectFormat();
-        for (Object signatureAttributeObj : signatureAttributeObjects) {
-            if (signatureAttributeObj instanceof JAXBElement) {
-                JAXBElement jaxbElement = (JAXBElement) signatureAttributeObj;
-                Object value = jaxbElement.getValue();
-                if (value instanceof AttributeBaseType) {
-                    AttributeBaseType attributeBase = (AttributeBaseType) value;
-                    if ("CertificateValues".equals(jaxbElement.getName().getLocalPart())) {
-                        assertEquals(5, attributeBase.getAttributeObject().get(0).getVOReference().size());
-                        certificateValuesFound = true;
+        List<JAXBElement<?>> signatureAttributeObjects = signatureAttributes.getSigningTimeOrSigningCertificateOrDataObjectFormat();
+        for (JAXBElement<?> signatureAttributeObj : signatureAttributeObjects) {
+            Object value = signatureAttributeObj.getValue();
+            if (value instanceof AttributeBaseType) {
+                AttributeBaseType attributeBase = (AttributeBaseType) value;
+                if ("CertificateValues".equals(signatureAttributeObj.getName().getLocalPart())) {
+                    assertEquals(5, attributeBase.getAttributeObject().get(0).getVOReference().size());
+                    certificateValuesFound = true;
 
-                    } else if ("RevocationValues".equals(jaxbElement.getName().getLocalPart())) {
-                        assertEquals(1, attributeBase.getAttributeObject().get(0).getVOReference().size());
-                        revocationValuesFound = true;
+                } else if ("RevocationValues".equals(signatureAttributeObj.getName().getLocalPart())) {
+                    assertEquals(1, attributeBase.getAttributeObject().get(0).getVOReference().size());
+                    revocationValuesFound = true;
 
-                    } else if ("TimeStampValidationData".equals(jaxbElement.getName().getLocalPart())) {
-                        assertEquals(4, attributeBase.getAttributeObject().get(0).getVOReference().size()); // 3 cert + 1 ocsp
-                        timestampValidationDataFound = true;
-                    }
+                } else if ("TimeStampValidationData".equals(signatureAttributeObj.getName().getLocalPart())) {
+                    assertEquals(4, attributeBase.getAttributeObject().get(0).getVOReference().size()); // 3 cert + 1 ocsp
+                    timestampValidationDataFound = true;
                 }
             }
         }

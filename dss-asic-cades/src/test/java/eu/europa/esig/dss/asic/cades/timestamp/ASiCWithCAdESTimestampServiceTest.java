@@ -23,23 +23,23 @@ package eu.europa.esig.dss.asic.cades.timestamp;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESContainerExtractor;
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESTimestampParameters;
 import eu.europa.esig.dss.asic.cades.validation.ASiCContainerWithCAdESValidator;
-import eu.europa.esig.dss.asic.cades.validation.ASiCWithCAdESManifestParser;
 import eu.europa.esig.dss.asic.common.ASiCContent;
 import eu.europa.esig.dss.asic.common.ZipUtils;
+import eu.europa.esig.dss.asic.common.validation.ASiCManifestParser;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.TimestampWrapper;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlSignatureScope;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.enumerations.MimeTypeEnum;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
-import eu.europa.esig.dss.model.MimeType;
+import eu.europa.esig.dss.model.ManifestEntry;
+import eu.europa.esig.dss.model.ManifestFile;
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampToken;
 import eu.europa.esig.dss.test.PKIFactoryAccess;
-import eu.europa.esig.dss.validation.ManifestEntry;
-import eu.europa.esig.dss.validation.ManifestFile;
 import eu.europa.esig.dss.validation.reports.Reports;
-import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -66,7 +66,7 @@ public class ASiCWithCAdESTimestampServiceTest extends PKIFactoryAccess {
 
     @Test
     public void timestampFromDocumentsWithASiCSOneFileTest() throws IOException {
-        DSSDocument documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeType.TEXT);
+        DSSDocument documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeTypeEnum.TEXT);
         List<DSSDocument> documentsToSign = Arrays.asList(documentToSign);
 
         ASiCWithCAdESTimestampParameters timestampParameters = new ASiCWithCAdESTimestampParameters();
@@ -97,8 +97,8 @@ public class ASiCWithCAdESTimestampServiceTest extends PKIFactoryAccess {
 
     @Test
     public void timestampFromDocumentsWithASiCSMultipleFilesTest() throws IOException {
-        DSSDocument documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeType.TEXT);
-        DSSDocument documentToSign2 = new InMemoryDocument("Bye World !".getBytes(), "test2.text", MimeType.TEXT);
+        DSSDocument documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeTypeEnum.TEXT);
+        DSSDocument documentToSign2 = new InMemoryDocument("Bye World !".getBytes(), "test2.text", MimeTypeEnum.TEXT);
         List<DSSDocument> documentsToSign = Arrays.asList(documentToSign, documentToSign2);
 
         ASiCWithCAdESTimestampParameters timestampParameters = new ASiCWithCAdESTimestampParameters();
@@ -129,7 +129,7 @@ public class ASiCWithCAdESTimestampServiceTest extends PKIFactoryAccess {
 
     @Test
     public void timestampFromDocumentsWithASiCEOneFileTest() throws IOException {
-        DSSDocument documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeType.TEXT);
+        DSSDocument documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeTypeEnum.TEXT);
         List<DSSDocument> documentsToSign = Arrays.asList(documentToSign);
 
         ASiCWithCAdESTimestampParameters timestampParameters = new ASiCWithCAdESTimestampParameters();
@@ -148,7 +148,7 @@ public class ASiCWithCAdESTimestampServiceTest extends PKIFactoryAccess {
         List<DSSDocument> manifestDocuments = validator.getManifestDocuments();
         assertEquals(1, manifestDocuments.size());
 
-        ManifestFile coveredManifest = ASiCWithCAdESManifestParser.getManifestFile(manifestDocuments.get(0));
+        ManifestFile coveredManifest = ASiCManifestParser.getManifestFile(manifestDocuments.get(0));
         assertNotNull(coveredManifest);
 
         List<ManifestEntry> entries = coveredManifest.getEntries();
@@ -166,8 +166,8 @@ public class ASiCWithCAdESTimestampServiceTest extends PKIFactoryAccess {
 
     @Test
     public void timestampFromDocumentsWithASiCEMultilpeFilesTest() throws IOException {
-        DSSDocument documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeType.TEXT);
-        DSSDocument documentToSign2 = new InMemoryDocument("Bye World !".getBytes(), "test2.text", MimeType.TEXT);
+        DSSDocument documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeTypeEnum.TEXT);
+        DSSDocument documentToSign2 = new InMemoryDocument("Bye World !".getBytes(), "test2.text", MimeTypeEnum.TEXT);
         List<DSSDocument> documentsToSign = Arrays.asList(documentToSign, documentToSign2);
 
         ASiCWithCAdESTimestampParameters timestampParameters = new ASiCWithCAdESTimestampParameters();
@@ -187,7 +187,7 @@ public class ASiCWithCAdESTimestampServiceTest extends PKIFactoryAccess {
         List<DSSDocument> manifestDocuments = validator.getManifestDocuments();
         assertEquals(1, manifestDocuments.size());
 
-        ManifestFile coveredManifest = ASiCWithCAdESManifestParser.getManifestFile(manifestDocuments.get(0));
+        ManifestFile coveredManifest = ASiCManifestParser.getManifestFile(manifestDocuments.get(0));
         assertNotNull(coveredManifest);
 
         List<ManifestEntry> entries = coveredManifest.getEntries();
@@ -207,12 +207,12 @@ public class ASiCWithCAdESTimestampServiceTest extends PKIFactoryAccess {
     public void timestampFromASiCContentWithASiCSTest() throws IOException {
         ASiCContent asicContent = new ASiCContent();
 
-        DSSDocument documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeType.TEXT);
-        DSSDocument documentToSign2 = new InMemoryDocument("Bye World !".getBytes(), "test2.text", MimeType.TEXT);
+        DSSDocument documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeTypeEnum.TEXT);
+        DSSDocument documentToSign2 = new InMemoryDocument("Bye World !".getBytes(), "test2.text", MimeTypeEnum.TEXT);
         asicContent.setSignedDocuments(Arrays.asList(documentToSign, documentToSign2));
 
         asicContent.setUnsupportedDocuments(Collections.singletonList(
-                new InMemoryDocument("unsupported".getBytes(), "other-docs/doc.txt", MimeType.TEXT)));
+                new InMemoryDocument("unsupported".getBytes(), "other-docs/doc.txt", MimeTypeEnum.TEXT)));
 
         ASiCWithCAdESTimestampParameters timestampParameters = new ASiCWithCAdESTimestampParameters();
         timestampParameters.setDigestAlgorithm(DigestAlgorithm.SHA256);
@@ -253,12 +253,12 @@ public class ASiCWithCAdESTimestampServiceTest extends PKIFactoryAccess {
     public void timestampFromASiCContentWithASiCETest() throws IOException {
         ASiCContent asicContent = new ASiCContent();
 
-        DSSDocument documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeType.TEXT);
-        DSSDocument documentToSign2 = new InMemoryDocument("Bye World !".getBytes(), "test2.text", MimeType.TEXT);
+        DSSDocument documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeTypeEnum.TEXT);
+        DSSDocument documentToSign2 = new InMemoryDocument("Bye World !".getBytes(), "test2.text", MimeTypeEnum.TEXT);
         asicContent.setSignedDocuments(Arrays.asList(documentToSign, documentToSign2));
 
         asicContent.setUnsupportedDocuments(Collections.singletonList(
-                new InMemoryDocument("unsupported".getBytes(), "other-docs/doc.txt", MimeType.TEXT)));
+                new InMemoryDocument("unsupported".getBytes(), "other-docs/doc.txt", MimeTypeEnum.TEXT)));
 
         ASiCWithCAdESTimestampParameters timestampParameters = new ASiCWithCAdESTimestampParameters();
         timestampParameters.setDigestAlgorithm(DigestAlgorithm.SHA256);
@@ -277,7 +277,7 @@ public class ASiCWithCAdESTimestampServiceTest extends PKIFactoryAccess {
         List<DSSDocument> manifestDocuments = validator.getManifestDocuments();
         assertEquals(1, manifestDocuments.size());
 
-        ManifestFile coveredManifest = ASiCWithCAdESManifestParser.getManifestFile(manifestDocuments.get(0));
+        ManifestFile coveredManifest = ASiCManifestParser.getManifestFile(manifestDocuments.get(0));
         assertNotNull(coveredManifest);
 
         List<ManifestEntry> entries = coveredManifest.getEntries();

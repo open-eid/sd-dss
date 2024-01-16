@@ -48,11 +48,6 @@ public class XAdESWithPolicyNewLinesAndWhitespaceTest extends AbstractXAdESTestV
 	}
 
 	@Override
-	protected void checkSignatureLevel(DiagnosticData diagnosticData) {
-		// do nothing
-	}
-
-	@Override
 	protected void checkBLevelValid(DiagnosticData diagnosticData) {
 		// do nothing
 	}

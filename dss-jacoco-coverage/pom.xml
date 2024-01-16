@@ -4,13 +4,18 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.11.1.d4j.1</version>
+		<version>6.0.d4j.1</version>
 	</parent>
 
 	<artifactId>dss-jacoco-coverage</artifactId>
+	<name>DSS Jacoco coverage</name>
 	<description>Module used to collect coverage on all dss modules</description>
 
 	<!--  More details : https://community.sonarsource.com/t/coverage-test-data-importing-jacoco-coverage-report-in-xml-format/12151 -->
+
+	<properties>
+		<module-name>jpms_dss_jacoco_coverage</module-name>
+	</properties>
 
 	<build>
 		<plugins>
@@ -65,6 +70,10 @@
 		</dependency>
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
+			<artifactId>specs-xmlers</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>specs-jws</artifactId>
 		</dependency>
 		<dependency>
@@ -74,6 +83,14 @@
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-spi</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-xml-common</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-xml-utils</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
@@ -99,6 +116,14 @@
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-document</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-pki-factory</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-pki-factory-jaxb</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
@@ -131,6 +156,10 @@
 		</dependency>
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-pdfa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-pades-pdfbox</artifactId>
 		</dependency>
 		<dependency>
@@ -140,6 +169,14 @@
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-xades</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-evidence-record-common</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-evidence-record-xml</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>${dss.groupId}</groupId>

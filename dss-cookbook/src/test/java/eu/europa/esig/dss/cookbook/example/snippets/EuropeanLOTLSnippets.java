@@ -30,8 +30,8 @@ import eu.europa.esig.dss.spi.client.http.DSSFileLoader;
 import eu.europa.esig.dss.spi.client.http.IgnoreDataLoader;
 import eu.europa.esig.dss.spi.tsl.TrustedListsCertificateSource;
 import eu.europa.esig.dss.spi.x509.CertificateSource;
-import eu.europa.esig.dss.spi.x509.CommonCertificateSource;
 import eu.europa.esig.dss.spi.x509.KeyStoreCertificateSource;
+import eu.europa.esig.dss.spi.x509.aia.DefaultAIASource;
 import eu.europa.esig.dss.tsl.alerts.LOTLAlert;
 import eu.europa.esig.dss.tsl.alerts.TLAlert;
 import eu.europa.esig.dss.tsl.alerts.detections.LOTLLocationChangeDetection;
@@ -48,7 +48,6 @@ import eu.europa.esig.dss.tsl.job.TLValidationJob;
 import eu.europa.esig.dss.tsl.source.LOTLSource;
 import eu.europa.esig.dss.tsl.sync.AcceptAllStrategy;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
-import eu.europa.esig.dss.spi.x509.aia.DefaultAIASource;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -144,8 +143,7 @@ public class EuropeanLOTLSnippets {
 	public LOTLSource europeanLOTL() {
 		LOTLSource lotlSource = new LOTLSource();
 		lotlSource.setUrl(LOTL_URL);
-//		lotlSource.setCertificateSource(officialJournalContentKeyStore());
-		lotlSource.setCertificateSource(new CommonCertificateSource());
+		lotlSource.setCertificateSource(officialJournalContentKeyStore());
 		lotlSource.setSigningCertificatesAnnouncementPredicate(new OfficialJournalSchemeInformationURI(OJ_URL));
 		lotlSource.setPivotSupport(true);
 		return lotlSource;
@@ -153,7 +151,7 @@ public class EuropeanLOTLSnippets {
 
 	public CertificateSource officialJournalContentKeyStore() {
 		try {
-			return new KeyStoreCertificateSource(new File("src/main/resources/keystore.p12"), "PKCS12", "dss-password");
+			return new KeyStoreCertificateSource(new File("src/main/resources/keystore.p12"), "PKCS12", getPassword());
 		} catch (IOException e) {
 			throw new DSSException("Unable to load the keystore", e);
 		}
@@ -223,5 +221,20 @@ public class EuropeanLOTLSnippets {
 		return new LOTLAlert(lotlLocationDetection, handler);
 	}
 	// end::complete-european-lotl-config[]
+
+	public CommonsDataLoader dataLoaderWithTLSv3() {
+		// tag::data-loader-tls-v3[]
+		CommonsDataLoader dataLoader = new CommonsDataLoader();
+		// enforce TLSv1.3 as a default SSL protocol
+		dataLoader.setSslProtocol("TLSv1.3");
+		// add supported SSL protocols (to be used by the server you establish connection with)
+		dataLoader.setSupportedSSLProtocols(new String[] { "TLSv1.2", "TLSv1.3" });
+		// end::data-loader-tls-v3[]
+		return dataLoader;
+	}
+
+	private char[] getPassword() {
+		return "dss-password".toCharArray();
+	}
 
 }

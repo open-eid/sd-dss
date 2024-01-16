@@ -3,10 +3,10 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.11.1.d4j.1</version>
+		<version>6.0.d4j.1</version>
 	</parent>
 	
-	<name>DSS Server signing SOAP Service</name>
+	<name>DSS Server Signing SOAP Service</name>
 	<artifactId>dss-server-signing-soap</artifactId>
 
 	<properties>

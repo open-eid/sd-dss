@@ -26,6 +26,7 @@ import eu.europa.esig.dss.model.identifier.EntityIdentifier;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.model.x509.X500PrincipalHelper;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
+import eu.europa.esig.dss.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,6 +115,50 @@ public class CommonCertificateSource implements CertificateSource {
 	}
 
 	/**
+	 * This method removes the corresponding certificate token from the certificate source
+	 *
+	 * @param certificateToRemove {@link CertificateToken} to remove
+	 */
+	protected void removeCertificate(final CertificateToken certificateToRemove) {
+		Objects.requireNonNull(certificateToRemove, "The certificate must be filled");
+
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("Certificate to remove: {} | {}", certificateToRemove.getIssuerX500Principal(), certificateToRemove.getSerialNumber());
+		}
+
+		synchronized (entriesByPublicKeyHash) {
+			final EntityIdentifier entityKey = certificateToRemove.getEntityKey();
+			CertificateSourceEntity poolEntity = entriesByPublicKeyHash.get(entityKey);
+			if (poolEntity == null) {
+				LOG.trace("Public key {} is not in the pool", entityKey);
+			} else {
+				LOG.trace("Public key {} is in the pool", entityKey);
+				if (poolEntity.getEquivalentCertificates().size() == 1) {
+					LOG.trace("Remove the public key {} from the pool", entityKey);
+					entriesByPublicKeyHash.remove(entityKey);
+				} else {
+					LOG.trace("Remove the token {} from the pool", certificateToRemove.getAbbreviation());
+					poolEntity.removeEquivalentCertificate(certificateToRemove);
+				}
+			}
+		}
+
+		synchronized (tokensBySubject) {
+			final Map<String, String> propertiesMap = DSSASN1Utils.get(certificateToRemove.getSubject().getPrincipal());
+			Set<CertificateToken> certificateTokens = tokensBySubject.get(propertiesMap);
+			if (Utils.isCollectionEmpty(certificateTokens)) {
+				LOG.trace("Property map {} is not in the pool", propertiesMap);
+			} else {
+				if (certificateTokens.size() == 1) {
+					tokensBySubject.remove(propertiesMap);
+				} else {
+					certificateTokens.remove(certificateToRemove);
+				}
+			}
+		}
+	}
+
+	/**
 	 * This method removes all certificates from the source
 	 */
 	protected void reset() {
@@ -124,7 +169,12 @@ public class CommonCertificateSource implements CertificateSource {
 	@Override
 	public boolean isKnown(CertificateToken token) {
 		final CertificateSourceEntity poolEntity = entriesByPublicKeyHash.get(token.getEntityKey());
-		return poolEntity != null;
+		if (poolEntity != null) {
+			Set<CertificateToken> certsByPublicKey = poolEntity.getEquivalentCertificates();
+			Set<CertificateToken> certsBySubject = getBySubject(token.getSubject());
+			return Utils.containsAny(certsByPublicKey, certsBySubject);
+		}
+		return false;
 	}
 
 	/**
@@ -227,12 +277,23 @@ public class CommonCertificateSource implements CertificateSource {
 		Set<CertificateToken> result = new HashSet<>();
 		for (CertificateSourceEntity entry : entriesByPublicKeyHash.values()) {
 			for (CertificateToken certificateToken : entry.getEquivalentCertificates()) {
-				if (certificateMatcher.match(certificateToken, certificateRef)) {
+				if (doesCertificateReferenceMatch(certificateToken, certificateRef)) {
 					result.add(certificateToken);
 				}
 			}
 		}
 		return result;
+	}
+
+	/**
+	 * This method verifies whether the {@code CertificateRef} does match to the {@code CertificateToken}
+	 *
+	 * @param certificateToken {@link CertificateToken} to be verified
+	 * @param certificateRef {@link CertificateRef} to be used to
+	 * @return TRUE if the certificate reference matches the certificate token, FALSE otherwise
+	 */
+	protected boolean doesCertificateReferenceMatch(CertificateToken certificateToken, CertificateRef certificateRef) {
+		return certificateMatcher.match(certificateToken, certificateRef);
 	}
 
 	/**

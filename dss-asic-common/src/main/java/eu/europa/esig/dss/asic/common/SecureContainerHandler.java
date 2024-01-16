@@ -25,7 +25,7 @@ import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
-import eu.europa.esig.dss.model.MimeType;
+import eu.europa.esig.dss.enumerations.MimeType;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
 import org.slf4j.Logger;
@@ -77,25 +77,22 @@ public class SecureContainerHandler implements ZipContainerHandler {
 	private int maxMalformedFiles = 100;
 
 	/**
+	 * Defines whether comments of ZIP entries shall be extracted.
+	 * Default : false (not extracted)
+	 */
+	private boolean extractComments = false;
+
+	/**
 	 * Internal variable used to calculate the extracted entries size
-	 * 
 	 * NOTE: shall be reset on every use
 	 */
 	private int byteCounter = 0;
 
 	/**
 	 * Internal variables used to count a number of malformed ZIP entries
-	 *
 	 * NOTE: shall be reset on every use
 	 */
 	private int malformedFilesCounter = 0;
-
-	/**
-	 * Defines whether comments of ZIP entries shall be extracted.
-	 *
-	 * Default : false (not extracted)
-	 */
-	private boolean extractComments = false;
 
 	/**
 	 * Default constructor instantiating handler with default configuration

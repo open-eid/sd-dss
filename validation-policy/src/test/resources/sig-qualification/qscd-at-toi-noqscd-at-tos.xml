@@ -90,9 +90,6 @@
             <CountryName>BG</CountryName>
             <OrganizationName>TSP-7.3 Name</OrganizationName>
             <OrganizationalUnit>CERT FOR TEST</OrganizationalUnit>
-            <AuthorityInformationAccessUrls/>
-            <CRLDistributionPoints/>
-            <OCSPAccessUrls/>
             <Sources>
                 <Source>SIGNATURE</Source>
                 <Source>TRUSTED_LIST</Source>
@@ -102,12 +99,6 @@
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
             <EntityKey>PK-9132593D6F764FEE0CC0295920F40C5784D9FB03EAD515AD51890BFD2B806896</EntityKey>
-            <KeyUsageBits>
-                <KeyUsage>keyCertSign</KeyUsage>
-                <KeyUsage>crlSign</KeyUsage>
-            </KeyUsageBits>
-            <ExtendedKeyUsages/>
-            <IdPkixOcspNoCheck>false</IdPkixOcspNoCheck>
             <BasicSignature>
                 <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
                 <KeyLengthUsedToSignThisToken>2048</KeyLengthUsedToSignThisToken>
@@ -118,9 +109,15 @@
             <CertificateChain/>
             <Trusted>true</Trusted>
             <SelfSigned>true</SelfSigned>
-            <CertificatePolicies/>
-            <TrustedServiceProviders>
-                <TrustedServiceProvider TL="TL-EBECEB08E8A5E37F0D537BBB7FD96EBE6548B87017CF65A5A8826FCBFA852FFD" LOTL="LOTL-C60B6849A3F2DBB44ACC1E23F9A8DD7297BA5A96685BC70BE36ECCB13BDFAA3D">
+            <CertificateExtensions>
+                <BasicConstraints OID="2.5.29.19" critical="true" CA="true" />
+                <KeyUsages OID="2.5.29.15" critical="true">
+                    <keyUsageBit>keyCertSign</keyUsageBit>
+                    <keyUsageBit>crlSign</keyUsageBit>
+                </KeyUsages>
+            </CertificateExtensions>
+            <TrustServiceProviders>
+                <TrustServiceProvider TL="TL-EBECEB08E8A5E37F0D537BBB7FD96EBE6548B87017CF65A5A8826FCBFA852FFD" LOTL="LOTL-C60B6849A3F2DBB44ACC1E23F9A8DD7297BA5A96685BC70BE36ECCB13BDFAA3D">
                     <TSPNames>
                         <TSPName lang="en">TSP-7.3 Name</TSPName>
                     </TSPNames>
@@ -128,8 +125,8 @@
                         <TSPTradeName lang="en">TSP-7.3 Trade name</TSPTradeName>
                     </TSPTradeNames>
                     <TSPRegistrationIdentifiers/>
-                    <TrustedServices>
-                        <TrustedService ServiceDigitalIdentifier="C-73647607DD264689DDDCE496B45767D8529525AEE62F510504A642917FA62E2E">
+                    <TrustServices>
+                        <TrustService ServiceDigitalIdentifier="C-73647607DD264689DDDCE496B45767D8529525AEE62F510504A642917FA62E2E">
                             <ServiceNames>
                                 <ServiceName lang="en">TS-7.3.1 Name</ServiceName>
                             </ServiceNames>
@@ -139,8 +136,8 @@
                             <AdditionalServiceInfoUris>
                                 <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
-                        </TrustedService>
-                        <TrustedService ServiceDigitalIdentifier="C-73647607DD264689DDDCE496B45767D8529525AEE62F510504A642917FA62E2E">
+                        </TrustService>
+                        <TrustService ServiceDigitalIdentifier="C-73647607DD264689DDDCE496B45767D8529525AEE62F510504A642917FA62E2E">
                             <ServiceNames>
                                 <ServiceName lang="en">HISTORY-7.3.1.1 Name</ServiceName>
                             </ServiceNames>
@@ -151,10 +148,10 @@
                             <AdditionalServiceInfoUris>
                                 <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
-                        </TrustedService>
-                    </TrustedServices>
-                </TrustedServiceProvider>
-            </TrustedServiceProviders>
+                        </TrustService>
+                    </TrustServices>
+                </TrustServiceProvider>
+            </TrustServiceProviders>
             <DigestAlgoAndValue>
                 <DigestMethod>SHA256</DigestMethod>
                 <DigestValue>c2R2B90mRond3OSWtFdn2FKVJa7mL1EFBKZCkX+mLi4=</DigestValue>
@@ -170,13 +167,6 @@
             <CountryName>BG</CountryName>
             <OrganizationName>TL7 Organization</OrganizationName>
             <OrganizationalUnit>CERT FOR TEST</OrganizationalUnit>
-            <AuthorityInformationAccessUrls>
-                <aiaUrl>http://192.168.87.22:8080/efda/validation-tests/crt/SDI-7.3.1.crt</aiaUrl>
-            </AuthorityInformationAccessUrls>
-            <CRLDistributionPoints>
-                <crlUrl>http://192.168.87.22:8080/efda/validation-tests/crl/SDI-7.3.1.crl</crlUrl>
-            </CRLDistributionPoints>
-            <OCSPAccessUrls/>
             <Sources>
                 <Source>SIGNATURE</Source>
             </Sources>
@@ -185,11 +175,6 @@
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
             <EntityKey>PK-C80E966AF3A366107FC67D758853A752CB4F6E81ADA32AF1EE0DAABA2F3BC799</EntityKey>
-            <KeyUsageBits>
-                <KeyUsage>nonRepudiation</KeyUsage>
-            </KeyUsageBits>
-            <ExtendedKeyUsages/>
-            <IdPkixOcspNoCheck>false</IdPkixOcspNoCheck>
             <BasicSignature>
                 <EncryptionAlgoUsedToSignThisToken>RSA</EncryptionAlgoUsedToSignThisToken>
                 <KeyLengthUsedToSignThisToken>2048</KeyLengthUsedToSignThisToken>
@@ -203,15 +188,25 @@
             </CertificateChain>
             <Trusted>false</Trusted>
             <SelfSigned>false</SelfSigned>
-            <CertificatePolicies/>
-            <QcStatements>
-                <QcCompliance present="true"/>
-                <QcTypes>
-                    <QcType Description="qc-type-esign">0.4.0.1862.1.6.1</QcType>
-                </QcTypes>
-            </QcStatements>
-            <TrustedServiceProviders>
-                <TrustedServiceProvider TL="TL-EBECEB08E8A5E37F0D537BBB7FD96EBE6548B87017CF65A5A8826FCBFA852FFD" LOTL="LOTL-C60B6849A3F2DBB44ACC1E23F9A8DD7297BA5A96685BC70BE36ECCB13BDFAA3D">
+            <CertificateExtensions>
+                <KeyUsages OID="2.5.29.15" critical="true">
+                    <keyUsageBit>nonRepudiation</keyUsageBit>
+                </KeyUsages>
+                <AuthorityInformationAccess OID="1.3.6.1.5.5.7.1.1" critical="false">
+                    <caIssuersUrl>http://192.168.87.22:8080/efda/validation-tests/crt/SDI-7.3.1.crt</caIssuersUrl>
+                </AuthorityInformationAccess>
+                <CRLDistributionPoints OID="2.5.29.31" critical="false">
+                    <crlUrl>http://192.168.87.22:8080/efda/validation-tests/crl/SDI-7.3.1.crl</crlUrl>
+                </CRLDistributionPoints>
+                <QcStatements OID="1.3.6.1.5.5.7.1.3" critical="false">
+                    <QcCompliance present="true"/>
+                    <QcTypes>
+                        <QcType Description="qc-type-esign">0.4.0.1862.1.6.1</QcType>
+                    </QcTypes>
+                </QcStatements>
+            </CertificateExtensions>
+            <TrustServiceProviders>
+                <TrustServiceProvider TL="TL-EBECEB08E8A5E37F0D537BBB7FD96EBE6548B87017CF65A5A8826FCBFA852FFD" LOTL="LOTL-C60B6849A3F2DBB44ACC1E23F9A8DD7297BA5A96685BC70BE36ECCB13BDFAA3D">
                     <TSPNames>
                         <TSPName lang="en">TSP-7.3 Name</TSPName>
                     </TSPNames>
@@ -219,8 +214,8 @@
                         <TSPTradeName lang="en">TSP-7.3 Trade name</TSPTradeName>
                     </TSPTradeNames>
                     <TSPRegistrationIdentifiers/>
-                    <TrustedServices>
-                        <TrustedService ServiceDigitalIdentifier="C-73647607DD264689DDDCE496B45767D8529525AEE62F510504A642917FA62E2E">
+                    <TrustServices>
+                        <TrustService ServiceDigitalIdentifier="C-73647607DD264689DDDCE496B45767D8529525AEE62F510504A642917FA62E2E">
                             <ServiceNames>
                                 <ServiceName lang="en">TS-7.3.1 Name</ServiceName>
                             </ServiceNames>
@@ -233,8 +228,8 @@
                             <AdditionalServiceInfoUris>
                                 <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
-                        </TrustedService>
-                        <TrustedService ServiceDigitalIdentifier="C-73647607DD264689DDDCE496B45767D8529525AEE62F510504A642917FA62E2E">
+                        </TrustService>
+                        <TrustService ServiceDigitalIdentifier="C-73647607DD264689DDDCE496B45767D8529525AEE62F510504A642917FA62E2E">
                             <ServiceNames>
                                 <ServiceName lang="en">HISTORY-7.3.1.1 Name</ServiceName>
                             </ServiceNames>
@@ -248,10 +243,10 @@
                             <AdditionalServiceInfoUris>
                                 <AdditionalServiceInfoUri>http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</AdditionalServiceInfoUri>
                             </AdditionalServiceInfoUris>
-                        </TrustedService>
-                    </TrustedServices>
-                </TrustedServiceProvider>
-            </TrustedServiceProviders>
+                        </TrustService>
+                    </TrustServices>
+                </TrustServiceProvider>
+            </TrustServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-BB524A3A8C7995F8323321A2260A23BE1DF72CE68388A01289376F4DE353195A">
                     <Status>GOOD</Status>

@@ -20,26 +20,26 @@
  */
 package eu.europa.esig.dss.cookbook.example.sign;
 
-import eu.europa.esig.dss.DomUtils;
 import eu.europa.esig.dss.cookbook.example.CookbookTools;
-import eu.europa.esig.dss.definition.DSSNamespace;
 import eu.europa.esig.dss.enumerations.CommitmentType;
 import eu.europa.esig.dss.enumerations.CommitmentTypeEnum;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.enumerations.MimeTypeEnum;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.model.BLevelParameters;
+import eu.europa.esig.dss.model.CommonObjectIdentifier;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
-import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.SignerLocation;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.token.DSSPrivateKeyEntry;
 import eu.europa.esig.dss.token.SignatureTokenConnection;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
+import eu.europa.esig.dss.xades.DSSObject;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
-import eu.europa.esig.dss.xades.definition.XAdESNamespaces;
+import eu.europa.esig.dss.xades.dataobject.DSSDataObjectFormat;
 import eu.europa.esig.dss.xades.reference.Base64Transform;
 import eu.europa.esig.dss.xades.reference.CanonicalizationTransform;
 import eu.europa.esig.dss.xades.reference.DSSReference;
@@ -49,6 +49,9 @@ import eu.europa.esig.dss.xades.reference.XPath2FilterTransform;
 import eu.europa.esig.dss.xades.reference.XPathTransform;
 import eu.europa.esig.dss.xades.reference.XsltTransform;
 import eu.europa.esig.dss.xades.signature.XAdESService;
+import eu.europa.esig.dss.xml.common.definition.DSSNamespace;
+import eu.europa.esig.dss.xml.utils.DomUtils;
+import eu.europa.esig.xades.definition.XAdESNamespace;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 
@@ -57,6 +60,7 @@ import javax.xml.crypto.dsig.XMLSignature;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class SignXmlXadesBWithTransformsTest extends CookbookTools {
@@ -118,6 +122,56 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 			// end::demoReference[]
 
 			// end::demo[]
+
+			// tag::demoDataObjectFormat[]
+			// import eu.europa.esig.dss.model.CommonObjectIdentifier;
+			// import eu.europa.esig.dss.xades.dataobject.DSSDataObjectFormat;
+
+			List<DSSDataObjectFormat> dataObjectFormatList = new ArrayList<>();
+			// Initialize a custom DataObjectFormat identifying the signed data object
+			DSSDataObjectFormat dataObjectFormat = new DSSDataObjectFormat();
+			// Provide a reference to the signed data object
+			dataObjectFormat.setObjectReference("#r-" + toSignDocument.getName());
+			// Define description of the data object
+			dataObjectFormat.setDescription("This describes the signed data object");
+			// Define the MimeType of the data object
+			dataObjectFormat.setMimeType(toSignDocument.getMimeType().getMimeTypeString());
+			// Set the encoding of the data object
+			dataObjectFormat.setEncoding("http://www.w3.org/2000/09/xmldsig#base64");
+
+			// Create an object identifier for the data object
+			CommonObjectIdentifier objectIdentifier = new CommonObjectIdentifier();
+			// Set OID or URI of the document
+			objectIdentifier.setUri("http://nowina.lu/sample");
+			// Provide reference(s) to the document
+			objectIdentifier.setDocumentationReferences("http://nowina.lu/docs/sample.xml");
+			// Set the created ObjectIdentifier
+			dataObjectFormat.setObjectIdentifier(objectIdentifier);
+
+			// Add the created DSSDataObjectFormat to a list and set the signature parameters
+			dataObjectFormatList.add(dataObjectFormat);
+			parameters.setDataObjectFormatList(dataObjectFormatList);
+			// end::demoDataObjectFormat[]
+
+			DSSDocument objectContent = toSignDocument;
+			// tag::demoObjects[]
+			// import eu.europa.esig.dss.enumerations.MimeTypeEnum;
+			// import eu.europa.esig.dss.xades.DSSObject;
+
+			// Create a DSSObject representing a ds:Object element structure
+			DSSObject object = new DSSObject();
+			// Provide a content of a DSSDocument format
+			object.setContent(objectContent);
+			// Set the identifier
+			object.setId("o-id-object");
+			// Set the MimeType
+			object.setMimeType(MimeTypeEnum.XML.getMimeTypeString());
+			// Set the encoding
+			object.setEncodingAlgorithm("http://www.w3.org/2000/09/xmldsig#base64");
+
+			// Set the object to the signature parameters
+			parameters.setObjects(Collections.singletonList(object));
+			// end::demoObjects[]
 			
 			parameters.setDigestAlgorithm(DigestAlgorithm.SHA512);
 			parameters.setSigningCertificate(privateKey.getCertificate());
@@ -145,7 +199,7 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 
 			CommonCertificateVerifier verifier = new CommonCertificateVerifier();
 			XAdESService service = new XAdESService(verifier);
-			service.setTspSource(getOnlineTSPSource());
+			service.setTspSource(getTSPSource());
 
 			// Signature process with its 3 stateless steps
 			ToBeSigned dataToSign = service.getDataToSign(toSignDocument, parameters);
@@ -158,23 +212,23 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 
 			// tag::demoPrefixes[]
 			// import eu.europa.esig.dss.xades.XAdESSignatureParameters;
-			// import eu.europa.esig.dss.xades.definition.XAdESNamespaces;
+			// import eu.europa.esig.xades.definition.XAdESNamespace;
 			// import eu.europa.esig.dss.definition.DSSNamespace;
 			// import javax.xml.crypto.dsig.XMLSignature;
 
 			parameters = new XAdESSignatureParameters();
 			
 			// Allows setting of a XAdES namespace (changes a XAdES format)
-			// Default : XAdESNamespaces.XADES_132 (produces XAdES 1.3.2)
-			parameters.setXadesNamespace(XAdESNamespaces.XADES_132);
+			// Default : XAdESNamespace.XADES_132 (produces XAdES 1.3.2)
+			parameters.setXadesNamespace(XAdESNamespace.XADES_132);
 			
 			// Defines an XmlDSig prefix
-			// Default : XAdESNamespaces.XMLDSIG
+			// Default : XAdESNamespace.XMLDSIG
 			parameters.setXmldsigNamespace(new DSSNamespace(XMLSignature.XMLNS, "myPrefix"));
 			
 			// Defines a XAdES 1.4.1 format prefix
-			// Default : XAdESNamespaces.XADES_141
-			parameters.setXades141Namespace(XAdESNamespaces.XADES_141);
+			// Default : XAdESNamespace.XADES_141
+			parameters.setXades141Namespace(XAdESNamespace.XADES_141);
 			
 			// end::demoPrefixes[]
 		}
@@ -188,7 +242,7 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 
 			DSSPrivateKeyEntry privateKey = signingToken.getKeys().get(0);
 
-			DSSDocument document = new InMemoryDocument("Hello World!".getBytes(), "Hello.txt", MimeType.BINARY);
+			DSSDocument document = new InMemoryDocument("Hello World!".getBytes(), "Hello.txt", MimeTypeEnum.BINARY);
 			List<DSSTransform> transforms = new ArrayList<>();
 			// tag::demoBase64Transform[]
 			// import eu.europa.esig.dss.xades.reference.Base64Transform;
@@ -236,7 +290,7 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 
 			CommonCertificateVerifier verifier = new CommonCertificateVerifier();
 			XAdESService service = new XAdESService(verifier);
-			service.setTspSource(getOnlineTSPSource());
+			service.setTspSource(getTSPSource());
 
 			ToBeSigned dataToSign = service.getDataToSign(document, parameters);
 			SignatureValue signatureValue = signingToken.sign(dataToSign, parameters.getDigestAlgorithm(), privateKey);
@@ -302,7 +356,7 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 
 			CommonCertificateVerifier verifier = new CommonCertificateVerifier();
 			XAdESService service = new XAdESService(verifier);
-			service.setTspSource(getOnlineTSPSource());
+			service.setTspSource(getTSPSource());
 
 			ToBeSigned dataToSign = service.getDataToSign(toSignDocument, parameters);
 			SignatureValue signatureValue = signingToken.sign(dataToSign, parameters.getDigestAlgorithm(), privateKey);
@@ -369,7 +423,7 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 
 			CommonCertificateVerifier verifier = new CommonCertificateVerifier();
 			XAdESService service = new XAdESService(verifier);
-			service.setTspSource(getOnlineTSPSource());
+			service.setTspSource(getTSPSource());
 
 			ToBeSigned dataToSign = service.getDataToSign(toSignDocument, parameters);
 			SignatureValue signatureValue = signingToken.sign(dataToSign, parameters.getDigestAlgorithm(), privateKey);
@@ -430,7 +484,7 @@ public class SignXmlXadesBWithTransformsTest extends CookbookTools {
 
 			CommonCertificateVerifier verifier = new CommonCertificateVerifier();
 			XAdESService service = new XAdESService(verifier);
-			service.setTspSource(getOnlineTSPSource());
+			service.setTspSource(getTSPSource());
 
 			ToBeSigned dataToSign = service.getDataToSign(toSignDocument, parameters);
 			SignatureValue signatureValue = signingToken.sign(dataToSign, parameters.getDigestAlgorithm(), privateKey);

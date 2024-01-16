@@ -41,10 +41,11 @@ import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.validationreport.jaxb.ValidationReportType;
 import org.junit.jupiter.api.Test;
 
-import javax.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBContext;
 import javax.xml.transform.Templates;
 import javax.xml.validation.Schema;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -177,11 +178,16 @@ public class SignedDocumentValidatorTest {
 		assertNotNull(xmlDetailedReport);
 		assertNotNull(htmlDetailedReport);
 
+		DSSDocument evidenceRecordDocument = null;
+		// tag::detached-evidence-records[]
+		documentValidator.setDetachedEvidenceRecordDocuments(Collections.singletonList(evidenceRecordDocument));
+		// end::detached-evidence-records[]
+
 		// tag::demo-xml-definer[]
 		// import eu.europa.esig.dss.detailedreport.DetailedReportFacade;
 		// import eu.europa.esig.dss.detailedreport.DetailedReportXmlDefiner;
 		// import eu.europa.esig.dss.detailedreport.jaxb.ObjectFactory;
-		// import javax.xml.bind.JAXBContext;
+		// import jakarta.xml.bind.JAXBContext;
 		// import javax.xml.transform.Templates;
 		// import javax.xml.validation.Schema;
 

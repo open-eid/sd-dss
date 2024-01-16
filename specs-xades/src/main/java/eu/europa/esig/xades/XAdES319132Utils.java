@@ -20,12 +20,12 @@
  */
 package eu.europa.esig.xades;
 
-import eu.europa.esig.xmldsig.XSDAbstractUtils;
+import eu.europa.esig.dss.jaxb.common.XSDAbstractUtils;
 import eu.europa.esig.xmldsig.XmlDSigUtils;
 import eu.europa.esig.xmldsig.jaxb.ObjectFactory;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import java.util.List;
@@ -47,6 +47,9 @@ public final class XAdES319132Utils extends XSDAbstractUtils {
 	/** JAXBContext */
 	private JAXBContext jc;
 
+	/**
+	 * Empty constructor
+	 */
 	private XAdES319132Utils() {
 		// empty
 	}

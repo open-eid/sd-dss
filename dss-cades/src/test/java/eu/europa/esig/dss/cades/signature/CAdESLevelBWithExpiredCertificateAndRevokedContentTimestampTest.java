@@ -35,7 +35,7 @@ import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.simplereport.SimpleReport;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
-import eu.europa.esig.dss.validation.timestamp.TimestampToken;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampToken;
 import eu.europa.esig.validationreport.enums.ObjectType;
 import eu.europa.esig.validationreport.jaxb.RevocationStatusInformationType;
 import eu.europa.esig.validationreport.jaxb.SignatureValidationReportType;
@@ -80,7 +80,6 @@ public class CAdESLevelBWithExpiredCertificateAndRevokedContentTimestampTest ext
 		TimestampToken contentTimestamp = service.getContentTimestamp(documentToSign, signatureParameters);
 		List<TimestampToken> contentTimestamps = Arrays.asList(contentTimestamp);
 		signatureParameters.setContentTimestamps(contentTimestamps);
-
 	}
 
 	@Override
@@ -103,7 +102,7 @@ public class CAdESLevelBWithExpiredCertificateAndRevokedContentTimestampTest ext
 		Indication indication = simpleReport.getIndication(simpleReport.getFirstSignatureId());
 		assertEquals(Indication.INDETERMINATE, indication);
 		SubIndication subIndication = simpleReport.getSubIndication(simpleReport.getFirstSignatureId());
-		assertEquals(SubIndication.TRY_LATER, subIndication);
+		assertEquals(SubIndication.CERTIFICATE_CHAIN_GENERAL_FAILURE, subIndication);
 	}
 	
 	@Override

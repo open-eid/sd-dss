@@ -33,9 +33,9 @@ import eu.europa.esig.dss.detailedreport.jaxb.XmlTimestamp;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.Indication;
+import eu.europa.esig.dss.enumerations.MimeTypeEnum;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
-import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.simplereport.SimpleReport;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
@@ -62,8 +62,8 @@ public class ASiCSWithCAdESTimestampValidatorTest extends AbstractASiCWithCAdEST
     @BeforeEach
     public void init() {
         documentsToSign = new ArrayList<>();
-        documentsToSign.add(new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeType.TEXT));
-        documentsToSign.add(new InMemoryDocument("Bye World !".getBytes(), "test2.text", MimeType.TEXT));
+        documentsToSign.add(new InMemoryDocument("Hello World !".getBytes(), "test.text", MimeTypeEnum.TEXT));
+        documentsToSign.add(new InMemoryDocument("Bye World !".getBytes(), "test2.text", MimeTypeEnum.TEXT));
     }
 
     @Override
@@ -124,7 +124,7 @@ public class ASiCSWithCAdESTimestampValidatorTest extends AbstractASiCWithCAdEST
         List<String> timestampIds = detailedReport.getTimestampIds();
         assertEquals(1, timestampIds.size());
         String timestampId = timestampIds.get(0);
-        assertEquals(Indication.PASSED, detailedReport.getTimestampValidationIndication(timestampId));
+        assertEquals(Indication.PASSED, detailedReport.getBasicTimestampValidationIndication(timestampId));
 
         XmlBasicBuildingBlocks timestampBBB = detailedReport.getBasicBuildingBlockById(timestampId);
         assertNotNull(timestampBBB.getCertificateChain());

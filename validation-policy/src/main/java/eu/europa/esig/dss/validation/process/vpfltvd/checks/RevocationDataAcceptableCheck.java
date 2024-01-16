@@ -34,6 +34,7 @@ import eu.europa.esig.dss.validation.process.ValidationProcessUtils;
 /**
  * Verifies the result of a basic revocation validation process
  *
+ * @param <T> implementation of the block's conclusion
  */
 public class RevocationDataAcceptableCheck<T extends XmlConstraintsConclusion> extends ChainItem<T> {
 
@@ -75,7 +76,7 @@ public class RevocationDataAcceptableCheck<T extends XmlConstraintsConclusion> e
 
 	@Override
 	protected String buildAdditionalInfo() {
-		return i18nProvider.getMessage(MessageTag.REVOCATION_ID, revocationId);
+		return i18nProvider.getMessage(MessageTag.TOKEN_ID, revocationId);
 	}
 
 	@Override

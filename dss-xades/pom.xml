@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.11.1.d4j.1</version>
+		<version>6.0.d4j.1</version>
 	</parent>
 
 	<artifactId>dss-xades</artifactId>
@@ -22,16 +22,20 @@
             <groupId>${dss.groupId}</groupId>
             <artifactId>dss-document</artifactId>
         </dependency>
-        
 		<dependency>
-			<groupId>org.apache.santuario</groupId>
-			<artifactId>xmlsec</artifactId>
+			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-xml-utils</artifactId>
 		</dependency>
         
 		<dependency>
 			<groupId>${dss.groupId}</groupId>
 			<artifactId>dss-test</artifactId>
 			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>${dss.groupId}</groupId>
+			<artifactId>dss-evidence-record-xml</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

@@ -52,9 +52,4 @@ public class XAdESWithPolicyValidationTest extends AbstractXAdESTestValidation {
 		// do nothing
 	}
 
-	@Override
-	protected void checkSignatureLevel(DiagnosticData diagnosticData) {
-		// do nothing
-	}
-
 }

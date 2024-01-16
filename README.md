@@ -12,16 +12,19 @@ Please, use the new JIRA for project is on https://ec.europa.eu/digital-building
 
 The latest version of DSS framework has the following minimal requirements:
 
- * Java 11 and higher (tested up to Java 18) for the build is required. For usage Java 8 is a minimum requirement;
- * Maven 3.6 and higher;
- * Memory and Disk: see minimal requirements for the used JVM. In general the higher available is better;
- * Operating system: no specific requirements (tested on Windows and Linux).
+* Java 8 or higher (tested up to Java 21) is required for usage;
+* Java 11 or higher is required for the build. Java 15 is the minimal requirement for a build with unit tests;
+* Maven 3.6.3 and higher (if build required);
+* Memory and Disk: see minimal requirements for the used JVM. In general the higher available is better;
+* Operating system: no specific requirements (tested on Windows and Linux).
+
+Starting from version `6.0`, DSS uses `jakarta.\*` namespace naming of Specification API. If your application uses `javax.*` namespaces, please use version `5.13`.
 
 # Maven repository
 
-The release is published on Maven Central : 
+The release is published on Maven Central repository : 
 
-https://mvnrepository.com/artifact/eu.europa.ec.joinup.sd-dss
+https://central.sonatype.com/search?q=eu.europa.ec.joinup.sd-dss
 
 <pre>
 &lt;!-- Add dss-bom for easy integration --&gt;
@@ -30,7 +33,7 @@ https://mvnrepository.com/artifact/eu.europa.ec.joinup.sd-dss
         &lt;dependency&gt;
             &lt;groupId&gt;eu.europa.ec.joinup.sd-dss&lt;/groupId&gt;
             &lt;artifactId&gt;dss-bom&lt;/artifactId&gt;
-            &lt;version&gt;5.10.2&lt;/version&gt;
+            &lt;version&gt;6.0&lt;/version&gt;
             &lt;type&gt;pom&lt;/type&gt;
             &lt;scope&gt;import&lt;/scope&gt;
         &lt;/dependency&gt;
@@ -104,9 +107,10 @@ The code of the demonstration can be found on https://ec.europa.eu/digital-build
 
 # Licenses
 
-The DSS project is delivered under the terms of the Lesser General Public License (LPGL), version 2.1 ([![License (LGPL version 2.1)](https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-blue.svg?style=flat-square)](https://opensource.org/licenses/LGPL-2.1)
+The DSS project is delivered under the terms of the Lesser General Public License (LGPL), version 2.1 
+
+[![License (LGPL version 2.1)](https://img.shields.io/badge/license-GNU%20LGPL%20version%202.1-blue.svg?style=flat-square)](https://opensource.org/licenses/LGPL-2.1)
 
 SPDX-License-Identifier : LGPL-2.1
-
 
 [![SonarCloud](https://sonarcloud.io/api/project_badges/measure?project=eu.europa.ec.joinup.sd-dss%3Asd-dss&metric=alert_status)](https://sonarcloud.io/dashboard?id=eu.europa.ec.joinup.sd-dss%3Asd-dss)

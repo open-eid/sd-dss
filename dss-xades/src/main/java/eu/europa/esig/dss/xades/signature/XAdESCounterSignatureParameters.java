@@ -20,11 +20,13 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
+import eu.europa.esig.dss.xml.utils.XMLCanonicalizer;
 import eu.europa.esig.dss.model.SerializableCounterSignatureParameters;
 import eu.europa.esig.dss.model.identifier.TokenIdentifier;
 import eu.europa.esig.dss.spi.DSSUtils;
-import eu.europa.esig.dss.xades.DSSXMLUtils;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
+
+import java.util.Objects;
 
 /**
  * Parameters for a XAdES counter-signature creation
@@ -44,12 +46,13 @@ public class XAdESCounterSignatureParameters extends XAdESSignatureParameters im
 	 * The canonicalization method used for a SignatureValue canonicalization
 	 * The EXCLUSIVE canonicalization is used by default
 	 */
-	private String counterSignatureCanonicalizationMethod = DSSXMLUtils.DEFAULT_DSS_C14N_METHOD;
+	private String counterSignatureCanonicalizationMethod = XMLCanonicalizer.DEFAULT_DSS_C14N_METHOD;
 
 	/**
 	 * Default constructor instantiating object with null values
 	 */
 	public XAdESCounterSignatureParameters() {
+		// empty
 	}
 
 	@Override
@@ -63,7 +66,7 @@ public class XAdESCounterSignatureParameters extends XAdESSignatureParameters im
 	}
 
 	/**
-	 * Returns a canonicalization method used for a counter signed SignatureValue
+	 * Returns a canonicalization method used for a counter-signed SignatureValue
 	 * 
 	 * @return {@link String} canonicalization method to use
 	 */
@@ -72,7 +75,7 @@ public class XAdESCounterSignatureParameters extends XAdESSignatureParameters im
 	}
 
 	/**
-	 * Sets a canonicalization method used for a counter signed SignatureValue
+	 * Sets a canonicalization method used for a counter-signed SignatureValue
 	 * 
 	 * @param counterSignatureCanonicalizationMethod {@link String} canonicalization method to use
 	 */
@@ -89,6 +92,35 @@ public class XAdESCounterSignatureParameters extends XAdESSignatureParameters im
 			getContext().setDeterministicId(deterministicId);
 		}
 		return deterministicId;
+	}
+
+	@Override
+	public String toString() {
+		return "XAdESCounterSignatureParameters{" +
+				"signatureIdToCounterSign='" + signatureIdToCounterSign + '\'' +
+				", counterSignatureCanonicalizationMethod='" + counterSignatureCanonicalizationMethod + '\'' +
+				"} " + super.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof XAdESCounterSignatureParameters)) return false;
+		if (!super.equals(o)) return false;
+
+		XAdESCounterSignatureParameters that = (XAdESCounterSignatureParameters) o;
+
+		if (!Objects.equals(signatureIdToCounterSign, that.signatureIdToCounterSign))
+			return false;
+		return Objects.equals(counterSignatureCanonicalizationMethod, that.counterSignatureCanonicalizationMethod);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + (signatureIdToCounterSign != null ? signatureIdToCounterSign.hashCode() : 0);
+		result = 31 * result + (counterSignatureCanonicalizationMethod != null ? counterSignatureCanonicalizationMethod.hashCode() : 0);
+		return result;
 	}
 
 }

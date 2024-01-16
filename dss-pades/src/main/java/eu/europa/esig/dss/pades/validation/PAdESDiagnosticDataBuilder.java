@@ -21,6 +21,7 @@
 package eu.europa.esig.dss.pades.validation;
 
 import eu.europa.esig.dss.cades.validation.CAdESDiagnosticDataBuilder;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlByteRange;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDocMDP;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlModification;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlModificationDetection;
@@ -46,7 +47,7 @@ import eu.europa.esig.dss.pdf.modifications.PdfModificationDetection;
 import eu.europa.esig.dss.pdf.modifications.PdfObjectModifications;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
-import eu.europa.esig.dss.validation.timestamp.TimestampToken;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampToken;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -62,6 +63,7 @@ public class PAdESDiagnosticDataBuilder extends CAdESDiagnosticDataBuilder {
 	 * Default constructor
 	 */
 	public PAdESDiagnosticDataBuilder() {
+		// empty
 	}
 
 	@Override
@@ -69,6 +71,7 @@ public class PAdESDiagnosticDataBuilder extends CAdESDiagnosticDataBuilder {
 		XmlSignature xmlSignature = super.buildDetachedXmlSignature(signature);
 		PAdESSignature padesSignature = (PAdESSignature) signature;
 		xmlSignature.setPDFRevision(getXmlPDFRevision(padesSignature.getPdfRevision()));
+		xmlSignature.setVRIDictionaryCreationTime(padesSignature.getVRICreationTime());
 		return xmlSignature;
 	}
 	
@@ -131,12 +134,20 @@ public class PAdESDiagnosticDataBuilder extends CAdESDiagnosticDataBuilder {
 			pdfSignatureDictionary.setContactInfo(emptyToNull(pdfSigDict.getContactInfo()));
 			pdfSignatureDictionary.setLocation(emptyToNull(pdfSigDict.getLocation()));
 			pdfSignatureDictionary.setReason(emptyToNull(pdfSigDict.getReason()));
-			pdfSignatureDictionary.getSignatureByteRange().addAll(pdfSigDict.getByteRange().toBigIntegerList());
+			pdfSignatureDictionary.setSignatureByteRange(getXmlByteRange(pdfSigDict.getByteRange()));
 			pdfSignatureDictionary.setDocMDP(getXmlDocMDP(pdfSigDict.getDocMDP()));
 			pdfSignatureDictionary.setFieldMDP(getXmlPDFLockDictionary(pdfSigDict.getFieldMDP()));
+			pdfSignatureDictionary.setConsistent(pdfSigDict.isConsistent());
 			return pdfSignatureDictionary;
 		}
 		return null;
+	}
+
+	private XmlByteRange getXmlByteRange(ByteRange byteRange) {
+		XmlByteRange xmlByteRange = new XmlByteRange();
+		xmlByteRange.getValue().addAll(byteRange.toBigIntegerList());
+		xmlByteRange.setValid(byteRange.isValid());
+		return xmlByteRange;
 	}
 
 	private XmlDocMDP getXmlDocMDP(CertificationPermission certificationPermission) {
@@ -226,7 +237,7 @@ public class PAdESDiagnosticDataBuilder extends CAdESDiagnosticDataBuilder {
 	}
 
 	private void buildOrphanTokensFromDocumentSources() {
-		for (CertificateToken certificateToken : documentCertificateSource.getAllCertificateTokens()) {
+		for (CertificateToken certificateToken : documentCertificateSource.getCertificates()) {
 			String id = certificateToken.getDSSIdAsString();
 			if (!xmlCertsMap.containsKey(id) && !xmlOrphanCertificateTokensMap.containsKey(id)) {
 				buildXmlOrphanCertificateToken(certificateToken);

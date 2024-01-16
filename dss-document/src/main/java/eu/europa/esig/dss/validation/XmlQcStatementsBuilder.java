@@ -31,11 +31,11 @@ import eu.europa.esig.dss.diagnostic.jaxb.XmlRoleOfPSP;
 import eu.europa.esig.dss.enumerations.OidDescription;
 import eu.europa.esig.dss.enumerations.QCType;
 import eu.europa.esig.dss.enumerations.RoleOfPspOid;
-import eu.europa.esig.dss.model.x509.PSD2QcType;
-import eu.europa.esig.dss.model.x509.PdsLocation;
-import eu.europa.esig.dss.model.x509.QCLimitValue;
-import eu.europa.esig.dss.model.x509.QcStatements;
-import eu.europa.esig.dss.model.x509.RoleOfPSP;
+import eu.europa.esig.dss.model.x509.extension.PSD2QcType;
+import eu.europa.esig.dss.model.x509.extension.PdsLocation;
+import eu.europa.esig.dss.model.x509.extension.QCLimitValue;
+import eu.europa.esig.dss.model.x509.extension.QcStatements;
+import eu.europa.esig.dss.model.x509.extension.RoleOfPSP;
 import eu.europa.esig.dss.utils.Utils;
 
 import java.util.ArrayList;
@@ -62,6 +62,8 @@ public class XmlQcStatementsBuilder {
      */
     public XmlQcStatements build(QcStatements qcStatements) {
         XmlQcStatements result = new XmlQcStatements();
+        result.setOID(qcStatements.getOid());
+        result.setCritical(qcStatements.isCritical());
         result.setQcCompliance(buildXmlQcCompliance(qcStatements.isQcCompliance()));
         result.setQcSSCD(buildXmlQcSSCD(qcStatements.isQcQSCD()));
         if (qcStatements.getQcEuRetentionPeriod() != null) {
@@ -224,6 +226,76 @@ public class XmlQcStatementsBuilder {
         xmlQcEuLimitValue.setAmount(qcLimitValue.getAmount());
         xmlQcEuLimitValue.setExponent(qcLimitValue.getExponent());
         return xmlQcEuLimitValue;
+    }
+
+    /**
+     * Builds a deep copy of {@code XmlQcStatements}
+     * NOTE: does not copy MRA content
+     *
+     * @param xmlQcStatements {@link XmlQcStatements} to copy
+     * @return new {@link XmlQcStatements}
+     */
+    public XmlQcStatements copy(XmlQcStatements xmlQcStatements) {
+        XmlQcStatements copy = new XmlQcStatements();
+        copy.setOID(xmlQcStatements.getOID());
+        copy.setDescription(xmlQcStatements.getDescription());
+        copy.setCritical(xmlQcStatements.isCritical());
+        if (xmlQcStatements.getQcCompliance() != null) {
+            XmlQcCompliance xmlQcCompliance = new XmlQcCompliance();
+            xmlQcCompliance.setPresent(xmlQcStatements.getQcCompliance().isPresent());
+            copy.setQcCompliance(xmlQcCompliance);
+        }
+        if (xmlQcStatements.getQcEuLimitValue() != null) {
+            XmlQcEuLimitValue xmlQcEuLimitValue = new XmlQcEuLimitValue();
+            xmlQcEuLimitValue.setAmount(xmlQcStatements.getQcEuLimitValue().getAmount());
+            xmlQcEuLimitValue.setCurrency(xmlQcStatements.getQcEuLimitValue().getCurrency());
+            xmlQcEuLimitValue.setExponent(xmlQcStatements.getQcEuLimitValue().getExponent());
+            copy.setQcEuLimitValue(xmlQcEuLimitValue);
+        }
+        copy.setQcEuRetentionPeriod(xmlQcStatements.getQcEuRetentionPeriod());
+        if (xmlQcStatements.getQcSSCD() != null) {
+            XmlQcSSCD xmlQcSSCD = new XmlQcSSCD();
+            xmlQcSSCD.setPresent(xmlQcStatements.getQcSSCD().isPresent());
+            copy.setQcSSCD(xmlQcSSCD);
+        }
+        if (xmlQcStatements.getSemanticsIdentifier() != null) {
+            XmlOID xmlSemanticIdentifier = new XmlOID();
+            xmlSemanticIdentifier.setDescription(xmlQcStatements.getSemanticsIdentifier().getDescription());
+            xmlSemanticIdentifier.setValue(xmlQcStatements.getSemanticsIdentifier().getValue());
+            copy.setSemanticsIdentifier(xmlSemanticIdentifier);
+        }
+        if (xmlQcStatements.getPSD2QcInfo() != null) {
+            XmlPSD2QcInfo xmlPSD2QcInfo = new XmlPSD2QcInfo();
+            xmlPSD2QcInfo.setNcaId(xmlQcStatements.getPSD2QcInfo().getNcaId());
+            xmlPSD2QcInfo.setNcaName(xmlQcStatements.getPSD2QcInfo().getNcaName());
+            for (XmlRoleOfPSP roleOfPSP : xmlQcStatements.getPSD2QcInfo().getRolesOfPSP()) {
+                XmlRoleOfPSP xmlRoleOfPSP = new XmlRoleOfPSP();
+                xmlRoleOfPSP.setName(roleOfPSP.getName());
+                xmlRoleOfPSP.setOid(roleOfPSP.getOid());
+                xmlPSD2QcInfo.getRolesOfPSP().add(xmlRoleOfPSP);
+            }
+            copy.setPSD2QcInfo(xmlPSD2QcInfo);
+        }
+        for (XmlLangAndValue xmlLangAndValue : xmlQcStatements.getQcEuPDS()) {
+            XmlLangAndValue xmlQcEuPDS = new XmlLangAndValue();
+            xmlQcEuPDS.setLang(xmlLangAndValue.getLang());
+            xmlQcEuPDS.setValue(xmlLangAndValue.getValue());
+            copy.getQcEuPDS().add(xmlQcEuPDS);
+        }
+        for (XmlOID xmlOID : xmlQcStatements.getQcTypes()) {
+            XmlOID xmlQcType = new XmlOID();
+            xmlQcType.setDescription(xmlOID.getDescription());
+            xmlQcType.setValue(xmlOID.getValue());
+            copy.getQcTypes().add(xmlQcType);
+        }
+        copy.getQcCClegislation().addAll(xmlQcStatements.getQcCClegislation());
+        for (XmlOID xmlOID : xmlQcStatements.getOtherOIDs()) {
+            XmlOID xmlOtherOID = new XmlOID();
+            xmlOtherOID.setDescription(xmlOID.getDescription());
+            xmlOtherOID.setValue(xmlOID.getValue());
+            copy.getOtherOIDs().add(xmlOtherOID);
+        }
+        return copy;
     }
 
 }

@@ -20,6 +20,9 @@
  */
 package eu.europa.esig.dss.spi.tsl;
 
+import eu.europa.esig.dss.spi.util.MutableTimeDependentValues;
+
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -27,7 +30,9 @@ import java.util.List;
  * of a Mutual Recognition Agreement schema
  *
  */
-public class MRA {
+public class MRA implements Serializable {
+
+	private static final long serialVersionUID = 6498087340536063280L;
 
 	/** Value of technicalType attribute */
 	private String technicalType;
@@ -42,7 +47,7 @@ public class MRA {
 	private String pointedContractingPartyLegislation;
 
 	/** Contains a list of equivalence schemes defined for various Trust Services */
-	private List<ServiceEquivalence> serviceEquivalence;
+	private List<MutableTimeDependentValues<ServiceEquivalence>> serviceEquivalence;
 
 	/**
 	 * Default constructor instantiating object with null values
@@ -126,18 +131,18 @@ public class MRA {
 	/**
 	 * Gets the list of equivalence mapping between Trust Services
 	 *
-	 * @return a list of {@link ServiceEquivalence}s
+	 * @return a list of {@link MutableTimeDependentValues<ServiceEquivalence>}s
 	 */
-	public List<ServiceEquivalence> getServiceEquivalence() {
+	public List<MutableTimeDependentValues<ServiceEquivalence>> getServiceEquivalence() {
 		return serviceEquivalence;
 	}
 
 	/**
 	 * Sets the list of equivalence mapping between Trust Services
 	 *
-	 * @param serviceEquivalence a list of {@link ServiceEquivalence}s
+	 * @param serviceEquivalence a list of {@link MutableTimeDependentValues<ServiceEquivalence>}s
 	 */
-	public void setServiceEquivalence(List<ServiceEquivalence> serviceEquivalence) {
+	public void setServiceEquivalence(List<MutableTimeDependentValues<ServiceEquivalence>> serviceEquivalence) {
 		this.serviceEquivalence = serviceEquivalence;
 	}
 

@@ -22,12 +22,16 @@ package eu.europa.esig.dss.service.ocsp;
 
 import eu.europa.esig.dss.enumerations.RevocationOrigin;
 import eu.europa.esig.dss.model.x509.CertificateToken;
+import eu.europa.esig.dss.model.x509.extension.AuthorityInformationAccess;
 import eu.europa.esig.dss.model.x509.revocation.ocsp.OCSP;
+import eu.europa.esig.dss.service.http.commons.CommonsDataLoader;
+import eu.europa.esig.dss.service.http.commons.OCSPDataLoader;
+import eu.europa.esig.dss.spi.CertificateExtensionsUtils;
+import eu.europa.esig.dss.spi.DSSRevocationUtils;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.client.jdbc.JdbcCacheConnector;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationToken;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPToken;
-import org.apache.commons.codec.binary.Hex;
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,10 +42,13 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.sql.SQLException;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -93,13 +100,13 @@ public class JdbcCacheOcspSourceTest {
 		assertEquals(revocationToken.getAbbreviation(), savedRevocationToken.getAbbreviation());
 		assertEquals(revocationToken.getCreationDate(), savedRevocationToken.getCreationDate());
 		assertEquals(revocationToken.getDSSIdAsString(), savedRevocationToken.getDSSIdAsString());
-		assertEquals(Hex.encodeHexString(revocationToken.getEncoded()), Hex.encodeHexString(savedRevocationToken.getEncoded()));
-		assertEquals(Hex.encodeHexString(revocationToken.getIssuerX500Principal().getEncoded()), Hex.encodeHexString(savedRevocationToken.getIssuerX500Principal().getEncoded()));
+		assertArrayEquals(revocationToken.getEncoded(), savedRevocationToken.getEncoded());
+		assertArrayEquals(revocationToken.getIssuerX500Principal().getEncoded(), savedRevocationToken.getIssuerX500Principal().getEncoded());
 		assertEquals(revocationToken.getNextUpdate(), savedRevocationToken.getNextUpdate());
 		assertEquals(RevocationOrigin.CACHED, savedRevocationToken.getExternalOrigin());
 		assertNotEquals(revocationToken.getExternalOrigin(), savedRevocationToken.getExternalOrigin());
 		assertEquals(revocationToken.getProductionDate(), savedRevocationToken.getProductionDate());
-		assertEquals(Hex.encodeHexString(revocationToken.getPublicKeyOfTheSigner().getEncoded()), Hex.encodeHexString(savedRevocationToken.getPublicKeyOfTheSigner().getEncoded()));
+		assertArrayEquals(revocationToken.getPublicKeyOfTheSigner().getEncoded(), savedRevocationToken.getPublicKeyOfTheSigner().getEncoded());
 		assertEquals(revocationToken.getReason(), savedRevocationToken.getReason());
 		assertEquals(revocationToken.getRelatedCertificateId(), savedRevocationToken.getRelatedCertificateId());
 		assertEquals(revocationToken.getRevocationDate(), savedRevocationToken.getRevocationDate());
@@ -133,6 +140,36 @@ public class JdbcCacheOcspSourceTest {
 		assertEquals(RevocationOrigin.EXTERNAL, refreshedRevocationToken.getExternalOrigin());
 
 	}
+
+	@Test
+	public void testMultipleOCSPResponses() {
+		CommonsDataLoader dataLoader = new CommonsDataLoader();
+
+		CertificateToken goodUser = DSSUtils.loadCertificate(dataLoader.get("http://dss.nowina.lu/pki-factory/crt/good-user.crt"));
+		CertificateToken goodCa = DSSUtils.loadCertificate(dataLoader.get("http://dss.nowina.lu/pki-factory/crt/good-ca.crt"));
+
+		OnlineOCSPSource onlineOCSPSource = new OnlineOCSPSource(new OCSPDataLoader());
+		OCSPToken firstOCSPToken = onlineOCSPSource.getRevocationToken(goodUser, goodCa);
+		OCSPToken secondOCSPToken = onlineOCSPSource.getRevocationToken(goodUser, goodCa);
+
+		AuthorityInformationAccess aia = CertificateExtensionsUtils.getAuthorityInformationAccess(goodUser);
+		assertNotNull(aia);
+		List<String> ocspAccessLocations = aia.getOcsp();
+		assertEquals(1, ocspAccessLocations.size());
+		String ocspRevocationKey = DSSRevocationUtils.getOcspRevocationKey(goodUser, ocspAccessLocations.get(0));
+
+		ocspSource.insertRevocation(ocspRevocationKey, firstOCSPToken);
+		ocspSource.insertRevocation(ocspRevocationKey, secondOCSPToken);
+
+		ocspSource.setDefaultNextUpdateDelay(3 * 60L); // 3 minutes
+		List<RevocationToken<OCSP>> extractedRevocationTokens = ocspSource.getRevocationTokens(goodUser, goodCa);
+		assertEquals(2, extractedRevocationTokens.size());
+
+		OCSPToken revocationToken = ocspSource.getRevocationToken(goodUser, goodCa);
+		assertNotNull(revocationToken);
+		assertTrue(extractedRevocationTokens.contains(revocationToken));
+		assertEquals(secondOCSPToken.getThisUpdate(), revocationToken.getThisUpdate());
+	}
 	
 	/**
 	 * Mocked to avoid time synchronization issue between this computer time and the OCSP responder
@@ -142,16 +179,17 @@ public class JdbcCacheOcspSourceTest {
 	private class MockJdbcCacheOCSPSource extends JdbcCacheOCSPSource {
 		
 		@Override
-		protected RevocationToken<OCSP> findRevocation(String key, CertificateToken certificateToken,
-				CertificateToken issuerCertificateToken) {
+		protected List<RevocationToken<OCSP>> findRevocations(String key, CertificateToken certificateToken,
+															 CertificateToken issuerCertificateToken) {
 			if (storedRevocationToken == null) {
-				return super.findRevocation(key, certificateToken, issuerCertificateToken);
+				return super.findRevocations(key, certificateToken, issuerCertificateToken);
 			} else {
 				LOG.info("ThisUpdate was overridden from {} to {}", storedRevocationToken.getThisUpdate(), requestTime);
 				storedRevocationToken.getThisUpdate().setTime(requestTime.getTime());
-				return storedRevocationToken;
+				return Collections.singletonList(storedRevocationToken);
 			}
 		}
+
 	}
 	
 	@AfterEach

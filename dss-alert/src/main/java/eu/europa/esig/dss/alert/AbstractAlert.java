@@ -23,9 +23,12 @@ package eu.europa.esig.dss.alert;
 import eu.europa.esig.dss.alert.detector.AlertDetector;
 import eu.europa.esig.dss.alert.handler.AlertHandler;
 
+import java.util.Objects;
+
 /**
  * The class contains a general logic for alert handling
  *
+ * @param <T> the object to execute alert detection and handling on
  */
 public abstract class AbstractAlert<T> implements Alert<T> {
 
@@ -36,7 +39,14 @@ public abstract class AbstractAlert<T> implements Alert<T> {
 	private final AlertHandler<T> handler;
 
 	/**
-	 * The default constructor
+	 * Empty constructor requiring implementation of {@code #getAlertDetector} and {@code #getAlertHandler} methods
+	 */
+	protected AbstractAlert() {
+		this(null, null);
+	}
+
+	/**
+	 * The default constructor setting the {@code detector} and {@code handler} explicitly
 	 *
 	 * @param detector {@link AlertDetector} to detect an event
 	 * @param handler {@link AlertHandler} to execute the corresponding code
@@ -48,9 +58,30 @@ public abstract class AbstractAlert<T> implements Alert<T> {
 
 	@Override
 	public void alert(T object) {
-		if (detector.detect(object)) {
-			handler.process(object);
+		if (getAlertDetector().detect(object)) {
+			getAlertHandler().process(object);
 		}
+	}
+
+	/**
+	 * Gets the alert detector
+	 *
+	 * @return {@link AlertDetector}
+	 */
+	protected AlertDetector<T> getAlertDetector() {
+		Objects.requireNonNull(detector, "AlertDetector shall be defined!");
+		return detector;
+	}
+
+	/**
+	 * Gets the alert handler
+	 *
+	 * @return {@link AlertHandler}
+	 */
+	protected AlertHandler<T> getAlertHandler() {
+		Objects.requireNonNull(handler, "AlertHandler shall be defined!");
+		return handler;
+
 	}
 
 }

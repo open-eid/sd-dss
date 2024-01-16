@@ -24,6 +24,7 @@ import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificate;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlContainerInfo;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDiagnosticData;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlEncapsulationType;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlEvidenceRecord;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanCertificateToken;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanRevocationToken;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlRevocation;
@@ -45,9 +46,10 @@ import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.TimestampType;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -70,6 +72,9 @@ public class DiagnosticData {
 
 	/** List of found timestamps */
 	private List<TimestampWrapper> usedTimestamps;
+
+	/** List of found evidence records */
+	private List<EvidenceRecordWrapper> foundEvidenceRecords;
 
 	/**
 	 * Default constructor
@@ -502,6 +507,22 @@ public class DiagnosticData {
 	}
 
 	/**
+	 * Returns a list of {@code TimestampWrapper}s for the given {@code TimestampType}
+	 *
+	 * @param timestampType {@link TimestampType} to get time-stamps for
+	 * @return a list of {@link TimestampWrapper}
+	 */
+	public List<TimestampWrapper> getTimestampsByType(TimestampType timestampType) {
+		List<TimestampWrapper> result = new ArrayList<>();
+		for (TimestampWrapper timestampWrapper : getTimestampList()) {
+			if (timestampType != null && timestampType == timestampWrapper.getType()) {
+				result.add(timestampWrapper);
+			}
+		}
+		return result;
+	}
+
+	/**
 	 * This method indicates if the certificate signature is valid and the revocation status is valid.
 	 *
 	 * @param dssCertificateId
@@ -665,7 +686,7 @@ public class DiagnosticData {
 	 * @return timestamp wrapper or null
 	 */
 	public TimestampWrapper getTimestampById(String id) {
-		Set<TimestampWrapper> allTimestamps = getTimestampSet();
+		List<TimestampWrapper> allTimestamps = getTimestampList();
 		for (TimestampWrapper timestampWrapper : allTimestamps) {
 			if (id.equals(timestampWrapper.getId())) {
 				return timestampWrapper;
@@ -903,9 +924,9 @@ public class DiagnosticData {
 	}
 
 	/**
-	 * This method retrieves a set of timestamp wrappers
+	 * This method retrieves a list of timestamp wrappers
 	 * 
-	 * @return a List of timestamp wrappers
+	 * @return a list of timestamp wrappers
 	 */
 	public List<TimestampWrapper> getTimestampList() {
 		if (usedTimestamps == null) {
@@ -918,6 +939,56 @@ public class DiagnosticData {
 			}
 		}
 		return usedTimestamps;
+	}
+
+	/**
+	 * Returns a list of time-stamp tokens which are not evidence record time-stamps
+	 *
+	 * @return a list of {@link TimestampWrapper}s
+	 */
+	public List<TimestampWrapper> getNonEvidenceRecordTimestamps() {
+		List<TimestampWrapper> result = new ArrayList<>();
+		for (TimestampWrapper timestampWrapper : getTimestampList()) {
+			if (!timestampWrapper.getType().isEvidenceRecordTimestamp()) {
+				result.add(timestampWrapper);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * This method retrieves a list of evidence record wrappers
+	 *
+	 * @return a list of evidence record wrappers
+	 */
+	public List<EvidenceRecordWrapper> getEvidenceRecords() {
+		if (foundEvidenceRecords == null) {
+			foundEvidenceRecords = new ArrayList<>();
+			List<XmlEvidenceRecord> xmlEvidenceRecords = wrapped.getEvidenceRecords();
+			if (xmlEvidenceRecords != null) {
+				for (XmlEvidenceRecord xmlEvidenceRecord : xmlEvidenceRecords) {
+					foundEvidenceRecords.add(new EvidenceRecordWrapper(xmlEvidenceRecord));
+				}
+			}
+		}
+		return foundEvidenceRecords;
+	}
+
+	/**
+	 * Returns the EvidenceRecordWrapper corresponding to the given id.
+	 *
+	 * @param id
+	 *            evidence record id
+	 * @return evidence record wrapper or null
+	 */
+	public EvidenceRecordWrapper getEvidenceRecordById(String id) {
+		List<EvidenceRecordWrapper> evidenceRecords = getEvidenceRecords();
+		for (EvidenceRecordWrapper evidenceRecord : evidenceRecords) {
+			if (id.equals(evidenceRecord.getId())) {
+				return evidenceRecord;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -984,15 +1055,6 @@ public class DiagnosticData {
 			}
 		}
 		return signatures;
-	}
-
-	/**
-	 * This method returns timestamps
-	 * 
-	 * @return a set of TimestampWrapper
-	 */
-	public Set<TimestampWrapper> getTimestampSet() {
-		return new LinkedHashSet<>(getTimestampList());
 	}
 
 	/**
@@ -1165,6 +1227,51 @@ public class DiagnosticData {
 	 */
 	public XmlContainerInfo getContainerInfo() {
 		return wrapped.getContainerInfo();
+	}
+
+	/**
+	 * Returns whether a document has been validated against PDF/A compliance
+	 *
+	 * @return TRUE if the PDF/A validation has been performed, FALSE otherwise
+	 */
+	public boolean isPDFAValidationPerformed() {
+		return wrapped.getPDFAInfo() != null;
+	}
+
+	/**
+	 * Returns evaluated PDF/A profile Id
+	 *
+	 * @return {@link String}
+	 */
+	public String getPDFAProfileId() {
+		if (wrapped.getPDFAInfo() != null) {
+			return wrapped.getPDFAInfo().getProfileId();
+		}
+		return null;
+	}
+
+	/**
+	 * Returns whether the document is a PDF/A compliant (PDF/A validation shall be performed!)
+	 *
+	 * @return TRUE if the document is PDF/A compliant, FALSE otherwise
+	 */
+	public boolean isPDFACompliant() {
+		if (wrapped.getPDFAInfo() != null) {
+			return wrapped.getPDFAInfo().isCompliant();
+		}
+		return false;
+	}
+
+	/**
+	 * Returns a collection of PDF/A validation errors occurred during the validation
+	 *
+	 * @return a collection of {@link String}s
+	 */
+	public Collection<String> getPDFAValidationErrors() {
+		if (wrapped.getPDFAInfo() != null) {
+			return wrapped.getPDFAInfo().getValidationMessages();
+		}
+		return Collections.emptyList();
 	}
 
 	/**

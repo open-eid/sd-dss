@@ -21,17 +21,19 @@
 package eu.europa.esig.dss.asic.xades;
 
 import eu.europa.esig.dss.asic.common.ASiCUtils;
+import eu.europa.esig.dss.asic.common.ContainerEntryDocument;
 import eu.europa.esig.dss.asic.common.DSSZipEntry;
 import eu.europa.esig.dss.asic.common.DSSZipEntryDocument;
 import eu.europa.esig.dss.asic.common.SecureContainerHandler;
-import eu.europa.esig.dss.asic.common.ContainerEntryDocument;
+import eu.europa.esig.dss.asic.common.SecureContainerHandlerBuilder;
 import eu.europa.esig.dss.asic.common.ZipUtils;
 import eu.europa.esig.dss.asic.xades.validation.ASiCContainerWithXAdESValidator;
+import eu.europa.esig.dss.enumerations.MimeType;
+import eu.europa.esig.dss.enumerations.MimeTypeEnum;
 import eu.europa.esig.dss.exception.IllegalInputException;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
-import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
@@ -71,12 +73,12 @@ public class SecureContainerHandlerTest {
 
 	@AfterEach
 	public void reset() {
-		ZipUtils.getInstance().setZipContainerHandler(new SecureContainerHandler());
+		ZipUtils.getInstance().setZipContainerHandlerBuilder(new SecureContainerHandlerBuilder());
 	}
 
 	@Test
 	public void testDefault() {
-		ZipUtils.getInstance().setZipContainerHandler(new SecureContainerHandler());
+		ZipUtils.getInstance().setZipContainerHandlerBuilder(new SecureContainerHandlerBuilder());
 
 		DocumentValidator validator = getValidator(smallerDocument);
 		Reports reports = validator.validateDocument();
@@ -89,9 +91,9 @@ public class SecureContainerHandlerTest {
 
 	@Test
 	public void testSmallerRatio() {
-		SecureContainerHandler secureContainerHandler = new SecureContainerHandler();
-		secureContainerHandler.setMaxCompressionRatio(50);
-		ZipUtils.getInstance().setZipContainerHandler(secureContainerHandler);
+		SecureContainerHandlerBuilder containerHandlerBuilder = new SecureContainerHandlerBuilder()
+				.setMaxCompressionRatio(50);
+		ZipUtils.getInstance().setZipContainerHandlerBuilder(containerHandlerBuilder);
 
 		DocumentValidator validator = getValidator(smallerDocument);
 		Reports reports = validator.validateDocument();
@@ -103,14 +105,17 @@ public class SecureContainerHandlerTest {
 
 	@Test
 	public void testBiggerThreshold() {
-		SecureContainerHandler secureContainerHandler = new SecureContainerHandler();
-		secureContainerHandler.setMaxCompressionRatio(50);
-		ZipUtils.getInstance().setZipContainerHandler(secureContainerHandler);
+		SecureContainerHandlerBuilder containerHandlerBuilder = new SecureContainerHandlerBuilder()
+				.setMaxCompressionRatio(50);
+		ZipUtils.getInstance().setZipContainerHandlerBuilder(containerHandlerBuilder);
 
 		Exception exception = assertThrows(IllegalInputException.class, () -> getValidator(biggerDocument));
 		assertEquals("Zip Bomb detected in the ZIP container. Validation is interrupted.", exception.getMessage());
 
-		secureContainerHandler.setThreshold(100000000);
+		containerHandlerBuilder = new SecureContainerHandlerBuilder()
+				.setMaxCompressionRatio(50)
+				.setThreshold(100000000);
+		ZipUtils.getInstance().setZipContainerHandlerBuilder(containerHandlerBuilder);
 
 		DocumentValidator validator = getValidator(biggerDocument);
 		Reports reports = validator.validateDocument();
@@ -119,9 +124,9 @@ public class SecureContainerHandlerTest {
 
 	@Test
 	public void testDifferentDocumentsAmount() {
-		SecureContainerHandler secureContainerHandler = new SecureContainerHandler();
-		secureContainerHandler.setMaxAllowedFilesAmount(1);
-		ZipUtils.getInstance().setZipContainerHandler(secureContainerHandler);
+		SecureContainerHandlerBuilder containerHandlerBuilder = new SecureContainerHandlerBuilder()
+				.setMaxAllowedFilesAmount(1);
+		ZipUtils.getInstance().setZipContainerHandlerBuilder(containerHandlerBuilder);
 
 		Exception exception = assertThrows(IllegalInputException.class, () -> getValidator(smallerDocument));
 		assertEquals("Too many files detected. Cannot extract ASiC content from the file.", exception.getMessage());
@@ -188,7 +193,7 @@ public class SecureContainerHandlerTest {
 		calendar.set(Calendar.MILLISECOND, 0);
 		creationTime = calendar.getTime(); // reset millis
 
-		MimeType mimeType = MimeType.ASICE;
+		MimeType mimeType = MimeTypeEnum.ASICE;
 
 		DSSZipEntry mimetypeZipEntry = new DSSZipEntry("mimetype");
 		mimetypeZipEntry.setCompressionMethod(ZipEntry.DEFLATED);
@@ -277,14 +282,14 @@ public class SecureContainerHandlerTest {
 		ContainerEntryDocument documentOne = new ContainerEntryDocument(
 				new InMemoryDocument("Hello World!".getBytes(), zipEntry.getName()), zipEntry);
 
-		SecureContainerHandler secureContainerHandler = new SecureContainerHandler();
+		SecureContainerHandlerBuilder containerHandlerBuilder = new SecureContainerHandlerBuilder();
 		ZipUtils zipUtils = ZipUtils.getInstance();
-		zipUtils.setZipContainerHandler(secureContainerHandler);
+		zipUtils.setZipContainerHandlerBuilder(containerHandlerBuilder);
 
 		DSSDocument zipArchive = zipUtils.createZipArchive(Collections.singletonList(documentOne), new Date(), null);
 		assertNotNull(zipArchive);
 
-		secureContainerHandler.setExtractComments(true);
+		containerHandlerBuilder.setExtractComments(true);
 
 		List<DSSDocument> containerContent = zipUtils.extractContainerContent(zipArchive);
 		assertEquals(1, containerContent.size());
@@ -313,7 +318,7 @@ public class SecureContainerHandlerTest {
 		assertNotNull(zipEntry);
 		assertEquals(comment, zipEntry.getComment());
 
-		secureContainerHandler.setExtractComments(false);
+		containerHandlerBuilder.setExtractComments(false);
 
 		containerContent = zipUtils.extractContainerContent(zipArchive);
 		assertEquals(1, containerContent.size());

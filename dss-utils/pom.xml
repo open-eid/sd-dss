@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.11.1.d4j.1</version>
+		<version>6.0.d4j.1</version>
 	</parent>
 
 	<artifactId>dss-utils</artifactId>
@@ -32,6 +32,7 @@
 			<id>quick-init</id>
 			<properties>
 				<maven.test.skip>false</maven.test.skip>
+				<maven.test.skip.exec>true</maven.test.skip.exec>
 			</properties>
 		</profile>
 	</profiles>

@@ -24,6 +24,7 @@ import eu.europa.esig.dss.AbstractSignatureParameters;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.EncryptionAlgorithm;
 import eu.europa.esig.dss.enumerations.JWSSerializationType;
+import eu.europa.esig.dss.enumerations.MimeTypeEnum;
 import eu.europa.esig.dss.enumerations.SigDMechanism;
 import eu.europa.esig.dss.enumerations.SignatureAlgorithm;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
@@ -38,7 +39,6 @@ import eu.europa.esig.dss.jades.validation.JAdESDocumentValidatorFactory;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.DigestDocument;
-import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.model.SignaturePolicyStore;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.TimestampBinary;
@@ -53,7 +53,7 @@ import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.DSSPKUtils;
-import eu.europa.esig.dss.validation.timestamp.TimestampToken;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampToken;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.tsp.TSPException;
 import org.slf4j.Logger;
@@ -278,7 +278,7 @@ public class JAdESService extends AbstractSignatureService<JAdESSignatureParamet
 			final DSSDocument dssDocument = signatureExtension.extendSignatures(toExtendDocument, parameters);
 			dssDocument.setName(
 					getFinalFileName(toExtendDocument, SigningOperation.EXTEND, parameters.getSignatureLevel()));
-			dssDocument.setMimeType(MimeType.JOSE_JSON);
+			dssDocument.setMimeType(MimeTypeEnum.JOSE_JSON);
 			return dssDocument;
 		}
 		throw new UnsupportedOperationException(

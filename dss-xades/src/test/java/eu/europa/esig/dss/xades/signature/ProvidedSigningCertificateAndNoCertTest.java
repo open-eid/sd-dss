@@ -20,23 +20,22 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
-import eu.europa.esig.dss.DomUtils;
-import eu.europa.esig.dss.definition.xmldsig.XMLDSigPaths;
+import eu.europa.esig.dss.xml.utils.DomUtils;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
+import eu.europa.esig.dss.enumerations.MimeTypeEnum;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
-import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.spi.x509.CertificateSource;
 import eu.europa.esig.dss.spi.x509.CommonCertificateSource;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
-import eu.europa.esig.dss.xades.DSSXMLUtils;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 import eu.europa.esig.dss.xades.XAdESTimestampParameters;
+import eu.europa.esig.xmldsig.definition.XMLDSigPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -76,17 +75,17 @@ public class ProvidedSigningCertificateAndNoCertTest extends AbstractXAdESTestSi
 		Document dom = DomUtils.buildDOM(signedDoc);
 		try {
 			Element root = dom.getDocumentElement();
-			XPathExpression xpath = DomUtils.createXPathExpression(XMLDSigPaths.KEY_INFO_PATH);
+			XPathExpression xpath = DomUtils.createXPathExpression(XMLDSigPath.KEY_INFO_PATH);
 			Element keyInfoTag = (Element) xpath.evaluate(root, XPathConstants.NODE);
 			keyInfoTag.getParentNode().removeChild(keyInfoTag);
 		} catch (Exception e) {
 			throw new DSSException("Unable to remove the KeyInfo element", e);
 		}
 
-		byte[] bytes = DSSXMLUtils.serializeNode(dom);
+		byte[] bytes = DomUtils.serializeNode(dom);
 		final InMemoryDocument inMemoryDocument = new InMemoryDocument(bytes);
 		inMemoryDocument.setName("bla.xml");
-		inMemoryDocument.setMimeType(MimeType.XML);
+		inMemoryDocument.setMimeType(MimeTypeEnum.XML);
 		return inMemoryDocument;
 	}
 

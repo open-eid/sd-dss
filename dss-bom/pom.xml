@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.11.1.d4j.1</version>
+		<version>6.0.d4j.1</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -22,6 +22,11 @@
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-alert</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-xml-common</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -62,6 +67,11 @@
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
 				<artifactId>specs-saml-assertion</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>specs-xmlers</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -146,6 +156,11 @@
 			</dependency>
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-xml-utils</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-document</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -171,6 +186,16 @@
 			</dependency>
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-pki-factory</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-pki-factory-jaxb</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-xades</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -187,6 +212,11 @@
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-pades</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-pdfa</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -217,6 +247,16 @@
 			<dependency>
 				<groupId>${dss.groupId}</groupId>
 				<artifactId>dss-tsl-validation</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-evidence-record-common</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${dss.groupId}</groupId>
+				<artifactId>dss-evidence-record-xml</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

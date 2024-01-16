@@ -24,7 +24,7 @@ import eu.europa.esig.dss.diagnostic.jaxb.XmlDiagnosticData;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.Result;
 import javax.xml.transform.TransformerException;
@@ -48,6 +48,23 @@ public class SVGGenerationTest {
 			newFacade.generateSVG(diagnosticData, result);
 		}
 		
+		File file = new File("target/diag-data.svg");
+		assertTrue(file.exists());
+		assertTrue(file.length() > 0);
+		assertTrue(file.delete(), "Cannot delete the SVG file");
+		assertFalse(file.exists());
+	}
+
+	@Test
+	public void testER() throws JAXBException, XMLStreamException, IOException, SAXException, TransformerException {
+		DiagnosticDataFacade newFacade = DiagnosticDataFacade.newFacade();
+		XmlDiagnosticData diagnosticData = newFacade.unmarshall(new File("src/test/resources/er-diag-data.xml"));
+
+		try (FileOutputStream fos = new FileOutputStream("target/diag-data.svg")) {
+			Result result = new StreamResult(fos);
+			newFacade.generateSVG(diagnosticData, result);
+		}
+
 		File file = new File("target/diag-data.svg");
 		assertTrue(file.exists());
 		assertTrue(file.length() > 0);

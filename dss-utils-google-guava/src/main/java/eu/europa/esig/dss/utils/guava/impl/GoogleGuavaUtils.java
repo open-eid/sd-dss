@@ -30,8 +30,10 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
+import com.google.common.primitives.Bytes;
 import eu.europa.esig.dss.utils.IUtils;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -59,6 +61,7 @@ public class GoogleGuavaUtils implements IUtils {
 	 * Default constructor
 	 */
 	public GoogleGuavaUtils() {
+		// empty
 	}
 
 	@Override
@@ -127,6 +130,11 @@ public class GoogleGuavaUtils implements IUtils {
 	}
 
 	@Override
+	public byte[] concat(byte[]... byteArrays) {
+		return Bytes.concat(byteArrays);
+	}
+
+	@Override
 	public String substringAfter(String text, String after) {
 		if (Strings.isNullOrEmpty(text)) {
 			return text;
@@ -190,6 +198,16 @@ public class GoogleGuavaUtils implements IUtils {
 
 	@Override
 	public boolean isArrayNotEmpty(byte[] array) {
+		return !isArrayEmpty(array);
+	}
+
+	@Override
+	public boolean isArrayEmpty(char[] array) {
+		return array == null || array.length == 0;
+	}
+
+	@Override
+	public boolean isArrayNotEmpty(char[] array) {
 		return !isArrayEmpty(array);
 	}
 
@@ -297,6 +315,63 @@ public class GoogleGuavaUtils implements IUtils {
 	@Override
 	public long getInputStreamSize(InputStream is) throws IOException {
 		return ByteStreams.exhaust(is);
+	}
+
+	@Override
+	public boolean compareInputStreams(InputStream stream1, InputStream stream2) throws IOException {
+		if (stream1 == stream2) {
+			return true;
+		}
+		if (stream1 == null || stream2 == null) {
+			return false;
+		}
+		if (!(stream1 instanceof BufferedInputStream)) {
+			stream1 = new BufferedInputStream(stream1);
+		}
+		if (!(stream2 instanceof BufferedInputStream)) {
+			stream2 = new BufferedInputStream(stream2);
+		}
+		int b1 = stream1.read();
+		while (-1 != b1) {
+			int b2 = stream2.read();
+			if (b1 != b2) {
+				return false;
+			}
+			b1 = stream1.read();
+		}
+		int b2 = stream2.read();
+		return b2 == -1;
+	}
+
+	@Override
+	public boolean startsWith(byte[] byteArray, byte[] prefixArray) {
+		if (byteArray == null || prefixArray == null) {
+			return false;
+		}
+		if (byteArray.length >= prefixArray.length) {
+			for (int i = 0; i < prefixArray.length; i++) {
+				if (byteArray[i] != prefixArray[i]) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean startsWith(InputStream inputStream, byte[] prefixArray) {
+		if (inputStream == null || prefixArray == null) {
+			return false;
+		}
+		byte[] temp = new byte[prefixArray.length];
+		try {
+			ByteStreams.readFully(inputStream, temp);
+		} catch (IOException e) {
+			// cannot read the InputStream, return false silently
+			return false;
+		}
+		return Arrays.equals(prefixArray, temp);
 	}
 
 	@Override

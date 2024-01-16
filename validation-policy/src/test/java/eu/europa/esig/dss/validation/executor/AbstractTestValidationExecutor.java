@@ -30,7 +30,7 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
+import com.fasterxml.jackson.module.jakarta.xmlbind.JakartaXmlBindAnnotationIntrospector;
 import eu.europa.esig.dss.detailedreport.DetailedReportFacade;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlDetailedReport;
 import eu.europa.esig.dss.diagnostic.DiagnosticDataFacade;
@@ -126,7 +126,6 @@ public abstract class AbstractTestValidationExecutor {
 		try {
 			String json = om.writeValueAsString(reports.getDiagnosticDataJaxb());
 			assertNotNull(json);
-//			LOG.info(json);
 			XmlDiagnosticData diagnosticDataObject = om.readValue(json, XmlDiagnosticData.class);
 			assertNotNull(diagnosticDataObject);
 		} catch (Exception e) {
@@ -175,7 +174,6 @@ public abstract class AbstractTestValidationExecutor {
 		try {
 			String json = om.writeValueAsString(reports.getSimpleReportJaxb());
 			assertNotNull(json);
-//			LOG.info(json);
 			XmlSimpleReport simpleReportObject = om.readValue(json, XmlSimpleReport.class);
 			assertNotNull(simpleReportObject);
 		} catch (Exception e) {
@@ -188,7 +186,6 @@ public abstract class AbstractTestValidationExecutor {
 		try {
 			String xmlValidationReport = reports.getXmlValidationReport();
 			assertTrue(Utils.isStringNotBlank(xmlValidationReport));
-//			LOG.info(xmlValidationReport);
 			assertNotNull(ValidationReportFacade.newFacade().unmarshall(xmlValidationReport));
 		} catch (Exception e) {
 			LOG.error("Unable to unmarshall the ETSI Validation Report : " + e.getMessage(), e);
@@ -198,7 +195,7 @@ public abstract class AbstractTestValidationExecutor {
 
 	private static ObjectMapper getObjectMapper() {
 		ObjectMapper om = new ObjectMapper();
-		JaxbAnnotationIntrospector jai = new JaxbAnnotationIntrospector(TypeFactory.defaultInstance());
+		JakartaXmlBindAnnotationIntrospector jai = new JakartaXmlBindAnnotationIntrospector(TypeFactory.defaultInstance());
 		om.setAnnotationIntrospector(jai);
 		om.enable(SerializationFeature.INDENT_OUTPUT);
 		return om;
@@ -258,7 +255,7 @@ public abstract class AbstractTestValidationExecutor {
 	}
 
 	protected boolean checkMessageValuePresence(List<Message> messages, String messageValue) {
-		return messages.stream().map(m -> m.getValue()).collect(Collectors.toList()).contains(messageValue);
+		return messages.stream().map(Message::getValue).collect(Collectors.toList()).contains(messageValue);
 	}
 
 	protected List<Message> convert(List<eu.europa.esig.dss.detailedreport.jaxb.XmlMessage> messages) {

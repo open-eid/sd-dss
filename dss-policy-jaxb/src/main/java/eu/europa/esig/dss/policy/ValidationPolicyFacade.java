@@ -24,9 +24,9 @@ import eu.europa.esig.dss.jaxb.common.AbstractJaxbFacade;
 import eu.europa.esig.dss.policy.jaxb.ConstraintsParameters;
 import org.xml.sax.SAXException;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBException;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.validation.Schema;
 import java.io.File;
@@ -42,8 +42,18 @@ public class ValidationPolicyFacade extends AbstractJaxbFacade<ConstraintsParame
 	/** The default validation policy path */
 	private static final String DEFAULT_VALIDATION_POLICY_LOCATION = "/policy/constraint.xml";
 
+	/** The path for default certificate validation policy */
+	private static final String CERTIFICATE_VALIDATION_POLICY_LOCATION = "/policy/certificate-constraint.xml";
+
 	/** The path for a LOTL/TL validation policy */
 	private static final String TRUSTED_LIST_VALIDATION_POLICY_LOCATION = "/policy/tsl-constraint.xml";
+
+	/**
+	 * Default constructor
+	 */
+	protected ValidationPolicyFacade() {
+		// empty
+	}
 
 	/**
 	 * Initializes a new {@code ValidationPolicyFacade}
@@ -81,6 +91,21 @@ public class ValidationPolicyFacade extends AbstractJaxbFacade<ConstraintsParame
 	public ValidationPolicy getDefaultValidationPolicy() throws JAXBException, XMLStreamException, IOException,
 			SAXException {
 		return loadDefault();
+	}
+
+	/**
+	 * Gets the default policy for certificate validation
+	 *
+	 * @return {@link ValidationPolicy}
+	 * @throws JAXBException if {@link JAXBException} occurs
+	 * @throws XMLStreamException if {@link XMLStreamException} occurs
+	 * @throws IOException if {@link IOException} occurs
+	 * @throws SAXException if {@link SAXException} occurs
+	 */
+	public ValidationPolicy getCertificateValidationPolicy() throws JAXBException, XMLStreamException, IOException, SAXException {
+		try (InputStream is = ValidationPolicyFacade.class.getResourceAsStream(CERTIFICATE_VALIDATION_POLICY_LOCATION)) {
+			return getValidationPolicy(is);
+		}
 	}
 
 	/**

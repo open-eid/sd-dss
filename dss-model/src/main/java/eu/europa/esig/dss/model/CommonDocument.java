@@ -21,12 +21,12 @@
 package eu.europa.esig.dss.model;
 
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.enumerations.MimeType;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.StringWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -123,10 +123,9 @@ public abstract class CommonDocument implements DSSDocument {
 
 	@Override
 	public String toString() {
-		final StringWriter stringWriter = new StringWriter();
-		stringWriter.append("Name: ").append(getName()).append(" / MimeType: ")
-				.append(mimeType == null ? "" : mimeType.getMimeTypeString());
-		return stringWriter.toString();
+		final String mimeTypeString = (mimeType == null) ? "" : mimeType.getMimeTypeString();
+		final String name = getName();
+		return "Name: " + name + " / MimeType: " + mimeTypeString;
 	}
 
 }

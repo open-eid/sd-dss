@@ -2,8 +2,15 @@
 <xsl:stylesheet version="1.0" 
 	xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
 	xmlns:fo="http://www.w3.org/1999/XSL/Format"
+	xmlns:fox="http://xmlgraphics.apache.org/fop/extensions"
 	xmlns:dss="http://dss.esig.europa.eu/validation/simple-report">
 	<xsl:output method="xml" indent="yes" />
+
+	<xsl:param name="rootUrlInTlBrowser">https://eidas.ec.europa.eu/efda/tl-browser/#/screen</xsl:param>
+	<xsl:param name="euTLSubDirectoryInTlBrowser">/tl</xsl:param>
+	<xsl:param name="tcTLSubDirectoryInTlBrowser">/tc-tl</xsl:param>
+	<xsl:param name="trustmarkSubDirectoryInTlBrowser">/trustmark</xsl:param>
+	<xsl:param name="euGenericTSLType">http://uri.etsi.org/TrstSvc/TrustedList/TSLType/EUgeneric</xsl:param>
 
 	<xsl:template match="/dss:SimpleReport">
 		<fo:root>
@@ -50,6 +57,20 @@
 							<fo:bookmark-title>Timestamp <xsl:value-of select="$index" />-<xsl:value-of select="$index_tst" /></fo:bookmark-title>
 						</fo:bookmark>
 					</xsl:for-each>
+					<xsl:for-each select="dss:EvidenceRecords/dss:EvidenceRecord">
+						<xsl:variable name="index_er"><xsl:value-of select="count(preceding-sibling::dss:EvidenceRecord) + 1" /></xsl:variable>
+						<fo:bookmark>
+							<xsl:attribute name="internal-destination">evidence-record-<xsl:value-of select="$index" />-<xsl:value-of select="$index_er" /></xsl:attribute>
+							<fo:bookmark-title>Evidence Record <xsl:value-of select="$index" />-<xsl:value-of select="$index_er" /></fo:bookmark-title>
+						</fo:bookmark>
+						<xsl:for-each select="dss:Timestamps/dss:Timestamp">
+							<xsl:variable name="index_er_tst"><xsl:value-of select="count(preceding-sibling::dss:Timestamp) + 1" /></xsl:variable>
+							<fo:bookmark>
+								<xsl:attribute name="internal-destination">timestamp-<xsl:value-of select="$index" />-<xsl:value-of select="$index_er" />-<xsl:value-of select="$index_er_tst" /></xsl:attribute>
+								<fo:bookmark-title>Timestamp <xsl:value-of select="$index" />-<xsl:value-of select="$index_er" />-<xsl:value-of select="$index_er_tst" /></fo:bookmark-title>
+							</fo:bookmark>
+						</xsl:for-each>
+					</xsl:for-each>
 				</xsl:for-each>
 				
 				<xsl:for-each select="dss:Timestamp">
@@ -58,6 +79,21 @@
 						<xsl:attribute name="internal-destination">timestamp-<xsl:value-of select="$index" /></xsl:attribute>
 						<fo:bookmark-title>Timestamp <xsl:value-of select="$index" /></fo:bookmark-title>
 					</fo:bookmark>
+				</xsl:for-each>
+
+				<xsl:for-each select="dss:EvidenceRecord">
+					<xsl:variable name="index"><xsl:value-of select="count(preceding-sibling::dss:EvidenceRecord) + 1" /></xsl:variable>
+					<fo:bookmark>
+						<xsl:attribute name="internal-destination">evidence-record-<xsl:value-of select="$index" /></xsl:attribute>
+						<fo:bookmark-title>Evidence Record <xsl:value-of select="$index" /></fo:bookmark-title>
+					</fo:bookmark>
+					<xsl:for-each select="dss:Timestamps/dss:Timestamp">
+						<xsl:variable name="index_tst"><xsl:value-of select="count(preceding-sibling::dss:Timestamp) + 1" /></xsl:variable>
+						<fo:bookmark>
+							<xsl:attribute name="internal-destination">timestamp-<xsl:value-of select="$index" />-<xsl:value-of select="$index_tst" /></xsl:attribute>
+							<fo:bookmark-title>Timestamp <xsl:value-of select="$index" />-<xsl:value-of select="$index_tst" /></fo:bookmark-title>
+						</fo:bookmark>
+					</xsl:for-each>
 				</xsl:for-each>
 				
 				<fo:bookmark>
@@ -107,6 +143,7 @@
 					<xsl:apply-templates select="dss:ValidationPolicy"/>
 					<xsl:apply-templates select="dss:Signature"/>
 					<xsl:apply-templates select="dss:Timestamp"/>
+					<xsl:apply-templates select="dss:EvidenceRecord"/>
 					
 	    			<xsl:call-template name="documentInformation"/>
 	    			
@@ -163,7 +200,7 @@
 					<xsl:attribute name="margin-bottom">2px</xsl:attribute>
 		       		
 					<xsl:attribute name="id">policy</xsl:attribute>
-					<xsl:text>Validation Policy : <xsl:value-of select="dss:PolicyName"/></xsl:text>
+					<xsl:text>Validation Policy: <xsl:value-of select="dss:PolicyName"/></xsl:text>
 		    	</fo:block>
 	    	</fo:block-container>
 		</fo:block-container>
@@ -196,10 +233,11 @@
 		
     </xsl:template>
     
-    <xsl:template match="dss:Signature|dss:Timestamp">
+    <xsl:template match="dss:Signature|dss:Timestamp|dss:EvidenceRecord">
         <xsl:variable name="nodeName" select="name()" />
         
 		<xsl:param name="sigCounter" />
+		<xsl:param name="erCounter" />
     	<xsl:variable name="counter">
     		<xsl:if test="$nodeName = 'Signature'">
     			<xsl:value-of select="count(preceding-sibling::dss:Signature) + 1" />
@@ -207,6 +245,9 @@
     		<xsl:if test="$nodeName = 'Timestamp'">
     			<xsl:value-of select="count(preceding-sibling::dss:Timestamp) + 1" />
     		</xsl:if>
+			<xsl:if test="$nodeName = 'EvidenceRecord'">
+				<xsl:value-of select="count(preceding-sibling::dss:EvidenceRecord) + 1" />
+			</xsl:if>
     	</xsl:variable>
     
         <xsl:variable name="indicationText" select="dss:Indication/text()"/>
@@ -227,13 +268,16 @@
     		</xsl:if>
     		<xsl:if test="$nodeName = 'Timestamp'">
 				<xsl:variable name="tstCounter">
-					<xsl:choose>
-						<xsl:when test="$sigCounter"><xsl:value-of select="$sigCounter" />-<xsl:value-of select="$counter" /></xsl:when>
-						<xsl:otherwise><xsl:value-of select="$counter" /></xsl:otherwise>
-					</xsl:choose>
+					<xsl:if test="$sigCounter"><xsl:value-of select="$sigCounter" />-</xsl:if><xsl:if test="$erCounter"><xsl:value-of select="$erCounter" />-</xsl:if><xsl:value-of select="$counter" />
 				</xsl:variable>
     			<xsl:attribute name="id">timestamp-<xsl:value-of select="$tstCounter" /></xsl:attribute>
     		</xsl:if>
+			<xsl:if test="$nodeName = 'EvidenceRecord'">
+				<xsl:variable name="currentERCounter">
+					<xsl:if test="$sigCounter"><xsl:value-of select="$sigCounter" />-</xsl:if><xsl:value-of select="$counter" />
+				</xsl:variable>
+				<xsl:attribute name="id">evidence-record-<xsl:value-of select="$currentERCounter" /></xsl:attribute>
+			</xsl:if>
 			
 			<xsl:attribute name="margin-top">7px</xsl:attribute>
 			<xsl:attribute name="margin-bottom">5px</xsl:attribute>
@@ -257,10 +301,13 @@
 		    				<xsl:attribute name="font-weight">bold</xsl:attribute>
 
 							<xsl:if test="$nodeName = 'Signature'">
-								<xsl:text>Signature : </xsl:text>
+								<xsl:text>Signature: </xsl:text>
 							</xsl:if>
 							<xsl:if test="$nodeName = 'Timestamp'">
-								<xsl:text>Timestamp : </xsl:text>
+								<xsl:text>Timestamp: </xsl:text>
+							</xsl:if>
+							<xsl:if test="$nodeName = 'EvidenceRecord'">
+								<xsl:text>Evidence Record: </xsl:text>
 							</xsl:if>
 				       		<xsl:value-of select="$idToken" />
 			       		</fo:block>
@@ -311,6 +358,9 @@
 											<xsl:if test="$nodeName = 'Timestamp'">
 								            	Timestamp filename:
 											</xsl:if>
+											<xsl:if test="$nodeName = 'EvidenceRecord'">
+												Evidence Record filename:
+											</xsl:if>
 										</fo:block>
 									</fo:table-cell>
 									<fo:table-cell>
@@ -334,7 +384,7 @@
 											<xsl:attribute name="margin-bottom">1px</xsl:attribute>
 											
 				       						<xsl:attribute name="font-weight">bold</xsl:attribute>
-											Qualification level : 
+											Qualification level:
 										</fo:block>
 									</fo:table-cell>
 									<fo:table-cell>
@@ -364,7 +414,7 @@
 										<xsl:attribute name="margin-bottom">1px</xsl:attribute>
 										
 			       						<xsl:attribute name="font-weight">bold</xsl:attribute>
-										Indication : 
+										Indication:
 									</fo:block>
 								</fo:table-cell>
 								<fo:table-cell>
@@ -392,7 +442,7 @@
 											<xsl:attribute name="margin-bottom">1px</xsl:attribute>
 											
 				       						<xsl:attribute name="font-weight">bold</xsl:attribute>
-											Signature Format : 
+											Signature Format:
 										</fo:block>
 									</fo:table-cell>
 									<fo:table-cell>
@@ -405,39 +455,55 @@
 									</fo:table-cell>
 								</fo:table-row>
 							</xsl:if>
-							
-							<fo:table-row>
-								<xsl:attribute name="margin-top">1px</xsl:attribute>
-								<xsl:attribute name="margin-bottom">1px</xsl:attribute>
-								<xsl:attribute name="page-break-inside">avoid</xsl:attribute>
-								
-								<fo:table-cell>
-									<fo:block>
-										<xsl:attribute name="margin-top">1px</xsl:attribute>
-										<xsl:attribute name="margin-bottom">1px</xsl:attribute>
-											
-			  							<xsl:attribute name="font-weight">bold</xsl:attribute>
-										Certificate chain:
-									</fo:block>
-								</fo:table-cell>
-								<fo:table-cell>
-									<xsl:choose>
-							            <xsl:when test="dss:CertificateChain/dss:Certificate">
-								            <xsl:for-each select="dss:CertificateChain/dss:Certificate">
-								        		<fo:block>
-													<xsl:attribute name="margin-top">1px</xsl:attribute>
-													<xsl:attribute name="margin-bottom">1px</xsl:attribute>
-											
-								        			<xsl:value-of select="dss:qualifiedName" />
-								        		</fo:block>	
-								        	</xsl:for-each>
-							        	</xsl:when>
-							        	<xsl:otherwise>
-							        		<fo:block>/</fo:block>
-							        	</xsl:otherwise>
-						        	</xsl:choose>
-								</fo:table-cell>
-							</fo:table-row>
+
+							<xsl:if test="dss:CertificateChain">
+								<fo:table-row>
+									<xsl:attribute name="margin-top">1px</xsl:attribute>
+									<xsl:attribute name="margin-bottom">1px</xsl:attribute>
+									<xsl:attribute name="page-break-inside">avoid</xsl:attribute>
+
+									<fo:table-cell>
+										<fo:block>
+											<xsl:attribute name="margin-top">1px</xsl:attribute>
+											<xsl:attribute name="margin-bottom">1px</xsl:attribute>
+
+											<xsl:attribute name="font-weight">bold</xsl:attribute>
+											Certificate chain:
+										</fo:block>
+									</fo:table-cell>
+									<fo:table-cell>
+										<xsl:choose>
+											<xsl:when test="dss:CertificateChain/dss:Certificate">
+												<xsl:for-each select="dss:CertificateChain/dss:Certificate">
+													<xsl:variable name="index" select="position()"/>
+
+													<fo:block>
+														<fo:inline>
+															<xsl:attribute name="margin-top">1px</xsl:attribute>
+															<xsl:attribute name="margin-bottom">1px</xsl:attribute>
+															<xsl:if test="$index = 1">
+																<xsl:attribute name="font-weight">bold</xsl:attribute>
+															</xsl:if>
+															<xsl:if test="not(@trusted = 'true' or following-sibling::dss:Certificate[@trusted = 'true'])">
+																<xsl:attribute name="color">gray</xsl:attribute>
+															</xsl:if>
+															<xsl:value-of select="dss:QualifiedName" />
+														</fo:inline>
+														<fo:inline>
+															<xsl:if test="@trusted = 'true' and not(dss:TrustAnchors)"> (Trust anchor)</xsl:if>
+															<xsl:apply-templates select="dss:TrustAnchors"/>
+														</fo:inline>
+													</fo:block>
+
+												</xsl:for-each>
+											</xsl:when>
+											<xsl:otherwise>
+												<fo:block>/</fo:block>
+											</xsl:otherwise>
+										</xsl:choose>
+									</fo:table-cell>
+								</fo:table-row>
+							</xsl:if>
 							
 							<fo:table-row>
 								<xsl:attribute name="margin-top">1px</xsl:attribute>
@@ -449,10 +515,13 @@
 											
 			       						<xsl:attribute name="font-weight">bold</xsl:attribute>
 										<xsl:if test="$nodeName = 'Signature'">
-											On claimed time : 
+											On claimed time:
 										</xsl:if>
 										<xsl:if test="$nodeName = 'Timestamp'">
-											Production time : 
+											Production time:
+										</xsl:if>
+										<xsl:if test="$nodeName = 'EvidenceRecord'">
+											POE time:
 										</xsl:if>
 									</fo:block>
 								</fo:table-cell>
@@ -471,6 +540,11 @@
 												<xsl:with-param name="DateTimeStr" select="dss:ProductionTime"/>
 											</xsl:call-template>
 										</xsl:if>
+										<xsl:if test="$nodeName = 'EvidenceRecord'">
+											<xsl:call-template name="formatdate">
+												<xsl:with-param name="DateTimeStr" select="dss:POETime"/>
+											</xsl:call-template>
+										</xsl:if>
 									</fo:block>
 								</fo:table-cell>
 							</fo:table-row>
@@ -485,7 +559,7 @@
 											<xsl:attribute name="margin-bottom">1px</xsl:attribute>
 											
 				       						<xsl:attribute name="font-weight">bold</xsl:attribute>
-											Best signature time : 
+											Best signature time:
 										</fo:block>
 									</fo:table-cell>
 									<fo:table-cell>
@@ -511,7 +585,7 @@
 											<xsl:attribute name="margin-bottom">1px</xsl:attribute>
 											
 				       						<xsl:attribute name="font-weight">bold</xsl:attribute>
-											Signature position : 
+											Signature position:
 										</fo:block>
 									</fo:table-cell>
 									<fo:table-cell>
@@ -527,11 +601,29 @@
 
 							<xsl:apply-templates select="dss:SignatureScope" />
 							<xsl:apply-templates select="dss:TimestampScope" />
+							<xsl:apply-templates select="dss:EvidenceRecordScope" />
 							
 						</fo:table-body>	
 					</fo:table>
+
+					<xsl:variable name="sigPosition">
+						<xsl:choose>
+							<xsl:when test="$sigCounter"><xsl:value-of select="$sigCounter" /></xsl:when>
+							<xsl:when test="$nodeName = 'Signature'"><xsl:value-of select="$counter" /></xsl:when>
+						</xsl:choose>
+					</xsl:variable>
+					<xsl:variable name="erPosition">
+						<xsl:choose>
+							<xsl:when test="$nodeName = 'EvidenceRecord'"><xsl:value-of select="$counter" /></xsl:when>
+						</xsl:choose>
+					</xsl:variable>
 		
 					<xsl:apply-templates select="dss:Timestamps">
+						<xsl:with-param name="sigCounter" select="$sigPosition"/>
+						<xsl:with-param name="erCounter" select="$erPosition"/>
+					</xsl:apply-templates>
+
+					<xsl:apply-templates select="dss:EvidenceRecords">
 						<xsl:with-param name="sigCounter" select="$counter"/>
 					</xsl:apply-templates>
 		
@@ -542,11 +634,12 @@
 
     </xsl:template>
 
-	<xsl:template match="dss:SignatureScope|dss:TimestampScope">
+	<xsl:template match="dss:SignatureScope|dss:TimestampScope|dss:EvidenceRecordScope">
 		<xsl:variable name="header">
 			<xsl:choose>
 				<xsl:when test="name() = 'SignatureScope'">Signature scope</xsl:when>
 				<xsl:when test="name() = 'TimestampScope'">Timestamp scope</xsl:when>
+				<xsl:when test="name() = 'EvidenceRecordScope'">Evidence Record scope</xsl:when>
 			</xsl:choose>
 		</xsl:variable>
 		<fo:table-row>
@@ -580,6 +673,57 @@
 		</fo:table-row>
 	</xsl:template>
 
+	<xsl:template match="dss:TrustAnchors">
+		<xsl:apply-templates select="dss:TrustAnchor"/>
+	</xsl:template>
+
+	<xsl:template match="dss:TrustAnchor">
+		<xsl:variable name="subDirectory">
+			<xsl:choose>
+				<xsl:when test="dss:TSLType and $euGenericTSLType = dss:TSLType"><xsl:value-of select="$euTLSubDirectoryInTlBrowser" /></xsl:when>
+				<xsl:otherwise><xsl:value-of select="$tcTLSubDirectoryInTlBrowser" /></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:variable name="countryTlUrl" select="concat($rootUrlInTlBrowser, $subDirectory, '/', @countryCode)" />
+		<xsl:variable name="countryTspUrl" select="concat($rootUrlInTlBrowser, $subDirectory,
+				$trustmarkSubDirectoryInTlBrowser, '/', @countryCode, '/', dss:TrustServiceProviderRegistrationId)" />
+
+		<xsl:text> </xsl:text>
+		<fo:instream-foreign-object fox:alt-text="arrow-right" content-height="6px" content-width="6px" height="6px" width="6px">
+			<svg viewBox="0 0 1792 1792" xmlns="http://www.w3.org/2000/svg"><path style="fill:black" d="M1413 896q0-27-18-45l-91-91-362-362q-18-18-45-18t-45 18l-91 91q-18 18-18 45t18 45l189 189h-502q-26 0-45 19t-19 45v128q0 26 19 45t45 19h502l-189 189q-19 19-19 45t19 45l91 91q18 18 45 18t45-18l362-362 91-91q18-18 18-45zm251 0q0 209-103 385.5t-279.5 279.5-385.5 103-385.5-103-279.5-279.5-103-385.5 103-385.5 279.5-279.5 385.5-103 385.5 103 279.5 279.5 103 385.5z"/></svg>
+		</fo:instream-foreign-object>
+		<xsl:text> </xsl:text>
+		<fo:basic-link>
+			<xsl:attribute name="external-destination"><xsl:value-of select="$countryTlUrl"/></xsl:attribute>
+			<xsl:value-of select="@countryCode" />
+		</fo:basic-link>
+		<xsl:text> </xsl:text>
+		<fo:instream-foreign-object fox:alt-text="arrow-right" content-height="6px" content-width="6px" height="6px" width="6px">
+			<svg viewBox="0 0 1792 1792" xmlns="http://www.w3.org/2000/svg"><path style="fill:black" d="M1413 896q0-27-18-45l-91-91-362-362q-18-18-45-18t-45 18l-91 91q-18 18-18 45t18 45l189 189h-502q-26 0-45 19t-19 45v128q0 26 19 45t45 19h502l-189 189q-19 19-19 45t19 45l91 91q18 18 45 18t45-18l362-362 91-91q18-18 18-45zm251 0q0 209-103 385.5t-279.5 279.5-385.5 103-385.5-103-279.5-279.5-103-385.5 103-385.5 279.5-279.5 385.5-103 385.5 103 279.5 279.5 103 385.5z"/></svg>
+		</fo:instream-foreign-object>
+		<xsl:text> </xsl:text>
+		<fo:basic-link>
+			<xsl:attribute name="external-destination"><xsl:value-of select="$countryTspUrl"/></xsl:attribute>
+			<xsl:value-of select="dss:TrustServiceProvider" />
+		</fo:basic-link>
+		<xsl:text> </xsl:text>
+
+		<!-- optionally display TrustServices names -->
+		<!--
+		<fo:instream-foreign-object fox:alt-text="arrow-right" content-height="6px" content-width="6px" height="6px" width="6px">
+			<svg viewBox="0 0 1792 1792" xmlns="http://www.w3.org/2000/svg"><path style="fill:black" d="M1413 896q0-27-18-45l-91-91-362-362q-18-18-45-18t-45 18l-91 91q-18 18-18 45t18 45l189 189h-502q-26 0-45 19t-19 45v128q0 26 19 45t45 19h502l-189 189q-19 19-19 45t19 45l91 91q18 18 45 18t45-18l362-362 91-91q18-18 18-45zm251 0q0 209-103 385.5t-279.5 279.5-385.5 103-385.5-103-279.5-279.5-103-385.5 103-385.5 279.5-279.5 385.5-103 385.5 103 279.5 279.5 103 385.5z"/></svg>
+		</fo:instream-foreign-object>
+		<xsl:text> </xsl:text>
+		<xsl:for-each select="dss:TrustServiceName">
+			<xsl:value-of select="." />
+			<xsl:if test="position() &lt; last()">
+				<xsl:text>; </xsl:text>
+			</xsl:if>
+		</xsl:for-each>
+		-->
+
+	</xsl:template>
+
 	<xsl:template match="dss:QualificationDetails|dss:AdESValidationDetails">
 		<xsl:variable name="header">
 			<xsl:choose>
@@ -596,7 +740,7 @@
 					<xsl:attribute name="margin-bottom">1px</xsl:attribute>
 
 					<xsl:attribute name="font-weight">bold</xsl:attribute>
-					<xsl:value-of select="$header" /> :
+					<xsl:value-of select="$header" />:
 				</fo:block>
 			</fo:table-cell>
 			<fo:table-cell>
@@ -628,6 +772,7 @@
 
 	<xsl:template match="dss:Timestamps">
 		<xsl:param name="sigCounter" />
+		<xsl:param name="erCounter" />
 		<fo:block-container>
 			<fo:block>
 				<xsl:attribute name="margin-top">2px</xsl:attribute>
@@ -635,7 +780,29 @@
 				<xsl:attribute name="font-size">7pt</xsl:attribute>
 
 				<xsl:attribute name="font-weight">bold</xsl:attribute>
-				Timestamps :
+				Timestamps:
+			</fo:block>
+		</fo:block-container>
+		<fo:block-container>
+			<fo:block>
+				<xsl:apply-templates>
+					<xsl:with-param name="sigCounter" select="$sigCounter"/>
+					<xsl:with-param name="erCounter" select="$erCounter"/>
+				</xsl:apply-templates>
+			</fo:block>
+		</fo:block-container>
+	</xsl:template>
+
+	<xsl:template match="dss:EvidenceRecords">
+		<xsl:param name="sigCounter" />
+		<fo:block-container>
+			<fo:block>
+				<xsl:attribute name="margin-top">2px</xsl:attribute>
+				<xsl:attribute name="margin-bottom">2px</xsl:attribute>
+				<xsl:attribute name="font-size">7pt</xsl:attribute>
+
+				<xsl:attribute name="font-weight">bold</xsl:attribute>
+				Evidence records:
 			</fo:block>
 		</fo:block-container>
 		<fo:block-container>
@@ -700,30 +867,9 @@
 							<xsl:attribute name="column-width">75%</xsl:attribute>
 						</fo:table-column>
 						<fo:table-body>
-						
-							<xsl:if test="dss:ContainerType">
-								<fo:table-row>
-									<xsl:attribute name="margin-top">1px</xsl:attribute>
-									<xsl:attribute name="margin-bottom">1px</xsl:attribute>
-									<fo:table-cell>
-										<fo:block>
-											<xsl:attribute name="margin-top">1px</xsl:attribute>
-											<xsl:attribute name="margin-bottom">1px</xsl:attribute>
-											
-											<xsl:attribute name="font-weight">bold</xsl:attribute>
-												Container type:
-										</fo:block>
-									</fo:table-cell>
-									<fo:table-cell>
-										<fo:block>
-											<xsl:attribute name="margin-top">1px</xsl:attribute>
-											<xsl:attribute name="margin-bottom">1px</xsl:attribute>
-											
-											<xsl:value-of select="dss:ContainerType"/>
-										</fo:block>
-									</fo:table-cell>
-								</fo:table-row>
-					        </xsl:if>
+
+							<xsl:apply-templates select="dss:ContainerType"/>
+							<xsl:apply-templates select="dss:PDFAInfo"/>
 						
 							<fo:table-row>
 								<xsl:attribute name="margin-top">1px</xsl:attribute>
@@ -734,7 +880,7 @@
 										<xsl:attribute name="margin-bottom">1px</xsl:attribute>
 											
 			       						<xsl:attribute name="font-weight">bold</xsl:attribute>
-										Signatures status : 
+										Signatures status:
 									</fo:block>
 								</fo:table-cell>
 								<fo:table-cell>
@@ -755,7 +901,7 @@
 										<xsl:attribute name="margin-bottom">1px</xsl:attribute>
 											
 			       						<xsl:attribute name="font-weight">bold</xsl:attribute>
-										Document name : 
+										Document name:
 									</fo:block>
 								</fo:table-cell>
 								<fo:table-cell>
@@ -774,6 +920,79 @@
 	       	
     	</fo:block-container>
     	
+	</xsl:template>
+
+	<xsl:template match="dss:ContainerType">
+		<fo:table-row>
+			<xsl:attribute name="margin-top">1px</xsl:attribute>
+			<xsl:attribute name="margin-bottom">1px</xsl:attribute>
+			<fo:table-cell>
+				<fo:block>
+					<xsl:attribute name="margin-top">1px</xsl:attribute>
+					<xsl:attribute name="margin-bottom">1px</xsl:attribute>
+
+					<xsl:attribute name="font-weight">bold</xsl:attribute>
+					Container type:
+				</fo:block>
+			</fo:table-cell>
+			<fo:table-cell>
+				<fo:block>
+					<xsl:attribute name="margin-top">1px</xsl:attribute>
+					<xsl:attribute name="margin-bottom">1px</xsl:attribute>
+
+					<xsl:value-of select="dss:ContainerType"/>
+				</fo:block>
+			</fo:table-cell>
+		</fo:table-row>
+	</xsl:template>
+
+	<xsl:template match="dss:PDFAInfo">
+
+		<fo:table-row>
+			<xsl:attribute name="margin-top">1px</xsl:attribute>
+			<xsl:attribute name="margin-bottom">1px</xsl:attribute>
+			<fo:table-cell>
+				<fo:block>
+					<xsl:attribute name="margin-top">1px</xsl:attribute>
+					<xsl:attribute name="margin-bottom">1px</xsl:attribute>
+
+					<xsl:attribute name="font-weight">bold</xsl:attribute>
+					PDF/A Profile:
+				</fo:block>
+			</fo:table-cell>
+			<fo:table-cell>
+				<fo:block>
+					<xsl:attribute name="margin-top">1px</xsl:attribute>
+					<xsl:attribute name="margin-bottom">1px</xsl:attribute>
+
+					<xsl:value-of select="dss:PDFAProfile"/>
+					<xsl:choose>
+						<xsl:when test="@valid = 'true'"> (valid)</xsl:when>
+						<xsl:otherwise> (failed)</xsl:otherwise>
+					</xsl:choose>
+				</fo:block>
+			</fo:table-cell>
+		</fo:table-row>
+
+		<xsl:if test="dss:ValidationMessages">
+			<fo:table-row>
+				<xsl:attribute name="margin-top">1px</xsl:attribute>
+				<xsl:attribute name="margin-bottom">1px</xsl:attribute>
+				<fo:table-cell>
+					<fo:block>
+						<xsl:attribute name="margin-top">1px</xsl:attribute>
+						<xsl:attribute name="margin-bottom">1px</xsl:attribute>
+
+						<xsl:attribute name="font-weight">bold</xsl:attribute>
+						PDF/A Validation Errors:
+					</fo:block>
+				</fo:table-cell>
+				<fo:table-cell>
+					<xsl:apply-templates select="dss:ValidationMessages/dss:Error"/>
+				</fo:table-cell>
+			</fo:table-row>
+		</xsl:if>
+
 	</xsl:template>
 	 
     <xsl:template match="dss:Semantic">

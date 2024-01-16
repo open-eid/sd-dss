@@ -24,6 +24,7 @@ import eu.europa.esig.dss.cades.CMSUtils;
 import eu.europa.esig.dss.cades.SignedAssertion;
 import eu.europa.esig.dss.cades.SignedAssertions;
 import eu.europa.esig.dss.cades.SignerAttributeV2;
+import eu.europa.esig.dss.cades.validation.scope.CAdESSignatureScopeFinder;
 import eu.europa.esig.dss.cades.validation.timestamp.CAdESTimestampSource;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.DigestMatcherType;
@@ -41,6 +42,7 @@ import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.SignaturePolicyStore;
 import eu.europa.esig.dss.model.SpDocSpecification;
 import eu.europa.esig.dss.model.UserNotice;
+import eu.europa.esig.dss.model.scope.SignatureScope;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.OID;
@@ -53,16 +55,16 @@ import eu.europa.esig.dss.spi.x509.revocation.ocsp.OfflineOCSPSource;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
 import eu.europa.esig.dss.validation.DefaultAdvancedSignature;
-import eu.europa.esig.dss.validation.ManifestEntry;
-import eu.europa.esig.dss.validation.ReferenceValidation;
-import eu.europa.esig.dss.validation.SignatureCertificateSource;
+import eu.europa.esig.dss.model.ManifestEntry;
+import eu.europa.esig.dss.model.ReferenceValidation;
+import eu.europa.esig.dss.spi.SignatureCertificateSource;
 import eu.europa.esig.dss.validation.SignatureCryptographicVerification;
 import eu.europa.esig.dss.validation.SignatureDigestReference;
 import eu.europa.esig.dss.validation.SignatureIdentifierBuilder;
 import eu.europa.esig.dss.validation.SignaturePolicy;
 import eu.europa.esig.dss.validation.SignatureProductionPlace;
 import eu.europa.esig.dss.validation.SignerRole;
-import eu.europa.esig.dss.validation.timestamp.TimestampToken;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampToken;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1IA5String;
 import org.bouncycastle.asn1.ASN1Integer;
@@ -207,6 +209,11 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	@Override
+	protected List<SignatureScope> findSignatureScopes() {
+		return new CAdESSignatureScopeFinder().findSignatureScope(this);
+	}
+
+	@Override
 	protected SignaturePolicy buildSignaturePolicy() {
 		final Attribute attribute = CMSUtils.getSignedAttribute(signerInformation, PKCSObjectIdentifiers.id_aa_ets_sigPolicyId);
 		if (attribute == null) {
@@ -263,12 +270,12 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 						signaturePolicy.setDocSpecification(spDocSpecification);
 
 					} else {
-						LOG.error("Unknown signature policy qualifier id: {} with value: {}", policyQualifierInfoId,
+						LOG.warn("Unknown signature policy qualifier id: {} with value: {}", policyQualifierInfoId,
 								policyQualifierInfoValue);
 					}
 
 				} catch (Exception e) {
-					LOG.error("Unable to read SigPolicyQualifierInfo {} : {}", ii, e.getMessage());
+					LOG.warn("Unable to read SigPolicyQualifierInfo {} : {}", ii, e.getMessage());
 				}
 			}
 		}
@@ -498,7 +505,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			}
 			return claimedRoles;
 		} catch (Exception e) {
-			LOG.error("Error when dealing with claimed signer roles : {}", signerAttrValues, e);
+			LOG.warn("Error when dealing with claimed signer roles : {}", signerAttrValues, e);
 			return Collections.emptyList();
 		}
 	}
@@ -539,7 +546,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 			}
 			return roles;
 		} catch (Exception e) {
-			LOG.error("Error when dealing with certified signer roles : {}", signerAttrValues, e);
+			LOG.warn("Error when dealing with certified signer roles : {}", signerAttrValues, e);
 			return Collections.emptyList();
 		}
 	}
@@ -570,9 +577,9 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	private SignerAttribute getSignerAttributeV1() {
-		final Attribute id_aa_ets_signerAttr = CMSUtils.getSignedAttribute(signerInformation, PKCSObjectIdentifiers.id_aa_ets_signerAttr);
-		if (id_aa_ets_signerAttr != null) {
-			final ASN1Set attrValues = id_aa_ets_signerAttr.getAttrValues();
+		final Attribute idAaEtsSignerAttr = CMSUtils.getSignedAttribute(signerInformation, PKCSObjectIdentifiers.id_aa_ets_signerAttr);
+		if (idAaEtsSignerAttr != null) {
+			final ASN1Set attrValues = idAaEtsSignerAttr.getAttrValues();
 			final ASN1Encodable attrValue = attrValues.getObjectAt(0);
 			try {
 				return SignerAttribute.getInstance(attrValue);
@@ -589,9 +596,9 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	private SignerAttributeV2 getSignerAttributeV2() {
-		final Attribute id_aa_ets_signerAttrV2 = CMSUtils.getSignedAttribute(signerInformation, OID.id_aa_ets_signerAttrV2);
-		if (id_aa_ets_signerAttrV2 != null) {
-			final ASN1Set attrValues = id_aa_ets_signerAttrV2.getAttrValues();
+		final Attribute idAaEtsSignerAttrV2 = CMSUtils.getSignedAttribute(signerInformation, OID.id_aa_ets_signerAttrV2);
+		if (idAaEtsSignerAttrV2 != null) {
+			final ASN1Set attrValues = idAaEtsSignerAttrV2.getAttrValues();
 			final ASN1Encodable attrValue = attrValues.getObjectAt(0);
 			try {
 				return SignerAttributeV2.getInstance(attrValue);

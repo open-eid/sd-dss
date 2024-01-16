@@ -20,14 +20,14 @@
  */
 package eu.europa.esig.dss.validation;
 
-import eu.europa.esig.dss.CertificateReorderer;
+import eu.europa.esig.dss.spi.x509.CertificateReorderer;
 import eu.europa.esig.dss.enumerations.RevocationReason;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.model.x509.Token;
 import eu.europa.esig.dss.model.x509.X500PrincipalHelper;
 import eu.europa.esig.dss.model.x509.revocation.crl.CRL;
 import eu.europa.esig.dss.model.x509.revocation.ocsp.OCSP;
-import eu.europa.esig.dss.spi.DSSASN1Utils;
+import eu.europa.esig.dss.spi.CertificateExtensionsUtils;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.x509.AlternateUrlsSourceAdapter;
 import eu.europa.esig.dss.spi.x509.CandidatesForSigningCertificate;
@@ -39,6 +39,7 @@ import eu.europa.esig.dss.spi.x509.ListCertificateSource;
 import eu.europa.esig.dss.spi.x509.ResponderId;
 import eu.europa.esig.dss.spi.x509.TokenIssuerSelector;
 import eu.europa.esig.dss.spi.x509.aia.AIASource;
+import eu.europa.esig.dss.spi.x509.revocation.ListRevocationSource;
 import eu.europa.esig.dss.spi.x509.revocation.OfflineRevocationSource;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationCertificateSource;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationSource;
@@ -46,11 +47,12 @@ import eu.europa.esig.dss.spi.x509.revocation.RevocationSourceAlternateUrlsSuppo
 import eu.europa.esig.dss.spi.x509.revocation.RevocationToken;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPToken;
 import eu.europa.esig.dss.utils.Utils;
+import eu.europa.esig.dss.validation.evidencerecord.EvidenceRecord;
 import eu.europa.esig.dss.validation.status.RevocationFreshnessStatus;
 import eu.europa.esig.dss.validation.status.SignatureStatus;
 import eu.europa.esig.dss.validation.status.TokenStatus;
-import eu.europa.esig.dss.validation.timestamp.TimestampToken;
-import eu.europa.esig.dss.validation.timestamp.TimestampedReference;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampToken;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampedReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -223,6 +225,11 @@ public class SignatureValidationContext implements ValidationContext {
 
 		List<TimestampToken> timestamps = signature.getAllTimestamps();
 		prepareTimestamps(timestamps);
+
+		List<EvidenceRecord> allEvidenceRecords = signature.getAllEvidenceRecords();
+		for (EvidenceRecord evidenceRecord : allEvidenceRecords) {
+			addEvidenceRecordForVerification(evidenceRecord);
+		}
 
 		registerBestSignatureTime(signature); // to be done after timestamp POE extraction
 
@@ -460,7 +467,7 @@ public class SignatureValidationContext implements ValidationContext {
 
 	private CertificateToken getIssuerFromProcessedCertificates(Token token) {
 		CertificateToken issuerCertificateToken = tokenIssuerMap.get(token);
-		// isSignedBy(...) check is required when a certificates is present in different sources
+		// isSignedBy(...) check is required when a certificate is present in different sources
 		// in order to instantiate a public key of the signer
 		if (issuerCertificateToken != null &&
 				(token.getPublicKeyOfTheSigner() != null || token.isSignedBy(issuerCertificateToken))) {
@@ -541,7 +548,7 @@ public class SignatureValidationContext implements ValidationContext {
 			Set<CertificateToken> issuerCandidates = new HashSet<>();
 			CertificateToken timestampSigner = theBestCandidate.getCertificateToken();
 			if (timestampSigner == null) {
-				issuerCandidates.addAll(allCertificateSources.getByCertificateIdentifier(theBestCandidate.getSignerInfo()));
+				issuerCandidates.addAll(allCertificateSources.getBySignerIdentifier(theBestCandidate.getSignerInfo()));
 			} else {
 				issuerCandidates.add(timestampSigner);
 			}
@@ -734,6 +741,14 @@ public class SignatureValidationContext implements ValidationContext {
 			}
 		}
 		return chain;
+	}
+
+	@Override
+	public void addEvidenceRecordForVerification(EvidenceRecord evidenceRecord) {
+		addDocumentCertificateSource(evidenceRecord.getCertificateSource());
+		addDocumentCRLSource(evidenceRecord.getCRLSource());
+		addDocumentOCSPSource(evidenceRecord.getOCSPSource());
+		prepareTimestamps(evidenceRecord.getTimestamps());
 	}
 
 	@Override
@@ -1025,25 +1040,23 @@ public class SignatureValidationContext implements ValidationContext {
 	}
 
 	@Override
-	public boolean checkAllCertificatesValid() {
+	public boolean checkCertificateNotRevoked(CertificateToken certificateToken) {
 		TokenStatus status = new TokenStatus();
-		for (CertificateToken certificateToken : processedCertificates) {
-			if (!isRevocationDataNotRequired(certificateToken)) {
-				List<RevocationToken<?>> relatedRevocationTokens = getRelatedRevocationTokens(certificateToken);
-				// check only available revocation data in order to not duplicate
-				// the method {@code checkAllRequiredRevocationDataPresent()}
-				if (Utils.isCollectionNotEmpty(relatedRevocationTokens)) {
-					// check if there is a best-signature-time before the revocation date
-					Date lowestPOETime = getLowestPOETime(certificateToken);
-					for (RevocationToken<?> revocationToken : relatedRevocationTokens) {
-						if ((revocationToken.getStatus().isRevoked() && lowestPOETime != null &&
-								!lowestPOETime.before(revocationToken.getRevocationDate())) ||
-								!revocationToken.getStatus().isKnown()) {
-							status.addRelatedTokenAndErrorMessage(certificateToken, "Certificate is revoked/suspended!");
-						}
-					}
-				}
-			}
+		checkCertificateIsNotRevokedRecursively(certificateToken, poeTimes.get(certificateToken.getDSSIdAsString()), status);
+		boolean success = status.isEmpty();
+		if (!success) {
+			status.setMessage("Revoked/Suspended certificate(s) detected.");
+			certificateVerifier.getAlertOnRevokedCertificate().alert(status);
+		}
+		return success;
+	}
+
+	@Override
+	public boolean checkCertificatesNotRevoked(AdvancedSignature signature) {
+		TokenStatus status = new TokenStatus();
+		CertificateToken signingCertificate = signature.getSigningCertificateToken();
+		if (signingCertificate != null) {
+			checkCertificateIsNotRevokedRecursively(signingCertificate, poeTimes.get(signature.getId()), status);
 		}
 		boolean success = status.isEmpty();
 		if (!success) {
@@ -1051,6 +1064,50 @@ public class SignatureValidationContext implements ValidationContext {
 			certificateVerifier.getAlertOnRevokedCertificate().alert(status);
 		}
 		return success;
+	}
+
+	private boolean checkCertificateIsNotRevokedRecursively(CertificateToken certificateToken, List<POE> poeTimes) {
+		return checkCertificateIsNotRevokedRecursively(certificateToken, poeTimes, null);
+	}
+
+	private boolean checkCertificateIsNotRevokedRecursively(CertificateToken certificateToken, List<POE> poeTimes, TokenStatus status) {
+		if (isSelfSignedOrTrusted(certificateToken)) {
+			return true;
+
+		} else if (!isOCSPNoCheckExtension(certificateToken)) {
+			List<RevocationToken<?>> relatedRevocationTokens = getRelatedRevocationTokens(certificateToken);
+			// check only available revocation data in order to not duplicate
+			// the method {@code checkAllRequiredRevocationDataPresent()}
+			if (Utils.isCollectionNotEmpty(relatedRevocationTokens)) {
+				// check if there is a best-signature-time before the revocation date
+				for (RevocationToken<?> revocationToken : relatedRevocationTokens) {
+					if ((revocationToken.getStatus().isRevoked() && !hasPOEBeforeRevocationDate(revocationToken.getRevocationDate(), poeTimes))
+							|| !revocationToken.getStatus().isKnown()) {
+						if (status != null) {
+							status.addRelatedTokenAndErrorMessage(certificateToken, "Certificate is revoked/suspended!");
+						}
+						return false;
+					}
+				}
+			}
+		}
+
+		CertificateToken issuer = getIssuer(certificateToken);
+		if (issuer != null) {
+			return checkCertificateIsNotRevokedRecursively(issuer, poeTimes, status);
+		}
+		return true;
+	}
+
+	private boolean hasPOEBeforeRevocationDate(Date revocationDate, List<POE> poeTimes) {
+		if (Utils.isCollectionNotEmpty(poeTimes)) {
+			for (POE poe : poeTimes) {
+				if (verifyPOE(poe) && poe.getTime().before(revocationDate)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private boolean isRevocationDataNotRequired(CertificateToken certToken) {
@@ -1062,7 +1119,7 @@ public class SignatureValidationContext implements ValidationContext {
 	}
 	
 	private boolean isOCSPNoCheckExtension(CertificateToken certToken) {
-		return DSSASN1Utils.hasIdPkixOcspNoCheckExtension(certToken);
+		return CertificateExtensionsUtils.hasOcspNoCheckExtension(certToken);
 	}
 
 	private List<RevocationToken<?>> getRelatedRevocationTokens(CertificateToken certificateToken) {
@@ -1234,23 +1291,26 @@ public class SignatureValidationContext implements ValidationContext {
 	private boolean verifyCertificateTokenHasPOERecursively(CertificateToken certificateToken, List<POE> poeTimeList) {
 		if (Utils.isCollectionNotEmpty(poeTimeList)) {
 			for (POE poeTime : poeTimeList) {
-				if (certificateToken.isValidOn(poeTime.getTime())) {
-					TimestampToken timestampToken = poeTime.getTimestampToken();
-					if (timestampToken != null) {
-						// check if the timestamp is valid at validation time
-						CertificateToken issuerCertificateToken = getIssuer(timestampToken);
-						if (issuerCertificateToken != null &&
-								verifyCertificateTokenHasPOERecursively(issuerCertificateToken, poeTimes.get(timestampToken.getDSSIdAsString()))) {
-							return true;
-						}
-					} else {
-						// the certificate is valid at the current time
-						return true;
-					}
+				if (certificateToken.isValidOn(poeTime.getTime()) && verifyPOE(poeTime)) {
+					return true;
 				}
 			}
 		}
 		return false;
+	}
+
+	private boolean verifyPOE(POE poe) {
+		TimestampToken timestampToken = poe.getTimestampToken();
+		if (timestampToken != null) {
+			// check if the timestamp is valid at validation time
+			CertificateToken issuerCertificateToken = getIssuer(timestampToken);
+			List<POE> timestampPOEs = poeTimes.get(timestampToken.getDSSIdAsString());
+			return issuerCertificateToken != null && timestampToken.isValid()
+					&& verifyCertificateTokenHasPOERecursively(issuerCertificateToken, timestampPOEs)
+					&& checkCertificateIsNotRevokedRecursively(issuerCertificateToken, timestampPOEs);
+		}
+		// POE is provided
+		return true;
 	}
 
 	@Override

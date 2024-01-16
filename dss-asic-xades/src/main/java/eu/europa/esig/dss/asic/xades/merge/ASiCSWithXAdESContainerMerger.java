@@ -20,14 +20,14 @@
  */
 package eu.europa.esig.dss.asic.xades.merge;
 
-import eu.europa.esig.dss.DomUtils;
+import eu.europa.esig.dss.xml.utils.DomUtils;
 import eu.europa.esig.dss.asic.common.ASiCContent;
 import eu.europa.esig.dss.asic.common.ASiCUtils;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
+import eu.europa.esig.dss.enumerations.MimeTypeEnum;
 import eu.europa.esig.dss.exception.IllegalInputException;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
-import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
@@ -277,8 +277,8 @@ public class ASiCSWithXAdESContainerMerger extends AbstractASiCWithXAdESContaine
             }
         }
 
-        byte[] bytes = DSSXMLUtils.serializeNode(documentElement);
-        return new InMemoryDocument(bytes, ASiCUtils.SIGNATURES_XML, MimeType.XML);
+        byte[] bytes = DomUtils.serializeNode(documentElement);
+        return new InMemoryDocument(bytes, ASiCUtils.SIGNATURES_XML, MimeTypeEnum.XML);
     }
 
 }

@@ -26,6 +26,7 @@ import eu.europa.esig.dss.diagnostic.TimestampWrapper;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.spi.DSSUtils;
+import eu.europa.esig.dss.spi.x509.CertificateSource;
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
 import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.token.SignatureTokenConnection;
@@ -101,6 +102,14 @@ public class CookbookTools extends PKIFactoryAccess {
 	}
 
 	/**
+	 * This method retrieves an instance of online PKCS12 keystore
+	 *
+	 */
+	protected SignatureTokenConnection getUserPkcs12Token() throws IOException {
+		return getOnlinePKCS12Token();
+	}
+
+	/**
 	 * This method retrieves an instance of PKCS12 keystore
 	 * 
 	 */
@@ -109,7 +118,18 @@ public class CookbookTools extends PKIFactoryAccess {
 	}
 
 	protected TSPSource getOnlineTSPSource() {
-		return getGoodTsa();
+		return getOnlineTSPSourceByName(GOOD_TSA);
+	}
+
+	@Override
+	protected CertificateSource getTrustedCertificateSource() {
+		CertificateSource trustedCertificateSource = super.getTrustedCertificateSource();
+		getOnlineTrustedCertificateSource().getCertificates().forEach(trustedCertificateSource::addCertificate);
+		return trustedCertificateSource;
+	}
+
+	protected TSPSource getTSPSource() {
+		return getPKITSPSourceByName(GOOD_TSA);
 	}
 
 	@Override

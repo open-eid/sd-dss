@@ -22,6 +22,8 @@ package eu.europa.esig.dss.jades.signature;
 
 import eu.europa.esig.dss.enumerations.CommitmentType;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.enumerations.MimeType;
+import eu.europa.esig.dss.enumerations.MimeTypeEnum;
 import eu.europa.esig.dss.enumerations.SigDMechanism;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.exception.IllegalInputException;
@@ -35,18 +37,17 @@ import eu.europa.esig.dss.model.CommonCommitmentType;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.DigestDocument;
-import eu.europa.esig.dss.model.MimeType;
 import eu.europa.esig.dss.model.Policy;
 import eu.europa.esig.dss.model.SignerLocation;
 import eu.europa.esig.dss.model.SpDocSpecification;
 import eu.europa.esig.dss.model.TimestampBinary;
 import eu.europa.esig.dss.model.UserNotice;
 import eu.europa.esig.dss.model.x509.CertificateToken;
-import eu.europa.esig.dss.signature.BaselineBCertificateSelector;
+import eu.europa.esig.dss.spi.x509.BaselineBCertificateSelector;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CertificateVerifier;
-import eu.europa.esig.dss.validation.timestamp.TimestampToken;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampToken;
 import org.jose4j.json.JsonUtil;
 import org.jose4j.json.internal.json_simple.JSONArray;
 import org.jose4j.jwx.HeaderParameterNames;
@@ -195,7 +196,10 @@ public class JAdESLevelBaselineB {
 	 * Incorporates 5.1.5 The x5u (X.509 URL) header parameter
 	 */
 	protected void incorporateSigningCertificateUri() {
-		// not supported
+		String x509Url = parameters.getX509Url();
+		if (Utils.isStringNotEmpty(x509Url)) {
+			addHeader(HeaderParameterNames.X509_URL, x509Url);
+		}
 	}
 	
 	/**
@@ -234,7 +238,9 @@ public class JAdESLevelBaselineB {
 			return;
 		}
 		
-		BaselineBCertificateSelector certificateSelector = new BaselineBCertificateSelector(certificateVerifier, parameters);
+		BaselineBCertificateSelector certificateSelector = new BaselineBCertificateSelector(parameters.getSigningCertificate(), parameters.getCertificateChain())
+				.setTrustAnchorBPPolicy(parameters.bLevel().isTrustAnchorBPPolicy())
+				.setTrustedCertificateSource(certificateVerifier.getTrustedCertSources());
 		List<CertificateToken> certificates = certificateSelector.getCertificates();
 		
 		List<String> base64Certificates = new ArrayList<>();
@@ -287,11 +293,11 @@ public class JAdESLevelBaselineB {
 			MimeType signatureMimeType;
 			switch (parameters.getJwsSerializationType()) {
 				case COMPACT_SERIALIZATION:
-					signatureMimeType = MimeType.JOSE;
+					signatureMimeType = MimeTypeEnum.JOSE;
 					break;
 				case JSON_SERIALIZATION:
 				case FLATTENED_JSON_SERIALIZATION:
-					signatureMimeType = MimeType.JOSE_JSON;
+					signatureMimeType = MimeTypeEnum.JOSE_JSON;
 					break;
 				default:
 					throw new DSSException(String.format("The given JWS serialization type '%s' is not supported!", 
@@ -539,7 +545,7 @@ public class JAdESLevelBaselineB {
 		 * instructions, interpretation directives, or content markup should be
 		 * necessary for proper display.
 		 */
-		qArrayMap.put(JAdESHeaderParameterNames.MEDIA_TYPE, MimeType.TEXT.getMimeTypeString());
+		qArrayMap.put(JAdESHeaderParameterNames.MEDIA_TYPE, MimeTypeEnum.TEXT.getMimeTypeString());
 
 		/*
 		 * b) The encoding member, which shall contain a string identifying the encoding
@@ -860,7 +866,7 @@ public class JAdESLevelBaselineB {
 		for (DSSDocument document : detachedContents) {
 			MimeType mimeType = document.getMimeType();
 			if (mimeType == null) {
-				mimeType = MimeType.BINARY;
+				mimeType = MimeTypeEnum.BINARY;
 			}
 			String rfc7515MimeType = getRFC7515ConformantMimeTypeString(mimeType);
 			mimeTypes.add(rfc7515MimeType);

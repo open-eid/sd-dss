@@ -21,7 +21,6 @@
 package eu.europa.esig.dss.token;
 
 import eu.europa.esig.dss.enumerations.EncryptionAlgorithm;
-import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 
 import java.security.KeyStore.PrivateKeyEntry;
@@ -35,7 +34,7 @@ import java.util.List;
  * Wrapper of a PrivateKeyEntry coming from a KeyStore.
  *
  */
-public class KSPrivateKeyEntry implements DSSPrivateKeyEntry {
+public class KSPrivateKeyEntry implements DSSPrivateKeyAccessEntry {
 
 	/** The key's alias */
 	private final String alias;
@@ -65,8 +64,8 @@ public class KSPrivateKeyEntry implements DSSPrivateKeyEntry {
 		for (final Certificate currentCertificate : simpleCertificateChain) {
 			x509CertificateList.add(new CertificateToken((X509Certificate) currentCertificate));
 		}
-		final CertificateToken[] certificateChain_ = new CertificateToken[x509CertificateList.size()];
-		certificateChain = x509CertificateList.toArray(certificateChain_);
+		final CertificateToken[] certificateChainArray = new CertificateToken[x509CertificateList.size()];
+		certificateChain = x509CertificateList.toArray(certificateChainArray);
 		privateKey = privateKeyEntry.getPrivateKey();
 	}
 
@@ -89,17 +88,13 @@ public class KSPrivateKeyEntry implements DSSPrivateKeyEntry {
 		return certificateChain;
 	}
 
-	/**
-	 * Get the private key
-	 * 
-	 * @return the private key
-	 */
+	@Override
 	public PrivateKey getPrivateKey() {
 		return privateKey;
 	}
 
 	@Override
-	public EncryptionAlgorithm getEncryptionAlgorithm() throws DSSException {
+	public EncryptionAlgorithm getEncryptionAlgorithm() {
 		return EncryptionAlgorithm.forKey(certificate.getPublicKey());
 	}
 

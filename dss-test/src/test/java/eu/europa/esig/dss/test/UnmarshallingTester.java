@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
+import com.fasterxml.jackson.module.jakarta.xmlbind.JakartaXmlBindAnnotationIntrospector;
 import eu.europa.esig.dss.detailedreport.DetailedReportFacade;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlDetailedReport;
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
@@ -43,6 +43,7 @@ import eu.europa.esig.dss.diagnostic.TimestampWrapper;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlAbstractToken;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificate;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDiagnosticData;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlEvidenceRecord;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanCertificateToken;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanRevocationToken;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlRevocation;
@@ -192,7 +193,7 @@ public class UnmarshallingTester {
 
 	private static ObjectMapper getObjectMapper() {
 		ObjectMapper om = new ObjectMapper();
-		JaxbAnnotationIntrospector jai = new JaxbAnnotationIntrospector(TypeFactory.defaultInstance());
+		JakartaXmlBindAnnotationIntrospector jai = new JakartaXmlBindAnnotationIntrospector(TypeFactory.defaultInstance());
 		om.setAnnotationIntrospector(jai);
 		om.enable(SerializationFeature.INDENT_OUTPUT);
 		return om;
@@ -230,6 +231,9 @@ public class UnmarshallingTester {
 					break;
 				case TIMESTAMP:
 					token = new XmlTimestamp();
+					break;
+				case EVIDENCE_RECORD:
+					token = new XmlEvidenceRecord();
 					break;
 				case SIGNED_DATA:
 					token = new XmlSignerData();
@@ -356,10 +360,13 @@ public class UnmarshallingTester {
 			CertificateWrapper originalCert = original.getUsedCertificateById(unmarshalledCert.getId());
 			assertNotNull(originalCert);
 			assertEquals(unmarshalledCert.getCertificateChain().size(), originalCert.getCertificateChain().size());
-			assertEquals(unmarshalledCert.getAuthorityInformationAccessUrls().size(), originalCert.getAuthorityInformationAccessUrls().size());
+			assertEquals(unmarshalledCert.getCAIssuersAccessUrls().size(), originalCert.getCAIssuersAccessUrls().size());
+			assertEquals(unmarshalledCert.getOCSPAccessUrls().size(), originalCert.getOCSPAccessUrls().size());
+			assertEquals(unmarshalledCert.getCRLDistributionPoints().size(), originalCert.getCRLDistributionPoints().size());
+			assertEquals(unmarshalledCert.getPolicyIds().size(), originalCert.getPolicyIds().size());
 			assertEquals(unmarshalledCert.getCertificateRevocationData().size(), originalCert.getCertificateRevocationData().size());
 			assertEquals(unmarshalledCert.getExtendedKeyUsages().size(), originalCert.getExtendedKeyUsages().size());
-			assertEquals(unmarshalledCert.getTrustedServices().size(), originalCert.getTrustedServices().size());
+			assertEquals(unmarshalledCert.getTrustServices().size(), originalCert.getTrustServices().size());
 			assertEquals(unmarshalledCert.getTrustServiceProviders().size(), originalCert.getTrustServiceProviders().size());
 
 			if (unmarshalledCert.getSigningCertificate() != null && !unmarshalledCert.getId().equals(unmarshalledCert.getSigningCertificate().getId())) {

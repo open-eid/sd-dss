@@ -31,8 +31,8 @@ import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
-import eu.europa.esig.dss.validation.timestamp.TimestampCertificateSource;
-import eu.europa.esig.dss.validation.timestamp.TimestampToken;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampCertificateSource;
+import eu.europa.esig.dss.spi.x509.tsp.TimestampToken;
 import eu.europa.esig.validationreport.jaxb.SignatureIdentifierType;
 
 import java.util.List;
@@ -83,7 +83,7 @@ public class PadesWrongDigestAlgoTest extends AbstractPAdESTestValidation {
 	
 	@Override
 	protected void checkTimestamps(DiagnosticData diagnosticData) {
-		assertEquals(4, diagnosticData.getTimestampSet().size());
+		assertEquals(4, diagnosticData.getTimestampList().size());
 		
 		for (TimestampWrapper timestampWrapper : diagnosticData.getTimestampList()) {
 			assertTrue(timestampWrapper.isSigningCertificateIdentified());

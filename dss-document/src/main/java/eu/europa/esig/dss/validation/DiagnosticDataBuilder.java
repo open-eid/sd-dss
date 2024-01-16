@@ -20,8 +20,14 @@
  */
 package eu.europa.esig.dss.validation;
 
+import eu.europa.esig.dss.diagnostic.jaxb.XmlAuthorityInformationAccess;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlAuthorityKeyIdentifier;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlBasicConstraints;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlBasicSignature;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlCRLDistributionPoints;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificate;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificateExtension;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificatePolicies;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificatePolicy;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificateRef;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificateRevocation;
@@ -30,19 +36,31 @@ import eu.europa.esig.dss.diagnostic.jaxb.XmlDiagnosticData;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDigestAlgoAndValue;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDistinguishedName;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlEncapsulationType;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlExtendedKeyUsages;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlFoundCertificates;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlGeneralName;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlGeneralSubtree;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlIdPkixOcspNoCheck;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlInhibitAnyPolicy;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlIssuerSerial;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlKeyUsages;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlNameConstraints;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlOID;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanCertificate;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanCertificateToken;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanRevocationToken;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanTokens;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlPolicyConstraints;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlRelatedCertificate;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlRevocation;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlRevocationRef;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlSignerInfo;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlSigningCertificate;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlSubjectAlternativeNames;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlSubjectKeyIdentifier;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlTrustedList;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlTrustedServiceProvider;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlTrustServiceProvider;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlValAssuredShortTermCertificate;
 import eu.europa.esig.dss.enumerations.CertificateOrigin;
 import eu.europa.esig.dss.enumerations.CertificateRefOrigin;
 import eu.europa.esig.dss.enumerations.CertificateSourceType;
@@ -55,15 +73,35 @@ import eu.europa.esig.dss.enumerations.SignatureValidity;
 import eu.europa.esig.dss.enumerations.TokenExtractionStrategy;
 import eu.europa.esig.dss.model.Digest;
 import eu.europa.esig.dss.model.identifier.Identifier;
+import eu.europa.esig.dss.model.identifier.TokenIdentifierProvider;
 import eu.europa.esig.dss.model.x509.CertificateToken;
-import eu.europa.esig.dss.model.x509.QcStatements;
 import eu.europa.esig.dss.model.x509.Token;
 import eu.europa.esig.dss.model.x509.TokenComparator;
 import eu.europa.esig.dss.model.x509.X500PrincipalHelper;
+import eu.europa.esig.dss.model.x509.extension.AuthorityInformationAccess;
+import eu.europa.esig.dss.model.x509.extension.AuthorityKeyIdentifier;
+import eu.europa.esig.dss.model.x509.extension.BasicConstraints;
+import eu.europa.esig.dss.model.x509.extension.CRLDistributionPoints;
+import eu.europa.esig.dss.model.x509.extension.CertificateExtension;
+import eu.europa.esig.dss.model.x509.extension.CertificateExtensions;
+import eu.europa.esig.dss.model.x509.extension.CertificatePolicies;
+import eu.europa.esig.dss.model.x509.extension.CertificatePolicy;
+import eu.europa.esig.dss.model.x509.extension.ExtendedKeyUsages;
+import eu.europa.esig.dss.model.x509.extension.GeneralName;
+import eu.europa.esig.dss.model.x509.extension.GeneralSubtree;
+import eu.europa.esig.dss.model.x509.extension.InhibitAnyPolicy;
+import eu.europa.esig.dss.model.x509.extension.KeyUsage;
+import eu.europa.esig.dss.model.x509.extension.NameConstraints;
+import eu.europa.esig.dss.model.x509.extension.OCSPNoCheck;
+import eu.europa.esig.dss.model.x509.extension.PolicyConstraints;
+import eu.europa.esig.dss.model.x509.extension.SubjectAlternativeNames;
+import eu.europa.esig.dss.model.x509.extension.SubjectKeyIdentifier;
+import eu.europa.esig.dss.model.x509.extension.ValidityAssuredShortTerm;
 import eu.europa.esig.dss.model.x509.revocation.Revocation;
+import eu.europa.esig.dss.spi.CertificateExtensionsUtils;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.DSSUtils;
-import eu.europa.esig.dss.spi.QcStatementUtils;
+import eu.europa.esig.dss.spi.SignatureCertificateSource;
 import eu.europa.esig.dss.spi.tsl.DownloadInfoRecord;
 import eu.europa.esig.dss.spi.tsl.LOTLInfo;
 import eu.europa.esig.dss.spi.tsl.ParsingInfoRecord;
@@ -72,7 +110,6 @@ import eu.europa.esig.dss.spi.tsl.TLValidationJobSummary;
 import eu.europa.esig.dss.spi.tsl.TrustProperties;
 import eu.europa.esig.dss.spi.tsl.TrustedListsCertificateSource;
 import eu.europa.esig.dss.spi.tsl.ValidationInfoRecord;
-import eu.europa.esig.dss.spi.x509.CertificatePolicy;
 import eu.europa.esig.dss.spi.x509.CertificateRef;
 import eu.europa.esig.dss.spi.x509.CertificateSource;
 import eu.europa.esig.dss.spi.x509.CertificateTokenRefMatcher;
@@ -335,12 +372,12 @@ public abstract class DiagnosticDataBuilder {
 	private void linkCertificatesAndTrustServices(Set<CertificateToken> certificates) {
 		if (Utils.isCollectionNotEmpty(certificates)) {
 			for (CertificateToken certificateToken : certificates) {
-				List<XmlTrustedServiceProvider> trustedServiceProviders =
-						new XmlTrustedServiceProviderBuilder(xmlCertsMap, xmlTrustedListsMap, tlInfoMap)
+				List<XmlTrustServiceProvider> trustServiceProviders =
+						new XmlTrustServiceProviderBuilder(xmlCertsMap, xmlTrustedListsMap, tlInfoMap)
 						.build(certificateToken, getRelatedTrustServices(certificateToken));
-				if (Utils.isCollectionNotEmpty(trustedServiceProviders)) {
+				if (Utils.isCollectionNotEmpty(trustServiceProviders)) {
 					XmlCertificate xmlCertificate = xmlCertsMap.get(certificateToken.getDSSIdAsString());
-					xmlCertificate.setTrustedServiceProviders(trustedServiceProviders);
+					xmlCertificate.setTrustServiceProviders(trustServiceProviders);
 				}
 			}
 		}
@@ -416,6 +453,21 @@ public abstract class DiagnosticDataBuilder {
 		}
 	}
 
+	/**
+	 * Builds a list of {@code XmlOrphanTokens}
+	 *
+	 * @return {@link XmlOrphanTokens}
+	 */
+	protected XmlOrphanTokens buildXmlOrphanTokens() {
+		if (Utils.isMapNotEmpty(xmlOrphanCertificateTokensMap) || Utils.isMapNotEmpty(xmlOrphanRevocationTokensMap)) {
+			XmlOrphanTokens xmlOrphanTokens = new XmlOrphanTokens();
+			xmlOrphanTokens.getOrphanCertificates().addAll(xmlOrphanCertificateTokensMap.values());
+			xmlOrphanTokens.getOrphanRevocations().addAll(xmlOrphanRevocationTokensMap.values());
+			return xmlOrphanTokens;
+		}
+		return null;
+	}
+
 	private Collection<XmlTrustedList> buildXmlTrustedLists(ListCertificateSource trustedCertificateSources) {
 		List<XmlTrustedList> trustedLists = new ArrayList<>();
 
@@ -477,7 +529,10 @@ public abstract class DiagnosticDataBuilder {
 		for (CertificateToken certificateToken : usedCertificates) {
 			List<TrustProperties> trustServices = tlCS.getTrustServices(certificateToken);
 			for (TrustProperties trustProperties : trustServices) {
-				tlIdentifiers.add(trustProperties.getTLIdentifier());
+				TLInfo tlInfo = trustProperties.getTLInfo();
+				if (tlInfo != null) {
+					tlIdentifiers.add(tlInfo.getDSSId());
+				}
 			}
 		}
 		return tlIdentifiers;
@@ -488,9 +543,9 @@ public abstract class DiagnosticDataBuilder {
 		for (CertificateToken certificateToken : usedCertificates) {
 			List<TrustProperties> trustServices = tlCS.getTrustServices(certificateToken);
 			for (TrustProperties trustProperties : trustServices) {
-				Identifier lotlUrl = trustProperties.getLOTLIdentifier();
-				if (lotlUrl != null) {
-					lotlIdentifiers.add(lotlUrl);
+				LOTLInfo lotlInfo = trustProperties.getLOTLInfo();
+				if (lotlInfo != null) {
+					lotlIdentifiers.add(lotlInfo.getDSSId());
 				}
 			}
 		}
@@ -529,7 +584,7 @@ public abstract class DiagnosticDataBuilder {
 			if (validationCacheInfo != null) {
 				result.setWellSigned(validationCacheInfo.isValid());
 			}
-			if (tlInfo.getMra() != null) {
+			if (tlInfo.getOtherTSLPointer() != null && tlInfo.getOtherTSLPointer().getMra() != null) {
 				result.setMra(true);
 			}
 			tlInfoMap.put(id, tlInfo);
@@ -957,9 +1012,23 @@ public abstract class DiagnosticDataBuilder {
 	private List<String> getCleanedUrls(List<String> urls) {
 		List<String> cleanedUrls = new ArrayList<>();
 		for (String url : urls) {
-			cleanedUrls.add(DSSUtils.removeControlCharacters(url));
+			cleanedUrls.add(getCleanedUrl(url));
 		}
 		return cleanedUrls;
+	}
+
+	private String getCleanedUrl(String url) {
+		return DSSUtils.removeControlCharacters(url);
+	}
+
+	/**
+	 * Returns found certificates from the source
+	 *
+	 * @param certificateSource {@link TokenCertificateSource}
+	 * @return {@link XmlFoundCertificates}
+	 */
+	protected XmlFoundCertificates getXmlFoundCertificates(TokenCertificateSource certificateSource) {
+		return getXmlFoundCertificates(null, certificateSource);
 	}
 
 	/**
@@ -973,11 +1042,23 @@ public abstract class DiagnosticDataBuilder {
 														   TokenCertificateSource certificateSource) {
 		XmlFoundCertificates xmlFoundCertificates = new XmlFoundCertificates();
 		xmlFoundCertificates.getRelatedCertificates().addAll(getXmlRelatedCertificates(certificateSource));
-		xmlFoundCertificates.getRelatedCertificates().addAll(getXmlRelatedCertificateForOrphanReferences(certificateSource));
-		CertificateToken signingCertificate = signingCertificateMap.get(tokenIdentifier.asXmlId());
-		xmlFoundCertificates.getOrphanCertificates().addAll(getOrphanCertificates(certificateSource, signingCertificate));
-		xmlFoundCertificates.getOrphanCertificates().addAll(getOrphanCertificateRefs(certificateSource, signingCertificate));
+		List<XmlRelatedCertificate> xmlRelatedCertificatesForOrphanReferences = getXmlRelatedCertificateForOrphanReferences(certificateSource);
+		for (XmlRelatedCertificate xmlRelatedCertificate : xmlRelatedCertificatesForOrphanReferences) {
+			if (!containsCertificate(xmlFoundCertificates.getRelatedCertificates(), xmlRelatedCertificate)) {
+				xmlFoundCertificates.getRelatedCertificates().add(xmlRelatedCertificate);
+			}
+		}
+		if (tokenIdentifier != null) {
+			CertificateToken signingCertificate = signingCertificateMap.get(tokenIdentifier.asXmlId());
+			// safe null processing is implemented inside (to create orphan references, when needed)
+			xmlFoundCertificates.getOrphanCertificates().addAll(getOrphanCertificates(certificateSource, signingCertificate));
+			xmlFoundCertificates.getOrphanCertificates().addAll(getOrphanCertificateRefs(certificateSource, signingCertificate));
+		}
 		return xmlFoundCertificates;
+	}
+
+	private boolean containsCertificate(Collection<XmlRelatedCertificate> certificates, XmlRelatedCertificate xmlRelatedCertificate) {
+		return certificates.stream().anyMatch(c -> xmlRelatedCertificate.getCertificate().getId().equals(c.getCertificate().getId()));
 	}
 
 	private List<XmlRelatedCertificate> getXmlRelatedCertificates(TokenCertificateSource certificateSource) {
@@ -987,12 +1068,16 @@ public abstract class DiagnosticDataBuilder {
 			populateCertificateOriginMap(relatedCertificatesMap, CertificateOrigin.BASIC_OCSP_RESP,
 					certificateSource.getCertificates(), certificateSource);
 
+		} else if (CertificateSourceType.EVIDENCE_RECORD.equals(certificateSource.getCertificateSourceType())) {
+			populateCertificateOriginMap(relatedCertificatesMap, CertificateOrigin.EVIDENCE_RECORD,
+					certificateSource.getCertificates(), certificateSource);
+
 		} else {
 			SignatureCertificateSource signatureCertificateSource = (SignatureCertificateSource) certificateSource;
 
 			populateCertificateOriginMap(relatedCertificatesMap, CertificateOrigin.KEY_INFO,
 					signatureCertificateSource.getKeyInfoCertificates(), certificateSource);
-			populateCertificateOriginMap(relatedCertificatesMap, CertificateOrigin.SIGNED_DATA,
+ 			populateCertificateOriginMap(relatedCertificatesMap, CertificateOrigin.SIGNED_DATA,
 					signatureCertificateSource.getSignedDataCertificates(), certificateSource);
 			populateCertificateOriginMap(relatedCertificatesMap, CertificateOrigin.CERTIFICATE_VALUES,
 					signatureCertificateSource.getCertificateValues(), certificateSource);
@@ -1109,12 +1194,15 @@ public abstract class DiagnosticDataBuilder {
 		Digest refDigest = ref.getCertDigest();
 		ResponderId responderId = ref.getResponderId();
 		if (refDigest != null) {
-			certificateRef
-					.setDigestAlgoAndValue(getXmlDigestAlgoAndValue(refDigest.getAlgorithm(), refDigest.getValue()));
+			certificateRef.setDigestAlgoAndValue(getXmlDigestAlgoAndValue(refDigest.getAlgorithm(), refDigest.getValue()));
 		} else if (signerIdentifier != null) {
 			certificateRef.setSerialInfo(getXmlSignerInfo(signerIdentifier));
 		} else if (responderId != null) {
 			certificateRef.setSerialInfo(getXmlSignerInfo(responderId));
+		}
+		String x509Url = ref.getX509Url();
+		if (x509Url != null) {
+			certificateRef.setX509Url(getCleanedUrl(x509Url));
 		}
 		certificateRef.setOrigin(origin);
 		return certificateRef;
@@ -1255,7 +1343,7 @@ public abstract class DiagnosticDataBuilder {
 		List<CertificateRef> orphanCertificateRefs = certificateSource.getOrphanCertificateRefs();
 		for (CertificateRef orphanCertificateRef : orphanCertificateRefs) {
 			// create orphan if certificate is not present
-			if (getUsedCertificateByCertificateRef(orphanCertificateRef) == null) {
+			if (Utils.isCollectionEmpty(getUsedCertificatesByCertificateRef(orphanCertificateRef))) {
 				orphanCertificates.add(createXmlOrphanCertificateFromRef(certificateSource, orphanCertificateRef, signingCertificate));
 			}
 		}
@@ -1297,9 +1385,11 @@ public abstract class DiagnosticDataBuilder {
 	protected List<XmlRelatedCertificate> getXmlRelatedCertificateForOrphanReferences(TokenCertificateSource certificateSource) {
 		List<XmlRelatedCertificate> relatedCertificates = new ArrayList<>();
 		for (CertificateRef certificateRef : certificateSource.getOrphanCertificateRefs()) {
-			CertificateToken certificateToken = getUsedCertificateByCertificateRef(certificateRef);
-			if (certificateToken != null) {
-				populateXmlRelatedCertificatesList(relatedCertificates, certificateSource, certificateToken, certificateRef);
+			Collection<CertificateToken> certificateTokens = getUsedCertificatesByCertificateRef(certificateRef);
+			if (Utils.isCollectionNotEmpty(certificateTokens)) {
+				for (CertificateToken certificateToken : certificateTokens) {
+					populateXmlRelatedCertificatesList(relatedCertificates, certificateSource, certificateToken, certificateRef);
+				}
 			}
 		}
 		return relatedCertificates;
@@ -1309,16 +1399,19 @@ public abstract class DiagnosticDataBuilder {
 	 * Returns used certificate by the {@code certificateRef}
 	 *
 	 * @param certificateRef {@link CertificateRef}
-	 * @return {@link CertificateToken}
+	 * @return a collection of {@link CertificateToken}s
 	 */
-	protected CertificateToken getUsedCertificateByCertificateRef(CertificateRef certificateRef) {
-		CertificateTokenRefMatcher matcher = new CertificateTokenRefMatcher();
+	protected Collection<CertificateToken> getUsedCertificatesByCertificateRef(CertificateRef certificateRef) {
+		final CertificateTokenRefMatcher matcher = new CertificateTokenRefMatcher();
+		final Set<CertificateToken> tokensFromRefs = allCertificateSources.findTokensFromCertRef(certificateRef);
+
+		final Set<CertificateToken> certificates = new HashSet<>();
 		for (CertificateToken certificateToken : usedCertificates) {
-			if (matcher.match(certificateToken, certificateRef)) {
-				return certificateToken;
+			if (tokensFromRefs.contains(certificateToken) || matcher.match(certificateToken, certificateRef)) {
+				certificates.add(certificateToken);
 			}
 		}
-		return null;
+		return certificates;
 	}
 
 	/**
@@ -1361,16 +1454,14 @@ public abstract class DiagnosticDataBuilder {
 		if (signatureAlgorithm != null) {
 			xmlBasicSignatureType.setEncryptionAlgoUsedToSignThisToken(signatureAlgorithm.getEncryptionAlgorithm());
 			xmlBasicSignatureType.setDigestAlgoUsedToSignThisToken(signatureAlgorithm.getDigestAlgorithm());
-			xmlBasicSignatureType
-					.setMaskGenerationFunctionUsedToSignThisToken(signatureAlgorithm.getMaskGenerationFunction());
+			xmlBasicSignatureType.setMaskGenerationFunctionUsedToSignThisToken(signatureAlgorithm.getMaskGenerationFunction());
 		}
 		xmlBasicSignatureType.setKeyLengthUsedToSignThisToken(DSSPKUtils.getStringPublicKeySize(token));
 
 		SignatureValidity signatureValidity = token.getSignatureValidity();
 		if (SignatureValidity.NOT_EVALUATED != signatureValidity) {
-			final boolean signatureValid = SignatureValidity.VALID == token.getSignatureValidity();
-			xmlBasicSignatureType.setSignatureIntact(signatureValid);
-			xmlBasicSignatureType.setSignatureValid(signatureValid);
+			xmlBasicSignatureType.setSignatureIntact(token.isSignatureIntact());
+			xmlBasicSignatureType.setSignatureValid(token.isValid());
 		}
 		return xmlBasicSignatureType;
 	}
@@ -1412,15 +1503,6 @@ public abstract class DiagnosticDataBuilder {
 		xmlCert.setPseudonym(DSSASN1Utils.extractAttributeFromX500Principal(BCStyle.PSEUDONYM, subject));
 		xmlCert.setEmail(DSSASN1Utils.extractAttributeFromX500Principal(BCStyle.E, subject));
 
-		List<String> subjectAlternativeNames = DSSASN1Utils.getSubjectAlternativeNames(certToken);
-		if (Utils.isCollectionNotEmpty(subjectAlternativeNames)) {
-			xmlCert.setSubjectAlternativeNames(subjectAlternativeNames);
-		}
-
-		xmlCert.setAuthorityInformationAccessUrls(getCleanedUrls(DSSASN1Utils.getCAAccessLocations(certToken)));
-		xmlCert.setOCSPAccessUrls(getCleanedUrls(DSSASN1Utils.getOCSPAccessLocations(certToken)));
-		xmlCert.setCRLDistributionPoints(getCleanedUrls(DSSASN1Utils.getCrlUrls(certToken)));
-
 		xmlCert.setSources(getXmlCertificateSources(certToken));
 
 		xmlCert.setNotAfter(certToken.getNotAfter());
@@ -1429,25 +1511,9 @@ public abstract class DiagnosticDataBuilder {
 		xmlCert.setPublicKeySize(DSSPKUtils.getPublicKeySize(publicKey));
 		xmlCert.setPublicKeyEncryptionAlgo(EncryptionAlgorithm.forKey(publicKey));
 		xmlCert.setEntityKey(certToken.getEntityKey().asXmlId());
-
-		xmlCert.setKeyUsageBits(certToken.getKeyUsageBits());
-		xmlCert.setExtendedKeyUsages(getXmlOids(DSSASN1Utils.getExtendedKeyUsage(certToken)));
-
-		xmlCert.setIdPkixOcspNoCheck(DSSASN1Utils.hasIdPkixOcspNoCheckExtension(certToken));
-
-		boolean valAssuredShortTermCert = DSSASN1Utils.hasValAssuredShortTermCertsExtension(certToken);
-		if (valAssuredShortTermCert) {
-			xmlCert.setValAssuredShortTermCertificate(valAssuredShortTermCert);
-		}
-
-		QcStatements qcStatements = QcStatementUtils.getQcStatements(certToken);
-		if (qcStatements != null) {
-			xmlCert.setQcStatements(new XmlQcStatementsBuilder().build(qcStatements));
-		}
-
 		xmlCert.setBasicSignature(getXmlBasicSignature(certToken));
 
-		xmlCert.setCertificatePolicies(getXmlCertificatePolicies(DSSASN1Utils.getCertificatePolicies(certToken)));
+		xmlCert.setCertificateExtensions(getXmlCertificateExtensions(certToken));
 
 		xmlCert.setSelfSigned(certToken.isSelfSigned());
 		xmlCert.setTrusted(allCertificateSources.isTrusted(certToken));
@@ -1462,10 +1528,242 @@ public abstract class DiagnosticDataBuilder {
 		return xmlCert;
 	}
 
+	private List<XmlCertificateExtension> getXmlCertificateExtensions(final CertificateToken token) {
+		final CertificateExtensions certificateExtensions = CertificateExtensionsUtils.getCertificateExtensions(token);
+
+		List<XmlCertificateExtension> xmlCertificateExtensions = new ArrayList<>();
+		if (certificateExtensions.getAuthorityKeyIdentifier() != null) {
+			xmlCertificateExtensions.add(getXmlAuthorityKeyIdentifier(certificateExtensions.getAuthorityKeyIdentifier()));
+		}
+		if (certificateExtensions.getSubjectKeyIdentifier() != null) {
+			xmlCertificateExtensions.add(getXmlSubjectKeyIdentifier(certificateExtensions.getSubjectKeyIdentifier()));
+		}
+		if (certificateExtensions.getBasicConstraints() != null) {
+			xmlCertificateExtensions.add(getXmlBasicConstraints(certificateExtensions.getBasicConstraints()));
+		}
+		if (certificateExtensions.getKeyUsage() != null) {
+			xmlCertificateExtensions.add(getXmlKeyUsages(certificateExtensions.getKeyUsage()));
+		}
+		if (certificateExtensions.getCertificatePolicies() != null) {
+			xmlCertificateExtensions.add(getXmlCertificatePolicies(certificateExtensions.getCertificatePolicies()));
+		}
+		if (certificateExtensions.getSubjectAlternativeNames() != null) {
+			xmlCertificateExtensions.add(getXmlSubjectAlternativeNames(certificateExtensions.getSubjectAlternativeNames()));
+		}
+		if (certificateExtensions.getPolicyConstraints() != null) {
+			xmlCertificateExtensions.add(getXmlPolicyConstraints(certificateExtensions.getPolicyConstraints()));
+		}
+		if (certificateExtensions.getNameConstraints() != null) {
+			xmlCertificateExtensions.add(getXmlNameConstraints(certificateExtensions.getNameConstraints()));
+		}
+		if (certificateExtensions.getExtendedKeyUsage() != null) {
+			xmlCertificateExtensions.add(getXmlExtendedKeyUsages(certificateExtensions.getExtendedKeyUsage()));
+		}
+		if (certificateExtensions.getInhibitAnyPolicy() != null) {
+			xmlCertificateExtensions.add(getXmlInhibitAnyPolicy(certificateExtensions.getInhibitAnyPolicy()));
+		}
+		if (certificateExtensions.getAuthorityInformationAccess() != null) {
+			xmlCertificateExtensions.add(getXmlAuthorityInformationAccess(certificateExtensions.getAuthorityInformationAccess()));
+		}
+		if (certificateExtensions.getCRLDistributionPoints() != null) {
+			xmlCertificateExtensions.add(getXmlCRLDistributionPoints(certificateExtensions.getCRLDistributionPoints()));
+		}
+		if (certificateExtensions.getOcspNoCheck() != null) {
+			xmlCertificateExtensions.add(getXmlIdPkixOcspNoCheck(certificateExtensions.getOcspNoCheck()));
+		}
+		if (certificateExtensions.getValidityAssuredShortTerm() != null) {
+			xmlCertificateExtensions.add(getXmlValAssuredShortTermCertificate(certificateExtensions.getValidityAssuredShortTerm()));
+		}
+		if (certificateExtensions.getQcStatements() != null) {
+			xmlCertificateExtensions.add(new XmlQcStatementsBuilder().build(certificateExtensions.getQcStatements()));
+		}
+		if (Utils.isCollectionNotEmpty(certificateExtensions.getOtherExtensions())) {
+			xmlCertificateExtensions.addAll(getXmlOtherCertificateExtensions(certificateExtensions.getOtherExtensions()));
+		}
+
+		return xmlCertificateExtensions;
+	}
+
+	private XmlKeyUsages getXmlKeyUsages(KeyUsage keyUsage) {
+		final XmlKeyUsages xmlKeyUsages = new XmlKeyUsages();
+		fillXmlCertificateExtension(xmlKeyUsages, keyUsage);
+		xmlKeyUsages.getKeyUsageBit().addAll(keyUsage.getKeyUsageBits());
+		return xmlKeyUsages;
+	}
+
+	private XmlExtendedKeyUsages getXmlExtendedKeyUsages(ExtendedKeyUsages extendedKeyUsages) {
+		final XmlExtendedKeyUsages xmlExtendedKeyUsages = new XmlExtendedKeyUsages();
+		fillXmlCertificateExtension(xmlExtendedKeyUsages, extendedKeyUsages);
+		xmlExtendedKeyUsages.getExtendedKeyUsageOid().addAll(getXmlOids(extendedKeyUsages.getOids()));
+		return xmlExtendedKeyUsages;
+	}
+
+	private XmlCertificatePolicies getXmlCertificatePolicies(CertificatePolicies certificatePolicies) {
+		final XmlCertificatePolicies xmlCertificatePolicies = new XmlCertificatePolicies();
+		fillXmlCertificateExtension(xmlCertificatePolicies, certificatePolicies);
+		xmlCertificatePolicies.getCertificatePolicy().addAll(getXmlCertificatePolicies(certificatePolicies.getPolicyList()));
+		return xmlCertificatePolicies;
+	}
+
+	private List<XmlCertificatePolicy> getXmlCertificatePolicies(List<CertificatePolicy> certificatePolicies) {
+		final List<XmlCertificatePolicy> result = new ArrayList<>();
+		for (CertificatePolicy cp : certificatePolicies) {
+			XmlCertificatePolicy xmlCP = new XmlCertificatePolicy();
+			xmlCP.setValue(cp.getOid());
+			xmlCP.setDescription(OidRepository.getDescription(cp.getOid()));
+			xmlCP.setCpsUrl(getCleanedUrl(cp.getCpsUrl()));
+			result.add(xmlCP);
+		}
+		return result;
+	}
+
+	private XmlSubjectAlternativeNames getXmlSubjectAlternativeNames(SubjectAlternativeNames subjectAlternativeNames) {
+		final XmlSubjectAlternativeNames xmlSubjectAlternativeNames = new XmlSubjectAlternativeNames();
+		fillXmlCertificateExtension(xmlSubjectAlternativeNames, subjectAlternativeNames);
+		xmlSubjectAlternativeNames.getSubjectAlternativeName().addAll(getXmlGeneralNames(subjectAlternativeNames.getGeneralNames()));
+		return xmlSubjectAlternativeNames;
+	}
+
+	private List<XmlGeneralName> getXmlGeneralNames(List<GeneralName> generalNames) {
+		List<XmlGeneralName> result = new ArrayList<>();
+		for (GeneralName generalName : generalNames) {
+			result.add(getXmlGeneralName(generalName));
+		}
+		return result;
+	}
+
+	private XmlGeneralName getXmlGeneralName(GeneralName generalName) {
+		XmlGeneralName xmlGeneralName = new XmlGeneralName();
+		xmlGeneralName.setType(generalName.getGeneralNameType());
+		xmlGeneralName.setValue(generalName.getValue());
+		return xmlGeneralName;
+	}
+
+	private XmlBasicConstraints getXmlBasicConstraints(BasicConstraints basicConstraints) {
+		final XmlBasicConstraints xmlBasicConstraints = new XmlBasicConstraints();
+		fillXmlCertificateExtension(xmlBasicConstraints, basicConstraints);
+		xmlBasicConstraints.setCA(basicConstraints.isCa());
+		if (basicConstraints.getPathLenConstraint() != -1) {
+			xmlBasicConstraints.setPathLenConstraint(basicConstraints.getPathLenConstraint());
+		}
+		return xmlBasicConstraints;
+	}
+
+	private XmlPolicyConstraints getXmlPolicyConstraints(PolicyConstraints policyConstraints) {
+		final XmlPolicyConstraints xmlPolicyConstraints = new XmlPolicyConstraints();
+		fillXmlCertificateExtension(xmlPolicyConstraints, policyConstraints);
+		if (policyConstraints.getInhibitPolicyMapping() != -1) {
+			xmlPolicyConstraints.setInhibitPolicyMapping(policyConstraints.getInhibitPolicyMapping());
+		}
+		if (policyConstraints.getRequireExplicitPolicy() != -1) {
+			xmlPolicyConstraints.setRequireExplicitPolicy(policyConstraints.getRequireExplicitPolicy());
+		}
+		return xmlPolicyConstraints;
+	}
+
+	private XmlInhibitAnyPolicy getXmlInhibitAnyPolicy(InhibitAnyPolicy inhibitAnyPolicy) {
+		final XmlInhibitAnyPolicy xmlInhibitAnyPolicy = new XmlInhibitAnyPolicy();
+		fillXmlCertificateExtension(xmlInhibitAnyPolicy, inhibitAnyPolicy);
+		if (inhibitAnyPolicy.getValue() != -1) {
+			xmlInhibitAnyPolicy.setValue(inhibitAnyPolicy.getValue());
+		}
+		return xmlInhibitAnyPolicy;
+	}
+
+	private XmlNameConstraints getXmlNameConstraints(NameConstraints nameConstraints) {
+		final XmlNameConstraints xmlNameConstraints = new XmlNameConstraints();
+		fillXmlCertificateExtension(xmlNameConstraints, nameConstraints);
+		if (Utils.isCollectionNotEmpty(nameConstraints.getPermittedSubtrees())) {
+			xmlNameConstraints.getPermittedSubtrees().addAll(getXmlGeneralSubtrees(nameConstraints.getPermittedSubtrees()));
+		}
+		if (Utils.isCollectionNotEmpty(nameConstraints.getExcludedSubtrees())) {
+			xmlNameConstraints.getExcludedSubtrees().addAll(getXmlGeneralSubtrees(nameConstraints.getExcludedSubtrees()));
+		}
+		return xmlNameConstraints;
+	}
+
+	private List<XmlGeneralSubtree> getXmlGeneralSubtrees(List<GeneralSubtree> generalSubtrees) {
+		List<XmlGeneralSubtree> result = new ArrayList<>();
+		for (GeneralSubtree generalSubtree : generalSubtrees) {
+			result.add(getXmlGeneralSubtree(generalSubtree));
+		}
+		return result;
+	}
+
+	private XmlGeneralSubtree getXmlGeneralSubtree(GeneralSubtree generalSubtree) {
+		XmlGeneralSubtree xmlGeneralSubtree = new XmlGeneralSubtree();
+		xmlGeneralSubtree.setType(generalSubtree.getGeneralNameType());
+		xmlGeneralSubtree.setValue(generalSubtree.getValue());
+		xmlGeneralSubtree.setMinimum(generalSubtree.getMinimum());
+		xmlGeneralSubtree.setMaximum(generalSubtree.getMaximum());
+		return xmlGeneralSubtree;
+	}
+
+	private XmlCRLDistributionPoints getXmlCRLDistributionPoints(CRLDistributionPoints crlDistributionPoints) {
+		final XmlCRLDistributionPoints xmlCRLDistributionPoints = new XmlCRLDistributionPoints();
+		fillXmlCertificateExtension(xmlCRLDistributionPoints, crlDistributionPoints);
+		xmlCRLDistributionPoints.getCrlUrl().addAll(getCleanedUrls(crlDistributionPoints.getCrlUrls()));
+		return xmlCRLDistributionPoints;
+	}
+
+	private XmlAuthorityKeyIdentifier getXmlAuthorityKeyIdentifier(AuthorityKeyIdentifier aki) {
+		final XmlAuthorityKeyIdentifier xmlAuthorityKeyIdentifier = new XmlAuthorityKeyIdentifier();
+		fillXmlCertificateExtension(xmlAuthorityKeyIdentifier, aki);
+		xmlAuthorityKeyIdentifier.setKeyIdentifier(aki.getKeyIdentifier());
+		xmlAuthorityKeyIdentifier.setAuthorityCertIssuerSerial(aki.getAuthorityCertIssuerSerial());
+		return xmlAuthorityKeyIdentifier;
+	}
+
+	private XmlSubjectKeyIdentifier getXmlSubjectKeyIdentifier(SubjectKeyIdentifier ski) {
+		final XmlSubjectKeyIdentifier xmlSubjectKeyIdentifier = new XmlSubjectKeyIdentifier();
+		fillXmlCertificateExtension(xmlSubjectKeyIdentifier, ski);
+		xmlSubjectKeyIdentifier.setSki(ski.getSki());
+		return xmlSubjectKeyIdentifier;
+	}
+
+	private XmlAuthorityInformationAccess getXmlAuthorityInformationAccess(AuthorityInformationAccess aia) {
+		final XmlAuthorityInformationAccess xmlAuthorityInformationAccess = new XmlAuthorityInformationAccess();
+		fillXmlCertificateExtension(xmlAuthorityInformationAccess, aia);
+		xmlAuthorityInformationAccess.getCaIssuersUrls().addAll(getCleanedUrls(aia.getCaIssuers()));
+		xmlAuthorityInformationAccess.getOcspUrls().addAll(getCleanedUrls(aia.getOcsp()));
+		return xmlAuthorityInformationAccess;
+	}
+
+	private XmlIdPkixOcspNoCheck getXmlIdPkixOcspNoCheck(OCSPNoCheck ocspNoCheck) {
+		final XmlIdPkixOcspNoCheck xmlIdPkixOcspNoCheck = new XmlIdPkixOcspNoCheck();
+		fillXmlCertificateExtension(xmlIdPkixOcspNoCheck, ocspNoCheck);
+		xmlIdPkixOcspNoCheck.setPresent(ocspNoCheck.isOcspNoCheck());
+		return xmlIdPkixOcspNoCheck;
+	}
+
+	private XmlValAssuredShortTermCertificate getXmlValAssuredShortTermCertificate(ValidityAssuredShortTerm valAssuredST) {
+		final XmlValAssuredShortTermCertificate xmlValAssuredShortTermCertificate = new XmlValAssuredShortTermCertificate();
+		fillXmlCertificateExtension(xmlValAssuredShortTermCertificate, valAssuredST);
+		xmlValAssuredShortTermCertificate.setPresent(valAssuredST.isValAssuredSTCerts());
+		return xmlValAssuredShortTermCertificate;
+	}
+
+	private List<XmlCertificateExtension> getXmlOtherCertificateExtensions(List<CertificateExtension> otherCertificateExtensions) {
+		List<XmlCertificateExtension> result = new ArrayList<>();
+		for (CertificateExtension certificateExtension : otherCertificateExtensions) {
+			XmlCertificateExtension xmlCertificateExtension = new XmlCertificateExtension();
+			fillXmlCertificateExtension(xmlCertificateExtension, certificateExtension);
+			xmlCertificateExtension.setOctets(certificateExtension.getOctets());
+			result.add(xmlCertificateExtension);
+		}
+		return result;
+	}
+
+	private void fillXmlCertificateExtension(XmlCertificateExtension xmlCertificateExtension, CertificateExtension certificateExtension) {
+		xmlCertificateExtension.setOID(certificateExtension.getOid());
+		xmlCertificateExtension.setDescription(certificateExtension.getDescription());
+		xmlCertificateExtension.setCritical(certificateExtension.isCritical());
+	}
+
 	private List<CertificateSourceType> getXmlCertificateSources(final CertificateToken token) {
 		List<CertificateSourceType> certificateSources = new ArrayList<>();
 		if (allCertificateSources != null) {
-			Set<CertificateSourceType> sourceTypes = allCertificateSources.getCertificateSource(token);
+			Set<CertificateSourceType> sourceTypes = allCertificateSources.getCertificateSourceType(token);
 			if (sourceTypes != null) {
 				certificateSources.addAll(sourceTypes);
 			}
@@ -1488,19 +1786,7 @@ public abstract class DiagnosticDataBuilder {
 		return revocations;
 	}
 
-	private List<XmlCertificatePolicy> getXmlCertificatePolicies(List<CertificatePolicy> certificatePolicies) {
-		List<XmlCertificatePolicy> result = new ArrayList<>();
-		for (CertificatePolicy cp : certificatePolicies) {
-			XmlCertificatePolicy xmlCP = new XmlCertificatePolicy();
-			xmlCP.setValue(cp.getOid());
-			xmlCP.setDescription(OidRepository.getDescription(cp.getOid()));
-			xmlCP.setCpsUrl(DSSUtils.removeControlCharacters(cp.getCpsUrl()));
-			result.add(xmlCP);
-		}
-		return result;
-	}
-
-	private List<XmlOID> getXmlOids(List<String> oidList) {
+	private List<XmlOID> getXmlOids(Collection<String> oidList) {
 		List<XmlOID> result = new ArrayList<>();
 		if (Utils.isCollectionNotEmpty(oidList)) {
 			for (String oid : oidList) {

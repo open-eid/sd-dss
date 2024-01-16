@@ -21,7 +21,6 @@
 package eu.europa.esig.dss.xades;
 
 import eu.europa.esig.dss.model.DSSDocument;
-import eu.europa.esig.dss.model.MimeType;
 
 import java.io.Serializable;
 
@@ -46,7 +45,7 @@ public class DSSObject implements Serializable {
     /**
      * Represents a value for the "MimeType" attribute
      */
-    private MimeType mimeType;
+    private String mimeType;
 
     /**
      * Represents a value for the "Encoding" attribute
@@ -100,18 +99,18 @@ public class DSSObject implements Serializable {
     /**
      * Gets the MimeType
      *
-     * @return {@link MimeType}
+     * @return {@link String}
      */
-    public MimeType getMimeType() {
+    public String getMimeType() {
         return mimeType;
     }
 
     /**
      * Sets the value for the "MimeType" attribute
      *
-     * @param mimeType {@link MimeType}
+     * @param mimeType {@link String}
      */
-    public void setMimeType(MimeType mimeType) {
+    public void setMimeType(String mimeType) {
         this.mimeType = mimeType;
     }
 

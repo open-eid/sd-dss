@@ -20,9 +20,10 @@
  */
 package eu.europa.esig.dss.pdf.pdfbox;
 
-import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.enumerations.CertificationPermission;
-import eu.europa.esig.dss.pades.exception.ProtectedDocumentException;
+import eu.europa.esig.dss.model.DSSDocument;
+import eu.europa.esig.dss.model.InMemoryDocument;
+import eu.europa.esig.dss.pades.PAdESCommonParameters;
 import eu.europa.esig.dss.pades.validation.ByteRange;
 import eu.europa.esig.dss.pades.validation.PdfSignatureDictionary;
 import eu.europa.esig.dss.pades.validation.PdfSignatureField;
@@ -34,7 +35,9 @@ import eu.europa.esig.dss.pdf.PdfDocumentReader;
 import eu.europa.esig.dss.pdf.PdfDssDict;
 import eu.europa.esig.dss.pdf.PdfSigDictWrapper;
 import eu.europa.esig.dss.pdf.SingleDssDict;
+import eu.europa.esig.dss.pdf.visible.ImageRotationUtils;
 import eu.europa.esig.dss.pdf.visible.ImageUtils;
+import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.utils.Utils;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
@@ -70,11 +73,11 @@ public class PdfBoxDocumentReader implements PdfDocumentReader {
 
 	private static final Logger LOG = LoggerFactory.getLogger(PdfBoxDocumentReader.class);
 
-	/** The PDF document */
-	private DSSDocument dssDocument;
-
 	/** The PDFBox implementation of the document */
 	private final PDDocument pdDocument;
+
+	/** The PDF document */
+	private DSSDocument dssDocument;
 
 	/** The map of signature dictionaries and corresponding signature fields */
 	private Map<PdfSignatureDictionary, List<PdfSignatureField>> signatureDictionaryMap;
@@ -126,6 +129,7 @@ public class PdfBoxDocumentReader implements PdfDocumentReader {
 	public PdfBoxDocumentReader(byte[] binaries, String passwordProtection)
 			throws IOException, eu.europa.esig.dss.pades.exception.InvalidPasswordException {
 		Objects.requireNonNull(binaries, "The document binaries must be defined!");
+		this.dssDocument = new InMemoryDocument(binaries);
 		try {
 			this.pdDocument = PDDocument.load(binaries, passwordProtection);
 		} catch (InvalidPasswordException e) {
@@ -255,8 +259,9 @@ public class PdfBoxDocumentReader implements PdfDocumentReader {
 	public List<PdfAnnotation> getPdfAnnotations(int page) throws IOException {
 		List<PdfAnnotation> annotations = new ArrayList<>();
 		List<PDAnnotation> pdAnnotations = getPageAnnotations(page);
+		int pageRotation = getPageRotation(page);
 		for (PDAnnotation pdAnnotation : pdAnnotations) {
-			PdfAnnotation pdfAnnotation = toPdfAnnotation(pdAnnotation);
+			PdfAnnotation pdfAnnotation = toPdfAnnotation(pdAnnotation, pageRotation);
 			if (pdfAnnotation != null) {
 				annotations.add(pdfAnnotation);
 			}
@@ -279,11 +284,14 @@ public class PdfBoxDocumentReader implements PdfDocumentReader {
 		return pdDocument.getPage(page - ImageUtils.DEFAULT_FIRST_PAGE);
 	}
 
-	private PdfAnnotation toPdfAnnotation(PDAnnotation pdAnnotation) {
+	private PdfAnnotation toPdfAnnotation(PDAnnotation pdAnnotation, int pageRotation) {
 		PDRectangle pdRect = pdAnnotation.getRectangle();
 		if (pdRect != null) {
 			AnnotationBox annotationBox = new AnnotationBox(pdRect.getLowerLeftX(), pdRect.getLowerLeftY(),
 					pdRect.getUpperRightX(), pdRect.getUpperRightY());
+			if (pdAnnotation.isNoRotate()) {
+				annotationBox = ImageRotationUtils.ensureNoRotate(annotationBox, pageRotation);
+			}
 			PdfAnnotation pdfAnnotation = new PdfAnnotation(annotationBox);
 			pdfAnnotation.setName(getSignatureFieldName(pdAnnotation));
 			return pdfAnnotation;
@@ -305,7 +313,8 @@ public class PdfBoxDocumentReader implements PdfDocumentReader {
 	public BufferedImage generateImageScreenshotWithoutAnnotations(int page, List<PdfAnnotation> annotations)
 			throws IOException {
 		List<PDAnnotation> pdAnnotations = getPageAnnotations(page);
-		pdAnnotations = getMatchingPDAnnotations(pdAnnotations, annotations);
+		int pageRotation = getPageRotation(page);
+		pdAnnotations = getMatchingPDAnnotations(pdAnnotations, annotations, pageRotation);
 		List<PDAnnotation> hiddenList = changeVisibility(pdAnnotations, true);
 		try {
 			return generateImageScreenshot(page);
@@ -315,10 +324,10 @@ public class PdfBoxDocumentReader implements PdfDocumentReader {
 		}
 	}
 
-	private List<PDAnnotation> getMatchingPDAnnotations(List<PDAnnotation> pdAnnotations, List<PdfAnnotation> annotationsToExtract) {
+	private List<PDAnnotation> getMatchingPDAnnotations(List<PDAnnotation> pdAnnotations, List<PdfAnnotation> annotationsToExtract, int pageRotation) {
 		List<PDAnnotation> result = new ArrayList<>();
 		for (PDAnnotation pdAnnotation : pdAnnotations) {
-			PdfAnnotation pdfAnnotation = toPdfAnnotation(pdAnnotation);
+			PdfAnnotation pdfAnnotation = toPdfAnnotation(pdAnnotation, pageRotation);
 			if (annotationsToExtract.contains(pdfAnnotation)) {
 				result.add(pdAnnotation);
 			}
@@ -345,17 +354,30 @@ public class PdfBoxDocumentReader implements PdfDocumentReader {
 	}
 
 	@Override
-	public void checkDocumentPermissions() {
-		AccessPermission accessPermission = pdDocument.getCurrentAccessPermission();
-		if (!accessPermission.canModify()) {
-			throw new ProtectedDocumentException("The document cannot be modified! Modification is not allowed.");
-		}
-		if (!accessPermission.canModifyAnnotations()) {
-			throw new ProtectedDocumentException("The document cannot be modified! Annotations modification is not allowed.");
-		}
-		if (!accessPermission.canFillInForm()) {
-			throw new ProtectedDocumentException("The document cannot be modified! Forms fill is forbidden.");
-		}
+	public boolean isEncrypted() {
+		return pdDocument.isEncrypted();
+	}
+
+	@Override
+	public boolean isOpenWithOwnerAccess() {
+		final AccessPermission accessPermission = getAccessPermission();
+		return accessPermission.isOwnerPermission();
+	}
+
+	@Override
+	public boolean canFillSignatureForm() {
+		final AccessPermission accessPermission = getAccessPermission();
+		return accessPermission.canModifyAnnotations() || accessPermission.canFillInForm();
+	}
+
+	@Override
+	public boolean canCreateSignatureField() {
+		final AccessPermission accessPermission = getAccessPermission();
+		return accessPermission.canModify() && accessPermission.canModifyAnnotations();
+	}
+
+	private AccessPermission getAccessPermission() {
+		return pdDocument.getCurrentAccessPermission();
 	}
 
 	@Override
@@ -375,23 +397,30 @@ public class PdfBoxDocumentReader implements PdfDocumentReader {
 					if (base instanceof COSArray) {
 						COSArray refArray = (COSArray) base;
 						for (int i = 0; i < refArray.size(); i++) {
-							base = refArray.getObject(i);
-							if (base instanceof COSDictionary) {
-								COSDictionary sigRefDict = (COSDictionary) base;
-								if (COSName.DOCMDP.equals(sigRefDict.getDictionaryObject(COSName.TRANSFORM_METHOD))) {
-									base = sigRefDict.getDictionaryObject(COSName.TRANSFORM_PARAMS);
-									if (base instanceof COSDictionary) {
-										COSDictionary transformDict = (COSDictionary) base;
-										int accessPermissions = transformDict.getInt(COSName.P, 2);
-										if (accessPermissions < 1 || accessPermissions > 3) {
-											accessPermissions = 2;
-										}
-										return CertificationPermission.fromCode(accessPermissions);
-									}
-								}
+							CertificationPermission certificationPermission = getPermissionFromReference(refArray.getObject(i));
+							if (certificationPermission != null) {
+								return certificationPermission;
 							}
 						}
 					}
+				}
+			}
+		}
+		return null;
+	}
+
+	private CertificationPermission getPermissionFromReference(COSBase reference) {
+		if (reference instanceof COSDictionary) {
+			COSDictionary sigRefDict = (COSDictionary) reference;
+			if (COSName.DOCMDP.equals(sigRefDict.getDictionaryObject(COSName.TRANSFORM_METHOD))) {
+				COSBase transformParams = sigRefDict.getDictionaryObject(COSName.TRANSFORM_PARAMS);
+				if (transformParams instanceof COSDictionary) {
+					COSDictionary transformDict = (COSDictionary) transformParams;
+					int accessPermissions = transformDict.getInt(COSName.P, 2);
+					if (accessPermissions < 1 || accessPermissions > 3) {
+						accessPermissions = 2;
+					}
+					return CertificationPermission.fromCode(accessPermissions);
 				}
 			}
 		}
@@ -421,6 +450,29 @@ public class PdfBoxDocumentReader implements PdfDocumentReader {
 	@Override
 	public PdfDict getCatalogDictionary() {
 		return new PdfBoxDict(pdDocument.getDocumentCatalog().getCOSObject(), pdDocument);
+	}
+
+	/**
+	 * Computes a DocumentId in a deterministic way based on the given {@code parameters} and the document
+	 *
+	 * @param parameters {@link PAdESCommonParameters}
+	 * @return deterministic identifier
+	 */
+	public long generateDocumentId(PAdESCommonParameters parameters) {
+		/*
+		 * Computation is according to "14.4 File identifiers"
+		 */
+		String deterministicId = parameters.getDeterministicId();
+		if (dssDocument != null && dssDocument.getName() != null) {
+			deterministicId = deterministicId + "-" + dssDocument.getName();
+		}
+
+		long documentId = dssDocument != null ? DSSUtils.getFileByteSize(dssDocument) : 0;
+		// attach String to long value in a deterministic way
+		for (int i = 0; i < deterministicId.length(); i++) {
+			documentId += ((long) deterministicId.charAt(i) & 0xFF) << (8 * i);
+		}
+		return documentId;
 	}
 
 }

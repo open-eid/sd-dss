@@ -20,10 +20,12 @@
  */
 package eu.europa.esig.dss.validation.scope;
 
-import eu.europa.esig.dss.model.Digest;
+import eu.europa.esig.dss.model.DSSDocument;
+import eu.europa.esig.dss.model.scope.SignatureScope;
 import eu.europa.esig.dss.utils.Utils;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The signature scope with the performed transforms
@@ -36,14 +38,24 @@ public abstract class SignatureScopeWithTransformations extends SignatureScope {
 	private final List<String> transformations;
 
 	/**
-	 * Default constructor
+	 * Default constructor with a name extracted from a document
 	 *
-	 * @param name {@link String} document name
-	 * @param digest {@link Digest} digest document
+	 * @param document {@link DSSDocument}
 	 * @param transformations list of {@link String} transform definitions
 	 */
-	protected SignatureScopeWithTransformations(final String name, final Digest digest, final List<String> transformations) {
-		super(name, digest);
+	protected SignatureScopeWithTransformations(final DSSDocument document, final List<String> transformations) {
+		this(document.getName(), document, transformations);
+	}
+
+	/**
+	 * Default constructor with a name provided
+	 *
+	 * @param name {@link String} filename
+	 * @param document {@link DSSDocument}
+	 * @param transformations list of {@link String} transform definitions
+	 */
+	protected SignatureScopeWithTransformations(final String name, final DSSDocument document, final List<String> transformations) {
+		super(name, document);
 		this.transformations = transformations;
 	}
 
@@ -63,6 +75,31 @@ public abstract class SignatureScopeWithTransformations extends SignatureScope {
 	@Override
 	public List<String> getTransformations() {
 		return transformations;
+	}
+
+	@Override
+	public String toString() {
+		return "SignatureScopeWithTransformations{" +
+				"transformations=" + transformations +
+				"} " + super.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof SignatureScopeWithTransformations)) return false;
+		if (!super.equals(o)) return false;
+
+		SignatureScopeWithTransformations that = (SignatureScopeWithTransformations) o;
+
+		return Objects.equals(transformations, that.transformations);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + (transformations != null ? transformations.hashCode() : 0);
+		return result;
 	}
 
 }
