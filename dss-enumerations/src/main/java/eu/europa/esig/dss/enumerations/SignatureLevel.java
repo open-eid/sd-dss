@@ -37,7 +37,7 @@ public enum SignatureLevel {
 	UNKNOWN,
 
 	/*
-	 * Estonian specific profiles
+	 * Estonian-specific profiles
 	 */
 	XAdES_BASELINE_LT_TM, XAdES_BASELINE_B_EPES;
 

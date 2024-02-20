@@ -46,7 +46,7 @@ public class XAdESWithPolicyNewLinesAndWhitespaceTest extends AbstractXAdESTestV
 		assertEquals(POLICY_ID, signature.getPolicyId());
 		assertEquals(POLICY_URL, signature.getPolicyUrl());
 	}
-
+	
 	@Override
 	protected void checkBLevelValid(DiagnosticData diagnosticData) {
 		// do nothing

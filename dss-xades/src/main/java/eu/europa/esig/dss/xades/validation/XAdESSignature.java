@@ -900,9 +900,11 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	/**
-	 * Checks the presence of SignatureTimeStamp segment in the signature, what is the proof -T profile existence
+	 * Checks if the T-level is present in the signature.
+	 * In case of a signature with BDOC signature policy, T-level is indicated by the presence of a time-mark-conformant
+	 * OCSP response.
 	 *
-	 * @return
+	 * @return true if the T-level is present, false otherwise
 	 */
 	public boolean hasTProfile() {
 		if (BDocTmSupport.hasBDocTmOcsp(signatureElement, xadesPath)) {
