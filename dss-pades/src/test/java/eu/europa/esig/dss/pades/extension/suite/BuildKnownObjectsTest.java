@@ -37,6 +37,7 @@ import eu.europa.esig.dss.spi.x509.CommonTrustedCertificateSource;
 import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.validation.AdvancedSignature;
 import eu.europa.esig.dss.validation.CertificateVerifier;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -60,6 +61,7 @@ public class BuildKnownObjectsTest extends PKIFactoryAccess {
 	 * @throws IOException
 	 */
 	@Test
+	@Disabled("Test uses expired certificates, and getting it working requires changes that are planned for DSS 6.1 release")
 	public void buildKnownObjects() throws IOException {
 
 		DSSDocument dssDocument = new InMemoryDocument(
