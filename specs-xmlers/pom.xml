@@ -4,7 +4,7 @@
     <parent>
         <artifactId>sd-dss</artifactId>
         <groupId>org.digidoc4j.dss</groupId>
-        <version>6.0.d4j.2</version>
+        <version>6.0.1.d4j.1</version>
     </parent>
 
     <artifactId>specs-xmlers</artifactId>
