@@ -52,6 +52,9 @@ public abstract class AbstractParsingResult implements CachedResult {
 	/** The distribution points urls */
 	private List<String> distributionPoints;
 
+	/** A list of error messages occurred during a structure validation */
+	protected List<String> structureValidationMessages;
+
 	/**
 	 * Default constructor instantiating object with null values
 	 */
@@ -182,6 +185,24 @@ public abstract class AbstractParsingResult implements CachedResult {
 	 */
 	public void setDistributionPoints(List<String> distributionPoints) {
 		this.distributionPoints = distributionPoints;
+	}
+
+	/**
+	 * Gets a list of error messages when occurred during the structure validation
+	 *
+	 * @return a list of {@link String} structure validation messages, empty list if the structure validation succeeded
+	 */
+	public List<String> getStructureValidationMessages() {
+		return structureValidationMessages;
+	}
+
+	/**
+	 * Sets the structure validation error messages
+	 *
+	 * @param structureValidationMessages a list of {@link String} error messages when occurred on the structure validation
+	 */
+	public void setStructureValidationMessages(List<String> structureValidationMessages) {
+		this.structureValidationMessages = structureValidationMessages;
 	}
 
 }

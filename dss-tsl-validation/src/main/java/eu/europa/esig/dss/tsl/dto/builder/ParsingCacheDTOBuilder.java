@@ -62,6 +62,7 @@ public class ParsingCacheDTOBuilder extends AbstractCacheDTOBuilder<AbstractPars
 			parsingCacheDTO.setIssueDate(getIssueDate());
 			parsingCacheDTO.setNextUpdateDate(getNextUpdateDate());
 			parsingCacheDTO.setDistributionPoints(getDistributionPoints());
+			parsingCacheDTO.setStructureValidationMessages(getStructureValidationMessages());
 			if (isLOTL()) {
 				parsingCacheDTO.setLotlOtherPointers(getLOTLOtherPointers());
 				parsingCacheDTO.setTlOtherPointers(getTLOtherPointers());
@@ -104,6 +105,10 @@ public class ParsingCacheDTOBuilder extends AbstractCacheDTOBuilder<AbstractPars
 	
 	private List<String> getDistributionPoints() {
 		return getResult().getDistributionPoints();
+	}
+
+	private List<String> getStructureValidationMessages() {
+		return getResult().getStructureValidationMessages();
 	}
 	
 	private List<TrustServiceProvider> getTrustServiceProviders() {

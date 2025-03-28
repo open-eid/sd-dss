@@ -20,6 +20,7 @@
  */
 package eu.europa.esig.dss.pades.extension.suite;
 
+import eu.europa.esig.dss.alert.LogOnStatusAlert;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
 import eu.europa.esig.dss.diagnostic.TimestampWrapper;
@@ -37,13 +38,11 @@ import eu.europa.esig.dss.spi.x509.revocation.RevocationSource;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.ExternalResourcesOCSPSource;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CertificateVerifier;
-import org.junit.jupiter.api.Disabled;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Disabled("Test uses expired certificates, and getting it working requires changes that are planned for DSS 6.1 release")
 public class DSS2821ExtensionToLTLevelTest extends AbstractPAdESTestValidation {
 
     @Override
@@ -53,12 +52,14 @@ public class DSS2821ExtensionToLTLevelTest extends AbstractPAdESTestValidation {
         CertificateVerifier certificateVerifier = getOfflineCertificateVerifier();
         certificateVerifier.setTrustedCertSources(getTrustedCertificateSource());
         certificateVerifier.setOcspSource(getOCSPSource());
+        certificateVerifier.setAlertOnExpiredSignature(new LogOnStatusAlert());
 
         PAdESService service = new PAdESService(certificateVerifier);
         service.setTspSource(getSelfSignedTsa());
 
         PAdESSignatureParameters parameters = new PAdESSignatureParameters();
         parameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_LT);
+        parameters.setSignWithExpiredCertificate(true);
         return service.extendDocument(dssDocument, parameters);
     }
 

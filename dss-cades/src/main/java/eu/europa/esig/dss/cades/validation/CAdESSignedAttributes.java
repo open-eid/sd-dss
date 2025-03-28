@@ -20,6 +20,7 @@
  */
 package eu.europa.esig.dss.cades.validation;
 
+import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.cms.AttributeTable;
 import org.bouncycastle.cms.SignerInformation;
 
@@ -34,9 +35,20 @@ public class CAdESSignedAttributes extends CAdESSigProperties {
 	 * The default constructor
 	 *
 	 * @param attributeTable {@link AttributeTable} signed attributes table
+	 * @deprecated since DSS 6.0.1. Please use {@code new CAdESSigProperties(ASN1Set asn1Set)} instead
 	 */
+	@Deprecated
 	CAdESSignedAttributes(AttributeTable attributeTable) {
 		super(attributeTable);
+	}
+
+	/**
+	 * The default constructor
+	 *
+	 * @param asn1Set {@link ASN1Set} signed attributes table
+	 */
+	CAdESSignedAttributes(ASN1Set asn1Set) {
+		super(asn1Set);
 	}
 
 	/**
@@ -46,7 +58,7 @@ public class CAdESSignedAttributes extends CAdESSigProperties {
 	 * @return {@link CAdESSignedAttributes}
 	 */
 	public static CAdESSignedAttributes build(SignerInformation signerInformation) {
-		return new CAdESSignedAttributes(signerInformation.getSignedAttributes());
+		return new CAdESSignedAttributes(signerInformation.toASN1Structure().getAuthenticatedAttributes());
 	}
 
 }

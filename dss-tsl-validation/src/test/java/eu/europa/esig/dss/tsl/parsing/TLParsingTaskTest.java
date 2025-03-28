@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -57,6 +58,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TLParsingTaskTest {
 
 	private static DSSDocument DE_TL;
+	private static DSSDocument FI_V5;
+	private static DSSDocument FI_V5_INVALID_XML_TL;
+	private static DSSDocument FI_V5_SIG_CERT_V2_TL;
+	private static DSSDocument FI_V6_TL;
+	private static DSSDocument FI_V6_NO_SUPPLY_POINTS_TYPE_TL;
+	private static DSSDocument FI_V6_SIG_CERT_TL;
 	private static DSSDocument FR_TL;
 	private static DSSDocument IE_TL;
 	private static DSSDocument SK_TL;
@@ -65,9 +72,17 @@ public class TLParsingTaskTest {
 	private static DSSDocument LOTL;
 	private static DSSDocument LOTL_NOT_PARSEABLE;
 
+	private static List<Integer> DEFAULT_ACCEPTED_TL_VERSION;
+
 	@BeforeAll
 	public static void init() throws IOException {
 		DE_TL = new FileDocument("src/test/resources/de-tl.xml");
+		FI_V5 = new FileDocument("src/test/resources/fi-v5.xml");
+		FI_V5_INVALID_XML_TL = new FileDocument("src/test/resources/fi-v5-invalid.xml");
+		FI_V5_SIG_CERT_V2_TL = new FileDocument("src/test/resources/fi-v5-sig-cert-v2.xml");
+		FI_V6_TL = new FileDocument("src/test/resources/fi-v6.xml");
+		FI_V6_NO_SUPPLY_POINTS_TYPE_TL = new FileDocument("src/test/resources/fi-v6-no-supply-points-type.xml");
+		FI_V6_SIG_CERT_TL = new FileDocument("src/test/resources/fi-v6-sig-cert.xml");
 		FR_TL = new FileDocument("src/test/resources/fr.xml");
 		IE_TL = new FileDocument("src/test/resources/ie-tl.xml");
 		SK_TL = new FileDocument("src/test/resources/sk-tl.xml");
@@ -75,6 +90,8 @@ public class TLParsingTaskTest {
 
 		LOTL = new FileDocument("src/test/resources/eu-lotl.xml");
 		LOTL_NOT_PARSEABLE = new FileDocument("src/test/resources/eu-lotl-not-parseable.xml");
+
+		DEFAULT_ACCEPTED_TL_VERSION = Arrays.asList(5, 6);
 	}
 
 	@Test
@@ -88,6 +105,7 @@ public class TLParsingTaskTest {
 		assertNotNull(result.getNextUpdateDate());
 		assertEquals("IE", result.getTerritory());
 		assertTrue(Utils.isCollectionEmpty(result.getDistributionPoints()));
+		assertTrue(Utils.isCollectionEmpty(result.getStructureValidationMessages()));
 
 		List<TrustServiceProvider> trustServiceProviders = result.getTrustServiceProviders();
 		assertNotNull(trustServiceProviders);
@@ -115,7 +133,8 @@ public class TLParsingTaskTest {
 		assertNotNull(result.getIssueDate());
 		assertNotNull(result.getNextUpdateDate());
 		assertEquals("SK", result.getTerritory());
-		assertNotNull(result.getDistributionPoints());
+		assertFalse(Utils.isCollectionEmpty(result.getDistributionPoints()));
+		assertTrue(Utils.isCollectionEmpty(result.getStructureValidationMessages()));
 
 		List<TrustServiceProvider> trustServiceProviders = result.getTrustServiceProviders();
 		assertNotNull(trustServiceProviders);
@@ -134,7 +153,184 @@ public class TLParsingTaskTest {
 	}
 
 	@Test
-	public void testLOTL() {
+	void testFIv5() {
+		TLSource tlSource = new TLSource();
+		tlSource.setTLVersions(DEFAULT_ACCEPTED_TL_VERSION);
+		TLParsingTask task = new TLParsingTask(FI_V5, tlSource);
+		TLParsingResult result = task.get();
+		assertNotNull(result);
+		assertEquals(5, result.getVersion());
+		assertEquals(49, result.getSequenceNumber());
+		assertNotNull(result.getIssueDate());
+		assertNotNull(result.getNextUpdateDate());
+		assertEquals("FI", result.getTerritory());
+		assertFalse(Utils.isCollectionEmpty(result.getDistributionPoints()));
+		assertTrue(Utils.isCollectionEmpty(result.getStructureValidationMessages()));
+
+		List<TrustServiceProvider> trustServiceProviders = result.getTrustServiceProviders();
+		assertNotNull(trustServiceProviders);
+		assertEquals(1, trustServiceProviders.size());
+
+		checkTSPs(trustServiceProviders);
+
+		TrustServiceProvider nsa = trustServiceProviders.get(0);
+		assertEquals(19, nsa.getServices().size());
+	}
+
+	@Test
+	void testFIv5InvalidXml() {
+		TLSource tlSource = new TLSource();
+		tlSource.setTLVersions(DEFAULT_ACCEPTED_TL_VERSION);
+		TLParsingTask task = new TLParsingTask(FI_V5_INVALID_XML_TL, tlSource);
+		TLParsingResult result = task.get();
+		assertNotNull(result);
+		assertEquals(5, result.getVersion());
+		assertEquals(49, result.getSequenceNumber());
+		assertNotNull(result.getIssueDate());
+		assertNotNull(result.getNextUpdateDate());
+		assertEquals("FI", result.getTerritory());
+		assertFalse(Utils.isCollectionEmpty(result.getDistributionPoints()));
+		assertFalse(Utils.isCollectionEmpty(result.getStructureValidationMessages()));
+		assertTrue(result.getStructureValidationMessages().stream().anyMatch(r -> r.contains("ServiceSupplyPoint")));
+
+		List<TrustServiceProvider> trustServiceProviders = result.getTrustServiceProviders();
+		assertNotNull(trustServiceProviders);
+		assertEquals(1, trustServiceProviders.size());
+
+		checkTSPs(trustServiceProviders);
+
+		TrustServiceProvider nsa = trustServiceProviders.get(0);
+		assertEquals(19, nsa.getServices().size());
+	}
+
+	@Test
+	void testFIv5InvalidXmlNoCheck() {
+		TLSource tlSource = new TLSource();
+		TLParsingTask task = new TLParsingTask(FI_V5_INVALID_XML_TL, tlSource);
+		TLParsingResult result = task.get();
+		assertNotNull(result);
+		assertEquals(5, result.getVersion());
+		assertEquals(49, result.getSequenceNumber());
+		assertNotNull(result.getIssueDate());
+		assertNotNull(result.getNextUpdateDate());
+		assertEquals("FI", result.getTerritory());
+		assertFalse(Utils.isCollectionEmpty(result.getDistributionPoints()));
+		assertTrue(Utils.isCollectionEmpty(result.getStructureValidationMessages()));
+
+		List<TrustServiceProvider> trustServiceProviders = result.getTrustServiceProviders();
+		assertNotNull(trustServiceProviders);
+		assertEquals(1, trustServiceProviders.size());
+
+		checkTSPs(trustServiceProviders);
+
+		TrustServiceProvider nsa = trustServiceProviders.get(0);
+		assertEquals(19, nsa.getServices().size());
+	}
+
+	@Test
+	void testFIv5SigCertV2() {
+		TLSource tlSource = new TLSource();
+		tlSource.setTLVersions(DEFAULT_ACCEPTED_TL_VERSION);
+		TLParsingTask task = new TLParsingTask(FI_V5_SIG_CERT_V2_TL, tlSource);
+		TLParsingResult result = task.get();
+		assertNotNull(result);
+		assertEquals(5, result.getVersion());
+		assertEquals(49, result.getSequenceNumber());
+		assertNotNull(result.getIssueDate());
+		assertNotNull(result.getNextUpdateDate());
+		assertEquals("FI", result.getTerritory());
+		assertFalse(Utils.isCollectionEmpty(result.getDistributionPoints()));
+		assertFalse(Utils.isCollectionEmpty(result.getStructureValidationMessages()));
+		assertTrue(result.getStructureValidationMessages().stream().anyMatch(r -> r.contains("SigningCertificateV2")));
+
+		List<TrustServiceProvider> trustServiceProviders = result.getTrustServiceProviders();
+		assertNotNull(trustServiceProviders);
+		assertEquals(1, trustServiceProviders.size());
+
+		checkTSPs(trustServiceProviders);
+
+		TrustServiceProvider nsa = trustServiceProviders.get(0);
+		assertEquals(19, nsa.getServices().size());
+	}
+
+	@Test
+	void testFIv6() {
+		TLSource tlSource = new TLSource();
+		tlSource.setTLVersions(DEFAULT_ACCEPTED_TL_VERSION);
+		TLParsingTask task = new TLParsingTask(FI_V6_TL, tlSource);
+		TLParsingResult result = task.get();
+		assertNotNull(result);
+		assertEquals(6, result.getVersion());
+		assertEquals(49, result.getSequenceNumber());
+		assertNotNull(result.getIssueDate());
+		assertNotNull(result.getNextUpdateDate());
+		assertEquals("FI", result.getTerritory());
+		assertFalse(Utils.isCollectionEmpty(result.getDistributionPoints()));
+		assertTrue(Utils.isCollectionEmpty(result.getStructureValidationMessages()));
+
+		List<TrustServiceProvider> trustServiceProviders = result.getTrustServiceProviders();
+		assertNotNull(trustServiceProviders);
+		assertEquals(1, trustServiceProviders.size());
+
+		checkTSPs(trustServiceProviders);
+
+		TrustServiceProvider nsa = trustServiceProviders.get(0);
+		assertEquals(19, nsa.getServices().size());
+	}
+
+	@Test
+	void testFIv6NoSupplyPointsType() {
+		TLSource tlSource = new TLSource();
+		tlSource.setTLVersions(DEFAULT_ACCEPTED_TL_VERSION);
+		TLParsingTask task = new TLParsingTask(FI_V6_NO_SUPPLY_POINTS_TYPE_TL, tlSource);
+		TLParsingResult result = task.get();
+		assertNotNull(result);
+		assertEquals(6, result.getVersion());
+		assertEquals(49, result.getSequenceNumber());
+		assertNotNull(result.getIssueDate());
+		assertNotNull(result.getNextUpdateDate());
+		assertEquals("FI", result.getTerritory());
+		assertFalse(Utils.isCollectionEmpty(result.getDistributionPoints()));
+		assertTrue(Utils.isCollectionEmpty(result.getStructureValidationMessages()));
+
+		List<TrustServiceProvider> trustServiceProviders = result.getTrustServiceProviders();
+		assertNotNull(trustServiceProviders);
+		assertEquals(1, trustServiceProviders.size());
+
+		checkTSPs(trustServiceProviders);
+
+		TrustServiceProvider nsa = trustServiceProviders.get(0);
+		assertEquals(19, nsa.getServices().size());
+	}
+
+	@Test
+	void testFIv6SigCertV2() {
+		TLSource tlSource = new TLSource();
+		tlSource.setTLVersions(DEFAULT_ACCEPTED_TL_VERSION);
+		TLParsingTask task = new TLParsingTask(FI_V6_SIG_CERT_TL, tlSource);
+		TLParsingResult result = task.get();
+		assertNotNull(result);
+		assertEquals(6, result.getVersion());
+		assertEquals(49, result.getSequenceNumber());
+		assertNotNull(result.getIssueDate());
+		assertNotNull(result.getNextUpdateDate());
+		assertEquals("FI", result.getTerritory());
+		assertFalse(Utils.isCollectionEmpty(result.getDistributionPoints()));
+		assertFalse(Utils.isCollectionEmpty(result.getStructureValidationMessages()));
+		assertTrue(result.getStructureValidationMessages().stream().anyMatch(r -> r.contains("SigningCertificate")));
+
+		List<TrustServiceProvider> trustServiceProviders = result.getTrustServiceProviders();
+		assertNotNull(trustServiceProviders);
+		assertEquals(1, trustServiceProviders.size());
+
+		checkTSPs(trustServiceProviders);
+
+		TrustServiceProvider nsa = trustServiceProviders.get(0);
+		assertEquals(19, nsa.getServices().size());
+	}
+
+	@Test
+	void testLOTL() {
 		TLParsingTask task = new TLParsingTask(LOTL, new TLSource());
 		TLParsingResult result = task.get();
 		assertNotNull(result);
@@ -144,7 +340,8 @@ public class TLParsingTaskTest {
 		assertEquals(5, result.getVersion());
 		assertEquals(248, result.getSequenceNumber());
 		assertEquals("EU", result.getTerritory());
-		assertNotNull(result.getDistributionPoints());
+		assertFalse(Utils.isCollectionEmpty(result.getDistributionPoints()));
+		assertTrue(Utils.isCollectionEmpty(result.getStructureValidationMessages()));
 
 		List<TrustServiceProvider> trustServiceProviders = result.getTrustServiceProviders();
 		assertNotNull(trustServiceProviders);
@@ -242,8 +439,9 @@ public class TLParsingTaskTest {
 	}
 
 	@Test
-	public void countCertificatesDE() throws Exception {
-		TLParsingTask task = new TLParsingTask(DE_TL, new TLSource());
+	void countCertificatesDE() throws Exception {
+		TLSource tlSource = new TLSource();
+		TLParsingTask task = new TLParsingTask(DE_TL, tlSource);
 		TLParsingResult result = task.get();
 
 		assertNotNull(result);
@@ -252,7 +450,39 @@ public class TLParsingTaskTest {
 		assertNotNull(result.getIssueDate());
 		assertNotNull(result.getNextUpdateDate());
 		assertEquals("DE", result.getTerritory());
-		assertTrue(Utils.isCollectionNotEmpty(result.getDistributionPoints()));
+		assertFalse(Utils.isCollectionEmpty(result.getDistributionPoints()));
+		assertTrue(Utils.isCollectionEmpty(result.getStructureValidationMessages()));
+
+		List<TrustServiceProvider> trustServiceProviders = result.getTrustServiceProviders();
+		assertNotNull(trustServiceProviders);
+
+		Set<CertificateToken> certs = new HashSet<>();
+		for (TrustServiceProvider tslServiceProvider : trustServiceProviders) {
+			List<TrustService> services = tslServiceProvider.getServices();
+			for (TrustService tslService : services) {
+				certs.addAll(tslService.getCertificates());
+			}
+		}
+		assertEquals(413, certs.size());
+	}
+
+	@Test
+	void countCertificatesDENotSupportedVersion() {
+		TLSource tlSource = new TLSource();
+		tlSource.setTLVersions(DEFAULT_ACCEPTED_TL_VERSION);
+
+		TLParsingTask task = new TLParsingTask(DE_TL, tlSource);
+		TLParsingResult result = task.get();
+
+		assertNotNull(result);
+		assertEquals(4, result.getVersion());
+		assertEquals(22, result.getSequenceNumber());
+		assertNotNull(result.getIssueDate());
+		assertNotNull(result.getNextUpdateDate());
+		assertEquals("DE", result.getTerritory());
+		assertFalse(Utils.isCollectionEmpty(result.getDistributionPoints()));
+		assertFalse(Utils.isCollectionEmpty(result.getStructureValidationMessages()));
+		assertTrue(result.getStructureValidationMessages().contains("The TL Version '4' is not acceptable!"));
 
 		List<TrustServiceProvider> trustServiceProviders = result.getTrustServiceProviders();
 		assertNotNull(trustServiceProviders);

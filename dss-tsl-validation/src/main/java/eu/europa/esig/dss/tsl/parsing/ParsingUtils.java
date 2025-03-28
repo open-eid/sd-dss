@@ -40,6 +40,7 @@ public class ParsingUtils {
 	 * Empty constructor
 	 */
 	private ParsingUtils() {
+		// empty
 	}
 	
 	/**

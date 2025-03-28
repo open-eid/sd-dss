@@ -20,14 +20,18 @@
  */
 package eu.europa.esig.dss.cades.validation;
 
+import eu.europa.esig.dss.cades.CMSUtils;
 import eu.europa.esig.dss.cades.TimeStampTokenProductionComparator;
-import eu.europa.esig.dss.spi.DSSASN1Utils;
+import eu.europa.esig.dss.enumerations.TimestampType;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.cms.AttributeTable;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.tsp.TimeStampToken;
 
+import java.io.Serializable;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -41,9 +45,20 @@ public class CAdESUnsignedAttributes extends CAdESSigProperties {
 	 * The default constructor
 	 *
 	 * @param attributeTable {@link AttributeTable} unsigned attributes table
+	 * @deprecated since DSS 6.0.1. Please use {@code new CAdESSigProperties(ASN1Set asn1Set)} instead
 	 */
+	@Deprecated
 	CAdESUnsignedAttributes(AttributeTable attributeTable) {
 		super(attributeTable);
+	}
+
+	/**
+	 * The default constructor
+	 *
+	 * @param asn1Set {@link ASN1Set} unsigned attributes table
+	 */
+	CAdESUnsignedAttributes(final ASN1Set asn1Set) {
+		super(asn1Set);
 	}
 
 	/**
@@ -53,18 +68,19 @@ public class CAdESUnsignedAttributes extends CAdESSigProperties {
 	 * @return {@link CAdESUnsignedAttributes}
 	 */
 	public static CAdESUnsignedAttributes build(SignerInformation signerInformation) {
-		return new CAdESUnsignedAttributes(signerInformation.getUnsignedAttributes());
+		// Extraction from SignerInfo allows to keep actual order
+		return new CAdESUnsignedAttributes(signerInformation.toASN1Structure().getUnauthenticatedAttributes());
 	}
 	
 	@Override
 	public List<CAdESAttribute> getAttributes() {
 		List<CAdESAttribute> attributes = super.getAttributes();
 		// Multiple timestamps need to be sorted in CAdES by their production date
-		return sortTimestamps(attributes, DSSASN1Utils.getTimestampOids());
+		return sortTimestamps(attributes, CMSUtils.getTimestampOids());
 	}
 	
 	private List<CAdESAttribute> sortTimestamps(List<CAdESAttribute> attributes, List<ASN1ObjectIdentifier> timestampOids) {
-		TimeStampTokenProductionComparator comparator = new TimeStampTokenProductionComparator();
+		final CAdESAttributeTimeStampComparator comparator = new CAdESAttributeTimeStampComparator();
 		for (int ii = 0; ii < attributes.size() - 1; ii++) {
 			for (int jj = 0; jj < attributes.size() - ii - 1; jj++) {
 				CAdESAttribute cadesAttribute = attributes.get(jj);
@@ -75,18 +91,49 @@ public class CAdESUnsignedAttributes extends CAdESSigProperties {
 					if (!timestampOids.contains(nextCAdESAttribute.getASN1Oid())) {
 						Collections.swap(attributes, jj, jj + 1);
 					} else {
-						TimeStampToken current = cadesAttribute.toTimeStampToken();
-						TimeStampToken next = nextCAdESAttribute.toTimeStampToken();
 						// swap if the current element was generated after the following timestamp attribute
-						if (current != null && next != null && (comparator.compare(current, next) > 0)) {
+						if (comparator.compare(cadesAttribute, nextCAdESAttribute) > 0) {
 							Collections.swap(attributes, jj, jj + 1);
 						}
-
 					}
 				}
 			}
 		}
 		return attributes;
+	}
+
+	private static final class CAdESAttributeTimeStampComparator implements Comparator<CAdESAttribute>, Serializable {
+
+		private static final long serialVersionUID = -603149548378907782L;
+
+		@Override
+		public int compare(CAdESAttribute o1, CAdESAttribute o2) {
+			int result = compareByTimeStampToken(o1, o2);
+			if (result == 0) {
+				result = compareByType(o1, o2);
+			}
+			return result;
+		}
+
+		private int compareByTimeStampToken(CAdESAttribute attributeOne, CAdESAttribute attributeTwo) {
+			TimeStampToken current = attributeOne.toTimeStampToken();
+			TimeStampToken next = attributeTwo.toTimeStampToken();
+			if (current != null && next != null) {
+				TimeStampTokenProductionComparator comparator = new TimeStampTokenProductionComparator();
+				return comparator.compare(current, next);
+			}
+			return 0;
+		}
+
+		private int compareByType(CAdESAttribute attributeOne, CAdESAttribute attributeTwo) {
+			TimestampType timestampTypeOne = attributeOne.getTimestampTokenType();
+			TimestampType timestampTypeTwo = attributeTwo.getTimestampTokenType();
+			if (timestampTypeOne != null && timestampTypeTwo != null) {
+				return timestampTypeOne.compare(timestampTypeTwo);
+			}
+			return 0;
+		}
+
 	}
 
 }
