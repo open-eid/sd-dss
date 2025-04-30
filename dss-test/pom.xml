@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+        <groupId>org.digidoc4j.dss</groupId>
         <artifactId>sd-dss</artifactId>
         <version>6.2</version>
     </parent>
@@ -19,23 +19,23 @@
 
     <dependencies>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-pki-factory-jaxb</artifactId>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-document</artifactId>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-validation</artifactId>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-token</artifactId>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-service</artifactId>
         </dependency>
 
@@ -84,21 +84,21 @@
 
         <!-- Choose your implementation -->
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-utils-apache-commons</artifactId>
         </dependency>
         <!--		<dependency>
-                    <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+                    <groupId>org.digidoc4j.dss</groupId>
                     <artifactId>dss-utils-google-guava</artifactId>
                 </dependency> -->
 
         <!-- Choose your implementation -->
         <!-- 		<dependency> -->
-        <!-- 			<groupId>eu.europa.ec.joinup.sd-dss</groupId> -->
+        <!-- 			<groupId>org.digidoc4j.dss</groupId> -->
         <!-- 			<artifactId>dss-crl-parser-x509crl</artifactId> -->
         <!-- 		</dependency> -->
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-crl-parser-stream</artifactId>
         </dependency>
 

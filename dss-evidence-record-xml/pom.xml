@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+        <groupId>org.digidoc4j.dss</groupId>
         <artifactId>sd-dss</artifactId>
         <version>6.2</version>
     </parent>
@@ -16,19 +16,19 @@
 
     <dependencies>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-evidence-record-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>specs-xmlers</artifactId>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-xml-utils</artifactId>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-validation</artifactId>
             <optional>true</optional>
         </dependency>
@@ -55,23 +55,23 @@
         </dependency>
 
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-utils-apache-commons</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-crl-parser-stream</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-test</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-evidence-record-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>

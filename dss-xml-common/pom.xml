@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+        <groupId>org.digidoc4j.dss</groupId>
         <artifactId>sd-dss</artifactId>
         <version>6.2</version>
     </parent>
@@ -19,11 +19,11 @@
 
     <dependencies>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-enumerations</artifactId>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-alert</artifactId>
         </dependency>
 

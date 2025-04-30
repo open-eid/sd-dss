@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
 		<version>6.2</version>
 	</parent>
@@ -30,7 +30,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-pades</artifactId>
 		</dependency>
 		<dependency>
@@ -40,35 +40,35 @@
 
 		<!-- Allows to test PDF/A -->
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-pdfa</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-pdfa</artifactId>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-pades</artifactId>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-test</artifactId>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-evidence-record-xml</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-evidence-record-asn1</artifactId>
 			<scope>test</scope>
 		</dependency>

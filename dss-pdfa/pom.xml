@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+        <groupId>org.digidoc4j.dss</groupId>
         <artifactId>sd-dss</artifactId>
         <version>6.2</version>
     </parent>
@@ -34,11 +34,11 @@
 
     <dependencies>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-pades</artifactId>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-validation</artifactId>
             <optional>true</optional>
         </dependency>
@@ -67,13 +67,13 @@
         </dependency>
 
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-pades</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+            <groupId>org.digidoc4j.dss</groupId>
             <artifactId>dss-test</artifactId>
             <type>test-jar</type>
             <scope>test</scope>

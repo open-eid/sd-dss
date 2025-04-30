@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
 		<version>6.2</version>
 	</parent>
@@ -45,351 +45,351 @@
 		<!-- List all DSS modules -->
 
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>specs-xmldsig</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>specs-xades</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>specs-trusted-list</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>specs-validation-report</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>specs-asic-manifest</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>specs-saml-assertion</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>specs-xmlers</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>specs-jws</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>specs-jades</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-spi</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-xml-common</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-xml-utils</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-crl-parser</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-crl-parser</artifactId>
 			<type>test-jar</type>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-crl-parser-x509crl</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-crl-parser-stream</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-service</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-document</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-pki-factory</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-pki-factory-jaxb</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-asic-common</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-asic-xades</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-asic-cades</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-cades</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-jades</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-pades</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-pades</artifactId>
 			<type>test-jar</type>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-pdfa</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-pades-pdfbox</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-pades-openpdf</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-xades</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-evidence-record-common</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-evidence-record-xml</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-evidence-record-asn1</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-model</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-common-remote-dto</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-common-remote-converter</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-signature-remote</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-signature-dto</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-signature-rest</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-signature-rest-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-signature-soap</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-signature-soap-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-validation-dto</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-validation-server-common</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-validation-rest</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-validation-rest-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-validation-soap</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-certificate-validation-dto</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-certificate-validation-common</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-certificate-validation-rest-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-certificate-validation-soap-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-certificate-validation-rest</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-certificate-validation-soap</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-validation-soap-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-token</artifactId>
 		</dependency>
 
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-server-signing-dto</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-server-signing-common</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-server-signing-rest-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-server-signing-rest</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-server-signing-soap-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-server-signing-soap</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-timestamp-dto</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-timestamp-remote</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-timestamp-remote-rest-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-timestamp-remote-soap-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-timestamp-remote-rest</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-timestamp-remote-soap</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-tsl-validation</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-enumerations</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-alert</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-jaxb-common</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-jaxb-parsers</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-diagnostic-jaxb</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-policy-jaxb</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-detailed-report-jaxb</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-simple-report-jaxb</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-simple-certificate-report-jaxb</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-i18n</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-validation</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-utils</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-utils</artifactId>
 			<type>test-jar</type>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-utils-apache-commons</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-utils-google-guava</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-cookbook</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-test</artifactId>
 			<type>test-jar</type>
 		</dependency>

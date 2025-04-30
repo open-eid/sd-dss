@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>
-		<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+		<groupId>org.digidoc4j.dss</groupId>
 		<artifactId>sd-dss</artifactId>
 		<version>6.2</version>
 	</parent>
@@ -16,19 +16,19 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-common-remote-dto</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-diagnostic-jaxb</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-simple-certificate-report-jaxb</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
+			<groupId>org.digidoc4j.dss</groupId>
 			<artifactId>dss-detailed-report-jaxb</artifactId>
 		</dependency>
 	</dependencies>
