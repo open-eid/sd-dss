@@ -34,7 +34,12 @@ public enum SignatureLevel {
 	
 	JSON_NOT_ETSI, JAdES_BASELINE_B, JAdES_BASELINE_T, JAdES_BASELINE_LT, JAdES_BASELINE_LTA,
 	
-	UNKNOWN;
+	UNKNOWN,
+
+	/*
+	 * Estonian-specific profiles
+	 */
+	XAdES_BASELINE_LT_TM, XAdES_BASELINE_B_EPES;
 
 	/**
 	 * Returns the SignatureLevel based on the name (String)
@@ -72,6 +77,8 @@ public enum SignatureLevel {
 			case XAdES_BASELINE_LT:
 			case XAdES_BASELINE_T:
 			case XAdES_BASELINE_B:
+			case XAdES_BASELINE_LT_TM:
+			case XAdES_BASELINE_B_EPES:
 				return SignatureForm.XAdES;
 			case CMS_NOT_ETSI:
 			case CAdES_BES:
