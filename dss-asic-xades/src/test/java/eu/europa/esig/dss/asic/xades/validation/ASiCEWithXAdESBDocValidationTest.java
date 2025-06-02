@@ -44,4 +44,16 @@ class ASiCEWithXAdESBDocValidationTest extends AbstractASiCWithXAdESTestValidati
 		assertEquals("application/vnd.bdoc-1.0", diagnosticData.getMimetypeFileContent());
 	}
 
+	@Override
+	protected void checkSignatureLevel(DiagnosticData diagnosticData) {
+		// DD4J-1093: the original assertions of this test don't apply because of custom BDOC-TM validation logic,
+		// do nothing
+	}
+
+	@Override
+	protected void checkTimestamps(DiagnosticData diagnosticData) {
+		// DD4J-1093: the original assertions of this test don't apply because of custom BDOC-TM validation logic,
+		// do nothing
+	}
+
 }
