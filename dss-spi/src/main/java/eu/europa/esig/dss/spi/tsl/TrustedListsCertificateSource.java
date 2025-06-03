@@ -109,7 +109,7 @@ public class TrustedListsCertificateSource extends CommonTrustedCertificateSourc
 		trustPropertiesByCerts.forEach(this::addCertificate);
 	}
 	
-	private void addCertificate(CertificateToken certificateToken, List<TrustProperties> trustPropertiesList) {
+	public synchronized void addCertificate(CertificateToken certificateToken, List<TrustProperties> trustPropertiesList) {
 		super.addCertificate(certificateToken);
 		Objects.requireNonNull(trustPropertiesList, "TrustPropertiesList must be filled");
 		
