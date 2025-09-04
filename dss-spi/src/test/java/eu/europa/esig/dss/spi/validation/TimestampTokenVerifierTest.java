@@ -159,6 +159,7 @@ class TimestampTokenVerifierTest {
 
         Calendar calendar = Calendar.getInstance();
         calendar.set(2024, Calendar.AUGUST, 1);
+        Date currentTime = calendar.getTime();
         calendar.add(Calendar.YEAR, -1);
         Date startDate = calendar.getTime();
         calendar.add(Calendar.YEAR, 2);
@@ -197,11 +198,11 @@ class TimestampTokenVerifierTest {
         calendar.add(Calendar.YEAR, 2);
         Date futureDate = calendar.getTime();
 
-        assertTrue(timestampTokenVerifier.isAcceptable(timestampToken, certificateChain, new Date()));
+        assertTrue(timestampTokenVerifier.isAcceptable(timestampToken, certificateChain, currentTime));
         assertTrue(timestampTokenVerifier.isAcceptable(timestampToken, certificateChain, futureDate));
 
         trustAnchorVerifier.setUseSunsetDate(true);
-        assertTrue(timestampTokenVerifier.isAcceptable(timestampToken, certificateChain, new Date()));
+        assertTrue(timestampTokenVerifier.isAcceptable(timestampToken, certificateChain, currentTime));
         assertFalse(timestampTokenVerifier.isAcceptable(timestampToken, certificateChain, futureDate));
     }
 

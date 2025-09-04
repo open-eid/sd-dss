@@ -41,6 +41,7 @@ import eu.europa.esig.dss.spi.x509.revocation.RevocationSource;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationToken;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPToken;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -247,6 +248,7 @@ class OnlineOCSPSourceTest extends OnlineSourceTest {
 	}
 
 	@Test
+	@Disabled("Used certificates have expired")
 	void validNextUpdateTest() {
 		OnlineOCSPSource ocspSource = new OnlineOCSPSource();
 		OCSPToken ocspToken = ocspSource.getRevocationToken(qtspUser, qtspCa);
@@ -254,6 +256,7 @@ class OnlineOCSPSourceTest extends OnlineSourceTest {
 	}
 
 	@Test
+	@Disabled("Used certificates have expired")
 	void validNextUpdateEnforcedTest() {
 		OnlineOCSPSource ocspSource = new OnlineOCSPSource();
 		ocspSource.setAlertOnInvalidUpdateTime(new DSSExternalResourceExceptionAlert());
