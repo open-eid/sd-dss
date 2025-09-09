@@ -23,15 +23,20 @@ package eu.europa.esig.dss.validation.process.bbb.xcv.sub.checks;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlConstraintsConclusion;
 import eu.europa.esig.dss.diagnostic.CertificateRevocationWrapper;
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlOID;
+import eu.europa.esig.dss.enumerations.ExtendedKeyUsage;
 import eu.europa.esig.dss.enumerations.Indication;
+import eu.europa.esig.dss.enumerations.KeyUsageBit;
 import eu.europa.esig.dss.enumerations.SubIndication;
 import eu.europa.esig.dss.i18n.I18nProvider;
 import eu.europa.esig.dss.i18n.MessageTag;
+import eu.europa.esig.dss.policy.jaxb.Level;
 import eu.europa.esig.dss.policy.jaxb.LevelConstraint;
 import eu.europa.esig.dss.validation.process.ChainItem;
 import eu.europa.esig.dss.validation.process.ValidationProcessUtils;
 
 import java.util.Date;
+import java.util.stream.Stream;
 
 /**
  * Checks if the certificate is not expired
@@ -97,6 +102,48 @@ public class CertificateValidityRangeCheck<T extends XmlConstraintsConclusion> e
 		return revocationIssuerTrusted || isInValidityRange(usedCertificateRevocation.getSigningCertificate());
 	}
 
+	private boolean hasValidityBegun(CertificateWrapper certificateWrapper) {
+		if (certificateWrapper != null) {
+			Date notBefore = certificateWrapper.getNotBefore();
+			return notBefore != null && currentTime.compareTo(notBefore) >= 0;
+		}
+		return false;
+	}
+
+	private boolean isSigningCertificateWithValidIssuer() {
+		return isSigningCertificate(certificate) && isCertificateValid(certificate.getSigningCertificate());
+	}
+
+	private static boolean isSigningCertificate(CertificateWrapper certificateWrapper) {
+		// DD4J-1302: Consider a certificate as signing certificate if the following conditions are met:
+		// - The certificate has no BasicConstraints extension, or its CA attribute is false
+		// - The certificate has KeyUsage extension with nonRepudiation bit set
+		// - The certificate has no ExtendedKeyUsage extension, or it does not contain OCSPSigning nor timeStamping entries
+		if (!certificateWrapper.isCA() && certificateWrapper.getKeyUsages().contains(KeyUsageBit.NON_REPUDIATION)) {
+			return certificateWrapper.getExtendedKeyUsages().stream()
+					.map(XmlOID::getValue)
+					.noneMatch(oid -> Stream
+							.of(ExtendedKeyUsage.OCSP_SIGNING, ExtendedKeyUsage.TIMESTAMPING)
+							.anyMatch(eku -> eku.getOid().equals(oid))
+					);
+		}
+		return false;
+	}
+
+	private boolean isCertificateValid(CertificateWrapper certificateWrapper) {
+		if (certificateWrapper != null) {
+			return isTrustAnchor(certificateWrapper) || isInValidityRange(certificateWrapper);
+		}
+		return false;
+	}
+
+	private boolean isTrustAnchor(CertificateWrapper certificateWrapper) {
+		LevelConstraint failLevelConstraint = new LevelConstraint();
+		failLevelConstraint.setLevel(Level.FAIL);
+
+		return ValidationProcessUtils.isTrustAnchor(certificateWrapper, currentTime, failLevelConstraint);
+	}
+
 	@Override
 	protected String buildAdditionalInfo() {
 		String notBeforeStr = certificate.getNotBefore() == null ? " ? " : ValidationProcessUtils.getFormattedDate(certificate.getNotBefore());
@@ -123,7 +170,12 @@ public class CertificateValidityRangeCheck<T extends XmlConstraintsConclusion> e
 	@Override
 	protected SubIndication getFailedSubIndicationForConclusion() {
 		boolean certificateIsKnownToNotBeRevoked = usedCertificateRevocation != null
-				&& !usedCertificateRevocation.isRevoked() && isRevocationDataValid();
+				&& !usedCertificateRevocation.isRevoked() && (isRevocationDataValid()
+				// DD4J-1302: Alternatively consider the certificate not revoked if the following conditions are met:
+				// - The validity of the revocation certificate has begun (notBefore is not after the reference time)
+				// - The certificate represents a signing certificate with a valid issuer
+				|| (hasValidityBegun(usedCertificateRevocation.getSigningCertificate()) && isSigningCertificateWithValidIssuer())
+		);
 		if (!revocationDataRequired || certificateIsKnownToNotBeRevoked) {
 			return SubIndication.OUT_OF_BOUNDS_NOT_REVOKED;
 		}
