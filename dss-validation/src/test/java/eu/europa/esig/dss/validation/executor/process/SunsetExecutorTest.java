@@ -4091,7 +4091,7 @@ class SunsetExecutorTest extends AbstractProcessExecutorTest {
         XmlXCV xcv = signatureBBB.getXCV();
         assertNotNull(xcv);
         assertEquals(Indication.INDETERMINATE, xcv.getConclusion().getIndication());
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, xcv.getConclusion().getSubIndication());
+        assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, xcv.getConclusion().getSubIndication());
         assertTrue(checkMessageValuePresence(convert(xcv.getConclusion().getErrors()), i18nProvider.getMessage(MessageTag.BBB_XCV_SUB_ANS)));
         assertTrue(checkMessageValuePresence(convert(xcv.getConclusion().getErrors()), i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
 
@@ -4153,7 +4153,7 @@ class SunsetExecutorTest extends AbstractProcessExecutorTest {
                 ++trustedCertCounter;
             } else {
                 assertEquals(Indication.INDETERMINATE, subXCV.getConclusion().getIndication());
-                assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, subXCV.getConclusion().getSubIndication());
+                assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, subXCV.getConclusion().getSubIndication());
                 assertTrue(checkMessageValuePresence(convert(subXCV.getConclusion().getErrors()), i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
                 ++untrustedCertCounter;
             }
@@ -4367,7 +4367,7 @@ class SunsetExecutorTest extends AbstractProcessExecutorTest {
 
         SimpleReport simpleReport = reports.getSimpleReport();
         assertEquals(Indication.INDETERMINATE, simpleReport.getIndication(simpleReport.getFirstSignatureId()));
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, simpleReport.getSubIndication(simpleReport.getFirstSignatureId()));
+        assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, simpleReport.getSubIndication(simpleReport.getFirstSignatureId()));
         assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(simpleReport.getFirstSignatureId()),
                 i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
 
@@ -4386,13 +4386,13 @@ class SunsetExecutorTest extends AbstractProcessExecutorTest {
         XmlBasicBuildingBlocks signatureBBB = detailedReport.getBasicBuildingBlockById(detailedReport.getFirstSignatureId());
         assertNotNull(signatureBBB);
         assertEquals(Indication.INDETERMINATE, signatureBBB.getConclusion().getIndication());
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, signatureBBB.getConclusion().getSubIndication());
+        assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, signatureBBB.getConclusion().getSubIndication());
         assertTrue(checkMessageValuePresence(convert(signatureBBB.getConclusion().getErrors()), i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
 
         XmlXCV xcv = signatureBBB.getXCV();
         assertNotNull(xcv);
         assertEquals(Indication.INDETERMINATE, xcv.getConclusion().getIndication());
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, xcv.getConclusion().getSubIndication());
+        assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, xcv.getConclusion().getSubIndication());
         assertTrue(checkMessageValuePresence(convert(xcv.getConclusion().getErrors()), i18nProvider.getMessage(MessageTag.BBB_XCV_SUB_ANS)));
         assertTrue(checkMessageValuePresence(convert(xcv.getConclusion().getErrors()), i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
 
@@ -4454,7 +4454,7 @@ class SunsetExecutorTest extends AbstractProcessExecutorTest {
                 ++trustedCertCounter;
             } else {
                 assertEquals(Indication.INDETERMINATE, subXCV.getConclusion().getIndication());
-                assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, subXCV.getConclusion().getSubIndication());
+                assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, subXCV.getConclusion().getSubIndication());
                 assertTrue(checkMessageValuePresence(convert(subXCV.getConclusion().getErrors()), i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
                 ++untrustedCertCounter;
             }

@@ -436,13 +436,13 @@ class PDFValidationExecutorTest extends AbstractProcessExecutorTest {
                         i18nProvider.getMessage(MessageTag.BBB_FC_ISVADMDPD_ANS)));
                 certificationSigFound = true;
 
-            } else if (Indication.INDETERMINATE.equals(simpleReport.getIndication(sigId))) {
-                assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, simpleReport.getSubIndication(sigId));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+            } else if (Indication.TOTAL_PASSED.equals(simpleReport.getIndication(sigId))) {
+                assertNull(simpleReport.getSubIndication(sigId));
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.LTV_ISCKNR_ANS1)));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.ARCH_LTAIVMP_ANS)));
                 secondSigFound = true;
             }
@@ -486,13 +486,13 @@ class PDFValidationExecutorTest extends AbstractProcessExecutorTest {
                         i18nProvider.getMessage(MessageTag.BBB_FC_ISVAFMDPD_ANS)));
                 certificationSigFound = true;
 
-            } else if (Indication.INDETERMINATE.equals(simpleReport.getIndication(sigId))) {
-                assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, simpleReport.getSubIndication(sigId));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+            } else if (Indication.TOTAL_PASSED.equals(simpleReport.getIndication(sigId))) {
+                assertNull(simpleReport.getSubIndication(sigId));
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.LTV_ISCKNR_ANS1)));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.ARCH_LTAIVMP_ANS)));
                 secondSigFound = true;
             }
@@ -536,13 +536,13 @@ class PDFValidationExecutorTest extends AbstractProcessExecutorTest {
                         i18nProvider.getMessage(MessageTag.BBB_FC_ISVASFLD_ANS)));
                 certificationSigFound = true;
 
-            } else if (Indication.INDETERMINATE.equals(simpleReport.getIndication(sigId))) {
-                assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, simpleReport.getSubIndication(sigId));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+            } else if (Indication.TOTAL_PASSED.equals(simpleReport.getIndication(sigId))) {
+                assertNull(simpleReport.getSubIndication(sigId));
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.LTV_ISCKNR_ANS1)));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.ARCH_LTAIVMP_ANS)));
                 secondSigFound = true;
             }
@@ -588,13 +588,13 @@ class PDFValidationExecutorTest extends AbstractProcessExecutorTest {
                         i18nProvider.getMessage(MessageTag.BBB_FC_DSCNFFSM_ANS)));
                 certificationSigFound = true;
 
-            } else if (Indication.INDETERMINATE.equals(simpleReport.getIndication(sigId))) {
-                assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, simpleReport.getSubIndication(sigId));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+            } else if (Indication.TOTAL_PASSED.equals(simpleReport.getIndication(sigId))) {
+                assertNull(simpleReport.getSubIndication(sigId));
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.LTV_ISCKNR_ANS1)));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.ARCH_LTAIVMP_ANS)));
                 secondSigFound = true;
             }
@@ -639,13 +639,13 @@ class PDFValidationExecutorTest extends AbstractProcessExecutorTest {
                         i18nProvider.getMessage(MessageTag.BBB_FC_DSCNACMDM_ANS)));
                 certificationSigFound = true;
 
-            } else if (Indication.INDETERMINATE.equals(simpleReport.getIndication(sigId))) {
-                assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, simpleReport.getSubIndication(sigId));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+            } else if (Indication.TOTAL_PASSED.equals(simpleReport.getIndication(sigId))) {
+                assertNull(simpleReport.getSubIndication(sigId));
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.LTV_ISCKNR_ANS1)));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.ARCH_LTAIVMP_ANS)));
                 secondSigFound = true;
             }
@@ -690,13 +690,13 @@ class PDFValidationExecutorTest extends AbstractProcessExecutorTest {
                         i18nProvider.getMessage(MessageTag.BBB_FC_DSCNUOM_ANS)));
                 certificationSigFound = true;
 
-            } else if (Indication.INDETERMINATE.equals(simpleReport.getIndication(sigId))) {
-                assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, simpleReport.getSubIndication(sigId));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+            } else if (Indication.TOTAL_PASSED.equals(simpleReport.getIndication(sigId))) {
+                assertNull(simpleReport.getSubIndication(sigId));
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.LTV_ISCKNR_ANS1)));
-                assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
+                assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(sigId),
                         i18nProvider.getMessage(MessageTag.ARCH_LTAIVMP_ANS)));
                 secondSigFound = true;
             }

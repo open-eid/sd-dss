@@ -77,10 +77,10 @@ class DSS2972ExecutorTest extends AbstractProcessExecutorTest {
 
         SimpleReport simpleReport = reports.getSimpleReport();
         assertEquals(Indication.INDETERMINATE, simpleReport.getIndication(simpleReport.getFirstSignatureId()));
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, simpleReport.getSubIndication(simpleReport.getFirstSignatureId()));
+        assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, simpleReport.getSubIndication(simpleReport.getFirstSignatureId()));
         assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(simpleReport.getFirstSignatureId()),
                 i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
-        assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(simpleReport.getFirstSignatureId()),
+        assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(simpleReport.getFirstSignatureId()),
                 i18nProvider.getMessage(MessageTag.LTV_ISCKNR_ANS1)));
         assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(simpleReport.getFirstSignatureId()),
                 i18nProvider.getMessage(MessageTag.ARCH_LTAIVMP_ANS)));
@@ -89,7 +89,7 @@ class DSS2972ExecutorTest extends AbstractProcessExecutorTest {
 
         DetailedReport detailedReport = reports.getDetailedReport();
         assertEquals(Indication.INDETERMINATE, detailedReport.getBasicValidationIndication(detailedReport.getFirstSignatureId()));
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, detailedReport.getBasicValidationSubIndication(detailedReport.getFirstSignatureId()));
+        assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, detailedReport.getBasicValidationSubIndication(detailedReport.getFirstSignatureId()));
 
         eu.europa.esig.dss.detailedreport.jaxb.XmlTimestamp xmlTimestamp = detailedReport.getXmlTimestampById(xmlDiagnosticData.getUsedTimestamps().get(0).getId());
         XmlValidationProcessBasicTimestamp basicValidationProcessTimestamp = xmlTimestamp.getValidationProcessBasicTimestamp();
@@ -135,7 +135,7 @@ class DSS2972ExecutorTest extends AbstractProcessExecutorTest {
 
         XmlValidationProcessArchivalData validationProcessArchivalData = detailedReport.getXmlSignatureById(detailedReport.getFirstSignatureId()).getValidationProcessArchivalData();
         assertEquals(Indication.INDETERMINATE, validationProcessArchivalData.getConclusion().getIndication());
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, validationProcessArchivalData.getConclusion().getSubIndication());
+        assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, validationProcessArchivalData.getConclusion().getSubIndication());
 
         boolean tstAllowedValidationFound = false;
         boolean ltvMaterialPresentCheckFound = false;
@@ -182,7 +182,7 @@ class DSS2972ExecutorTest extends AbstractProcessExecutorTest {
 
         SimpleReport simpleReport = reports.getSimpleReport();
         assertEquals(Indication.INDETERMINATE, simpleReport.getIndication(simpleReport.getFirstSignatureId()));
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, simpleReport.getSubIndication(simpleReport.getFirstSignatureId()));
+        assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, simpleReport.getSubIndication(simpleReport.getFirstSignatureId()));
         assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(simpleReport.getFirstSignatureId()),
                 i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
         assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(simpleReport.getFirstSignatureId()),
@@ -190,7 +190,7 @@ class DSS2972ExecutorTest extends AbstractProcessExecutorTest {
 
         DetailedReport detailedReport = reports.getDetailedReport();
         assertEquals(Indication.INDETERMINATE, detailedReport.getBasicValidationIndication(detailedReport.getFirstSignatureId()));
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, detailedReport.getBasicValidationSubIndication(detailedReport.getFirstSignatureId()));
+        assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, detailedReport.getBasicValidationSubIndication(detailedReport.getFirstSignatureId()));
 
         XmlValidationProcessBasicTimestamp validationProcessTimestamp = detailedReport.getXmlTimestampById(
                 xmlDiagnosticData.getUsedTimestamps().get(0).getId()).getValidationProcessBasicTimestamp();
@@ -208,7 +208,7 @@ class DSS2972ExecutorTest extends AbstractProcessExecutorTest {
 
         XmlValidationProcessLongTermData validationProcessLongTermData = xmlSignature.getValidationProcessLongTermData();
         assertEquals(Indication.INDETERMINATE, validationProcessLongTermData.getConclusion().getIndication());
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, validationProcessLongTermData.getConclusion().getSubIndication());
+        assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, validationProcessLongTermData.getConclusion().getSubIndication());
 
         boolean tstAllowedValidationFound = false;
         for (XmlConstraint xmlConstraint : validationProcessLongTermData.getConstraint()) {
@@ -222,7 +222,7 @@ class DSS2972ExecutorTest extends AbstractProcessExecutorTest {
 
         XmlValidationProcessArchivalData validationProcessArchivalData = xmlSignature.getValidationProcessArchivalData();
         assertEquals(Indication.INDETERMINATE, validationProcessArchivalData.getConclusion().getIndication());
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, validationProcessArchivalData.getConclusion().getSubIndication());
+        assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, validationProcessArchivalData.getConclusion().getSubIndication());
 
         boolean valMaterialPresentCheckFound = false;
         tstAllowedValidationFound = false;

@@ -44,6 +44,7 @@ import java.io.File;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DSS2805ExecutorTest extends AbstractProcessExecutorTest {
@@ -313,11 +314,11 @@ class DSS2805ExecutorTest extends AbstractProcessExecutorTest {
         Reports reports = executor.execute();
 
         SimpleReport simpleReport = reports.getSimpleReport();
-        assertEquals(Indication.INDETERMINATE, simpleReport.getIndication(simpleReport.getFirstSignatureId()));
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, simpleReport.getSubIndication(simpleReport.getFirstSignatureId()));
-        assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(simpleReport.getFirstSignatureId()),
+        assertEquals(Indication.TOTAL_PASSED, simpleReport.getIndication(simpleReport.getFirstSignatureId()));
+        assertNull(simpleReport.getSubIndication(simpleReport.getFirstSignatureId()));
+        assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(simpleReport.getFirstSignatureId()),
                 i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
-        assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(simpleReport.getFirstSignatureId()),
+        assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(simpleReport.getFirstSignatureId()),
                 i18nProvider.getMessage(MessageTag.LTV_ISCKNR_ANS1)));
 
         DetailedReport detailedReport = reports.getDetailedReport();
@@ -326,7 +327,7 @@ class DSS2805ExecutorTest extends AbstractProcessExecutorTest {
 
         XmlValidationProcessBasicSignature validationProcessBasicSignature = xmlSignature.getValidationProcessBasicSignature();
         assertEquals(Indication.INDETERMINATE, validationProcessBasicSignature.getConclusion().getIndication());
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, validationProcessBasicSignature.getConclusion().getSubIndication());
+        assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, validationProcessBasicSignature.getConclusion().getSubIndication());
         assertTrue(checkMessageValuePresence(convert(validationProcessBasicSignature.getConclusion().getErrors()),
                 i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
 
@@ -364,12 +365,12 @@ class DSS2805ExecutorTest extends AbstractProcessExecutorTest {
                 assertEquals(XmlStatus.NOT_OK, constraint.getStatus());
                 assertEquals(MessageTag.LTV_ISCKNR_ANS1.getId(), constraint.getError().getKey());
                 certKnownToBeNotRevokedCheckFound = true;
-            } else {
+            } else if (!MessageTag.ADEST_ISTPTDABST.getId().equals(constraint.getName().getKey())) {
                 assertEquals(XmlStatus.OK, constraint.getStatus());
             }
         }
         assertTrue(bstNotBeforeCertIssuanceCheckFound);
-        assertTrue(certKnownToBeNotRevokedCheckFound);
+        assertFalse(certKnownToBeNotRevokedCheckFound);
 
         XmlValidationProcessArchivalData validationProcessArchivalData = xmlSignature.getValidationProcessArchivalData();
         assertNotNull(validationProcessArchivalData);
@@ -377,8 +378,8 @@ class DSS2805ExecutorTest extends AbstractProcessExecutorTest {
         boolean ltaDataPresentCheckFound = false;
         for (XmlConstraint constraint : validationProcessArchivalData.getConstraint()) {
             if (MessageTag.ARCH_LTAIVMP.getId().equals(constraint.getName().getKey())) {
-                assertEquals(XmlStatus.NOT_OK, constraint.getStatus());
-                assertEquals(MessageTag.ARCH_LTAIVMP_ANS.getId(), constraint.getError().getKey());
+                assertEquals(XmlStatus.INFORMATION, constraint.getStatus());
+                assertEquals(MessageTag.ARCH_LTAIVMP_ANS.getId(), constraint.getInfo().getKey());
                 ltaDataPresentCheckFound = true;
             } else {
                 assertEquals(XmlStatus.OK, constraint.getStatus());
@@ -488,11 +489,11 @@ class DSS2805ExecutorTest extends AbstractProcessExecutorTest {
         Reports reports = executor.execute();
 
         SimpleReport simpleReport = reports.getSimpleReport();
-        assertEquals(Indication.INDETERMINATE, simpleReport.getIndication(simpleReport.getFirstSignatureId()));
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, simpleReport.getSubIndication(simpleReport.getFirstSignatureId()));
-        assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(simpleReport.getFirstSignatureId()),
+        assertEquals(Indication.TOTAL_PASSED, simpleReport.getIndication(simpleReport.getFirstSignatureId()));
+        assertNull(simpleReport.getSubIndication(simpleReport.getFirstSignatureId()));
+        assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(simpleReport.getFirstSignatureId()),
                 i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
-        assertTrue(checkMessageValuePresence(simpleReport.getAdESValidationErrors(simpleReport.getFirstSignatureId()),
+        assertFalse(checkMessageValuePresence(simpleReport.getAdESValidationErrors(simpleReport.getFirstSignatureId()),
                 i18nProvider.getMessage(MessageTag.LTV_ISCKNR_ANS1)));
 
         DetailedReport detailedReport = reports.getDetailedReport();
@@ -501,7 +502,7 @@ class DSS2805ExecutorTest extends AbstractProcessExecutorTest {
 
         XmlValidationProcessBasicSignature validationProcessBasicSignature = xmlSignature.getValidationProcessBasicSignature();
         assertEquals(Indication.INDETERMINATE, validationProcessBasicSignature.getConclusion().getIndication());
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, validationProcessBasicSignature.getConclusion().getSubIndication());
+        assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, validationProcessBasicSignature.getConclusion().getSubIndication());
         assertTrue(checkMessageValuePresence(convert(validationProcessBasicSignature.getConclusion().getErrors()),
                 i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
 
@@ -539,12 +540,12 @@ class DSS2805ExecutorTest extends AbstractProcessExecutorTest {
                 assertEquals(XmlStatus.NOT_OK, constraint.getStatus());
                 assertEquals(MessageTag.LTV_ISCKNR_ANS1.getId(), constraint.getError().getKey());
                 certKnownToBeNotRevokedCheckFound = true;
-            } else {
+            } else if (!MessageTag.ADEST_ISTPTDABST.getId().equals(constraint.getName().getKey())) {
                 assertEquals(XmlStatus.OK, constraint.getStatus());
             }
         }
         assertTrue(bstNotBeforeCertIssuanceCheckFound);
-        assertTrue(certKnownToBeNotRevokedCheckFound);
+        assertFalse(certKnownToBeNotRevokedCheckFound);
 
         XmlValidationProcessArchivalData validationProcessArchivalData = xmlSignature.getValidationProcessArchivalData();
         assertNotNull(validationProcessArchivalData);
@@ -552,8 +553,8 @@ class DSS2805ExecutorTest extends AbstractProcessExecutorTest {
         boolean ltaDataPresentCheckFound = false;
         for (XmlConstraint constraint : validationProcessArchivalData.getConstraint()) {
             if (MessageTag.ARCH_LTAIVMP.getId().equals(constraint.getName().getKey())) {
-                assertEquals(XmlStatus.NOT_OK, constraint.getStatus());
-                assertEquals(MessageTag.ARCH_LTAIVMP_ANS.getId(), constraint.getError().getKey());
+                assertEquals(XmlStatus.INFORMATION, constraint.getStatus());
+                assertEquals(MessageTag.ARCH_LTAIVMP_ANS.getId(), constraint.getInfo().getKey());
                 ltaDataPresentCheckFound = true;
             } else {
                 assertEquals(XmlStatus.OK, constraint.getStatus());
@@ -584,7 +585,7 @@ class DSS2805ExecutorTest extends AbstractProcessExecutorTest {
 
         XmlValidationProcessBasicSignature validationProcessBasicSignature = xmlSignature.getValidationProcessBasicSignature();
         assertEquals(Indication.INDETERMINATE, validationProcessBasicSignature.getConclusion().getIndication());
-        assertEquals(SubIndication.OUT_OF_BOUNDS_NO_POE, validationProcessBasicSignature.getConclusion().getSubIndication());
+        assertEquals(SubIndication.OUT_OF_BOUNDS_NOT_REVOKED, validationProcessBasicSignature.getConclusion().getSubIndication());
         assertTrue(checkMessageValuePresence(convert(validationProcessBasicSignature.getConclusion().getErrors()),
                 i18nProvider.getMessage(MessageTag.BBB_XCV_ICTIVRSC_ANS)));
 
@@ -632,8 +633,8 @@ class DSS2805ExecutorTest extends AbstractProcessExecutorTest {
             }
         }
         assertTrue(bstNotBeforeCertIssuanceCheckFound);
-        assertTrue(certKnownToBeNotRevokedCheckFound);
-        assertFalse(bstNotAfterCertValidityCheckFound);
+        assertFalse(certKnownToBeNotRevokedCheckFound);
+        assertTrue(bstNotAfterCertValidityCheckFound);
 
         XmlValidationProcessArchivalData validationProcessArchivalData = xmlSignature.getValidationProcessArchivalData();
         assertNotNull(validationProcessArchivalData);
@@ -654,7 +655,7 @@ class DSS2805ExecutorTest extends AbstractProcessExecutorTest {
             }
         }
         assertTrue(ltaDataPresentCheckFound);
-        assertTrue(psvCheckFound);
+        assertFalse(psvCheckFound);
     }
 
 }
